@@ -39,7 +39,7 @@ and prepare for the first server environment snapshot before the first vLLM run.
 - Local research PDFs are kept outside Git in ignored `docs/papers/`.
 - Server access is expected later this week.
 - Server has Ubuntu 24 and 8x H200 NVL, but the repo has not yet recorded an environment snapshot from it.
-- Working tree has documentation changes for the paper-reading workflow;
+- Latest paper-reading workflow documentation changes are tracked in the handoff log;
   `.claude/` remains untracked.
 
 ---
@@ -150,6 +150,38 @@ for every entry-point script.
 ---
 
 ## Handoff log
+
+### 2026-05-03 - align paper reading guide with Keshav review
+
+- Pulled latest `origin/main` with `git pull --ff-only` before editing. The remote
+  had added `docs/templates/paper-note-lite.md` and a "Recommended first use" section
+  in `docs/paper-reading-guide.md`.
+- Updated `docs/paper-reading-guide.md` with targeted fixes only:
+  - renamed the old "Przejście 0" heading to mark it as a project-specific
+    pre-reading step,
+  - broadened the `Correctness` question beyond LLM/GPU only,
+  - added pass-2 note-taking during reading,
+  - added explicit defer/background/pass-3 choices after an unsuccessful pass 2,
+  - adjusted pass-3 timing to match Keshav more closely,
+  - added missing citations and future-work ideas to pass 3,
+  - added the survey-paper escape hatch, key-researcher lookup, and recent top
+    conference proceedings to the mini literature survey workflow,
+  - updated "Recommended first use" wording to refer to the pre-reading step rather
+    than "Przejście 0".
+- Did not change roadmap, scope, reading-list ordering, or template structure.
+- Commands run:
+  `git status -sb`, `git branch --show-current`,
+  `git log --oneline --max-count=5 -- docs/paper-reading-guide.md
+  docs/templates/paper-note-template.md docs/agent-state.md`,
+  `git log --oneline HEAD..origin/main`, `git diff --stat HEAD..origin/main`,
+  `git diff --name-only HEAD..origin/main`, `git pull --ff-only`,
+  `Get-Content -Raw docs/paper-reading-guide.md`,
+  `Get-Content -Raw docs/templates/paper-note-lite.md`,
+  `Get-Content -Raw docs/templates/paper-note-template.md`,
+  `Get-Content -Raw docs/agent-state.md`, `uv run ruff check .`,
+  `uv run pytest`, `git diff --check`, `git diff --stat`.
+- Validation: `uv run ruff check .` OK; `uv run pytest` OK (32 passed);
+  `git diff --check` OK.
 
 ### 2026-05-03 - paper-note-lite + recommended first use
 
