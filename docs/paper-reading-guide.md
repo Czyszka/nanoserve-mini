@@ -1,0 +1,196 @@
+# Jak praktycznie czytać artykuły
+
+Źródło metody: S. Keshav, "How to Read a Paper", ACM SIGCOMM Computer Communication
+Review, 2007. Ten dokument adaptuje metodę trzech przejść do `nanoserve-mini`, czyli
+czytania pod kątem LLM inference, vLLM, benchmarków, obserwowalności i późniejszego
+profilowania kerneli.
+
+## Cel
+
+Nie czytamy artykułów po to, żeby przepisać ich streszczenie. Po każdej istotnej pracy
+powinny zostać trzy rzeczy:
+
+- decyzja, czy paper jest ważny dla obecnej fazy projektu,
+- krótka notatka z twierdzeniami, dowodami i ograniczeniami,
+- jeden możliwy eksperyment albo pomiar, który da się wykonać w `nanoserve-mini`.
+
+Najważniejsza zasada: nie zaczynaj od liniowego czytania od pierwszej do ostatniej
+strony. Czytaj w przejściach i po każdym przejściu zdecyduj, czy głębsze czytanie ma
+sens teraz.
+
+## Przejście 0: ustaw cel
+
+Czas: 2-3 minuty.
+
+Zanim otworzysz paper, zapisz:
+
+- dlaczego czytasz go właśnie teraz,
+- z którą fazą roadmapy się łączy,
+- czego szukasz: modelu mentalnego, metryki, algorytmu, baseline'u, ograniczenia vLLM
+  czy pomysłu na eksperyment,
+- ile czasu maksymalnie chcesz na niego poświęcić.
+
+Jeżeli nie da się odpowiedzieć na "dlaczego teraz?", paper zwykle powinien poczekać.
+
+## Przejście 1: kwalifikacja
+
+Czas: 5-10 minut.
+
+Czytaj tylko:
+
+- tytuł, abstrakt i wstęp,
+- nagłówki sekcji i podsekcji,
+- konkluzję,
+- bibliografię, żeby rozpoznać znane prace i nazwiska.
+
+Po tym przejściu odpowiedz na pięć pytań:
+
+- **Category:** jaki to typ pracy: measurement, system, scheduling, kernel, survey,
+  analiza istniejącego systemu, prototype?
+- **Context:** z jakimi pracami się łączy i które pojęcia trzeba znać wcześniej?
+- **Correctness:** czy założenia wyglądają sensownie dla LLM inference i GPU servingu?
+- **Contributions:** co autorzy twierdzą, że wnoszą?
+- **Clarity:** czy paper jest napisany tak, że da się odtworzyć argument?
+
+Decyzja po przejściu 1:
+
+- **skip:** poza zakresem albo zbyt słabe założenia,
+- **background:** zostaw krótki opis i wróć, gdy pojawi się konkretny problem,
+- **pass 2:** czytaj dalej, bo praca wpływa na aktualną fazę,
+- **pass 3 later:** oznacz jako ważną pracę do głębokiego czytania przed implementacją
+  lub write-upem.
+
+## Przejście 2: zrozumienie argumentu
+
+Czas: 30-60 minut.
+
+Czytaj całość uważnie, ale jeszcze nie rekonstruuj każdego dowodu ani detalu
+implementacyjnego. Celem jest umieć wyjaśnić komuś główną tezę i dowody.
+
+Zwróć uwagę na:
+
+- definicje metryk: TTFT, TPOT, throughput, latency percentiles, memory usage, cost,
+  utilization,
+- workload: długości promptów, długości outputów, concurrency, arrival process, model,
+  batch size, cache hit ratio,
+- baseline: czy porównują z vLLM, Orca, FasterTransformer, TensorRT-LLM, własnym
+  systemem, naive batchingiem,
+- hardware i software: GPU, CPU, interconnect, wersje frameworków, precision,
+  serving setup,
+- wykresy: osie, jednostki, percentyle, error bars, zakresy eksperymentów,
+- ablations: czy pokazują, który komponent rzeczywiście daje zysk,
+- ograniczenia: czego nie mierzą, jakich scenariuszy unikają, gdzie wynik może się
+  nie przenieść.
+
+Po przejściu 2 zapisz 8-12 zdań:
+
+- problem,
+- główny pomysł,
+- mechanizm działania,
+- najważniejszy wynik liczbowy,
+- co autorzy uznają za bottleneck,
+- jaki jest trade-off,
+- co to znaczy dla `nanoserve-mini`.
+
+Jeżeli po tym przejściu paper dalej jest nieczytelny, najczęściej brakuje tła. Zapisz
+brakujące pojęcia i przeczytaj jedną pracę wprowadzającą zamiast siłować się z detalami.
+
+## Przejście 3: rekonstrukcja
+
+Czas: 1-4 godziny. Rób tylko dla prac kluczowych dla obecnej fazy albo finalnego
+write-upu.
+
+Zachowuj się tak, jakbyś miał odtworzyć pracę:
+
+- przepisz algorytm własnymi słowami albo jako pseudokod,
+- wypisz wszystkie założenia, także ukryte,
+- sprawdź, czy metryki rzeczywiście mierzą deklarowany problem,
+- narysuj pipeline systemu: request arrival, prefill, decode, KV cache, scheduler,
+  kernel, sieć, storage,
+- porównaj projekt autorów z tym, jak działa vLLM,
+- zapisz, które elementy da się zmierzyć bez implementacji całego systemu,
+- zapisz jeden minimalny eksperyment w repo.
+
+Po przejściu 3 powinieneś umieć odtworzyć strukturę paperu z pamięci: problem,
+założenia, metoda, eksperymenty, wyniki, słabe punkty i pytania otwarte.
+
+## Jak czytać paper systemowy lub performance
+
+W LLM inference najłatwiej dać się złapać na duże procenty bez kontekstu. Dla każdej
+pracy pytaj:
+
+- względem jakiego baseline'u liczą speedup,
+- czy porównanie jest fair względem tego samego modelu, workloadu i hardware'u,
+- czy optymalizują średnią, p95/p99, koszt, throughput czy jeden wybrany scenariusz,
+- czy zysk pochodzi z algorytmu, cache, schedulera, kernela, batchingu, mniejszej
+  jakości, mniejszej precyzji albo innej konfiguracji,
+- czy autorzy pokazali profiling albo tylko opisali bottleneck słownie,
+- czy praca poprawia prefill, decode, pamięć KV, scheduling, kernel, routing,
+  observability czy benchmark methodology,
+- czy wynik jest czymś, co `nanoserve-mini` ma implementować, czy tylko zjawiskiem,
+  które trzeba umieć zmierzyć.
+
+## LLM inference lens
+
+To jest obowiązkowa sekcja każdej notatki o paperze z reading listy projektu.
+
+Najpierw sklasyfikuj optymalizowany etap:
+
+- prefill,
+- decode,
+- oba,
+- scheduling wokół prefill/decode,
+- pamięć wokół KV cache i batchingu,
+- operacja kernel-level,
+- obserwowalność albo metodologia pomiarowa.
+
+Potem przypisz główny cel:
+
+- niższy TTFT,
+- niższy TPOT,
+- wyższy throughput,
+- niższa pamięć,
+- niższy koszt,
+- lepsze SLO albo tail latency,
+- lepsze utilization.
+
+Następnie odpowiedz na pięć pytań praktycznych:
+
+- jaki bottleneck autorzy uznają za najważniejszy,
+- jakie liczby, profiling albo eksperymenty pokazują na poparcie tej tezy,
+- co poświęcają,
+- jaki jest związek z vLLM,
+- jaki minimalny eksperyment można uruchomić w `nanoserve-mini`.
+
+Minimalny eksperyment nie musi implementować paperu. Często wystarczy zmierzyć objaw:
+TTFT przy długim promptcie, TPOT przy długim decode, wpływ concurrency, wpływ podobnych
+prefiksów, tail latency przy mieszanym workloadzie albo wykorzystanie GPU/cache podczas
+serii requestów.
+
+## Jak robić mini literature survey
+
+Dla nowego tematu, np. prefix caching albo prefill/decode disaggregation:
+
+1. Znajdź 3-5 ostatnich prac z tematu.
+2. Zrób przejście 1 na każdej.
+3. Przejrzyj sekcje related work i bibliografie.
+4. Wypisz powtarzające się prace, autorów i konferencje.
+5. Pobierz kluczowe prace, ale czytaj głęboko tylko te, które wracają w cytowaniach
+   albo bezpośrednio łączą się z eksperymentem.
+6. Zrób przejście 2 na wybranych pracach.
+7. Jeżeli wiele paperów cytuje jedną nieprzeczytaną pracę jako fundament, dodaj ją do
+   kolejki i wróć do kroku 2.
+
+Survey jest skończony na potrzeby projektu, gdy masz mapę: główne problemy, główne
+systemy, typowe metryki, typowe workloady, powtarzające się bottlenecki i jedną listę
+eksperymentów możliwych w `nanoserve-mini`.
+
+## Konwencja notatek
+
+- PDF-y trzymaj lokalnie w `docs/papers/`; ten katalog jest ignorowany przez Git.
+- Notatki Markdown trzymaj jako commitowalne artefakty, najlepiej zwięzłe.
+- Do nowych paperów używaj `docs/templates/paper-note-template.md`.
+- Po każdym ważnym paperze dopisz w `docs/reading-list.md` 2-3 zdania w sekcji notatek
+  własnych albo dodaj osobny plik z pełną notatką, jeżeli paper będzie użyty w write-upie.
+- W notatce nie przepisuj całego paperu. Zapisuj decyzje, dowody, ograniczenia i pomiary,
+  które wpływają na projekt.

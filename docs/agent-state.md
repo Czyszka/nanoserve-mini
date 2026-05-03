@@ -39,7 +39,8 @@ and prepare for the first server environment snapshot before the first vLLM run.
 - Local research PDFs are kept outside Git in ignored `docs/papers/`.
 - Server access is expected later this week.
 - Server has Ubuntu 24 and 8x H200 NVL, but the repo has not yet recorded an environment snapshot from it.
-- Working tree has local changes for `.gitignore` and `docs/agent-state.md`; `.claude/` remains untracked.
+- Working tree has documentation changes for the paper-reading workflow;
+  `.claude/` remains untracked.
 
 ---
 
@@ -149,6 +150,33 @@ for every entry-point script.
 ---
 
 ## Handoff log
+
+### 2026-05-03 - paper reading workflow docs
+
+- Read local `docs/papers/how to read papers.pdf` (S. Keshav, "How to Read a Paper")
+  with a bundled PDF-capable Python runtime.
+- Added `docs/paper-reading-guide.md`, a practical three-pass paper reading workflow
+  adapted to `nanoserve-mini` and LLM inference performance work.
+- Added `docs/templates/paper-note-template.md`, a reusable Markdown template for
+  future paper notes with an explicit `LLM inference lens` section covering prefill,
+  decode, scheduling, memory, kernel-level work, TTFT, TPOT, throughput, memory,
+  cost, SLO/tail latency, utilization, vLLM interaction, trade-offs, bottleneck
+  evidence, and minimal project experiments.
+- No Python/config files changed.
+- Commands run:
+  `Get-Content -Raw docs/agent-state.md`, `Get-ChildItem -Recurse -File`,
+  `Get-ChildItem -Recurse -File -Filter *.pdf`, bundled Python `pypdf` text
+  extraction for `docs/papers/how to read papers.pdf`, `git diff --check`,
+  `git status --short`, `git status -sb`, `git branch --show-current`,
+  `git remote -v`, `git diff -- docs\agent-state.md docs\paper-reading-guide.md
+  docs\templates\paper-note-template.md`.
+- Validation: `git diff --check` OK. Ruff/pytest were not run because this was a
+  docs-only change. An initial `uv run python -c ...` probe failed before extraction
+  because uv could not initialize `C:\Users\Dom\AppData\Local\uv\cache`
+  (`os error 183`), so the bundled Codex PDF runtime was used instead.
+- Next recommended action: use `docs/templates/paper-note-template.md` for the next
+  required paper, likely `Efficient LLM Serving Survey`, and fill in the
+  `LLM inference lens` section before deciding on experiments.
 
 ### 2026-05-03 - bootstrap state
 
