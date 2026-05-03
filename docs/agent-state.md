@@ -151,6 +151,22 @@ for every entry-point script.
 
 ## Handoff log
 
+### 2026-05-03 - paper-note-lite + recommended first use
+
+- Verified `.gitignore` already lists `docs/papers/`; no change required.
+- Added `docs/templates/paper-note-lite.md` — short note format for the
+  majority of papers (status/date/phase/why/verdict, 5-line summary, LLM
+  inference lens, project experiment, takeaway). The full
+  `docs/templates/paper-note-template.md` is reserved for foundational
+  works (Efficient LLM Serving Survey, PagedAttention/vLLM, Efficiently
+  Scaling Transformer Inference, Orca, Sarathi-Serve, FlashAttention).
+- Added a "Recommended first use" section to `docs/paper-reading-guide.md`
+  that names the lite template as the default and explicitly enumerates
+  the foundational papers that justify the full template; the existing
+  "Konwencja notatek" section was updated to reference both templates.
+- No roadmap or scope change.
+- Validation: `uv run ruff check .` OK, `uv run pytest` OK (32 passed).
+
 ### 2026-05-03 - paper reading workflow docs
 
 - Read local `docs/papers/how to read papers.pdf` (S. Keshav, "How to Read a Paper")

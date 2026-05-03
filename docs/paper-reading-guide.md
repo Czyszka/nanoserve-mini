@@ -185,11 +185,46 @@ Survey jest skończony na potrzeby projektu, gdy masz mapę: główne problemy, 
 systemy, typowe metryki, typowe workloady, powtarzające się bottlenecki i jedną listę
 eksperymentów możliwych w `nanoserve-mini`.
 
+## Recommended first use
+
+Domyślnie używaj **lekkiego template'u** `docs/templates/paper-note-lite.md`.
+Pełny `docs/templates/paper-note-template.md` zarezerwuj wyłącznie dla prac
+fundamentalnych dla `nanoserve-mini` — czyli takich, które są bezpośrednim
+fundamentem decyzji architektonicznych albo finalnych write-upów.
+
+**Pełny template** stosuj dla:
+
+- *Efficient LLM Serving Survey*,
+- *PagedAttention / vLLM*,
+- *Efficiently Scaling Transformer Inference*,
+- *Orca*,
+- *Sarathi-Serve*,
+- *FlashAttention*.
+
+**Lite template** stosuj dla wszystkiego pozostałego: pojedynczych prac
+mierzących objaw, alternatywnych systemów, prac stycznych z reading listy,
+tła do konkretnego eksperymentu.
+
+Domyślny przepływ pierwszego użycia:
+
+1. Przejście 0 (cel) → przejście 1 (kwalifikacja). Decyzja: skip / background
+   / pass 2 / pass 3 later.
+2. Jeżeli zostaje przy projekcie, otwórz `paper-note-lite.md`, wypełnij sekcje
+   "5-line summary" i "LLM inference lens" w trakcie pass 2. Zostań na lite,
+   chyba że paper jest na liście fundamentalnych powyżej.
+3. Pełny template włączaj świadomie, dopiero gdy decydujesz, że zrobisz
+   pass 3 i paper będzie użyty w write-upie.
+
+Cel jest taki, żeby większość paperów kończyła się na 1 stronie notatki,
+a fundamenty dostały pełną notatkę dopiero kiedy realnie wpływają na decyzje.
+
 ## Konwencja notatek
 
 - PDF-y trzymaj lokalnie w `docs/papers/`; ten katalog jest ignorowany przez Git.
 - Notatki Markdown trzymaj jako commitowalne artefakty, najlepiej zwięzłe.
-- Do nowych paperów używaj `docs/templates/paper-note-template.md`.
+- Do większości paperów używaj `docs/templates/paper-note-lite.md`. Pełnego
+  `docs/templates/paper-note-template.md` używaj tylko dla prac wymienionych
+  w sekcji "Recommended first use".
 - Po każdym ważnym paperze dopisz w `docs/reading-list.md` 2-3 zdania w sekcji notatek
   własnych albo dodaj osobny plik z pełną notatką, jeżeli paper będzie użyty w write-upie.
 - W notatce nie przepisuj całego paperu. Zapisuj decyzje, dowody, ograniczenia i pomiary,
