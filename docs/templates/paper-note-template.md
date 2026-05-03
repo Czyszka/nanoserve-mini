@@ -150,6 +150,20 @@ Jaki minimalny eksperyment mogę zrobić w `nanoserve-mini`?
 - **Kernel/profiling relevance:** <whether later Triton/profiling work should care>
 - **Out-of-scope boundary:** <what not to implement in this project>
 
+## Actions created from this paper
+
+- [ ] <repo/code action>
+- [ ] <benchmark action>
+- [ ] <observability or measurement action>
+- [ ] <docs/write-up action>
+
+## Potential LinkedIn angle
+
+- **Working thesis:** <one sentence that could become a post>
+- **Technical hook:** <what surprised me, failed, or changed my understanding?>
+- **Concrete evidence from the project:** <commit, benchmark, graph, bug, metric, or decision>
+- **Draft takeaway:** <what a reader should learn>
+
 ## Follow-up references
 
 - <paper or system name> - <why it matters>
