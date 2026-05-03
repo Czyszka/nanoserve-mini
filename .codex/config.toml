@@ -1,0 +1,28 @@
+# Project-scoped Codex configuration for nanoserve-mini.
+# Keep permissions conservative while the repo is being bootstrapped.
+
+model = "gpt-5.5"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "cached"
+default_permissions = ":workspace"
+
+[windows]
+sandbox = "elevated"
+
+[features]
+shell_snapshot = true
+
+# Make Windows user tools visible to Codex subprocesses.
+# This fixes cases where the graphical Codex app does not inherit the same PATH
+# as normal PowerShell.
+[shell_environment_policy]
+inherit = "all"
+ignore_default_excludes = false
+experimental_use_profile = true
+include_only = []
+exclude = []
+
+[shell_environment_policy.set]
+PATH = "C:\\Users\\Dom\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\Dom\\.local\\bin;C:\\Users\\Dom\\AppData\\Roaming\\npm;C:\\Program Files\\Git\\cmd;C:\\Program Files\\GitHub CLI;C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+Path = "C:\\Users\\Dom\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\Dom\\.local\\bin;C:\\Users\\Dom\\AppData\\Roaming\\npm;C:\\Program Files\\Git\\cmd;C:\\Program Files\\GitHub CLI;C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
