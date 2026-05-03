@@ -130,3 +130,5 @@ Tu zapisuj swoje wnioski po każdym paperze w 2-3 zdaniach. Po projekcie ten fra
 Format sugerowany:
 
 > **[Paper title]** — czytany w tygodniu N. Główna idea: ... Co z tego biorę do projektu: ... Co mi się nie zgrywało: ...
+
+> **Towards Efficient Generative Large Language Model Serving: A Survey from Algorithms to Systems** — czytany w tygodniu 1 / Phase 1. Główna idea: LLM serving trzeba rozumieć jako cały stos: autoregresyjny prefill/decode, KV cache, scheduler, batching, kernel backend i benchmark methodology, a nie jako pojedynczy speedup. Co z tego biorę do projektu: pierwszy vLLM baseline ma od razu zapisywać TTFT, E2E, workload controls i server controls, a później korelować je z `/metrics`; nie implementujemy alternatywnych serving systemów, tylko mierzymy objawy opisane w surveyu.

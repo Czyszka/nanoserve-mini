@@ -136,20 +136,51 @@ uv run python -m scripts.check_server_env
 
 ## Last validation
 
-Most recent local validation (2026-05-03, laptop, after D1-D4 + review fixes):
+Most recent local validation (2026-05-03, laptop, after Efficient LLM Serving Survey note):
 
 ```text
-uv sync --extra dev     OK
 uv run ruff check .     OK, all checks passed
 uv run pytest           OK, 32 passed
+git status              OK, working tree has docs changes plus pre-existing untracked .claude/
 ```
-
-Module-execution smoke-checked locally with `python -m scripts.<name> --help`
-for every entry-point script.
 
 ---
 
 ## Handoff log
+
+### 2026-05-03 - Efficient LLM Serving Survey paper note
+
+- Added full Phase 1 paper note:
+  `docs/papers-notes/efficient-llm-serving-survey.md`.
+- Used the full paper-note template because this is a foundational Phase 1 paper.
+- The note focuses on the project-relevant parts of the survey:
+  vLLM baseline interpretation, TTFT/E2E and future TPOT, prefill vs decode,
+  KV cache and memory management, scheduling/batching, observability, and
+  benchmark methodology.
+- Updated `docs/reading-list.md` with a short "Notatki własne" entry for the
+  survey.
+- Did not modify roadmap or project scope. Did not add or commit PDFs.
+- Commands run:
+  `Get-Content -Raw docs/paper-reading-guide.md`,
+  `Get-Content -Raw docs/templates/paper-note-template.md`,
+  `Get-Content -Raw docs/reading-list.md`,
+  `Get-Content -Raw docs/ROADMAP_v_1_0.md`,
+  `Get-Content -Raw docs/agent-state.md`,
+  `Get-ChildItem -Force docs`, `Get-ChildItem -Force docs\papers`,
+  `git status -sb`, `rg --files` (failed, `rg` is not installed),
+  bundled Python/pypdf PDF metadata and targeted text extraction,
+  `Get-Content -Raw scripts\measure_ttft_once.py`,
+  `Get-Content -Raw scripts\run_sequential_benchmark.py`,
+  `Get-Content -Raw scripts\_metrics.py`,
+  `git diff -- docs\reading-list.md`,
+  `uv run ruff check .`, `uv run pytest`, `git status`.
+- Validation: `uv run ruff check .` OK; `uv run pytest` OK (32 passed);
+  `git status` OK and shows modified docs plus untracked `docs/papers-notes/`
+  and pre-existing untracked `.claude/`.
+- Next recommended action: when vLLM is available on the server, run
+  `scripts/request_once.py` and `scripts/measure_ttft_once.py`, then use
+  `scripts/run_sequential_benchmark.py` to compare short/medium/long prompts
+  with fixed controls before adding vLLM `/metrics` scraping.
 
 ### 2026-05-03 - align paper reading guide with Keshav review
 
