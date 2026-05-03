@@ -66,15 +66,17 @@ Immediate milestone:
 
 1. README and agent coordination docs are committed and pushed (done).
 2. Laptop-safe scaffolding for the first server session is committed:
-   `docs/server-first-session.md`, `scripts/_client.py`, `scripts/_metrics.py`,
-   `scripts/request_once.py`, `scripts/measure_ttft_once.py`,
-   `scripts/run_sequential_benchmark.py` plus tests with httpx.MockTransport
-   (done).
-3. run `scripts/check_server_env.py` on the server when available,
+   `docs/server-first-session.md`, `scripts/__init__.py`, `scripts/_client.py`,
+   `scripts/_metrics.py`, `scripts/request_once.py`,
+   `scripts/measure_ttft_once.py`, `scripts/run_sequential_benchmark.py`
+   plus tests with httpx.MockTransport (done).
+3. run `uv run python -m scripts.check_server_env` on the server when available,
 4. commit `results/raw/server_env_snapshot.json` from the server if it is small and useful,
 5. decide vLLM setup path: Docker vs uv/native (follow `docs/server-first-session.md`),
-6. once vLLM is up: `scripts/request_once.py` -> `scripts/measure_ttft_once.py`
-   -> `scripts/run_sequential_benchmark.py`.
+6. once vLLM is up:
+   `uv run python -m scripts.request_once` ->
+   `uv run python -m scripts.measure_ttft_once` ->
+   `uv run python -m scripts.run_sequential_benchmark`.
 
 ---
 
@@ -131,21 +133,16 @@ uv run python -m scripts.check_server_env
 
 ## Last validation
 
-Latest known local validation from laptop:
-
-```text
-uv sync --extra dev     OK
-uv run ruff check .     OK
-uv run pytest           OK, 1 passed
-```
-
-Most recent focused validation (2026-05-03, laptop, after D1-D4 + review fixes):
+Most recent local validation (2026-05-03, laptop, after D1-D4 + review fixes):
 
 ```text
 uv sync --extra dev     OK
 uv run ruff check .     OK, all checks passed
 uv run pytest           OK, 32 passed
 ```
+
+Module-execution smoke-checked locally with `python -m scripts.<name> --help`
+for every entry-point script.
 
 ---
 
@@ -156,7 +153,7 @@ uv run pytest           OK, 32 passed
 - Local repo was initialized and pushed to GitHub.
 - Codex bootstrap created repo configuration.
 - `.gitattributes` was added after LF/CRLF warnings.
-- `scripts/check_server_env.py` exists for the first H200 server environment snapshot.
+- `scripts/check_server_env.py` exists for the first H200 server environment snapshot. (Run as `python -m scripts.check_server_env` after the review-fix entry made the `scripts/` package importable.)
 
 ### 2026-05-03 - README and shared agent state
 
@@ -170,7 +167,7 @@ uv run pytest           OK, 32 passed
 - `README.md`, `CLAUDE.md`, `AGENTS.md`, and `docs/agent-state.md` are now committed to the repo and pushed to GitHub (`origin/main`).
 - Working tree clean on branch `claude/vigorous-margulis-ac5191`.
 - Local validation re-run on laptop: `uv sync --extra dev` OK, `uv run ruff check .` OK, `uv run pytest` OK (1 passed).
-- Next recommended action: when the server is available, run `scripts/check_server_env.py` and capture `results/raw/server_env_snapshot.json`.
+- Next recommended action: when the server is available, run `uv run python -m scripts.check_server_env` and capture `results/raw/server_env_snapshot.json`. (Module-execution form was introduced in the later "review fixes" entry; the older path-based form `python scripts/check_server_env.py` is no longer the canonical invocation.)
 
 ### 2026-05-03 - first-server-session scaffolding (D1-D4)
 
