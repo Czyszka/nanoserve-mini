@@ -34,15 +34,11 @@ and prepare for the first server environment snapshot before the first vLLM run.
 - Local Windows laptop bootstrap is done.
 - Python workflow uses `uv`.
 - `ruff` and `pytest` are configured and pass locally.
-- `README.md` exists with the project overview, local workflow, and suggested GitHub description.
-- `CLAUDE.md` exists as the Claude Code entrypoint.
-- `AGENTS.md` exists as the Codex instruction file.
-- `docs/agent-state.md` is the shared handoff/status file.
+- `README.md`, `CLAUDE.md`, `AGENTS.md`, and `docs/agent-state.md` are committed and pushed to GitHub.
 - `.gitattributes` exists to normalize line endings.
 - Server access is expected later this week.
 - Server has Ubuntu 24 and 8x H200 NVL, but the repo has not yet recorded an environment snapshot from it.
-- Current uncommitted files include modified `AGENTS.md` plus untracked `README.md`,
-  `CLAUDE.md`, `docs/agent-state.md`, and `claude_code_integration_files.zip`.
+- Working tree is clean; branch is up to date with `origin/main`.
 
 ---
 
@@ -67,7 +63,7 @@ Do not start vLLM setup until the server environment is captured.
 
 Immediate milestone:
 
-1. commit and push the README / agent coordination docs,
+1. README and agent coordination docs are committed and pushed (done).
 2. run `scripts/check_server_env.py` on the server when available,
 3. commit `results/raw/server_env_snapshot.json` from the server if it is small and useful,
 4. decide vLLM setup path: Docker vs uv/native.
@@ -135,10 +131,11 @@ uv run ruff check .     OK
 uv run pytest           OK, 1 passed
 ```
 
-Most recent focused validation:
+Most recent focused validation (2026-05-03, laptop):
 
 ```text
-uv run ruff check .     OK
+uv sync --extra dev     OK
+uv run ruff check .     OK, all checks passed
 uv run pytest           OK, 1 passed
 ```
 
@@ -159,3 +156,10 @@ uv run pytest           OK, 1 passed
 - `CLAUDE.md` was added as the Claude Code entrypoint.
 - `docs/agent-state.md` was verified and updated as the shared handoff file for Codex, Claude Code, and human work.
 - `AGENTS.md` and `CLAUDE.md` now require updating `docs/agent-state.md` after meaningful work and before commit/push handoff.
+
+### 2026-05-03 - coordination docs committed and pushed
+
+- `README.md`, `CLAUDE.md`, `AGENTS.md`, and `docs/agent-state.md` are now committed to the repo and pushed to GitHub (`origin/main`).
+- Working tree clean on branch `claude/vigorous-margulis-ac5191`.
+- Local validation re-run on laptop: `uv sync --extra dev` OK, `uv run ruff check .` OK, `uv run pytest` OK (1 passed).
+- Next recommended action: when the server is available, run `scripts/check_server_env.py` and capture `results/raw/server_env_snapshot.json`.
