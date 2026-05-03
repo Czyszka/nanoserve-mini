@@ -170,6 +170,22 @@ What minimal experiment can I run in `nanoserve-mini`?
 - **Kernel/profiling relevance:** Later Triton/profiling work should focus on memory access, attention/FFN/operator costs, HBM pressure, and prefill/decode differences, not on replacing vLLM attention kernels.
 - **Out-of-scope boundary:** Do not add a custom inference engine, TensorRT-LLM integration, SGLang integration, multi-GPU parallelism, FP8, speculative decoding, disaggregated serving, or custom KV cache implementation for this Phase 1 note.
 
+## Actions created from this paper
+
+- [ ] Update benchmark result schema to always store `ttft_ms` and `e2e_latency_ms` as separate fields.
+- [ ] Add workload metadata to benchmark outputs: workload label, prompt shape, `max_tokens`, decoding parameters, and number of measured runs.
+- [ ] Add server/control metadata to benchmark outputs: model name, vLLM version, dtype or quantization, GPU model, server args, git commit, and environment snapshot path.
+- [ ] Add a follow-up task for future TPOT support once token-level accounting is available in the harness.
+- [ ] Add a follow-up task for future vLLM `/metrics` scraping during benchmark runs, especially scheduler state, running/waiting requests, GPU cache usage, and token throughput.
+- [ ] Convert the final takeaway of this note into a short project log entry after the first controlled vLLM benchmark run.
+
+## Potential LinkedIn angle
+
+- **Working thesis:** LLM inference latency is not one number; a useful benchmark needs to separate TTFT, TPOT, and end-to-end latency.
+- **Technical hook:** I started reading an LLM serving survey and realized that my first vLLM run should not be treated as a smoke test, but as a controlled measurement exercise.
+- **Concrete evidence from the project:** The next benchmark records in `nanoserve-mini` will separate TTFT from E2E latency and preserve workload, server, and environment controls.
+- **Draft takeaway:** Before optimizing an LLM serving stack, first make the measurement reproducible; otherwise `tokens/s` or `latency` numbers are mostly anecdotes.
+
 ## Follow-up references
 
 - PagedAttention / vLLM - required to understand the baseline engine and KV cache metrics.
