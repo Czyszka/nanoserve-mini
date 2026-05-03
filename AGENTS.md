@@ -79,6 +79,33 @@ Do not add the following unless explicitly requested:
 - Do not rewrite `ROADMAP.md` unless explicitly asked.
 - Do not change project scope unless explicitly asked.
 
+## Shared project state
+
+Use `docs/agent-state.md` as the single repo-tracked handoff/status file shared by
+Codex, Claude Code, and human work.
+
+File roles:
+
+- `AGENTS.md` - stable instructions for Codex.
+- `CLAUDE.md` - stable instructions for Claude Code.
+- `docs/agent-state.md` - current project state, decisions, next step, and blockers.
+- `ROADMAP.md` - project scope; do not change it without an explicit decision.
+
+At the beginning of non-trivial work, read `docs/agent-state.md` and verify that it
+matches the repo state.
+
+After meaningful changes, update `docs/agent-state.md` with:
+
+- what changed,
+- commands run,
+- validation results,
+- new decisions,
+- next recommended action,
+- open blockers.
+
+Always update `docs/agent-state.md` before committing, pushing, or handing work to
+another agent when the task changed the repository state.
+
 ## Validation
 
 After Python/config changes, try to run:
