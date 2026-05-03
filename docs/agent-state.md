@@ -48,6 +48,7 @@ Read these before making non-trivial changes:
 
 - `docs/ROADMAP_v_1_0.md` - current scope, phases, and definition of done.
 - `docs/infrastructure_v_1_0.md` - machine roles and workflow.
+- `docs/server-first-session.md` - runbook for the first server session (env snapshot + vLLM setup decision).
 - `docs/reading-list.md` - papers by phase.
 - `docs/nvidia_self_paced_courses.md` - optional NVIDIA courses.
 - `AGENTS.md` - Codex-specific repo instructions.
