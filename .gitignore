@@ -32,3 +32,6 @@ Thumbs.db
 # Large local-only artifacts
 artifacts/
 tmp/
+
+# Local research papers
+docs/papers/

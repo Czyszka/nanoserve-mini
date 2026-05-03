@@ -36,9 +36,10 @@ and prepare for the first server environment snapshot before the first vLLM run.
 - `ruff` and `pytest` are configured and pass locally.
 - `README.md`, `CLAUDE.md`, `AGENTS.md`, and `docs/agent-state.md` are committed and pushed to GitHub.
 - `.gitattributes` exists to normalize line endings.
+- Local research PDFs are kept outside Git in ignored `docs/papers/`.
 - Server access is expected later this week.
 - Server has Ubuntu 24 and 8x H200 NVL, but the repo has not yet recorded an environment snapshot from it.
-- Working tree is clean; branch is up to date with `origin/main`.
+- Working tree has local changes for `.gitignore` and `docs/agent-state.md`; `.claude/` remains untracked.
 
 ---
 
@@ -116,6 +117,7 @@ uv run python -m scripts.check_server_env
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
 | State updates | Codex and Claude Code must update `docs/agent-state.md` after meaningful work and before commit/push handoff |
+| Local papers | Store read scientific papers in ignored `docs/papers/`; commit bibliographic notes/summaries separately if useful |
 
 ---
 
@@ -231,3 +233,9 @@ uv sync --extra dev     OK
 uv run ruff check .     OK, all checks passed
 uv run pytest           OK, 32 passed
 ```
+
+### 2026-05-03 - local papers directory
+
+- Added ignored local directory `docs/papers/` for scientific paper PDFs already read or being reviewed.
+- Moved local `docs/Efficient LLM Serving Survey.pdf` into `docs/papers/`.
+- `.gitignore` now excludes `docs/papers/`; paper notes or summaries should be committed separately as Markdown when useful.
