@@ -53,7 +53,7 @@ OK gdy: komenda kończy się bez błędu i tworzy `.venv/`. Brak instalacji jaki
 ## Krok 3 — `scripts/check_server_env.py`
 
 ```bash
-uv run python scripts/check_server_env.py
+uv run python -m scripts.check_server_env
 ```
 
 OK gdy:

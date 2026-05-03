@@ -8,7 +8,6 @@ without a real vLLM.
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 import httpx
@@ -63,7 +62,7 @@ def test_build_summary_handles_errors_and_missing_ttft() -> None:
         _ok_row(0, phase="measured"),
         RunRow(
             index=1, phase="measured", timestamp="t",
-            ttft_seconds=None, e2e_seconds=float("nan"),
+            ttft_seconds=None, e2e_seconds=None,
             chunks_received=0, output_chars=0,
             error="ConnectError: boom",
         ),
@@ -202,7 +201,7 @@ def test_main_rejects_zero_runs(capsys: pytest.CaptureFixture[str]) -> None:
     assert "--runs must be >= 1" in err
 
 
-def test_summary_with_zero_measured_is_safe() -> None:
+def test_summary_with_zero_measured_is_safe_and_strict_json() -> None:
     rows = [_ok_row(0, phase="warmup")]
     request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=8)
     controls = RunControls(model="m", base_url="http://x", warmup_runs=1, measured_runs=0)
@@ -210,5 +209,30 @@ def test_summary_with_zero_measured_is_safe() -> None:
     s = summary["summary"]
     assert s["measured_runs"] == 0
     assert s["errors"] == 0
-    assert math.isnan(s["ttft_seconds"]["p50"])
-    assert math.isnan(s["e2e_seconds"]["p50"])
+    for key in ("min", "p50", "p95", "max", "mean"):
+        assert s["ttft_seconds"][key] is None
+        assert s["e2e_seconds"][key] is None
+    # The whole record must serialize under strict JSON (no NaN tokens).
+    encoded = json.dumps(summary, allow_nan=False)
+    assert "NaN" not in encoded
+
+
+def test_error_run_jsonl_row_is_strict_json(tmp_path: Path) -> None:
+    """Errored rows carry None, not NaN, and the JSONL line is strict JSON."""
+    rows = [
+        RunRow(
+            index=0, phase="measured", timestamp="t",
+            ttft_seconds=None, e2e_seconds=None,
+            chunks_received=0, output_chars=0,
+            error="ConnectError: boom",
+        ),
+    ]
+    path = tmp_path / "errored.jsonl"
+    write_jsonl(path, rows)
+    line = path.read_text(encoding="utf-8").strip()
+    # strict load must succeed
+    parsed = json.loads(line)
+    assert parsed["e2e_seconds"] is None
+    assert parsed["ttft_seconds"] is None
+    # NaN is not valid JSON, so this also acts as a regression check
+    assert "NaN" not in line

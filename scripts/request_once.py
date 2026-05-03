@@ -2,7 +2,7 @@
 
 Usage on the server, after vLLM is running on the default port:
 
-    uv run python scripts/request_once.py \
+    uv run python -m scripts.request_once \
         --base-url http://127.0.0.1:8000 \
         --model meta-llama/Llama-3.1-8B-Instruct \
         --prompt "Say hi in one short sentence."

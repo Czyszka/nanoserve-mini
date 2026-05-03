@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import math
+import json
 
 import pytest
 
@@ -22,8 +22,8 @@ def test_percentile_known_values() -> None:
     assert percentile(values, 100.0) == 4.0
 
 
-def test_percentile_empty_is_nan() -> None:
-    assert math.isnan(percentile([], 50.0))
+def test_percentile_empty_is_none() -> None:
+    assert percentile([], 50.0) is None
 
 
 def test_percentile_invalid_p() -> None:
@@ -41,11 +41,21 @@ def test_summarize_non_empty() -> None:
     assert summary["p95"] == pytest.approx(3.85)
 
 
-def test_summarize_empty() -> None:
+def test_summarize_empty_uses_none_not_nan() -> None:
     summary = summarize([])
     assert summary["count"] == 0
     for key in ("min", "p50", "p95", "max", "mean"):
-        assert math.isnan(summary[key])
+        assert summary[key] is None
+
+
+def test_summarize_empty_round_trips_through_strict_json() -> None:
+    """Strict JSON parsers reject NaN; ``None`` -> ``null`` survives a round-trip."""
+    summary = summarize([])
+    encoded = json.dumps(summary)  # default allow_nan=True wouldn't catch this
+    encoded_strict = json.dumps(summary, allow_nan=False)
+    decoded = json.loads(encoded_strict)
+    assert decoded == summary
+    assert "NaN" not in encoded
 
 
 def test_run_controls_as_dict_roundtrip() -> None:

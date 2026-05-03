@@ -94,7 +94,7 @@ Server, once available:
 git clone https://github.com/Czyszka/nanoserve-mini.git
 cd nanoserve-mini
 uv sync --extra dev
-uv run python scripts/check_server_env.py
+uv run python -m scripts.check_server_env
 ```
 
 ---
@@ -139,12 +139,12 @@ uv run ruff check .     OK
 uv run pytest           OK, 1 passed
 ```
 
-Most recent focused validation (2026-05-03, laptop, after D1-D4):
+Most recent focused validation (2026-05-03, laptop, after D1-D4 + review fixes):
 
 ```text
 uv sync --extra dev     OK
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 30 passed
+uv run pytest           OK, 32 passed
 ```
 
 ---
@@ -204,3 +204,33 @@ uv run pytest           OK, 30 passed
 
 Next recommended action: when the server is available, work through
 `docs/server-first-session.md` step-by-step.
+
+### 2026-05-03 - review fixes (CLI import + JSON strictness)
+
+Two laptop-safe corrections before the first H200 server slot:
+
+- `scripts/__init__.py` added so `scripts._client` and `scripts._metrics`
+  are importable as a real package. All entry-point scripts are now
+  invoked via module execution (`uv run python -m scripts.<name>`) in
+  `README.md`, `docs/server-first-session.md`, every script docstring,
+  and the "Standard commands" block above. This avoids brittle path
+  invocations that break the relative imports.
+- `scripts/_metrics.py` no longer emits `float('nan')` from
+  `percentile()` / `summarize()`; empty input now returns `None`
+  (serializes as JSON `null`). `RunRow.e2e_seconds` for errored runs is
+  also `None`. JSON writers in `measure_ttft_once.py` and
+  `run_sequential_benchmark.py` now use `allow_nan=False` so any future
+  regression that reintroduces NaN raises at write time instead of
+  silently producing invalid JSON.
+
+New tests cover strict-JSON round-trip for empty summaries and for
+errored-run JSONL rows. Module-execution paths smoke-checked locally
+with `python -m scripts.<name> --help`.
+
+Validation (laptop, 2026-05-03, after fixes):
+
+```text
+uv sync --extra dev     OK
+uv run ruff check .     OK, all checks passed
+uv run pytest           OK, 32 passed
+```

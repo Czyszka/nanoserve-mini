@@ -78,7 +78,7 @@ The server environment snapshot script records basic OS, CUDA, NVIDIA, Docker, a
 hardware metadata into `results/raw/server_env_snapshot.json`:
 
 ```bash
-uv run python scripts/check_server_env.py
+uv run python -m scripts.check_server_env
 ```
 
 Do not commit secrets, model weights, Hugging Face caches, large logs, Nsight traces,

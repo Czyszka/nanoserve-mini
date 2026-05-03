@@ -19,7 +19,7 @@ The output shape follows the same Benchmark Contract style as
 
 Usage on the server:
 
-    uv run python scripts/run_sequential_benchmark.py \
+    uv run python -m scripts.run_sequential_benchmark \
         --base-url http://127.0.0.1:8000 \
         --model meta-llama/Llama-3.1-8B-Instruct \
         --warmup 1 --runs 5 \
@@ -47,7 +47,7 @@ class RunRow:
     phase: str  # "warmup" | "measured"
     timestamp: str
     ttft_seconds: float | None
-    e2e_seconds: float
+    e2e_seconds: float | None
     chunks_received: int
     output_chars: int
     error: str | None
@@ -78,9 +78,10 @@ def run_sequential(
 ) -> list[RunRow]:
     """Run warmup + measured runs sequentially. Returns one row per run.
 
-    On error, the row records ``error`` and ``ttft_seconds=None``,
-    ``e2e_seconds=nan``. We continue to the next run — one bad request
-    shouldn't kill a 5-run smoke benchmark.
+    On error, the row records ``error`` with ``ttft_seconds=None`` and
+    ``e2e_seconds=None`` (kept out of the summary aggregates and JSON-strict).
+    We continue to the next run — one bad request shouldn't kill a 5-run
+    smoke benchmark.
     """
     rows: list[RunRow] = []
 
@@ -110,7 +111,7 @@ def run_sequential(
                 phase=phase,
                 timestamp=ts,
                 ttft_seconds=None,
-                e2e_seconds=float("nan"),
+                e2e_seconds=None,
                 chunks_received=0,
                 output_chars=0,
                 error=f"{type(exc).__name__}: {exc}",
@@ -127,7 +128,11 @@ def write_jsonl(path: Path, rows: list[RunRow]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as fh:
         for row in rows:
-            fh.write(json.dumps(_row_as_dict(row), ensure_ascii=False) + "\n")
+            # allow_nan=False makes any future regression that tries to write
+            # NaN/Infinity raise here instead of silently producing invalid JSON.
+            fh.write(
+                json.dumps(_row_as_dict(row), ensure_ascii=False, allow_nan=False) + "\n"
+            )
 
 
 def _row_as_dict(row: RunRow) -> dict[str, Any]:
@@ -151,7 +156,7 @@ def build_summary(
 ) -> dict[str, Any]:
     measured = [r for r in rows if r.phase == "measured" and r.error is None]
     ttfts = [r.ttft_seconds for r in measured if r.ttft_seconds is not None]
-    e2es = [r.e2e_seconds for r in measured]
+    e2es = [r.e2e_seconds for r in measured if r.e2e_seconds is not None]
 
     error_count = sum(1 for r in rows if r.phase == "measured" and r.error is not None)
 
@@ -205,8 +210,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _format_ms(value: float) -> str:
-    if value != value:  # NaN
+def _format_ms(value: float | None) -> str:
+    if value is None:
         return "n/a"
     return f"{value * 1000:.1f} ms"
 
@@ -243,7 +248,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     def progress(row: RunRow) -> None:
-        ttft_str = _format_ms(row.ttft_seconds) if row.ttft_seconds is not None else "n/a"
+        ttft_str = _format_ms(row.ttft_seconds)
         e2e_str = _format_ms(row.e2e_seconds)
         marker = "W" if row.phase == "warmup" else "M"
         err = f" ERROR={row.error}" if row.error else ""
@@ -263,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = build_summary(request=request, controls=controls, rows=rows)
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(
-        json.dumps(summary, indent=2, ensure_ascii=False),
+        json.dumps(summary, indent=2, ensure_ascii=False, allow_nan=False),
         encoding="utf-8",
     )
 

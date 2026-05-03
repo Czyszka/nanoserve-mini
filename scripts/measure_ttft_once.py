@@ -14,7 +14,7 @@ Default output path: ``results/raw/first_ttft.json``.
 
 Usage on the server:
 
-    uv run python scripts/measure_ttft_once.py \
+    uv run python -m scripts.measure_ttft_once \
         --base-url http://127.0.0.1:8000 \
         --model meta-llama/Llama-3.1-8B-Instruct \
         --prompt "Say hi in one short sentence." \
@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
-        json.dumps(record, indent=2, ensure_ascii=False),
+        json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False),
         encoding="utf-8",
     )
 

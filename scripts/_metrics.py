@@ -56,15 +56,16 @@ def now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def percentile(values: list[float], p: float) -> float:
+def percentile(values: list[float], p: float) -> float | None:
     """Plain linear-interpolated percentile.
 
     No numpy dependency — keeps the laptop env minimal. ``p`` is in [0, 100].
-    Returns ``float('nan')`` for empty input so summary code doesn't crash on
-    zero successful runs.
+    Returns ``None`` for empty input so summary code can serialize cleanly to
+    strict JSON (NaN is not valid JSON; ``json.dumps(float('nan'))`` produces
+    invalid output that many parsers reject).
     """
     if not values:
-        return float("nan")
+        return None
     if not 0.0 <= p <= 100.0:
         raise ValueError("p must be in [0, 100]")
 
@@ -79,19 +80,21 @@ def percentile(values: list[float], p: float) -> float:
     return ordered[lower] * (1 - weight) + ordered[upper] * weight
 
 
-def summarize(values: list[float]) -> dict[str, float]:
+def summarize(values: list[float]) -> dict[str, float | int | None]:
     """Common summary block used in result JSON.
 
-    Includes count, min, p50, p95, max, mean. ``nan`` when empty.
+    Includes count, min, p50, p95, max, mean. ``None`` for every aggregate when
+    the input is empty so the resulting JSON stays strict (no NaN tokens).
+    ``count`` is always an integer.
     """
     if not values:
         return {
             "count": 0,
-            "min": float("nan"),
-            "p50": float("nan"),
-            "p95": float("nan"),
-            "max": float("nan"),
-            "mean": float("nan"),
+            "min": None,
+            "p50": None,
+            "p95": None,
+            "max": None,
+            "mean": None,
         }
     return {
         "count": len(values),
