@@ -65,9 +65,16 @@ Do not start vLLM setup until the server environment is captured.
 Immediate milestone:
 
 1. README and agent coordination docs are committed and pushed (done).
-2. run `scripts/check_server_env.py` on the server when available,
-3. commit `results/raw/server_env_snapshot.json` from the server if it is small and useful,
-4. decide vLLM setup path: Docker vs uv/native.
+2. Laptop-safe scaffolding for the first server session is committed:
+   `docs/server-first-session.md`, `scripts/_client.py`, `scripts/_metrics.py`,
+   `scripts/request_once.py`, `scripts/measure_ttft_once.py`,
+   `scripts/run_sequential_benchmark.py` plus tests with httpx.MockTransport
+   (done).
+3. run `scripts/check_server_env.py` on the server when available,
+4. commit `results/raw/server_env_snapshot.json` from the server if it is small and useful,
+5. decide vLLM setup path: Docker vs uv/native (follow `docs/server-first-session.md`),
+6. once vLLM is up: `scripts/request_once.py` -> `scripts/measure_ttft_once.py`
+   -> `scripts/run_sequential_benchmark.py`.
 
 ---
 
@@ -132,12 +139,12 @@ uv run ruff check .     OK
 uv run pytest           OK, 1 passed
 ```
 
-Most recent focused validation (2026-05-03, laptop):
+Most recent focused validation (2026-05-03, laptop, after D1-D4):
 
 ```text
 uv sync --extra dev     OK
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 1 passed
+uv run pytest           OK, 30 passed
 ```
 
 ---
@@ -164,3 +171,36 @@ uv run pytest           OK, 1 passed
 - Working tree clean on branch `claude/vigorous-margulis-ac5191`.
 - Local validation re-run on laptop: `uv sync --extra dev` OK, `uv run ruff check .` OK, `uv run pytest` OK (1 passed).
 - Next recommended action: when the server is available, run `scripts/check_server_env.py` and capture `results/raw/server_env_snapshot.json`.
+
+### 2026-05-03 - first-server-session scaffolding (D1-D4)
+
+Four laptop-safe artifacts added across four commits, all pushed to `origin/main`:
+
+- D1 `docs/server-first-session.md` - strict runbook for the first H200 slot
+  (clone -> uv sync -> env snapshot -> commit -> Docker vs uv/native decision).
+  No vLLM install, no model downloads, no observability stack in that session.
+- D2 `scripts/_client.py` + `scripts/request_once.py` - shared HTTP client for
+  the OpenAI-compatible vLLM endpoint and a single non-streaming smoke script.
+- D3 `scripts/_metrics.py` + `scripts/measure_ttft_once.py` - Benchmark
+  Contract record shape (`RunControls`, `summarize`, `percentile`) and a
+  one-shot streaming TTFT/E2E measurement that writes
+  `results/raw/first_ttft.json`. TTFT is anchored on the first chunk with
+  non-empty `delta.content`, so role-only chunks don't pollute the metric.
+- D4 `scripts/run_sequential_benchmark.py` - 1 warmup + N measured sequential
+  streaming requests, JSONL of every run + `summary.json` with p50/p95/min/max/
+  mean for TTFT and E2E. Errors are captured per-run and don't abort the loop.
+
+Test coverage: 30 tests total, all using `httpx.MockTransport` so the laptop
+gate (`uv run ruff check .` + `uv run pytest`) covers request shaping,
+streaming SSE parsing, percentile math, JSONL/summary write paths, and the
+CLI entry points. No real network or GPU dependency on laptop.
+
+Validation (laptop, 2026-05-03):
+
+```text
+uv run ruff check .     OK, all checks passed
+uv run pytest           OK, 30 passed
+```
+
+Next recommended action: when the server is available, work through
+`docs/server-first-session.md` step-by-step.
