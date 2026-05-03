@@ -39,6 +39,15 @@ to ignore.>
 - **Metrics:** <TTFT, TPOT, E2E, throughput, p50/p95/p99, memory/cache>
 - **Expected signal:** <result that would support or reject the claim>
 
+## Actions created from this paper
+
+- [ ] <one concrete project action, or "none">
+
+## Potential LinkedIn angle
+
+<One sentence: what could become a public learning note, or "none for now".>
+
+
 ## Final takeaway
 
 <Two or three sentences: what stays in the project, what is rejected, and what
