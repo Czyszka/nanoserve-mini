@@ -148,6 +148,79 @@ git status              OK, working tree has docs changes plus pre-existing untr
 
 ## Handoff log
 
+### 2026-05-05 - company H200 plan capacity estimates
+
+- Updated `docs/company-ai-support-h200-plan.md` with a new planning section:
+  "Przykładowe wyliczenia pojemności i scenariusze użycia".
+- Added capacity-planning estimates for 8xH200 NVL:
+  raw HBM size, DeepSeek-V4-Pro and DeepSeek-V4-Flash deployment assumptions,
+  approximate checkpoint/KV-cache implications, and concurrency-oriented
+  scenarios for code questions, PR/module work, large repo analysis, repo-scale
+  tasks, and team load tests.
+- Added the rationale for measuring concurrency 1 / 4 / 8 / 16 and interpreting
+  response time as `E2E latency ~= TTFT + output_tokens * TPOT`.
+- Added technical source links to vLLM DeepSeek V4 recipes, the vLLM DeepSeek V4
+  blog post, and NVIDIA H200.
+- Renumbered later sections in `docs/company-ai-support-h200-plan.md`.
+- Commands run:
+  `git status -sb`, `Get-Content docs\company-ai-support-h200-plan.md`,
+  `git diff -- docs\company-ai-support-h200-plan.md`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern '^## '`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern '^### 6'`.
+- Validation: docs-only change; ruff/pytest not run.
+- Next recommended action: review the new estimates for tone and acceptable SLO
+  targets before turning them into firm commitments in the company note.
+
+### 2026-05-05 - company H200 plan proxy/routing alignment
+
+- Updated `docs/company-ai-support-h200-plan.md` to align with the roadmap's
+  proxy/routing scope.
+- Added LiteLLM Proxy as the shared OpenAI-compatible endpoint in the target
+  architecture, with manual routing by `model`, per-user API keys, and usage logs.
+- Updated target architecture, modernization rationale, planning scenarios,
+  12-week phases, success criteria, effort scope, and team value to include
+  multi-model proxy/routing.
+- Added vLLM Semantic Router as a later measurement experiment comparing
+  automatic classification against manual routing through LiteLLM Proxy.
+- Commands run:
+  `Select-String -Path docs\ROADMAP_v_1_0.md -Pattern 'proxy|router|routing|gateway|endpoint' -Context 2,3`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern 'LiteLLM|Semantic Router|routing|proxy' -Context 1,2`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern '^## '`,
+  `git diff --stat`,
+  `git diff -- docs\company-ai-support-h200-plan.md`.
+- Validation: docs-only change; ruff/pytest not run.
+- Next recommended action: review whether vLLM Semantic Router should remain a
+  hard success criterion or be worded as an optional experiment after the manual
+  LiteLLM routing baseline is stable.
+
+### 2026-05-05 - company H200 plan shared-node Kimi experiment
+
+- Updated `docs/company-ai-support-h200-plan.md` with a vLLM-only shared-node
+  experiment for the target two-model setup.
+- Added Kimi K2.6 as the premium model candidate running on the full 8xH200 node
+  with `tensor_parallel_size=8`.
+- Added the second model as a separate faster vLLM endpoint on the same 8xH200
+  node, for example DeepSeek-V4-Flash / Qwen / Gemma.
+- Clarified that this is not a hard GPU split such as 5+3 or 6+2, but a
+  shared-node experiment where both vLLM instances share GPU memory, compute, and
+  HBM bandwidth.
+- Added the key measurement question: whether the faster model preserves
+  acceptable p95/p99 latency while Kimi K2.6 performs long prefill or decode.
+- Added a minimal measurement matrix: Kimi solo, faster model solo, both idle,
+  Kimi long-context plus short requests to the faster model, and both models
+  under load.
+- Added Kimi K2.6 vLLM recipe source link and updated the candidate model naming
+  from Kimi K2 to Kimi K2.6.
+- Commands run:
+  `git status -sb`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern 'Kimi|DeepSeek-V4|LiteLLM|Routing|Scenariusze|Kryteria|Plan 12' -Context 1,2`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern '^## |^### '`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern 'Kimi K2' -Context 0,1`,
+  `Select-String -Path docs\company-ai-support-h200-plan.md -Pattern 'shared-node|Kimi K2.6|TP=8|tensor_parallel_size' -Context 1,2`.
+- Validation: docs-only change; ruff/pytest not run.
+- Next recommended action: commit and push the updated company note and shared
+  agent state.
+
 ### 2026-05-03 - Efficient LLM Serving Survey paper note
 
 - Added full Phase 1 paper note:
