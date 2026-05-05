@@ -113,24 +113,52 @@ Decision doc (`docs/decision.md`) pisany w tygodniu 12 jest częścią Definitio
 
 ---
 
-## Świadomie poza scope
+## W scope dzięki projektowi firmowemu (synteza, bez własnej infrastruktury)
 
-Te rzeczy są poza scope tego projektu. **Nie wracamy do dyskusji o nich w trakcie tych 12 tygodni.** Jeśli pojawi się chęć rozszerzenia — odkładamy do decyzji końcowej (Ścieżka B = nanoserve full).
+Następujące obszary **pierwotnie były poza scope** prywatnego mini, ale dzięki temu, że równolegle prowadzony jest projekt firmowy na sprzęcie 8×H200 (vLLM, modele >500B MoE w FP8, multi-tenant), wchodzą do prywatnego scope **jako materiał do write-upów**, bez konieczności stawiania własnej infrastruktury.
+
+Reguła: pomiar wykonywany jest raz, na sprzęcie firmowym. Synteza dla rynku idzie do prywatnego repo z higieną — publiczne workloady (ShareGPT, MMLU, dummy syntetyczne), publiczne modele HF, standardowy sprzęt. **Workload domenowy z pracy nie wchodzi do write-upów portfolio.**
+
+Obszary wchodzące do scope tym kanałem:
+
+- **8×H200, NVLink/PCIe topology** — pomiary podczas pracy, synteza w write-upie.
+- **Tensor parallelism, multi-GPU** — TP scaling, koszty komunikacji, sweet spot.
+- **MoE serving** — Kimi K2 / DeepSeek V4 / MiniMax: KV cache pressure, expert routing, ograniczenia wydajnościowe.
+- **FP8 quantization** — trade-off cost/quality, wpływ na throughput i pamięć.
+- **Multi-tenant serving** — duży + małe modele na jednej maszynie, alokacja GPU, izolacja workloadów.
+
+## Świadomie poza scope (nawet z projektem firmowym)
 
 - **Własny engine od zera** — używamy vLLM. Pisanie własnego inference engine to nanoserve full.
 - **Implementacja PagedAttention od zera** — używamy gotowej z vLLM, zrozumieć i zmierzyć.
-- **Tensor parallelism / multi-GPU** — single GPU wystarczy do zrobienia value tej fazy.
 - **Kubernetes, Helm, GPU Operator** — Docker albo native install, bez K8s.
-- **Multi-backend router** — zostaje vLLM, ewentualnie 1 eksperyment z prostą strategią routing nie pełen gateway.
+- **Multi-backend router** — zostaje vLLM, ewentualnie 1 eksperyment z prostą strategią routing, nie pełen gateway.
 - **Fused attention kernel** — pierwszy kernel to RMSNorm/SwiGLU/RoPE, nie attention.
 - **TensorRT-LLM, SGLang integration** — vLLM wystarczy.
-- **8×H200, NVLink/PCIe analysis, NUMA affinity** — to nanoserve full territory.
-- **FP8, quantization** — może w nanoserve, nie tu.
-- **Speculative decoding, MoE, disaggregated serving** — beyond scope.
+- **Speculative decoding, disaggregated serving** — beyond scope.
 - **Production HA, autoscaling, multi-region** — beyond scope.
 - **Pełna implementacja prefix cache** — używamy vLLM APC i mierzymy zachowanie.
 
 Wszystkie te rzeczy mają wartość **później**. Nie teraz.
+
+---
+
+## Write-upy (titles roboczo, do dopracowania)
+
+Plan 6 write-upów portfolio, mapowanych na fazy pracy firmowej + prywatny Triton track. Tytuły robocze — finalne decyduje treść po zebraniu danych.
+
+| # | Faza źródłowa | Tytuł roboczy | Treść |
+|---|---|---|---|
+| W1 | F1 firma | **vLLM serving baseline on 8×H200: from zero to first measurement** | Stack od instalacji po pierwszy TTFT/E2E z pełnym zestawem kontroli; observability (Prometheus + Grafana) i co realnie widać w `/metrics`. |
+| W2 | F2 firma | **Tensor parallelism scaling on 8×H200: where the sweet spot really is** | TP=1/2/4/8 dla modeli klasy 70B-200B, koszt all-reduce, wpływ NVLink, kiedy TP przestaje się opłacać. |
+| W3 | F2-F3 firma | **Serving 1T-parameter MoE in FP8: KV cache, expert routing, and the cost of context length** | Kimi K2 / DeepSeek V4 — co realnie ogranicza throughput, jak skaluje się KV cache z długością kontekstu, ile kosztuje FP8 jakościowo. |
+| W4 | F3 prywatna | **Writing a Triton kernel for RMSNorm: correctness, benchmark, and what the profile actually shows** | Jeden kernel od zera, test correctness vs PyTorch, benchmark dla kilku shapes, analiza memory bandwidth i Nsight profile. |
+| W5 | dowolna | **What didn't work: a failure write-up** | Konkretny eksperyment, który nie poprawił metryk — dlaczego, co to mówi o intuicji, co bym zrobił inaczej. Najmocniejszy artefakt z całej szóstki. |
+| W6 | F4 | **12 weeks of LLM inference: methodology, numbers, decisions** | Synteza całego projektu — metodyka MLPerf-inspired + Serving-Bench-inspired, kluczowe liczby, najważniejsze wnioski, decision doc w skrócie. |
+
+Triton (W4) to jedyny write-up oparty na pracy poza godzinami firmowymi. Reszta korzysta z pomiarów wykonanych w ramach projektu firmowego — write-up jest pakowaniem tych danych pod kątem rynku, nie powtarzaniem eksperymentu.
+
+Cadence pisania: co 2 tygodnie jeden write-up (W1 koniec F1, W2-W3 w F2, W4 w F3, W5 elastycznie, W6 w F4).
 
 ---
 
