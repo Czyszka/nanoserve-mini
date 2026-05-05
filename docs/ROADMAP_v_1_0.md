@@ -20,10 +20,12 @@ Target rynkowy: role typu **Senior SWE Inference / Performance Engineer / ML Sys
 
 Zbudować reprodukowalny LLM inference performance lab z:
 - vLLM jako serving baseline,
+- LiteLLM Proxy jako warstwą multi-model routingu (jeden endpoint OpenAI-compatible przed wieloma instancjami vLLM),
 - Prometheus/Grafana observability,
 - własnym benchmark harness i workload analysis,
+- eksperymentem z vLLM Semantic Router (automatyczna klasyfikacja zapytań, porównanie z routingiem manualnym),
 - jednym kernelem Triton (RMSNorm albo SwiGLU) z benchmarkiem i profilem,
-- 4-6 technicznymi write-upami,
+- 5-7 technicznymi write-upami,
 - final decision doc.
 
 ---
@@ -33,13 +35,15 @@ Zbudować reprodukowalny LLM inference performance lab z:
 Projekt jest skończony, gdy spełnia wszystkie poniższe:
 
 1. **Działający vLLM serving setup** z reprodukowalną instalacją.
-2. **Reprodukowalny benchmark harness** dla różnych workloadów i poziomów concurrency.
-3. **Prometheus/Grafana dashboard** pokazujący live metrics w trakcie load testu.
-4. **Co najmniej jeden eksperyment analityczny** — workload comparison (short/medium/long/mixed) ALBO prefix cache experiment.
-5. **Jeden kernel Triton** z testem correctness vs PyTorch, benchmarkiem dla kilku shapes i analizą memory bandwidth.
-6. **4-6 write-upów technicznych** — w tym minimum jeden failure write-up opisujący rzecz, która nie zadziałała albo nie poprawiła metryk — + finalny README + decision doc opisujący wybór ścieżki dalej.
+2. **LiteLLM Proxy** uruchomione przed vLLM jako jeden endpoint OpenAI-compatible z routingiem po polu `model` (multi-model setup, klucze API per użytkownik, logi).
+3. **Reprodukowalny benchmark harness** dla różnych workloadów i poziomów concurrency.
+4. **Prometheus/Grafana dashboard** pokazujący live metrics w trakcie load testu.
+5. **Co najmniej jeden eksperyment analityczny** — workload comparison (short/medium/long/mixed) ALBO prefix cache experiment.
+6. **Eksperyment z vLLM Semantic Router** — automatyczna klasyfikacja zapytań i porównanie z routingiem manualnym (jakość klasyfikacji, latency overhead, koszt obliczeniowy, satysfakcja użytkownika).
+7. **Jeden kernel Triton** z testem correctness vs PyTorch, benchmarkiem dla kilku shapes i analizą memory bandwidth.
+8. **5-7 write-upów technicznych** — w tym minimum jeden failure write-up opisujący rzecz, która nie zadziałała albo nie poprawiła metryk — + finalny README + decision doc opisujący wybór ścieżki dalej.
 
-Mniej niż 4 z tych = projekt "w trakcie", nie "skończony". Komunikacja na CV/LinkedIn dopiero po wszystkich 6.
+Mniej niż 5 z tych = projekt "w trakcie", nie "skończony". Komunikacja na CV/LinkedIn dopiero po wszystkich 8.
 
 ---
 
@@ -76,9 +80,9 @@ Każdy benchmark w projekcie musi zapisywać metryki i warunki uruchomienia w sp
 
 | Faza | Tygodnie | Główny deliverable | Co udowadnia |
 |------|---------|-------------------|--------------|
-| **F1 — Serving baseline + observability** | 1-3 | Działający vLLM + dashboard + benchmark methodology doc | Rozumiesz operations side LLM serving |
+| **F1 — Serving baseline + observability + multi-model proxy** | 1-3 | Działający vLLM + LiteLLM Proxy + dashboard + benchmark methodology doc | Rozumiesz operations side LLM serving i multi-model routing |
 | **F2 — Workload analysis + cache experiment** | 4-7 | Latency study + prefix cache experiment + write-upy | Rozumiesz prefill/decode economics, KV cache pressure |
-| **F3 — Triton kernel + profiling** | 8-10 | Jeden kernel z benchmarkiem i profilem | Kernel credibility, memory bandwidth thinking |
+| **F3 — Triton kernel + profiling + semantic routing** | 8-10 | Jeden kernel z benchmarkiem i profilem + eksperyment z vLLM Semantic Router | Kernel credibility, memory bandwidth thinking, świadoma ocena production routing strategies |
 | **F4 — Polish + decision** | 11-12 | README, final summary, decision doc, opcjonalny upstream PR/issue | Umiesz komunikować efekt, podejmujesz świadomą decyzję |
 
 Szczegółowy plan tygodnia każdej fazy → osobny `docs/phase-N-plan.md`, pisany **na początku tej fazy** (nie wcześniej, bo wnioski z poprzedniej fazy zmieniają plan następnej).
@@ -126,13 +130,13 @@ Obszary wchodzące do scope tym kanałem:
 - **MoE serving** — Kimi K2 / DeepSeek V4 / MiniMax: KV cache pressure, expert routing, ograniczenia wydajnościowe.
 - **FP8 quantization** — trade-off cost/quality, wpływ na throughput i pamięć.
 - **Multi-tenant serving** — duży + małe modele na jednej maszynie, alokacja GPU, izolacja workloadów.
+- **Multi-model proxy / routing strategies** — LiteLLM Proxy jako manualny routing po `model`, vLLM Semantic Router jako automatyczna klasyfikacja, porównanie obu podejść.
 
 ## Świadomie poza scope (nawet z projektem firmowym)
 
 - **Własny engine od zera** — używamy vLLM. Pisanie własnego inference engine to nanoserve full.
 - **Implementacja PagedAttention od zera** — używamy gotowej z vLLM, zrozumieć i zmierzyć.
 - **Kubernetes, Helm, GPU Operator** — Docker albo native install, bez K8s.
-- **Multi-backend router** — zostaje vLLM, ewentualnie 1 eksperyment z prostą strategią routing, nie pełen gateway.
 - **Fused attention kernel** — pierwszy kernel to RMSNorm/SwiGLU/RoPE, nie attention.
 - **TensorRT-LLM, SGLang integration** — vLLM wystarczy.
 - **Speculative decoding, disaggregated serving** — beyond scope.
@@ -145,20 +149,21 @@ Wszystkie te rzeczy mają wartość **później**. Nie teraz.
 
 ## Write-upy (titles roboczo, do dopracowania)
 
-Plan 6 write-upów portfolio, mapowanych na fazy pracy firmowej + prywatny Triton track. Tytuły robocze — finalne decyduje treść po zebraniu danych.
+Plan 7 write-upów portfolio, mapowanych na fazy pracy firmowej + prywatny Triton track. Tytuły robocze — finalne decyduje treść po zebraniu danych.
 
 | # | Faza źródłowa | Tytuł roboczy | Treść |
 |---|---|---|---|
-| W1 | F1 firma | **vLLM serving baseline on 8×H200: from zero to first measurement** | Stack od instalacji po pierwszy TTFT/E2E z pełnym zestawem kontroli; observability (Prometheus + Grafana) i co realnie widać w `/metrics`. |
+| W1 | F1 firma | **vLLM + LiteLLM Proxy on 8×H200: a multi-model serving baseline from zero to first measurement** | Stack od instalacji po pierwszy TTFT/E2E z pełnym zestawem kontroli; LiteLLM Proxy jako jeden endpoint OpenAI-compatible przed wieloma instancjami vLLM (routing po `model`, klucze API, logi); observability (Prometheus + Grafana) i co realnie widać w `/metrics`. |
 | W2 | F2 firma | **Tensor parallelism scaling on 8×H200: where the sweet spot really is** | TP=1/2/4/8 dla modeli klasy 70B-200B, koszt all-reduce, wpływ NVLink, kiedy TP przestaje się opłacać. |
 | W3 | F2-F3 firma | **Serving 1T-parameter MoE in FP8: KV cache, expert routing, and the cost of context length** | Kimi K2 / DeepSeek V4 — co realnie ogranicza throughput, jak skaluje się KV cache z długością kontekstu, ile kosztuje FP8 jakościowo. |
-| W4 | F3 prywatna | **Writing a Triton kernel for RMSNorm: correctness, benchmark, and what the profile actually shows** | Jeden kernel od zera, test correctness vs PyTorch, benchmark dla kilku shapes, analiza memory bandwidth i Nsight profile. |
-| W5 | dowolna | **What didn't work: a failure write-up** | Konkretny eksperyment, który nie poprawił metryk — dlaczego, co to mówi o intuicji, co bym zrobił inaczej. Najmocniejszy artefakt z całej szóstki. |
-| W6 | F4 | **12 weeks of LLM inference: methodology, numbers, decisions** | Synteza całego projektu — metodyka MLPerf-inspired + Serving-Bench-inspired, kluczowe liczby, najważniejsze wnioski, decision doc w skrócie. |
+| W4 | F3 firma | **Semantic routing for production LLM serving: vLLM Semantic Router vs manual model selection** | Eksperyment z vLLM Semantic Router — automatyczna klasyfikacja zapytań (krótkie/proste vs długie/złożone, kodowe vs ogólne), porównanie z routingiem manualnym (LiteLLM po `model`): jakość klasyfikacji, latency overhead, koszt obliczeniowy, satysfakcja użytkownika. |
+| W5 | F3 prywatna | **Writing a Triton kernel for RMSNorm: correctness, benchmark, and what the profile actually shows** | Jeden kernel od zera, test correctness vs PyTorch, benchmark dla kilku shapes, analiza memory bandwidth i Nsight profile. |
+| W6 | dowolna | **What didn't work: a failure write-up** | Konkretny eksperyment, który nie poprawił metryk — dlaczego, co to mówi o intuicji, co bym zrobił inaczej. Najmocniejszy artefakt z całej siódemki. Naturalni kandydaci do bycia tym write-upem: W4 (semantic router gorszy niż manual) lub W5 (Triton kernel nie pobił `torch.compile`) — który nie dowiezie, ten staje się W6. |
+| W7 | F4 | **12 weeks of LLM inference: methodology, numbers, decisions** | Synteza całego projektu — metodyka MLPerf-inspired + Serving-Bench-inspired, kluczowe liczby, najważniejsze wnioski, decision doc w skrócie. |
 
-Triton (W4) to jedyny write-up oparty na pracy poza godzinami firmowymi. Reszta korzysta z pomiarów wykonanych w ramach projektu firmowego — write-up jest pakowaniem tych danych pod kątem rynku, nie powtarzaniem eksperymentu.
+Triton (W5) to jedyny write-up oparty na pracy poza godzinami firmowymi. Reszta korzysta z pomiarów wykonanych w ramach projektu firmowego — write-up jest pakowaniem tych danych pod kątem rynku, nie powtarzaniem eksperymentu.
 
-Cadence pisania: co 2 tygodnie jeden write-up (W1 koniec F1, W2-W3 w F2, W4 w F3, W5 elastycznie, W6 w F4).
+Cadence pisania: co ~1.7 tygodnia jeden write-up (W1 koniec F1, W2-W3 w F2, W4-W5 w F3, W6 elastycznie, W7 w F4).
 
 ---
 
