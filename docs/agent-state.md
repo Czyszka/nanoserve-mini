@@ -175,7 +175,7 @@ Most recent entries only. Older entries live in
 - Did: stripped phase blocks from CLAUDE.md/AGENTS.md (now point to agent-state); added Summary cursor; created `docs/templates/sync-state-agent.md`; archived 9 older handoff entries to `docs/handoff-archive/2026-05.md`; compressed remaining log to new format.
 - Range: `d39eff3..HEAD` (1 commit pending)
 - Validation: skipped (doc-only).
-- Next: invoke `/project:sync-state` after future meaningful commits.
+- Next: invoke `/sync-state` after future meaningful commits.
 
 ### 2026-05-06 - vLLM Kimi-K2.6 single-node DEP compose
 
