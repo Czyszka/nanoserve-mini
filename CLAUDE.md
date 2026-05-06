@@ -107,6 +107,8 @@ another agent when the task changed the repository state.
 
 Keep `docs/agent-state.md` concise. It should be a handoff document, not a full diary.
 
+For periodic documentation hygiene, use `docs/templates/tidy-docs-agent.md`.
+
 ## Results and secrets policy
 
 Never commit:

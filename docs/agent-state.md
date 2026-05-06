@@ -5,8 +5,9 @@ This file is the repo-tracked handoff state for Claude Code, Codex, and human wo
 Keep it concise and current. Update it after meaningful repo changes, especially before
 committing, pushing, or handing work to another agent.
 
-The `sync-state` routine (see `docs/templates/sync-state-agent.md`) maintains
-this file. Older handoff entries live in `docs/handoff-archive/YYYY-MM.md`.
+The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to
+this file. The `tidy-docs` routine (see `docs/templates/tidy-docs-agent.md`)
+compacts it in place. Git is the archive — no separate handoff archive directory.
 
 ---
 
@@ -165,9 +166,9 @@ uv run pytest           OK, 32 passed
 
 ## Handoff log
 
-Most recent entries only. Older entries live in
-`docs/handoff-archive/YYYY-MM.md`. Newest entry first. Maintained by the
-`sync-state` routine — see `docs/templates/sync-state-agent.md`.
+Newest entry first. Appended by the `sync-state` routine
+(`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
+routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 ### 2026-05-06 - sync-state routine + Model B refactor
 

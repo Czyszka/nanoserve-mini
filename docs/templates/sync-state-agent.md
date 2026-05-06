@@ -7,14 +7,14 @@ file to evolve the routine; the slash commands point at it.
 ## Goal
 
 Update `docs/agent-state.md` to reflect commits made since the last summary
-cursor. Move expired handoff entries to the monthly archive. Do nothing else.
+cursor. Append, do not compact. Compaction lives in
+`docs/templates/tidy-docs-agent.md`.
 
 ## Hard rules
 
 1. **Allowlist of editable files** (anything else = forbidden without explicit
    user request):
    - `docs/agent-state.md` (always)
-   - `docs/handoff-archive/YYYY-MM.md` (only when archiving expired entries)
 2. **Forbidden files** unless the user explicitly asks: `docs/ROADMAP_v_1_0.md`,
    `CLAUDE.md`, `AGENTS.md`, `docs/infrastructure_v_1_0.md`, anything in
    `scripts/`, `infra/`, `results/`, `tests/`, `benchmarks/`.
@@ -94,9 +94,10 @@ g. **Last validation** — update only if commits include actual validation
    results. Keep only the most recent block.
 
 h. **Handoff log** — prepend ONE entry using the compressed template below.
-   Then enforce the rolling window: if the handoff log has more than 5 entries,
-   move the oldest entry to `docs/handoff-archive/YYYY-MM.md` (use the entry's
-   own date for the YYYY-MM). Repeat until ≤5 entries remain.
+   Do not delete or compact older entries. If the log has more than 5 entries
+   after prepending, leave them in place and add a one-line note in the final
+   report: `Handoff log has N entries (cap 5); consider running tidy-docs.`
+   Compaction is the responsibility of `docs/templates/tidy-docs-agent.md`.
 
 ### 6. Compressed handoff entry template
 
@@ -117,18 +118,10 @@ h. **Handoff log** — prepend ONE entry using the compressed template below.
 - No session IDs.
 - "Validation: OK" if all green; do not list every check.
 
-### 7. Archive expired entries
-
-When moving an entry out of `agent-state.md`:
-1. Open or create `docs/handoff-archive/YYYY-MM.md` matching the entry's date.
-2. If the file is new, start it with: `# Handoff archive YYYY-MM\n\n`.
-3. Append the entry verbatim under that header (chronological order, oldest
-   first within the file).
-
-### 8. Commit and push
+### 7. Commit and push
 
 ```bash
-git add docs/agent-state.md docs/handoff-archive/
+git add docs/agent-state.md
 git -c commit.gpgsign=false commit -m "docs: sync project state - <topic from new entry>"
 git push origin HEAD:main
 ```
@@ -137,13 +130,13 @@ Always push to `main`. Worktree branches (`claude/...`) track `main`
 upstream, so a plain `git push` fails on name mismatch. The routine is
 doc-only, so a direct push to `main` is acceptable.
 
-### 9. Report
+### 8. Report
 
 Single concise message to the user:
 - LAST_SYNC SHA used, source (cursor / grep fallback / first commit).
 - Commits processed: N logged, M skipped.
 - Sections updated.
-- Entries archived (if any).
+- Handoff log entry count (with `consider tidy-docs` note if > 5).
 - New commit SHA, push result.
 
 ## Section length budget
