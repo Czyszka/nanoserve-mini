@@ -53,15 +53,20 @@ OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible e
 - `.gitattributes` exists to normalize line endings.
 - Local research PDFs are kept outside Git in ignored `docs/papers/`.
 - **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
-- **`results/raw/server_env_snapshot.json` committed** (2026-05-06).
+- **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated
+  with `scripts/check_server_env.py` on ubuntusrv2 and records Ubuntu 24.04.2,
+  Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL,
+  driver 595.58.03, CUDA 13.2.
 - **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
 - **Kimi-K2.6 model download completed** in named volume `nanoserve-hf-cache`.
-- **Kimi-K2.6 serves successfully through vLLM with TP=8.**
+- **Kimi-K2.6 serves successfully through `vllm serve` with TP=8.**
 - **Single-node DEP attempt did not work** for this run; current working path is TP=8.
 - **Speculative decoding works correctly** with the Eagle3 speculative head
   (`lightseekorg/kimi-k2.6-eagle3-mla`).
 - **OpenWebUI container is running on the server** and connected to `vllm serve`;
   Kimi-K2.6 is visible in OpenWebUI and answers requests.
+- Current Kimi-K2.6 launch parameters still need tuning, especially GPU memory
+  reservation/utilization, so a second smaller model can fit on the same server.
 - Compose file currently tracked for the earlier DEP attempt:
   `infra/compose/docker-compose.kimi-k2.6.yml`.
 - `.claude/` remains untracked locally.
@@ -99,12 +104,14 @@ Immediate next steps (in order):
 6. ~~Wait for Kimi-K2.6 + Eagle3 model download to complete~~ (done, 2026-05-06)
 7. ~~Start vLLM serving stack~~ (done, 2026-05-06; working configuration is TP=8, not DEP)
 8. ~~Expose interactive UI through OpenWebUI connected to vLLM~~ (done, 2026-05-06)
-9. Record the exact working TP=8 `vllm serve` / compose command in `infra/compose/README.md`
-   or a dedicated TP=8 compose file.
-10. Smoke test API path explicitly: `curl http://localhost:8000/v1/models`
-11. First scripted inference: `uv run python -m scripts.request_once`
-12. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
-13. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
+9. Record the exact working TP=8 `vllm serve` command and runtime parameters
+   in `infra/compose/README.md` or a dedicated TP=8 compose/runbook file.
+10. Tune launch parameters, especially GPU memory utilization/reservation, to
+   leave room for a second smaller model.
+11. Smoke test API path explicitly: `curl http://localhost:8000/v1/models`
+12. First scripted inference: `uv run python -m scripts.request_once`
+13. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
+14. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
 
 ---
 
@@ -140,7 +147,7 @@ uv run python -m scripts.check_server_env
 | Python workflow | uv on laptop and server |
 | Heavy GPU deps | not in laptop base config |
 | vLLM setup | **Docker** (`vllm/vllm-openai:v0.20.0-cu130`) |
-| vLLM strategy | **Working: TP=8 + Eagle3 speculative decoding**; single-node DEP was tried and did not work |
+| vLLM strategy | **Working: `vllm serve` with TP=8 + Eagle3 speculative decoding**; single-node DEP was tried and did not work |
 | Model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
 | HF weights storage | named Docker volume `nanoserve-hf-cache` |
 | Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` currently documents the earlier DEP attempt; TP=8 working config still needs to be recorded |
@@ -155,14 +162,9 @@ uv run python -m scripts.check_server_env
 
 ## Open questions
 
-- [x] ~~Is server Docker installed and usable?~~ Yes (Docker 28.5, Compose v2.39).
-- [x] ~~Does `nvidia-smi` show all 8x H200 NVL?~~ Yes, all 8x H200 NVL 143 GB visible.
-- [x] ~~Which Python version is available on the server?~~ Python 3.12.11.
-- [x] ~~Should vLLM be launched via Docker or uv/native?~~ Docker.
-- [x] ~~Did Kimi-K2.6 download and serve successfully?~~ Yes, with TP=8.
-- [x] ~~Does speculative decoding work?~~ Yes, with Eagle3 speculative head.
-- [x] ~~Is there an interactive UI connected to vLLM?~~ Yes, OpenWebUI.
 - [ ] Record exact working TP=8 server command/config in repo.
+- [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow a second smaller
+  model to fit on the same server?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
 - [ ] Should raw result files be committed directly or summarized after first GPU run?
 - [ ] Should the roadmap be copied/renamed to root `ROADMAP.md`, or should `docs/ROADMAP_v_1_0.md` remain canonical?
@@ -185,6 +187,14 @@ uv run pytest           OK, 32 passed
 Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-06 - Current server state confirmed
+
+- Why: make the live server state explicit before planning further tests.
+- Did: recorded that Kimi-K2.6 is downloaded and running via `vllm serve` with TP=8; DEP did not work; OpenWebUI is connected and interactive; `check_server_env.py` output is saved in `results/raw/server_env_snapshot.json`.
+- Snapshot: Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL 143771 MiB, driver 595.58.03, CUDA 13.2.
+- Validation: local docs check only; no server benchmark run in this update.
+- Next: capture the exact working `vllm serve` command, tune GPU memory settings for a second model, then run smoke/TTFT/sequential benchmark scripts.
 
 ### 2026-05-06 - Codex pull review and repo cleanup
 
