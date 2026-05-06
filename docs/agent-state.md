@@ -148,6 +148,29 @@ git status              OK, working tree has docs changes plus pre-existing untr
 
 ## Handoff log
 
+### 2026-05-06 - vLLM Kimi-K2.6 single-node DEP compose
+
+- Added `infra/compose/docker-compose.kimi-k2.6.yml`, `infra/compose/.env.example`,
+  and `infra/compose/README.md` for serving `moonshotai/Kimi-K2.6` with
+  vLLM 0.20.0 (CUDA 13) on the 8x H200 NVL server, per
+  `https://recipes.vllm.ai/moonshotai/Kimi-K2.6?strategy=single_node_dep`.
+- Strategy: single node DP=8 + `--enable-expert-parallel`, TP=1, plus
+  K2.x-required flags (`--mm-encoder-tp-mode data`, `--tool-call-parser kimi_k2`,
+  `--reasoning-parser kimi_k2`, `--enable-auto-tool-choice`, `--trust-remote-code`).
+- Image `vllm/vllm-openai:v0.20.0-cu130`; named volume `nanoserve-hf-cache`
+  mounted at `/root/.cache/huggingface`; port `8000:8000`; `ipc: host`,
+  `shm_size: 32gb`, ulimits memlock/stack; healthcheck on `/health`.
+- README documents host-side `curl` smoke tests and notes that Claude Code CLI
+  speaks the Anthropic protocol, so a translator (LiteLLM Proxy or a
+  Anthropic->OpenAI shim) is needed before pointing `ANTHROPIC_BASE_URL` at the
+  vLLM endpoint - vLLM itself only exposes OpenAI-compatible routes.
+- Decision recorded; vLLM setup path = Docker (Compose) for the Kimi-K2.6 run.
+- Validation (laptop, 2026-05-06): `uv sync --extra dev` OK,
+  `uv run ruff check .` OK, `uv run pytest` OK (32 passed).
+- Next recommended action: on the server, `cp infra/compose/.env.example .env`,
+  set `HF_TOKEN`, `docker compose -f infra/compose/docker-compose.kimi-k2.6.yml
+  up -d`, watch logs and `curl http://localhost:8000/v1/models`.
+
 ### 2026-05-05 - company H200 plan capacity estimates
 
 - Updated `docs/company-ai-support-h200-plan.md` with a new planning section:
