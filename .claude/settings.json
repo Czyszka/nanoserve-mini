@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Run /project:sync-state to update docs/agent-state.md with session changes.\"}'",
+            "statusMessage": "Reminding to sync project state..."
+          }
+        ]
+      }
+    ]
+  }
+}
