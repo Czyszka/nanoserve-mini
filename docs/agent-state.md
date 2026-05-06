@@ -13,7 +13,7 @@ compacts it in place. Git is the archive — no separate handoff archive directo
 
 ## Summary cursor
 
-- Last summarized commit: `3981367`
+- Last summarized commit: `1ba9cc6`
 - Last summarized at: 2026-05-06
 
 The `sync-state` routine reads this block to find the diff window. Update only
@@ -35,10 +35,11 @@ Treat it as the current scope document unless a root `ROADMAP.md` is added later
 
 ## Current phase
 
-**Phase 1 - first vLLM run in progress.**
+**Phase 1 - first vLLM run completed; first interactive serving available.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed,
-Kimi-K2.6 weights are being downloaded to the `nanoserve-hf-cache` named volume.
+Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
+OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible endpoint.
 
 ---
 
@@ -54,9 +55,15 @@ Kimi-K2.6 weights are being downloaded to the `nanoserve-hf-cache` named volume.
 - **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
 - **`results/raw/server_env_snapshot.json` committed** (2026-05-06).
 - **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
-- **Kimi-K2.6 model download in progress** to named volume `nanoserve-hf-cache`.
-  Also downloading: `lightseekorg/kimi-k2.6-eagle3-mla` (Eagle3 speculative head).
-- Compose file: `infra/compose/docker-compose.kimi-k2.6.yml` (single-node DEP, DP=8, EP).
+- **Kimi-K2.6 model download completed** in named volume `nanoserve-hf-cache`.
+- **Kimi-K2.6 serves successfully through vLLM with TP=8.**
+- **Single-node DEP attempt did not work** for this run; current working path is TP=8.
+- **Speculative decoding works correctly** with the Eagle3 speculative head
+  (`lightseekorg/kimi-k2.6-eagle3-mla`).
+- **OpenWebUI container is running on the server** and connected to `vllm serve`;
+  Kimi-K2.6 is visible in OpenWebUI and answers requests.
+- Compose file currently tracked for the earlier DEP attempt:
+  `infra/compose/docker-compose.kimi-k2.6.yml`.
 - `.claude/` remains untracked locally.
 
 ---
@@ -79,7 +86,8 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 
 ## Current technical direction
 
-Server is active. vLLM Docker is installed. Model weights downloading now.
+Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8.
+OpenWebUI is connected and can be used for interactive checks.
 
 Immediate next steps (in order):
 
@@ -88,12 +96,15 @@ Immediate next steps (in order):
 3. ~~Run `uv run python -m scripts.check_server_env` on the server~~ (done, 2026-05-06)
 4. ~~Commit `results/raw/server_env_snapshot.json`~~ (done, 2026-05-06)
 5. ~~Decide vLLM setup path: Docker~~ (done, 2026-05-06)
-6. **Wait for Kimi-K2.6 + Eagle3 model download to complete.**
-7. Start the stack: `docker compose -f infra/compose/docker-compose.kimi-k2.6.yml up -d`
-8. Smoke test: `curl http://localhost:8000/v1/models`
-9. First inference: `uv run python -m scripts.request_once`
-10. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
-11. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
+6. ~~Wait for Kimi-K2.6 + Eagle3 model download to complete~~ (done, 2026-05-06)
+7. ~~Start vLLM serving stack~~ (done, 2026-05-06; working configuration is TP=8, not DEP)
+8. ~~Expose interactive UI through OpenWebUI connected to vLLM~~ (done, 2026-05-06)
+9. Record the exact working TP=8 `vllm serve` / compose command in `infra/compose/README.md`
+   or a dedicated TP=8 compose file.
+10. Smoke test API path explicitly: `curl http://localhost:8000/v1/models`
+11. First scripted inference: `uv run python -m scripts.request_once`
+12. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
+13. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
 
 ---
 
@@ -129,10 +140,11 @@ uv run python -m scripts.check_server_env
 | Python workflow | uv on laptop and server |
 | Heavy GPU deps | not in laptop base config |
 | vLLM setup | **Docker** (`vllm/vllm-openai:v0.20.0-cu130`) |
-| vLLM strategy | single-node DEP: DP=8, EP, TP=1 + Eagle3 speculative decoding |
+| vLLM strategy | **Working: TP=8 + Eagle3 speculative decoding**; single-node DEP was tried and did not work |
 | Model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
 | HF weights storage | named Docker volume `nanoserve-hf-cache` |
-| Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` |
+| Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` currently documents the earlier DEP attempt; TP=8 working config still needs to be recorded |
+| Interactive UI | OpenWebUI container connected to vLLM OpenAI-compatible endpoint |
 | Agent memory | `docs/agent-state.md` is repo-tracked shared handoff |
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
@@ -147,6 +159,10 @@ uv run python -m scripts.check_server_env
 - [x] ~~Does `nvidia-smi` show all 8x H200 NVL?~~ Yes, all 8x H200 NVL 143 GB visible.
 - [x] ~~Which Python version is available on the server?~~ Python 3.12.11.
 - [x] ~~Should vLLM be launched via Docker or uv/native?~~ Docker.
+- [x] ~~Did Kimi-K2.6 download and serve successfully?~~ Yes, with TP=8.
+- [x] ~~Does speculative decoding work?~~ Yes, with Eagle3 speculative head.
+- [x] ~~Is there an interactive UI connected to vLLM?~~ Yes, OpenWebUI.
+- [ ] Record exact working TP=8 server command/config in repo.
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
 - [ ] Should raw result files be committed directly or summarized after first GPU run?
 - [ ] Should the roadmap be copied/renamed to root `ROADMAP.md`, or should `docs/ROADMAP_v_1_0.md` remain canonical?
@@ -170,10 +186,20 @@ Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-06 - Codex pull review and repo cleanup
+
+- Why: sync local laptop with Claude's latest work and remove obsolete/redundant repo artifacts.
+- Did: pulled `origin/main` to `1ba9cc6`, verified tidy-docs/sync-state additions, removed `CODEX_BOOTSTRAP_CONFIG_TASK.md`, removed tracked `docs/handoff-archive/2026-05.md`, and restored current server status to TP=8/OpenWebUI.
+- Note: current templates now say Git is the archive; no separate handoff archive
+  directory should be recreated. Tracked `.claude/commands/sync-state.md` and
+  `.claude/settings.json` remain present; tidy-docs slash command was not tracked.
+- Validation: skipped (docs-only cleanup).
+- Next: commit the exact working TP=8 launch configuration, then run scripted smoke/TTFT/benchmark commands against the live vLLM endpoint.
+
 ### 2026-05-06 - sync-state routine + Model B refactor
 
 - Why: avoid drift between agent-state, CLAUDE.md, AGENTS.md and prevent agent-state bloat.
-- Did: stripped phase blocks from CLAUDE.md/AGENTS.md (now point to agent-state); added Summary cursor; created `docs/templates/sync-state-agent.md`; archived 9 older handoff entries to `docs/handoff-archive/2026-05.md`; compressed remaining log to new format.
+- Did: stripped phase blocks from CLAUDE.md/AGENTS.md (now point to agent-state); added Summary cursor; created `docs/templates/sync-state-agent.md`; compacted older handoff entries and compressed remaining log to new format.
 - Range: `d39eff3..3981367` (3 commits)
 - Validation: skipped (doc-only).
 - Next: invoke `/sync-state` after future meaningful commits.
