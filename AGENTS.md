@@ -100,6 +100,8 @@ After meaningful changes, update `docs/agent-state.md` with:
 Always update `docs/agent-state.md` before committing, pushing, or handing work to
 another agent when the task changed the repository state.
 
+For periodic documentation hygiene, use `docs/templates/tidy-docs-agent.md`.
+
 ## Validation
 
 After Python/config changes, try to run:
