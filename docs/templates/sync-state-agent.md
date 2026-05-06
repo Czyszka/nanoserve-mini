@@ -1,7 +1,7 @@
 # sync-state agent template
 
 Canonical prompt and rules for the `sync-state` routine. Both Claude Code's
-`/project:sync-state` and Codex's equivalent invoke this same logic. Edit this
+`/sync-state` and Codex's equivalent invoke this same logic. Edit this
 file to evolve the routine; the slash commands point at it.
 
 ## Goal
