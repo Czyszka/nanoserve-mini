@@ -130,8 +130,12 @@ When moving an entry out of `agent-state.md`:
 ```bash
 git add docs/agent-state.md docs/handoff-archive/
 git -c commit.gpgsign=false commit -m "docs: sync project state - <topic from new entry>"
-git push
+git push origin HEAD:main
 ```
+
+Always push to `main`. Worktree branches (`claude/...`) track `main`
+upstream, so a plain `git push` fails on name mismatch. The routine is
+doc-only, so a direct push to `main` is acceptable.
 
 ### 9. Report
 
