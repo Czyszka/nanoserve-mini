@@ -73,16 +73,8 @@ Do not rewrite `ROADMAP.md` unless explicitly asked.
 
 ## Immediate project state
 
-The repo is in bootstrap / Phase 1 preparation.
-
-Current known next technical milestone:
-
-1. prepare server environment check,
-2. run it on the Ubuntu 24 / 8xH200 server,
-3. save `results/raw/server_env_snapshot.json`,
-4. use that result to decide whether vLLM setup should be Docker-based or uv/native.
-
-The server is not always available. If the server is unavailable, continue only with laptop-safe work: scripts, docs, tests, README, and planning for the next server session.
+For current phase, status, decisions, and next step, see `docs/agent-state.md`.
+Do not duplicate that content here.
 
 ## Agent state protocol
 

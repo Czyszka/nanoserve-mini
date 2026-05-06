@@ -15,14 +15,8 @@ The project focuses on:
 
 ## Current phase
 
-We are in bootstrap / Phase 1 preparation.
-
-The current goal is:
-
-1. keep the repo organized,
-2. prepare local development configuration,
-3. prepare scripts and docs,
-4. later run vLLM and first TTFT measurement on the GPU server.
+For current phase, status, decisions, and next step, see `docs/agent-state.md`.
+Do not duplicate that content here.
 
 ## Local laptop environment
 
