@@ -1,3 +1,7 @@
+---
+description: Sync project state - update docs/agent-state.md from commits since last summary cursor
+---
+
 Run the project state sync routine.
 
 The full prompt, hard rules, file allowlist, edit procedure, compressed
