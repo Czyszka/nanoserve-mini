@@ -12,7 +12,7 @@ this file. Older handoff entries live in `docs/handoff-archive/YYYY-MM.md`.
 
 ## Summary cursor
 
-- Last summarized commit: `d39eff3`
+- Last summarized commit: `3981367`
 - Last summarized at: 2026-05-06
 
 The `sync-state` routine reads this block to find the diff window. Update only
@@ -173,7 +173,7 @@ Most recent entries only. Older entries live in
 
 - Why: avoid drift between agent-state, CLAUDE.md, AGENTS.md and prevent agent-state bloat.
 - Did: stripped phase blocks from CLAUDE.md/AGENTS.md (now point to agent-state); added Summary cursor; created `docs/templates/sync-state-agent.md`; archived 9 older handoff entries to `docs/handoff-archive/2026-05.md`; compressed remaining log to new format.
-- Range: `d39eff3..HEAD` (1 commit pending)
+- Range: `d39eff3..3981367` (3 commits)
 - Validation: skipped (doc-only).
 - Next: invoke `/sync-state` after future meaningful commits.
 
