@@ -21,10 +21,10 @@ Treat it as the current scope document unless a root `ROADMAP.md` is added later
 
 ## Current phase
 
-Bootstrap / Phase 1 preparation.
+**Phase 1 - first vLLM run in progress.**
 
-The current goal is to keep the repo organized, finish the GitHub-facing description,
-and prepare for the first server environment snapshot before the first vLLM run.
+Server is up, environment snapshot is committed, Docker vLLM image is installed,
+Kimi-K2.6 weights are being downloaded to the `nanoserve-hf-cache` named volume.
 
 ---
 
@@ -37,10 +37,13 @@ and prepare for the first server environment snapshot before the first vLLM run.
 - `README.md`, `CLAUDE.md`, `AGENTS.md`, and `docs/agent-state.md` are committed and pushed to GitHub.
 - `.gitattributes` exists to normalize line endings.
 - Local research PDFs are kept outside Git in ignored `docs/papers/`.
-- Server access is expected later this week.
-- Server has Ubuntu 24 and 8x H200 NVL, but the repo has not yet recorded an environment snapshot from it.
-- Latest paper-reading workflow documentation changes are tracked in the handoff log;
-  `.claude/` remains untracked.
+- **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
+- **`results/raw/server_env_snapshot.json` committed** (2026-05-06).
+- **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
+- **Kimi-K2.6 model download in progress** to named volume `nanoserve-hf-cache`.
+  Also downloading: `lightseekorg/kimi-k2.6-eagle3-mla` (Eagle3 speculative head).
+- Compose file: `infra/compose/docker-compose.kimi-k2.6.yml` (single-node DEP, DP=8, EP).
+- `.claude/` remains untracked locally.
 
 ---
 
@@ -62,23 +65,21 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 
 ## Current technical direction
 
-Do not start vLLM setup until the server environment is captured.
+Server is active. vLLM Docker is installed. Model weights downloading now.
 
-Immediate milestone:
+Immediate next steps (in order):
 
-1. README and agent coordination docs are committed and pushed (done).
-2. Laptop-safe scaffolding for the first server session is committed:
-   `docs/server-first-session.md`, `scripts/__init__.py`, `scripts/_client.py`,
-   `scripts/_metrics.py`, `scripts/request_once.py`,
-   `scripts/measure_ttft_once.py`, `scripts/run_sequential_benchmark.py`
-   plus tests with httpx.MockTransport (done).
-3. run `uv run python -m scripts.check_server_env` on the server when available,
-4. commit `results/raw/server_env_snapshot.json` from the server if it is small and useful,
-5. decide vLLM setup path: Docker vs uv/native (follow `docs/server-first-session.md`),
-6. once vLLM is up:
-   `uv run python -m scripts.request_once` ->
-   `uv run python -m scripts.measure_ttft_once` ->
-   `uv run python -m scripts.run_sequential_benchmark`.
+1. ~~README and agent coordination docs committed and pushed~~ (done)
+2. ~~Laptop-safe scaffolding committed~~ (done)
+3. ~~Run `uv run python -m scripts.check_server_env` on the server~~ (done, 2026-05-06)
+4. ~~Commit `results/raw/server_env_snapshot.json`~~ (done, 2026-05-06)
+5. ~~Decide vLLM setup path: Docker~~ (done, 2026-05-06)
+6. **Wait for Kimi-K2.6 + Eagle3 model download to complete.**
+7. Start the stack: `docker compose -f infra/compose/docker-compose.kimi-k2.6.yml up -d`
+8. Smoke test: `curl http://localhost:8000/v1/models`
+9. First inference: `uv run python -m scripts.request_once`
+10. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
+11. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
 
 ---
 
@@ -113,7 +114,11 @@ uv run python -m scripts.check_server_env
 | Optional cloud | backup GPU access only |
 | Python workflow | uv on laptop and server |
 | Heavy GPU deps | not in laptop base config |
-| vLLM setup | decide after server snapshot |
+| vLLM setup | **Docker** (`vllm/vllm-openai:v0.20.0-cu130`) |
+| vLLM strategy | single-node DEP: DP=8, EP, TP=1 + Eagle3 speculative decoding |
+| Model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
+| HF weights storage | named Docker volume `nanoserve-hf-cache` |
+| Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` |
 | Agent memory | `docs/agent-state.md` is repo-tracked shared handoff |
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
@@ -124,11 +129,11 @@ uv run python -m scripts.check_server_env
 
 ## Open questions
 
-- [ ] Is server Docker installed and usable?
-- [ ] Does `nvidia-smi` show all 8x H200 NVL?
-- [ ] Which Python version is available on the server?
-- [ ] Does `uv sync --extra dev` work on the server?
-- [ ] Should vLLM be launched via Docker or uv/native?
+- [x] ~~Is server Docker installed and usable?~~ Yes (Docker 28.5, Compose v2.39).
+- [x] ~~Does `nvidia-smi` show all 8x H200 NVL?~~ Yes, all 8x H200 NVL 143 GB visible.
+- [x] ~~Which Python version is available on the server?~~ Python 3.12.11.
+- [x] ~~Should vLLM be launched via Docker or uv/native?~~ Docker.
+- [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
 - [ ] Should raw result files be committed directly or summarized after first GPU run?
 - [ ] Should the roadmap be copied/renamed to root `ROADMAP.md`, or should `docs/ROADMAP_v_1_0.md` remain canonical?
 
@@ -136,12 +141,11 @@ uv run python -m scripts.check_server_env
 
 ## Last validation
 
-Most recent local validation (2026-05-03, laptop, after Efficient LLM Serving Survey note):
+Most recent local validation (2026-05-06, laptop):
 
 ```text
 uv run ruff check .     OK, all checks passed
 uv run pytest           OK, 32 passed
-git status              OK, working tree has docs changes plus pre-existing untracked .claude/
 ```
 
 ---
