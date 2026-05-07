@@ -87,10 +87,15 @@ Zapisujemy odpowiedzi w głowie / notesie — jedziemy do następnego kroku.
 
 Snapshot jest mały (kilka–kilkanaście KB JSON), więc go committujemy. Polityka `Results and secrets policy` na to pozwala (mały, tekstowy, useful).
 
+Konwencja nazewnictwa: domyślna ścieżka to `results/raw/server_env_snapshot.json` (nadpisywana przy każdej sesji bootstrapa). Jeśli chcesz zachować snapshoty per-maszyna albo per-data, zapisz kopię równolegle, np.:
+
+- `results/raw/server_env_snapshot__<host>__<YYYY-MM-DD>.json` — gdy bootstrapujesz nową maszynę i chcesz zachować historyczny snapshot do porównania,
+- albo trzymaj tylko najświeższy `server_env_snapshot.json` na `main`, jeśli interesuje cię wyłącznie aktualny stan.
+
 ```bash
 git status
 git add results/raw/server_env_snapshot.json
-git commit -m "infra: add first server env snapshot"
+git commit -m "infra: add server env snapshot"
 git push origin main
 ```
 
@@ -134,7 +139,7 @@ git push origin main
 
 ---
 
-## Co NIE robimy w tej sesji
+## Co NIE robimy w tej fazie bootstrapa
 
 - Nie instalujemy vLLM.
 - Nie pobieramy modeli z HF.
@@ -145,10 +150,10 @@ Wszystko powyżej jest dopiero **po** decyzji z kroku 6, w osobnym slocie serwer
 
 ---
 
-## Definicja "sesja udana"
+## Definicja "bootstrap udany"
 
-1. `results/raw/server_env_snapshot.json` jest na `origin/main`.
+1. `results/raw/server_env_snapshot.json` (lub odpowiednik per-maszyna) jest na `origin/main`.
 2. Decyzja Docker vs native jest zapisana w `docs/agent-state.md` na `origin/main`.
 3. Wiemy, jaki jest następny konkretny krok (np. "pull obrazu vLLM X.Y.Z" albo "uv add vllm w nowym extras").
 
-Jeśli te 3 punkty są spełnione — sesja zaliczona, niezależnie od tego ile czasu zostało w slocie. Resztę slotu można zostawić, nie ma sensu rozpoczynać kolejnego dużego kroku w stresie.
+Jeśli te 3 punkty są spełnione — bootstrap zaliczony, niezależnie od tego ile czasu zostało w slocie. Resztę slotu można zostawić, nie ma sensu rozpoczynać kolejnego dużego kroku w stresie.
