@@ -8,6 +8,7 @@ without a real vLLM.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import httpx
@@ -21,6 +22,12 @@ from scripts.run_sequential_benchmark import (
     build_summary,
     run_sequential,
     write_jsonl,
+)
+
+_SSE = (
+    b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
+    b'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n'
+    b"data: [DONE]\n\n"
 )
 
 
@@ -37,6 +44,22 @@ def _ok_row(index: int, phase: str = "measured", e2e: float = 0.5) -> RunRow:
     )
 
 
+def _mock_streaming_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content.decode("utf-8"))
+        assert body["stream"] is True
+        return httpx.Response(200, content=_SSE, headers={"content-type": "text/event-stream"})
+
+    transport = httpx.MockTransport(handler)
+    real_client_cls = httpx.Client
+
+    def fake_client(*args: object, **kwargs: object) -> httpx.Client:
+        kwargs.pop("timeout", None)
+        return real_client_cls(transport=transport)
+
+    monkeypatch.setattr(_client.httpx, "Client", fake_client)
+
+
 def test_build_summary_counts_only_measured_runs() -> None:
     rows = [
         _ok_row(0, phase="warmup", e2e=10.0),  # warmup ignored
@@ -49,7 +72,10 @@ def test_build_summary_counts_only_measured_runs() -> None:
 
     summary = build_summary(request=request, controls=controls, rows=rows)
 
-    assert summary["schema"] == "nanoserve-mini.sequential-bench.v1"
+    assert summary["schema"] == "nanoserve-mini.sequential-bench.v2"
+    assert summary["methodology"] == "mlperf_inspired_lite"
+    assert summary["benchmark_mode"] == "singlestream_lite_repeated"
+    assert summary["error"] is None
     assert summary["summary"]["measured_runs"] == 3
     assert summary["summary"]["errors"] == 0
     assert summary["summary"]["e2e_seconds"]["count"] == 3
@@ -84,7 +110,7 @@ def test_build_summary_handles_errors_and_missing_ttft() -> None:
     assert s["ttft_seconds"]["count"] == 1  # only the one with non-None ttft
 
 
-def test_write_jsonl_one_line_per_row(tmp_path: Path) -> None:
+def test_write_jsonl_one_line_per_row_with_schema(tmp_path: Path) -> None:
     rows = [_ok_row(0), _ok_row(1)]
     path = tmp_path / "out.jsonl"
     write_jsonl(path, rows)
@@ -95,6 +121,10 @@ def test_write_jsonl_one_line_per_row(tmp_path: Path) -> None:
     assert parsed[0]["index"] == 0
     assert parsed[1]["index"] == 1
     assert all(p["phase"] == "measured" for p in parsed)
+    # v2 schema fields
+    assert parsed[0]["schema"] == "nanoserve-mini.sequential-bench-row.v2"
+    assert parsed[0]["methodology"] == "mlperf_inspired_lite"
+    assert parsed[0]["benchmark_mode"] == "singlestream_lite_repeated"
 
 
 def test_run_sequential_continues_after_per_run_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -130,29 +160,7 @@ def test_main_writes_jsonl_and_summary(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    sse = (
-        b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
-        b'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n'
-        b"data: [DONE]\n\n"
-    )
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        body = json.loads(request.content.decode("utf-8"))
-        assert body["stream"] is True
-        return httpx.Response(
-            200,
-            content=sse,
-            headers={"content-type": "text/event-stream"},
-        )
-
-    transport = httpx.MockTransport(handler)
-    real_client_cls = httpx.Client
-
-    def fake_client(*args: object, **kwargs: object) -> httpx.Client:
-        kwargs.pop("timeout", None)
-        return real_client_cls(transport=transport)
-
-    monkeypatch.setattr(_client.httpx, "Client", fake_client)
+    _mock_streaming_client(monkeypatch)
 
     jsonl = tmp_path / "bench.jsonl"
     summary_path = tmp_path / "bench_summary.json"
@@ -175,9 +183,15 @@ def test_main_writes_jsonl_and_summary(
     parsed = [json.loads(line) for line in lines]
     assert parsed[0]["phase"] == "warmup"
     assert sum(1 for p in parsed if p["phase"] == "measured") == 3
+    # v2 row fields
+    assert parsed[0]["schema"] == "nanoserve-mini.sequential-bench-row.v2"
+    assert parsed[0]["benchmark_mode"] == "singlestream_lite_repeated"
 
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    assert summary["schema"] == "nanoserve-mini.sequential-bench.v1"
+    assert summary["schema"] == "nanoserve-mini.sequential-bench.v2"
+    assert summary["methodology"] == "mlperf_inspired_lite"
+    assert summary["benchmark_mode"] == "singlestream_lite_repeated"
+    assert summary["error"] is None
     assert summary["controls"]["gpu_model"] == "H200 NVL"
     assert summary["controls"]["measured_runs"] == 3
     assert summary["summary"]["measured_runs"] == 3
@@ -189,6 +203,39 @@ def test_main_writes_jsonl_and_summary(
     assert "[W0]" in out
     assert "[M0]" in out
     assert "TTFT  p50=" in out
+
+
+def test_main_uses_run_id_paths(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _mock_streaming_client(monkeypatch)
+
+    orig_dir = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        rc = run_sequential_benchmark.main([
+            "--model", "m",
+            "--warmup", "0",
+            "--runs", "2",
+            "--run-id", "run-xyz",
+        ])
+        assert rc == 0
+    finally:
+        os.chdir(orig_dir)
+
+    base = tmp_path / "results" / "runs" / "run-xyz" / "singlestream_lite_repeated"
+    assert (base / "results.jsonl").exists()
+    assert (base / "summary.json").exists()
+
+    summary = json.loads((base / "summary.json").read_text(encoding="utf-8"))
+    assert summary["benchmark_mode"] == "singlestream_lite_repeated"
+    assert summary["controls"]["run_id"] == "run-xyz"
+
+    lines = (base / "results.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    assert len(lines) == 2
+    row = json.loads(lines[0])
+    assert row["benchmark_mode"] == "singlestream_lite_repeated"
 
 
 def test_main_rejects_zero_runs(capsys: pytest.CaptureFixture[str]) -> None:
@@ -236,3 +283,25 @@ def test_error_run_jsonl_row_is_strict_json(tmp_path: Path) -> None:
     assert parsed["ttft_seconds"] is None
     # NaN is not valid JSON, so this also acts as a regression check
     assert "NaN" not in line
+    # v2 schema
+    assert parsed["schema"] == "nanoserve-mini.sequential-bench-row.v2"
+
+
+def test_build_summary_includes_measured_only_throughput() -> None:
+    rows = [
+        _ok_row(0, phase="warmup", e2e=5.0),  # warmup excluded from denominator
+        _ok_row(0, phase="measured", e2e=0.5),
+        _ok_row(1, phase="measured", e2e=0.5),
+    ]
+    request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=8)
+    controls = RunControls(model="m", base_url="http://x", warmup_runs=1, measured_runs=2)
+    # measured_wall_clock_seconds reflects only the measured phase wall time
+    summary = build_summary(
+        request=request, controls=controls, rows=rows, measured_wall_clock_seconds=2.0,
+    )
+    s = summary["summary"]
+    assert "measured_wall_clock_seconds" in s
+    assert "wall_clock_seconds" not in s  # old ambiguous name must not appear
+    assert s["measured_wall_clock_seconds"] == pytest.approx(2.0)
+    assert s["request_throughput"] == pytest.approx(1.0)  # 2 measured runs / 2.0 s
+    assert s["output_chars_per_second"] is not None

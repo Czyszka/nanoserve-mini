@@ -11,6 +11,7 @@ Defined timings:
 
 Output shape follows the Benchmark Contract (controls + metrics + raw run).
 Default output path: ``results/raw/first_ttft.json``.
+With --run-id: ``results/runs/<run_id>/singlestream_lite_latency/result.json``.
 
 Usage on the server:
 
@@ -38,7 +39,12 @@ from scripts._client import (
     chat_completion_stream,
     extract_stream_delta_text,
 )
-from scripts._metrics import RunControls, now_iso
+from scripts._metrics import RunControls, get_git_commit, now_iso, resolve_output_path
+
+_BENCHMARK_MODE = "singlestream_lite_latency"
+_METHODOLOGY = "mlperf_inspired_lite"
+_SCRIPT_NAME = "measure_ttft_once.py"
+_FALLBACK_OUTPUT = "results/raw/first_ttft.json"
 
 
 @dataclass
@@ -101,8 +107,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument(
         "--output",
-        default="results/raw/first_ttft.json",
-        help="Where to write the result JSON (default: %(default)s).",
+        default=None,
+        help="Where to write the result JSON. Overrides --run-id path "
+             f"(legacy default: {_FALLBACK_OUTPUT}).",
+    )
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help="Run identifier. Sets output to results/runs/<run_id>/"
+             f"{_BENCHMARK_MODE}/result.json unless --output is also given.",
     )
     parser.add_argument("--dtype", default=None, help="Model dtype, e.g. bfloat16.")
     parser.add_argument("--quantization", default=None)
@@ -124,6 +137,8 @@ def build_record(
 ) -> dict[str, Any]:
     return {
         "schema": "nanoserve-mini.ttft-once.v1",
+        "methodology": _METHODOLOGY,
+        "benchmark_mode": _BENCHMARK_MODE,
         "timestamp": now_iso(),
         "controls": controls.as_dict(),
         "request": {
@@ -139,11 +154,20 @@ def build_record(
             "completed": result.completed,
         },
         "output_text": result.output_text,
+        "error": None,
     }
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+
+    output_path_str = resolve_output_path(
+        run_id=args.run_id,
+        explicit_path=args.output,
+        benchmark_mode=_BENCHMARK_MODE,
+        filename="result.json",
+        fallback=_FALLBACK_OUTPUT,
+    )
 
     request = CompletionRequest(
         base_url=args.base_url,
@@ -167,6 +191,9 @@ def main(argv: list[str] | None = None) -> int:
         measured_runs=1,
         workload=args.workload,
         notes=args.notes,
+        run_id=args.run_id,
+        script_name=_SCRIPT_NAME,
+        git_commit=get_git_commit(),
     )
 
     start = _now()
@@ -175,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
 
     record = build_record(request=request, controls=controls, result=result)
 
-    output_path = Path(args.output)
+    output_path = Path(output_path_str)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False),

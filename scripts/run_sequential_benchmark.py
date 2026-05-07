@@ -37,8 +37,14 @@ from pathlib import Path
 from typing import Any
 
 from scripts._client import CompletionRequest, chat_completion_stream
-from scripts._metrics import RunControls, now_iso, summarize
+from scripts._metrics import RunControls, get_git_commit, now_iso, resolve_output_path, summarize
 from scripts.measure_ttft_once import StreamRunResult, measure_stream
+
+_BENCHMARK_MODE = "singlestream_lite_repeated"
+_METHODOLOGY = "mlperf_inspired_lite"
+_SCRIPT_NAME = "run_sequential_benchmark.py"
+_FALLBACK_JSONL = "results/raw/sequential_bench.jsonl"
+_FALLBACK_SUMMARY = "results/raw/sequential_bench_summary.json"
 
 
 @dataclass
@@ -137,6 +143,9 @@ def write_jsonl(path: Path, rows: list[RunRow]) -> None:
 
 def _row_as_dict(row: RunRow) -> dict[str, Any]:
     return {
+        "schema": "nanoserve-mini.sequential-bench-row.v2",
+        "methodology": _METHODOLOGY,
+        "benchmark_mode": _BENCHMARK_MODE,
         "index": row.index,
         "phase": row.phase,
         "timestamp": row.timestamp,
@@ -153,6 +162,7 @@ def build_summary(
     request: CompletionRequest,
     controls: RunControls,
     rows: list[RunRow],
+    measured_wall_clock_seconds: float | None = None,
 ) -> dict[str, Any]:
     measured = [r for r in rows if r.phase == "measured" and r.error is None]
     ttfts = [r.ttft_seconds for r in measured if r.ttft_seconds is not None]
@@ -160,8 +170,26 @@ def build_summary(
 
     error_count = sum(1 for r in rows if r.phase == "measured" and r.error is not None)
 
+    total_output_chars = sum(r.output_chars for r in measured)
+
+    throughput: dict[str, Any] = {}
+    if measured_wall_clock_seconds is not None and measured_wall_clock_seconds > 0:
+        n_ok = len(measured)
+        throughput["measured_wall_clock_seconds"] = measured_wall_clock_seconds
+        throughput["request_throughput"] = n_ok / measured_wall_clock_seconds if n_ok > 0 else None
+        throughput["output_chars_per_second"] = (
+            total_output_chars / measured_wall_clock_seconds
+            if total_output_chars > 0 else None
+        )
+    else:
+        throughput["measured_wall_clock_seconds"] = None
+        throughput["request_throughput"] = None
+        throughput["output_chars_per_second"] = None
+
     return {
-        "schema": "nanoserve-mini.sequential-bench.v1",
+        "schema": "nanoserve-mini.sequential-bench.v2",
+        "methodology": _METHODOLOGY,
+        "benchmark_mode": _BENCHMARK_MODE,
         "timestamp": now_iso(),
         "controls": controls.as_dict(),
         "request": {
@@ -174,7 +202,9 @@ def build_summary(
             "errors": error_count,
             "ttft_seconds": summarize(ttfts),
             "e2e_seconds": summarize(e2es),
+            **throughput,
         },
+        "error": None,
     }
 
 
@@ -192,11 +222,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument(
         "--output-jsonl",
-        default="results/raw/sequential_bench.jsonl",
+        default=None,
+        help=f"Path for JSONL rows. Overrides --run-id path (legacy default: {_FALLBACK_JSONL}).",
     )
     parser.add_argument(
         "--output-summary",
-        default="results/raw/sequential_bench_summary.json",
+        default=None,
+        help=(
+            "Path for summary JSON. Overrides --run-id path "
+            f"(legacy default: {_FALLBACK_SUMMARY})."
+        ),
+    )
+    parser.add_argument(
+        "--run-id",
+        default=None,
+        help="Run identifier. Sets output paths under results/runs/<run_id>/"
+             f"{_BENCHMARK_MODE}/ unless explicit --output-* flags are given.",
     )
     parser.add_argument("--dtype", default=None)
     parser.add_argument("--quantization", default=None)
@@ -223,6 +264,21 @@ def main(argv: list[str] | None = None) -> int:
         print("--runs must be >= 1", file=sys.stderr)
         return 2
 
+    jsonl_path_str = resolve_output_path(
+        run_id=args.run_id,
+        explicit_path=args.output_jsonl,
+        benchmark_mode=_BENCHMARK_MODE,
+        filename="results.jsonl",
+        fallback=_FALLBACK_JSONL,
+    )
+    summary_path_str = resolve_output_path(
+        run_id=args.run_id,
+        explicit_path=args.output_summary,
+        benchmark_mode=_BENCHMARK_MODE,
+        filename="summary.json",
+        fallback=_FALLBACK_SUMMARY,
+    )
+
     request = CompletionRequest(
         base_url=args.base_url,
         model=args.model,
@@ -245,6 +301,9 @@ def main(argv: list[str] | None = None) -> int:
         measured_runs=args.runs,
         workload=args.workload,
         notes=args.notes,
+        run_id=args.run_id,
+        script_name=_SCRIPT_NAME,
+        git_commit=get_git_commit(),
     )
 
     def progress(row: RunRow) -> None:
@@ -254,18 +313,36 @@ def main(argv: list[str] | None = None) -> int:
         err = f" ERROR={row.error}" if row.error else ""
         print(f"[{marker}{row.index}] TTFT={ttft_str:>10}  E2E={e2e_str:>10}{err}")
 
-    rows = run_sequential(
+    # Run warmup and measured phases separately so we can time the measured
+    # phase alone. Throughput computed over the warmup window would be
+    # meaningless because the denominator would include cache/JIT warm-up time.
+    warmup_rows = run_sequential(
         request,
         warmup=args.warmup,
+        runs=0,
+        timeout=args.timeout,
+        on_run=progress,
+    )
+    measured_wall_start = _now()
+    measured_rows = run_sequential(
+        request,
+        warmup=0,
         runs=args.runs,
         timeout=args.timeout,
         on_run=progress,
     )
+    measured_wall_clock_seconds = _now() - measured_wall_start
+    rows = warmup_rows + measured_rows
 
-    jsonl_path = Path(args.output_jsonl)
-    summary_path = Path(args.output_summary)
+    jsonl_path = Path(jsonl_path_str)
+    summary_path = Path(summary_path_str)
     write_jsonl(jsonl_path, rows)
-    summary = build_summary(request=request, controls=controls, rows=rows)
+    summary = build_summary(
+        request=request,
+        controls=controls,
+        rows=rows,
+        measured_wall_clock_seconds=measured_wall_clock_seconds,
+    )
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(
         json.dumps(summary, indent=2, ensure_ascii=False, allow_nan=False),
