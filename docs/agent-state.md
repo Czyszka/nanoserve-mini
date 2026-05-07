@@ -35,11 +35,17 @@ Treat it as the current scope document unless a root `ROADMAP.md` is added later
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; first interactive serving available.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization completed.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed,
 Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
 OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible endpoint.
+
+The repo now also has:
+
+- MLPerf-inspired lite output layout for the first benchmark scripts.
+- Synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
+- A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
 
 ---
 
@@ -48,8 +54,7 @@ OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible e
 - GitHub repo exists: `https://github.com/Czyszka/nanoserve-mini.git`
 - Local Windows laptop bootstrap is done.
 - Python workflow uses `uv`.
-- `ruff` and `pytest` are configured and pass locally.
-- `README.md`, `CLAUDE.md`, `AGENTS.md`, and `docs/agent-state.md` are committed and pushed to GitHub.
+- `ruff` and `pytest` are configured.
 - `.gitattributes` exists to normalize line endings.
 - Local research PDFs are kept outside Git in ignored `docs/papers/`.
 - **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
@@ -80,6 +85,9 @@ Read these before making non-trivial changes:
 - `docs/ROADMAP_v_1_0.md` - current scope, phases, and definition of done.
 - `docs/infrastructure_v_1_0.md` - machine roles and workflow.
 - `docs/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap (env snapshot + vLLM setup decision).
+- `docs/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes and `--run-id` layout.
+- `docs/plans/2026-05-11-server-work-plan.md` - Monday server work plan: MiniMax-M2.7, coding agent check, dual-model benchmarks.
+- `benchmarks/coding-agent-tasks/README.md` - synthetic coding-agent task suite overview.
 - `docs/reading-list.md` - papers by phase.
 - `docs/nvidia_self_paced_courses.md` - optional NVIDIA courses.
 - `AGENTS.md` - Codex-specific repo instructions.
@@ -94,16 +102,35 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8.
 OpenWebUI is connected and can be used for interactive checks.
 
+The benchmark scripts now use these MLPerf-inspired lite modes:
+
+| Script | Benchmark mode |
+|---|---|
+| `scripts/request_once.py` | `singlestream_lite_correctness` |
+| `scripts/measure_ttft_once.py` | `singlestream_lite_latency` |
+| `scripts/run_sequential_benchmark.py` | `singlestream_lite_repeated` |
+
+All three support `--run-id` and write under:
+
+```text
+results/runs/<run_id>/<benchmark_mode>/
+```
+
 Immediate next steps (in order):
 
-1. Record the exact working TP=8 `vllm serve` command and runtime parameters
+1. On the server, `git pull` latest `main` and run `uv sync --extra dev` if needed.
+2. Record the exact working TP=8 `vllm serve` command and runtime parameters
    in `infra/compose/README.md` or a dedicated TP=8 compose/runbook file.
-2. Tune launch parameters, especially GPU memory utilization/reservation, to
-   leave room for a second smaller model.
-3. Smoke test API path explicitly: `curl http://localhost:8000/v1/models`
-4. First scripted inference: `uv run python -m scripts.request_once`
-5. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
-6. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
+3. Add metrics scripts:
+   - `scripts/collect_metrics_snapshot.py` for GPU/vLLM/Docker/system snapshots.
+   - `scripts/sample_gpu_metrics.py` for interval GPU CSV sampling.
+4. Download and test `MiniMaxAI/MiniMax-M2.7` as the primary smaller coding model candidate.
+5. Check whether already-installed Claude Code CLI can talk to local vLLM; if not, install/use OpenCode fallback.
+6. Run the normalized scripts live against vLLM using `--run-id`:
+   - `uv run python -m scripts.request_once ... --run-id <run_id>`
+   - `uv run python -m scripts.measure_ttft_once ... --run-id <run_id>`
+   - `uv run python -m scripts.run_sequential_benchmark ... --run-id <run_id>`
+7. Attempt dual-model serving: Kimi-K2.6 + MiniMax-M2.7, then repeat the benchmark sequence with GPU/vLLM metrics.
 
 ---
 
@@ -117,13 +144,32 @@ uv run ruff check .
 uv run pytest
 ```
 
-Server, once available:
+Server:
 
 ```bash
-git clone https://github.com/Czyszka/nanoserve-mini.git
-cd nanoserve-mini
+git pull
 uv sync --extra dev
 uv run python -m scripts.check_server_env
+```
+
+Benchmark examples:
+
+```bash
+uv run python -m scripts.request_once \
+  --base-url http://127.0.0.1:8000 \
+  --model moonshotai/Kimi-K2.6 \
+  --run-id 2026-05-11_kimi_tp8_baseline
+
+uv run python -m scripts.measure_ttft_once \
+  --base-url http://127.0.0.1:8000 \
+  --model moonshotai/Kimi-K2.6 \
+  --run-id 2026-05-11_kimi_tp8_baseline
+
+uv run python -m scripts.run_sequential_benchmark \
+  --base-url http://127.0.0.1:8000 \
+  --model moonshotai/Kimi-K2.6 \
+  --warmup 1 --runs 5 \
+  --run-id 2026-05-11_kimi_tp8_baseline
 ```
 
 ---
@@ -141,9 +187,14 @@ uv run python -m scripts.check_server_env
 | vLLM setup | **Docker** (`vllm/vllm-openai:v0.20.0-cu130`) |
 | vLLM strategy | **Working: `vllm serve` with TP=8 + Eagle3 speculative decoding**; single-node DEP was tried and did not work |
 | Model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
+| Smaller coding model candidate | Primary: `MiniMaxAI/MiniMax-M2.7`; research: `poolside/Laguna-XS.2`; fallback: `Qwen/Qwen3.6-35B-A3B`; stretch: `deepseek-ai/DeepSeek-V4-Flash` |
 | HF weights storage | named Docker volume `nanoserve-hf-cache` |
 | Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` currently documents the earlier DEP attempt; TP=8 working config still needs to be recorded |
 | Interactive UI | OpenWebUI container connected to vLLM OpenAI-compatible endpoint |
+| Coding agent | Check Claude Code CLI with local vLLM first; if blocked, use OpenCode fallback |
+| Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
+| Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` |
+| Coding tasks | Synthetic, separate temp repo during evaluation; final result compared by model/agent commit |
 | Agent memory | `docs/agent-state.md` is repo-tracked shared handoff |
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
@@ -159,17 +210,21 @@ uv run python -m scripts.check_server_env
   model to fit on the same server?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
 - [ ] Should raw result files be committed directly or summarized after first GPU run?
+- [ ] Does Claude Code CLI work directly with local vLLM in this setup, or do we need OpenCode?
 
 ---
 
 ## Last validation
 
-Most recent local validation (2026-05-07, Claude Code):
+Most recent validation reported by Claude Code in PR #2 (2026-05-07):
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 46 passed
+uv run pytest           OK, tests passed
 ```
+
+Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`,
+`resolve_output_path(None)`, and measured-only sequential throughput before merge.
 
 ---
 
@@ -179,12 +234,27 @@ Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-07 - End-of-day state after benchmark/task merges
+
+- Why: close the session after merging the coding task specs and benchmark script normalization work.
+- Did: merged PR #1 (`bfca83b`) with synthetic coding-agent task specs for Python, C++, and C#; merged PR #2 (`fb9f878`) with normalized MLPerf-inspired lite benchmark outputs and `--run-id` support.
+- Current repo state: task specs are complete at the specification level; benchmark scripts are ready for live server validation; metrics scripts are still pending.
+- Validation: relied on PR #2 reported `ruff`/`pytest` pass; not rerun by ChatGPT connector after merge.
+- Next: implement metrics snapshot/sampling scripts, then run live `--run-id` benchmark sequence on the server.
+
 ### 2026-05-07 - Normalize mlperf-lite benchmark outputs
 
 - Why: bring all three benchmark scripts to consistent `methodology`, `benchmark_mode`, `--run-id`, and `git_commit` support per task spec.
-- Did: extended `RunControls` in `scripts/_metrics.py` with `run_id`, `script_name`, `git_commit` and added `get_git_commit()` (best-effort) and `resolve_output_path()` helpers; updated `request_once.py` to write JSON (schema `nanoserve-mini.request-once.v1`, mode `singlestream_lite_correctness`) with `--output`/`--run-id` flags; updated `measure_ttft_once.py` to add `methodology`, `benchmark_mode`, `error: null`, `--run-id` and controls fields; updated `run_sequential_benchmark.py` to schema v2 (`sequential-bench.v2` / `sequential-bench-row.v2`), mode `singlestream_lite_repeated`, `--run-id`, wall-clock throughput in summary; updated all tests (46 pass); added `--run-id` output layout section to `docs/benchmark-methodology.md`.
-- Commands run: `uv run ruff check .` (pass), `uv run pytest` (46 passed, up from 32).
+- Did: extended `RunControls` in `scripts/_metrics.py` with `run_id`, `script_name`, `git_commit` and added `get_git_commit()` (best-effort) and `resolve_output_path()` helpers; updated `request_once.py` to write JSON (schema `nanoserve-mini.request-once.v1`, mode `singlestream_lite_correctness`) with `--output`/`--run-id` flags; updated `measure_ttft_once.py` to add `methodology`, `benchmark_mode`, `error: null`, `--run-id` and controls fields; updated `run_sequential_benchmark.py` to schema v2 (`sequential-bench.v2` / `sequential-bench-row.v2`), mode `singlestream_lite_repeated`, `--run-id`, measured-only throughput in summary; updated tests; added `--run-id` output layout section to `docs/benchmark-methodology.md`.
+- Commands run: reported by Claude Code in PR #2: `uv run ruff check .` (pass), `uv run pytest` (pass).
 - Next: run first live benchmark against vLLM endpoint using `--run-id` to verify end-to-end write path on the server.
+
+### 2026-05-07 - Completed coding-agent synthetic task specs
+
+- Why: complete the coding-agent benchmark suite specifications for tasks 02/03/04.
+- Did: added TASK.md specs for Python streaming CLI, C++ token buffer hot path, and C# allocation-aware parser refactor under `benchmarks/coding-agent-tasks/`.
+- Validation: repo status checked by Codex; lint/tests were unavailable in the Codex environment for the docs-only PR.
+- Next: later generate starter task repositories and hidden tests from the specs.
 
 ### 2026-05-06 - Current server state confirmed
 
@@ -192,7 +262,7 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 - Did: recorded that Kimi-K2.6 is downloaded and running via `vllm serve` with TP=8; DEP did not work; OpenWebUI is connected and interactive; `check_server_env.py` output is saved in `results/raw/server_env_snapshot.json`.
 - Snapshot: Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL 143771 MiB, driver 595.58.03, CUDA 13.2.
 - Validation: local docs check only; no server benchmark run in this update.
-- Next: capture the exact working `vllm serve` command, tune GPU memory settings for a second model, then run smoke/TTFT/sequential benchmark scripts.
+- Next: capture the exact working `vllm serve` command, tune GPU memory settings for a second model, then run smoke/TTFT/benchmark scripts.
 
 ### 2026-05-06 - Codex pull review and repo cleanup
 
@@ -206,10 +276,3 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
 > Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
-
-### 2026-05-07 - Completed coding-agent synthetic task specs
-
-- Why: complete the coding-agent benchmark suite specifications for tasks 02/03/04.
-- Did: added TASK.md specs for Python streaming CLI, C++ token buffer hot path, and C# allocation-aware parser refactor under `benchmarks/coding-agent-tasks/`.
-- Validation: repo status checked; lint/tests attempted in this environment.
-- Next: review wording consistency and run full local checks on a workstation with standard tool PATH if needed.
