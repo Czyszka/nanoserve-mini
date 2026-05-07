@@ -9,10 +9,13 @@ notes, and small result summaries.
 
 ## Status
 
-Current phase: bootstrap / Phase 1 preparation.
+Current phase: Phase 1 — first vLLM run completed. Kimi-K2.6 is served through
+`vllm serve` with TP=8 + Eagle3 speculative decoding on the 8×H200 NVL server,
+and OpenWebUI is connected to the OpenAI-compatible endpoint. For up-to-date
+phase, decisions, and next step, see [`docs/agent-state.md`](docs/agent-state.md).
 
 The local Windows laptop is used for code, documentation, benchmark preparation, and
-result analysis. GPU runtime work happens later on the GPU server.
+result analysis. GPU runtime work happens on the GPU server.
 
 ## Goals
 
