@@ -2,7 +2,7 @@
 
 Roboczy plan pracy na serwerze GPU dla `nanoserve-mini`.
 
-Cel dnia: sprawdzić praktyczną użyteczność mniejszego modelu programistycznego względem Kimi-K2.6, przygotować go pod Claude Code CLI, zebrać metryki systemowe i wykonać pierwsze benchmarki w nomenklaturze MLPerf-inspired lite.
+Cel dnia: sprawdzić praktyczną użyteczność mniejszego modelu programistycznego względem Kimi-K2.6, przygotować go pod lokalny coding-agent workflow, zebrać metryki systemowe i wykonać pierwsze benchmarki w nomenklaturze MLPerf-inspired lite.
 
 Ten plan jest operacyjny. Nie jest finalnym benchmark write-upem.
 
@@ -13,6 +13,8 @@ Ten plan jest operacyjny. Nie jest finalnym benchmark write-upem.
 - Główny serwer: Ubuntu 24.04, 8x H200 NVL.
 - Aktualny duży model: `moonshotai/Kimi-K2.6`, działający przez vLLM z TP=8.
 - Nowy kandydat na mniejszy, ale użyteczny model: model programistyczny / agentic coding model, prawdopodobnie TP=4.
+- Claude Code CLI jest już zainstalowany; najpierw sprawdzamy, czy da się go skierować do lokalnego vLLM.
+- Jeśli Claude Code CLI nie działa z lokalnym vLLM bez nadmiernej integracji/proxy, fallbackiem jest instalacja i użycie OpenCode.
 - Wyniki zapisujemy w `results/runs/<run_id>/`.
 - GitHub pozostaje single source of truth dla kodu, konfiguracji, małych wyników i summary.
 - Nie commitujemy wag modeli, cache Hugging Face, dużych logów, dużych trace'ów ani sekretów.
@@ -68,17 +70,18 @@ results/runs/2026-05-11_minimax-m2.7_coding_eval_dualmodel/
   gpu_metrics/
     before_download.csv
     after_minimax_start.csv
-    after_claude_code_eval.csv
+    after_coding_agent_eval.csv
     after_dualmodel_start.csv
     after_benchmarks.csv
   vllm_metrics/
     minimax_after_start.prom
-    minimax_after_claude_code_eval.prom
+    minimax_after_coding_agent_eval.prom
     kimi_after_dualmodel_start.prom
     minimax_after_dualmodel_start.prom
     kimi_after_benchmarks.prom
     minimax_after_benchmarks.prom
-  claude_code_eval/
+  coding_agent_eval/
+    agent_selection.md
     tasks_summary.md
     results.jsonl
     transcripts/
@@ -90,9 +93,9 @@ results/runs/2026-05-11_minimax-m2.7_coding_eval_dualmodel/
 
 ---
 
-# Część A — model programistyczny + Claude Code CLI
+# Część A — model programistyczny + coding agent CLI
 
-Cel części A: odpowiedzieć, czy `MiniMaxAI/MiniMax-M2.7` realnie nadaje się do pracy programistycznej przez Claude Code CLI / agent coding workflow.
+Cel części A: odpowiedzieć, czy `MiniMaxAI/MiniMax-M2.7` realnie nadaje się do pracy programistycznej przez lokalny coding-agent workflow. Najpierw sprawdzamy Claude Code CLI, bo jest już zainstalowany. Jeśli integracja Claude Code CLI z lokalnym vLLM nie działa albo wymaga zbyt dużego proxy/gateway work, instalujemy i testujemy OpenCode.
 
 ## A1. Przygotowanie sesji
 
@@ -133,71 +136,109 @@ Cel części A: odpowiedzieć, czy `MiniMaxAI/MiniMax-M2.7` realnie nadaje się 
 - [ ] Zebrać GPU metrics po starcie.
 - [ ] Zebrać vLLM `/metrics` po starcie.
 
-## A4. Integracja z Claude Code CLI
+## A4. Coding agent CLI: Claude Code first, OpenCode fallback
 
-- [ ] Ustalić ścieżkę integracji Claude Code CLI z lokalnym vLLM.
-- [ ] Jeśli potrzebny jest Anthropic-compatible gateway/proxy, uruchomić albo przygotować minimalny shim.
-- [ ] Skonfigurować Claude Code CLI tak, aby używał `MiniMaxAI/MiniMax-M2.7`.
-- [ ] Potwierdzić w logach:
+Najpierw sprawdzamy Claude Code CLI, bo jest już zainstalowany. OpenCode jest fallbackiem, jeśli Claude Code nie potrafi łatwo pracować z lokalnym vLLM albo wymaga zbyt dużego Anthropic-compatible gateway/proxy.
+
+### A4.1. Claude Code CLI — check z lokalnym vLLM
+
+- [ ] Sprawdzić aktualną instalację Claude Code CLI i wersję.
+- [ ] Sprawdzić, czy Claude Code CLI można skonfigurować na lokalny endpoint vLLM / OpenAI-compatible endpoint bez dodatkowego dużego proxy.
+- [ ] Spróbować skierować Claude Code CLI do `MiniMaxAI/MiniMax-M2.7` serwowanego przez vLLM.
+- [ ] Wykonać minimalny test w roboczym repo testowym:
+  - prosty prompt,
+  - mała edycja pliku,
+  - opcjonalnie uruchomienie testu/komendy.
+- [ ] Potwierdzić w logach albo obserwacji:
   - endpoint,
   - model id,
   - format requestu,
   - format odpowiedzi,
   - czy tool calls / command execution nie psują przepływu.
-- [ ] Zapisać konfigurację Claude Code CLI bez sekretów.
-
-## A5. Test weryfikujący model w Claude Code CLI
-
-Przygotować cztery małe zadania programistyczne, każde z oczekiwanym rezultatem i komendą testującą.
-
-Docelowy katalog:
+- [ ] Zapisać wynik checku do:
 
 ```text
-benchmarks/claude-code-tasks/
-  01_csharp_refactor_and_tests/
-  02_python_bugfix_and_cli/
-  03_cpp_correctness_or_perf_fix/
-  04_powershell_automation_script/
+results/runs/<run_id>/coding_agent_eval/agent_selection.md
+```
+
+### A4.2. Decyzja po checku Claude Code CLI
+
+- [ ] Jeśli Claude Code CLI działa z lokalnym vLLM: użyć Claude Code CLI jako pierwszego agenta do testów programistycznych.
+- [ ] Jeśli Claude Code CLI nie działa z lokalnym vLLM albo blocker jest zbyt duży: zapisać blocker i przejść do OpenCode.
+- [ ] Nie poświęcać dużej części dnia na budowanie gateway/proxy, jeśli OpenCode pozwala szybciej przejść do oceny modelu.
+
+### A4.3. OpenCode fallback
+
+- [ ] Jeśli Claude Code CLI nie działa, zainstalować OpenCode.
+- [ ] Skonfigurować OpenCode do lokalnego vLLM / OpenAI-compatible endpointu.
+- [ ] Skierować OpenCode do `MiniMaxAI/MiniMax-M2.7`.
+- [ ] Wykonać ten sam minimalny test w roboczym repo testowym.
+- [ ] Zapisać:
+  - wersję OpenCode,
+  - konfigurację bez sekretów,
+  - endpoint,
+  - model id,
+  - wynik minimalnego testu,
+  - ewentualne ograniczenia.
+
+## A5. Test weryfikujący model w coding agent CLI
+
+Przygotować cztery syntetyczne zadania programistyczne w osobnym roboczym repo testowym. Zadania nie mają bazować na `nanoserve-mini`. Każde zadanie powinno mieć kilka etapów o rosnącym poziomie trudności. Wynik pracy per model będzie porównywany przez commit końcowy z roboczego repo.
+
+Docelowy katalog z definicjami zadań:
+
+```text
+benchmarks/coding-agent-tasks/
+  01_powershell_environment_and_backup/
+  02_python_cli_and_streaming_client/
+  03_cpp_buffer_and_hotpath/
+  04_csharp_allocation_aware_refactor/
 ```
 
 Każde zadanie powinno mieć:
 
-- [ ] `README.md` z opisem problemu.
-- [ ] Pliki wejściowe.
-- [ ] Komendę testującą.
-- [ ] Kryteria zaliczenia.
-- [ ] Limit czasu.
-- [ ] Informację, czy model może uruchamiać testy i edytować wiele plików.
+- [ ] otwartą treść promptu / README dla modelu,
+- [ ] ukryte testy i ukrytą ocenę,
+- [ ] pliki wejściowe,
+- [ ] komendę testującą dla jawnych testów,
+- [ ] kryteria zaliczenia,
+- [ ] limit czasu,
+- [ ] informację, że model może uruchamiać testy i komendy,
+- [ ] kilka etapów o rosnącym poziomie trudności.
 
-### Zadanie 1 — C#
+### Zadanie 1 — PowerShell, poziom A
 
-- [ ] Bugfix albo refactor w małym module C#.
-- [ ] Dodać albo poprawić testy.
-- [ ] Zachować public API.
-- [ ] Kryterium zaliczenia: testy przechodzą, zmiana jest minimalna i czytelna.
+- [ ] Skrypt sprawdzający status środowiska Docker/vLLM/GPU.
+- [ ] Walidacja środowiska.
+- [ ] Backup/export małych wyników.
+- [ ] Kryterium zaliczenia: działa dla happy path i błędnych parametrów, poprawnie raportuje status.
 
-### Zadanie 2 — Python
+### Zadanie 2 — Python, poziom B
 
-- [ ] Bugfix w CLI/parserze albo obsłudze edge case.
-- [ ] Testy `pytest`.
-- [ ] Kryterium zaliczenia: testy przechodzą, edge case obsłużony.
+- [ ] CLI parser.
+- [ ] Streaming OpenAI-compatible client.
+- [ ] Raportowanie wyników JSON/JSONL.
+- [ ] Kryterium zaliczenia: poprawna obsługa argumentów, streaming chunks, timeout/error handling i zapis wyników.
 
-### Zadanie 3 — C++
+### Zadanie 3 — C++, poziom B
 
-- [ ] Błąd correctness, memory safety albo prosty performance problem.
-- [ ] Kompilacja + test.
-- [ ] Kryterium zaliczenia: program przechodzi testy i nie wprowadza niepotrzebnej złożoności.
+- [ ] Bug w buforze / allocator-like logic.
+- [ ] Performance hot path.
+- [ ] Kompilacja + testy.
+- [ ] Kryterium zaliczenia: poprawność, brak oczywistych błędów pamięci, lepszy albo niegorszy hot path.
 
-### Zadanie 4 — PowerShell
+### Zadanie 4 — C#, poziom C
 
-- [ ] Skrypt automatyzacyjny DevOps.
-- [ ] Walidacja argumentów i obsługa błędów.
-- [ ] Kryterium zaliczenia: skrypt działa dla happy path i błędnych parametrów.
+- [ ] Allocation-aware refactor.
+- [ ] Performance/memory allocation problem.
+- [ ] Testy i benchmark-like checks.
+- [ ] Kryterium zaliczenia: testy przechodzą, public API zachowane, alokacje albo czas wykonania poprawione bez nieczytelnego kodu.
 
-## A6. Metryki dla Claude Code CLI eval
+## A6. Metryki dla coding agent eval
 
 Dla każdego zadania zapisać:
 
+- [ ] agent (`claude_code` albo `opencode`),
 - [ ] model,
 - [ ] start timestamp,
 - [ ] end timestamp,
@@ -209,15 +250,17 @@ Dla każdego zadania zapisać:
 - [ ] liczba zmienionych plików,
 - [ ] liczba uruchomień testów,
 - [ ] czy model sam naprawił błąd po failed test,
+- [ ] E2E latency dla requestów, jeśli dostępna,
 - [ ] GPU metrics przed/po,
 - [ ] vLLM metrics przed/po,
-- [ ] skrócony transcript albo ścieżka do transcriptu.
+- [ ] skrócony transcript albo ścieżka do transcriptu,
+- [ ] commit hash z roboczego repo po wykonaniu zadania.
 
 Wyniki zapisać do:
 
 ```text
-results/runs/<run_id>/claude_code_eval/results.jsonl
-results/runs/<run_id>/claude_code_eval/tasks_summary.md
+results/runs/<run_id>/coding_agent_eval/results.jsonl
+results/runs/<run_id>/coding_agent_eval/tasks_summary.md
 ```
 
 ---
@@ -362,9 +405,10 @@ Dzień uznajemy za udany, jeśli mamy co najmniej:
 - [ ] uruchomiony MiniMax-M2.7 przez vLLM,
 - [ ] zapisaną komendę launch,
 - [ ] zebrane GPU metrics i vLLM metrics,
-- [ ] Claude Code CLI skierowany do MiniMax albo jasno opisany blocker gateway/proxy,
+- [ ] sprawdzone, czy Claude Code CLI działa z lokalnym vLLM,
+- [ ] jeśli Claude Code CLI nie działa: zainstalowany albo przynajmniej rozpoczęty fallback OpenCode,
 - [ ] przygotowane 4 zadania programistyczne,
-- [ ] wykonany przynajmniej jeden test Claude Code CLI,
+- [ ] wykonany przynajmniej jeden test coding agent CLI,
 - [ ] próba dual-model Kimi + MiniMax,
 - [ ] wyniki `SingleStream-lite correctness`, `SingleStream-lite latency` i `SingleStream-lite repeated` dla co najmniej jednego modelu,
 - [ ] summary w `results/runs/<run_id>/summary.md`,
@@ -377,7 +421,8 @@ Dzień uznajemy za udany, jeśli mamy co najmniej:
 Sesja nadal jest wartościowa, jeśli:
 
 - [ ] MiniMax-M2.7 nie uruchomił się, ale mamy failure note z konkretnym błędem.
-- [ ] Claude Code CLI nie zadziałał, ale mamy jasny blocker integracyjny.
+- [ ] Claude Code CLI nie zadziałał, ale mamy jasny blocker integracyjny i decyzję o fallbacku do OpenCode.
+- [ ] OpenCode też nie zadziałał, ale mamy oddzielny blocker instalacyjny/konfiguracyjny.
 - [ ] Dual-model setup nie zadziałał, ale mamy metryki VRAM i powód.
 - [ ] Benchmark nie przeszedł, ale skrypt zapisał błąd w JSON/JSONL.
 
