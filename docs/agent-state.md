@@ -164,11 +164,11 @@ uv run python -m scripts.check_server_env
 
 ## Last validation
 
-Most recent local validation (2026-05-06, laptop):
+Most recent local validation (2026-05-07, Claude Code):
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 32 passed
+uv run pytest           OK, 46 passed
 ```
 
 ---
@@ -178,6 +178,13 @@ uv run pytest           OK, 32 passed
 Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-07 - Normalize mlperf-lite benchmark outputs
+
+- Why: bring all three benchmark scripts to consistent `methodology`, `benchmark_mode`, `--run-id`, and `git_commit` support per task spec.
+- Did: extended `RunControls` in `scripts/_metrics.py` with `run_id`, `script_name`, `git_commit` and added `get_git_commit()` (best-effort) and `resolve_output_path()` helpers; updated `request_once.py` to write JSON (schema `nanoserve-mini.request-once.v1`, mode `singlestream_lite_correctness`) with `--output`/`--run-id` flags; updated `measure_ttft_once.py` to add `methodology`, `benchmark_mode`, `error: null`, `--run-id` and controls fields; updated `run_sequential_benchmark.py` to schema v2 (`sequential-bench.v2` / `sequential-bench-row.v2`), mode `singlestream_lite_repeated`, `--run-id`, wall-clock throughput in summary; updated all tests (46 pass); added `--run-id` output layout section to `docs/benchmark-methodology.md`.
+- Commands run: `uv run ruff check .` (pass), `uv run pytest` (46 passed, up from 32).
+- Next: run first live benchmark against vLLM endpoint using `--run-id` to verify end-to-end write path on the server.
 
 ### 2026-05-06 - Current server state confirmed
 
