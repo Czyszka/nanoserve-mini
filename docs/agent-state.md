@@ -199,3 +199,10 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
 > Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
+
+### 2026-05-07 - Completed coding-agent synthetic task specs
+
+- Why: complete the coding-agent benchmark suite specifications for tasks 02/03/04.
+- Did: added TASK.md specs for Python streaming CLI, C++ token buffer hot path, and C# allocation-aware parser refactor under `benchmarks/coding-agent-tasks/`.
+- Validation: repo status checked; lint/tests attempted in this environment.
+- Next: review wording consistency and run full local checks on a workstation with standard tool PATH if needed.
