@@ -111,6 +111,37 @@ Expected behavior:
 - target QPS is configured explicitly,
 - server-side metrics are correlated with client-side latency.
 
+## Benchmark mode identifiers
+
+Each script uses a fixed `benchmark_mode` identifier in its JSON output.
+All results carry `"methodology": "mlperf_inspired_lite"`.
+
+| Script | `benchmark_mode` |
+|---|---|
+| `scripts/request_once.py` | `singlestream_lite_correctness` |
+| `scripts/measure_ttft_once.py` | `singlestream_lite_latency` |
+| `scripts/run_sequential_benchmark.py` | `singlestream_lite_repeated` |
+
+## Output layout with --run-id
+
+All three scripts accept `--run-id <run_id>`. When provided, results are written
+under a shared directory tree so runs can be grouped and compared:
+
+```
+results/runs/<run_id>/
+  singlestream_lite_correctness/
+    result.json
+  singlestream_lite_latency/
+    result.json
+  singlestream_lite_repeated/
+    results.jsonl
+    summary.json
+```
+
+Explicit `--output`, `--output-jsonl`, and `--output-summary` flags override
+the `--run-id` path. If neither `--run-id` nor explicit flags are supplied,
+each script falls back to its legacy default path under `results/raw/`.
+
 ## Mapping to current scripts
 
 | Mode | Current status | Script | Notes |

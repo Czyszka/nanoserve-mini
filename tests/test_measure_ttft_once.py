@@ -8,6 +8,7 @@ with a mocked HTTP transport so the CLI -> JSON write path is covered.
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -34,6 +35,30 @@ def _chunks() -> Iterator[dict[str, Any]]:
     yield {"choices": [{"delta": {"role": "assistant"}}]}
     yield {"choices": [{"delta": {"content": "hi"}}]}
     yield {"choices": [{"delta": {"content": " there"}}]}
+
+
+_SSE = (
+    b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
+    b'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n'
+    b'data: {"choices":[{"delta":{"content":" there"}}]}\n\n'
+    b"data: [DONE]\n\n"
+)
+
+
+def _mock_streaming_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content.decode("utf-8"))
+        assert body["stream"] is True
+        return httpx.Response(200, content=_SSE, headers={"content-type": "text/event-stream"})
+
+    transport = httpx.MockTransport(handler)
+    real_client_cls = httpx.Client
+
+    def fake_client(*args: object, **kwargs: object) -> httpx.Client:
+        kwargs.pop("timeout", None)
+        return real_client_cls(transport=transport)
+
+    monkeypatch.setattr(_client.httpx, "Client", fake_client)
 
 
 def test_measure_stream_anchors_ttft_on_first_content_chunk() -> None:
@@ -83,6 +108,9 @@ def test_build_record_shape() -> None:
     record = build_record(request=request, controls=controls, result=result)
 
     assert record["schema"] == "nanoserve-mini.ttft-once.v1"
+    assert record["methodology"] == "mlperf_inspired_lite"
+    assert record["benchmark_mode"] == "singlestream_lite_latency"
+    assert record["error"] is None
     assert "timestamp" in record
     assert record["controls"]["model"] == "m"
     assert record["request"]["max_tokens"] == 8
@@ -98,30 +126,7 @@ def test_main_writes_result_json(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    sse = (
-        b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
-        b'data: {"choices":[{"delta":{"content":"hi"}}]}\n\n'
-        b'data: {"choices":[{"delta":{"content":" there"}}]}\n\n'
-        b"data: [DONE]\n\n"
-    )
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        body = json.loads(request.content.decode("utf-8"))
-        assert body["stream"] is True
-        return httpx.Response(
-            200,
-            content=sse,
-            headers={"content-type": "text/event-stream"},
-        )
-
-    transport = httpx.MockTransport(handler)
-    real_client_cls = httpx.Client
-
-    def fake_client(*args: object, **kwargs: object) -> httpx.Client:
-        kwargs.pop("timeout", None)
-        return real_client_cls(transport=transport)
-
-    monkeypatch.setattr(_client.httpx, "Client", fake_client)
+    _mock_streaming_client(monkeypatch)
 
     output = tmp_path / "first_ttft.json"
     rc = measure_ttft_once.main([
@@ -137,6 +142,9 @@ def test_main_writes_result_json(
 
     record = json.loads(output.read_text(encoding="utf-8"))
     assert record["schema"] == "nanoserve-mini.ttft-once.v1"
+    assert record["methodology"] == "mlperf_inspired_lite"
+    assert record["benchmark_mode"] == "singlestream_lite_latency"
+    assert record["error"] is None
     assert record["controls"]["gpu_model"] == "H200 NVL"
     assert record["controls"]["vllm_version"] == "0.6.0"
     assert record["metrics"]["completed"] is True
@@ -147,3 +155,50 @@ def test_main_writes_result_json(
     out = capsys.readouterr().out
     assert "TTFT:" in out
     assert "E2E:" in out
+
+
+def test_main_uses_run_id_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _mock_streaming_client(monkeypatch)
+
+    orig_dir = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        rc = measure_ttft_once.main(["--model", "m", "--run-id", "run-abc"])
+        assert rc == 0
+    finally:
+        os.chdir(orig_dir)
+
+    expected = (
+        tmp_path / "results" / "runs" / "run-abc" / "singlestream_lite_latency" / "result.json"
+    )
+    assert expected.exists()
+    record = json.loads(expected.read_text(encoding="utf-8"))
+    assert record["benchmark_mode"] == "singlestream_lite_latency"
+    assert record["controls"]["run_id"] == "run-abc"
+
+
+def test_main_output_overrides_run_id(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _mock_streaming_client(monkeypatch)
+    explicit = tmp_path / "explicit.json"
+    rc = measure_ttft_once.main(["--model", "m", "--run-id", "run-999", "--output", str(explicit)])
+    assert rc == 0
+    assert explicit.exists()
+
+
+def test_main_json_is_strict(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _mock_streaming_client(monkeypatch)
+    output = tmp_path / "out.json"
+    measure_ttft_once.main(["--model", "m", "--output", str(output)])
+    raw = output.read_text(encoding="utf-8")
+    assert "NaN" not in raw
+    assert "Infinity" not in raw
+    json.loads(raw)

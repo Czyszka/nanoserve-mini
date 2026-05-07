@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from scripts._metrics import RunControls, percentile, summarize
+from scripts._metrics import RunControls, get_git_commit, percentile, resolve_output_path, summarize
 
 
 def test_percentile_single_value() -> None:
@@ -70,17 +70,64 @@ def test_run_controls_as_dict_roundtrip() -> None:
         warmup_runs=1,
         measured_runs=5,
         workload="smoke",
+        run_id="r1",
+        script_name="foo.py",
+        git_commit="deadbeef",
     )
     data = controls.as_dict()
     assert data["model"] == "m"
     assert data["dtype"] == "bfloat16"
     assert data["decoding"] == {"temperature": 0.0}
     assert data["measured_runs"] == 5
+    assert data["run_id"] == "r1"
+    assert data["script_name"] == "foo.py"
+    assert data["git_commit"] == "deadbeef"
     # all expected keys are present even if None
     for key in (
         "model", "base_url", "dtype", "quantization", "gpu_model",
         "vllm_version", "max_model_len", "max_num_seqs",
         "max_num_batched_tokens", "decoding", "warmup_runs",
         "measured_runs", "workload", "notes",
+        "run_id", "script_name", "git_commit",
     ):
         assert key in data
+
+
+def test_get_git_commit_returns_string_or_none() -> None:
+    result = get_git_commit()
+    assert result is None or isinstance(result, str)
+    if result is not None:
+        assert len(result) > 0
+
+
+def test_resolve_output_path_explicit_wins() -> None:
+    path = resolve_output_path(
+        run_id="r1",
+        explicit_path="/tmp/out.json",
+        benchmark_mode="singlestream_lite_correctness",
+        filename="result.json",
+        fallback="results/raw/fallback.json",
+    )
+    assert path == "/tmp/out.json"
+
+
+def test_resolve_output_path_run_id() -> None:
+    path = resolve_output_path(
+        run_id="run-001",
+        explicit_path=None,
+        benchmark_mode="singlestream_lite_latency",
+        filename="result.json",
+        fallback="results/raw/fallback.json",
+    )
+    assert path == "results/runs/run-001/singlestream_lite_latency/result.json"
+
+
+def test_resolve_output_path_fallback() -> None:
+    path = resolve_output_path(
+        run_id=None,
+        explicit_path=None,
+        benchmark_mode="singlestream_lite_latency",
+        filename="result.json",
+        fallback="results/raw/fallback.json",
+    )
+    assert path == "results/raw/fallback.json"

@@ -8,9 +8,26 @@ Aligned with the "Benchmark Contract" section of ROADMAP_v_1_0.md.
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
+
+
+def get_git_commit() -> str | None:
+    """Return the current HEAD commit hash, or None if git is unavailable."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip() or None
+    except Exception:  # noqa: BLE001
+        pass
+    return None
 
 
 @dataclass
@@ -31,6 +48,9 @@ class RunControls:
     measured_runs: int = 1
     workload: str | None = None
     notes: str | None = None
+    run_id: str | None = None
+    script_name: str | None = None
+    git_commit: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -48,6 +68,9 @@ class RunControls:
             "measured_runs": self.measured_runs,
             "workload": self.workload,
             "notes": self.notes,
+            "run_id": self.run_id,
+            "script_name": self.script_name,
+            "git_commit": self.git_commit,
         }
 
 
@@ -104,3 +127,25 @@ def summarize(values: list[float]) -> dict[str, float | int | None]:
         "max": max(values),
         "mean": sum(values) / len(values),
     }
+
+
+def resolve_output_path(
+    *,
+    run_id: str | None,
+    explicit_path: str | None,
+    benchmark_mode: str,
+    filename: str,
+    fallback: str,
+) -> str:
+    """Determine the output path for a benchmark result file.
+
+    Priority:
+    1. explicit_path if provided
+    2. results/runs/<run_id>/<benchmark_mode>/<filename> if run_id provided
+    3. fallback (legacy default)
+    """
+    if explicit_path is not None:
+        return explicit_path
+    if run_id is not None:
+        return f"results/runs/{run_id}/{benchmark_mode}/{filename}"
+    return fallback
