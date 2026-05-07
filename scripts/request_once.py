@@ -167,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
         explicit_path=args.output,
         benchmark_mode=_BENCHMARK_MODE,
         filename="result.json",
-        fallback=None,  # type: ignore[arg-type]
+        fallback=None,
     )
 
     request = CompletionRequest(
@@ -232,6 +232,22 @@ def main(argv: list[str] | None = None) -> int:
 
     assert response is not None
 
+    if output_path_str is not None:
+        record = build_record(
+            request=request,
+            controls=controls,
+            response=response,
+            e2e_seconds=e2e_seconds,
+            error=None,
+        )
+        out = Path(output_path_str)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False),
+            encoding="utf-8",
+        )
+        print(f"saved: {out}")
+
     if args.raw:
         print(json.dumps(response, indent=2, ensure_ascii=False))
         return 0
@@ -248,22 +264,6 @@ def main(argv: list[str] | None = None) -> int:
           f"total={usage.get('total_tokens')}")
     print("---")
     print(text)
-
-    if output_path_str is not None:
-        record = build_record(
-            request=request,
-            controls=controls,
-            response=response,
-            e2e_seconds=e2e_seconds,
-            error=None,
-        )
-        out = Path(output_path_str)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(
-            json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False),
-            encoding="utf-8",
-        )
-        print(f"saved: {out}")
 
     return 0
 

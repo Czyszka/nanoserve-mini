@@ -98,6 +98,57 @@ def test_main_raw_prints_full_json(
     assert parsed == payload
 
 
+def test_main_raw_with_output_writes_json_and_prints_raw(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _patch_client(monkeypatch, _mock_transport(_GOOD_PAYLOAD))
+
+    out_file = tmp_path / "result.json"
+    rc = request_once.main(["--model", "m", "--raw", "--output", str(out_file)])
+    assert rc == 0
+
+    # JSON file must be written even though --raw is set
+    assert out_file.exists()
+    record = json.loads(out_file.read_text(encoding="utf-8"))
+    assert record["schema"] == "nanoserve-mini.request-once.v1"
+    assert record["benchmark_mode"] == "singlestream_lite_correctness"
+
+    # stdout must still be the raw server response, not the normalized record
+    out = capsys.readouterr().out
+    # "saved:" line comes first, then the raw JSON
+    lines = out.strip().splitlines()
+    # find the raw JSON by parsing the last line(s) that form a JSON object
+    raw_blob = "\n".join(line for line in lines if not line.startswith("saved:"))
+    parsed_raw = json.loads(raw_blob)
+    assert parsed_raw == _GOOD_PAYLOAD
+
+
+def test_main_raw_with_run_id_writes_json(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import os
+    _patch_client(monkeypatch, _mock_transport(_GOOD_PAYLOAD))
+
+    orig_dir = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        rc = request_once.main(["--model", "m", "--raw", "--run-id", "run-raw"])
+        assert rc == 0
+    finally:
+        os.chdir(orig_dir)
+
+    expected = (
+        tmp_path / "results" / "runs" / "run-raw"
+        / "singlestream_lite_correctness" / "result.json"
+    )
+    assert expected.exists()
+    record = json.loads(expected.read_text(encoding="utf-8"))
+    assert record["benchmark_mode"] == "singlestream_lite_correctness"
+
+
 def test_main_writes_json_when_output_provided(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

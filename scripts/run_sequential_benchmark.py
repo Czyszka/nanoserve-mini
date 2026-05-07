@@ -162,7 +162,7 @@ def build_summary(
     request: CompletionRequest,
     controls: RunControls,
     rows: list[RunRow],
-    wall_clock_seconds: float | None = None,
+    measured_wall_clock_seconds: float | None = None,
 ) -> dict[str, Any]:
     measured = [r for r in rows if r.phase == "measured" and r.error is None]
     ttfts = [r.ttft_seconds for r in measured if r.ttft_seconds is not None]
@@ -173,15 +173,16 @@ def build_summary(
     total_output_chars = sum(r.output_chars for r in measured)
 
     throughput: dict[str, Any] = {}
-    if wall_clock_seconds is not None and wall_clock_seconds > 0:
+    if measured_wall_clock_seconds is not None and measured_wall_clock_seconds > 0:
         n_ok = len(measured)
-        throughput["wall_clock_seconds"] = wall_clock_seconds
-        throughput["request_throughput"] = n_ok / wall_clock_seconds if n_ok > 0 else None
+        throughput["measured_wall_clock_seconds"] = measured_wall_clock_seconds
+        throughput["request_throughput"] = n_ok / measured_wall_clock_seconds if n_ok > 0 else None
         throughput["output_chars_per_second"] = (
-            total_output_chars / wall_clock_seconds if total_output_chars > 0 else None
+            total_output_chars / measured_wall_clock_seconds
+            if total_output_chars > 0 else None
         )
     else:
-        throughput["wall_clock_seconds"] = None
+        throughput["measured_wall_clock_seconds"] = None
         throughput["request_throughput"] = None
         throughput["output_chars_per_second"] = None
 
@@ -312,15 +313,26 @@ def main(argv: list[str] | None = None) -> int:
         err = f" ERROR={row.error}" if row.error else ""
         print(f"[{marker}{row.index}] TTFT={ttft_str:>10}  E2E={e2e_str:>10}{err}")
 
-    wall_start = _now()
-    rows = run_sequential(
+    # Run warmup and measured phases separately so we can time the measured
+    # phase alone. Throughput computed over the warmup window would be
+    # meaningless because the denominator would include cache/JIT warm-up time.
+    warmup_rows = run_sequential(
         request,
         warmup=args.warmup,
+        runs=0,
+        timeout=args.timeout,
+        on_run=progress,
+    )
+    measured_wall_start = _now()
+    measured_rows = run_sequential(
+        request,
+        warmup=0,
         runs=args.runs,
         timeout=args.timeout,
         on_run=progress,
     )
-    wall_clock_seconds = _now() - wall_start
+    measured_wall_clock_seconds = _now() - measured_wall_start
+    rows = warmup_rows + measured_rows
 
     jsonl_path = Path(jsonl_path_str)
     summary_path = Path(summary_path_str)
@@ -329,7 +341,7 @@ def main(argv: list[str] | None = None) -> int:
         request=request,
         controls=controls,
         rows=rows,
-        wall_clock_seconds=wall_clock_seconds,
+        measured_wall_clock_seconds=measured_wall_clock_seconds,
     )
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary_path.write_text(

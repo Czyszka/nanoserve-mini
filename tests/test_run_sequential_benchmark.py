@@ -287,15 +287,21 @@ def test_error_run_jsonl_row_is_strict_json(tmp_path: Path) -> None:
     assert parsed["schema"] == "nanoserve-mini.sequential-bench-row.v2"
 
 
-def test_build_summary_includes_throughput() -> None:
+def test_build_summary_includes_measured_only_throughput() -> None:
     rows = [
+        _ok_row(0, phase="warmup", e2e=5.0),  # warmup excluded from denominator
         _ok_row(0, phase="measured", e2e=0.5),
         _ok_row(1, phase="measured", e2e=0.5),
     ]
     request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=8)
-    controls = RunControls(model="m", base_url="http://x", measured_runs=2)
-    summary = build_summary(request=request, controls=controls, rows=rows, wall_clock_seconds=2.0)
+    controls = RunControls(model="m", base_url="http://x", warmup_runs=1, measured_runs=2)
+    # measured_wall_clock_seconds reflects only the measured phase wall time
+    summary = build_summary(
+        request=request, controls=controls, rows=rows, measured_wall_clock_seconds=2.0,
+    )
     s = summary["summary"]
-    assert s["wall_clock_seconds"] == pytest.approx(2.0)
-    assert s["request_throughput"] == pytest.approx(1.0)  # 2 runs / 2.0 s
+    assert "measured_wall_clock_seconds" in s
+    assert "wall_clock_seconds" not in s  # old ambiguous name must not appear
+    assert s["measured_wall_clock_seconds"] == pytest.approx(2.0)
+    assert s["request_throughput"] == pytest.approx(1.0)  # 2 measured runs / 2.0 s
     assert s["output_chars_per_second"] is not None

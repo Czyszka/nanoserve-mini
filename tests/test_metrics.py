@@ -131,3 +131,14 @@ def test_resolve_output_path_fallback() -> None:
         fallback="results/raw/fallback.json",
     )
     assert path == "results/raw/fallback.json"
+
+
+def test_resolve_output_path_none_fallback() -> None:
+    path = resolve_output_path(
+        run_id=None,
+        explicit_path=None,
+        benchmark_mode="singlestream_lite_correctness",
+        filename="result.json",
+        fallback=None,
+    )
+    assert path is None

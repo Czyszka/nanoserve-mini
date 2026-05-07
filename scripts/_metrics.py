@@ -135,14 +135,14 @@ def resolve_output_path(
     explicit_path: str | None,
     benchmark_mode: str,
     filename: str,
-    fallback: str,
-) -> str:
+    fallback: str | None,
+) -> str | None:
     """Determine the output path for a benchmark result file.
 
     Priority:
     1. explicit_path if provided
     2. results/runs/<run_id>/<benchmark_mode>/<filename> if run_id provided
-    3. fallback (legacy default)
+    3. fallback (legacy default, may be None)
     """
     if explicit_path is not None:
         return explicit_path
