@@ -116,23 +116,30 @@ Never commit:
 - `.env`,
 - API keys,
 - Hugging Face tokens,
-- GitHub tokens,
+- GitHub tokens (or W&B / cloud provider credentials),
 - model weights,
 - Hugging Face cache,
 - large logs,
-- large Nsight traces,
+- full Nsight traces (`*.ncu-rep`, `*.nsys-rep`),
+- database dumps,
 - large benchmark artifacts.
 
 Commit:
 
+- `.env.example` (no real values),
 - small JSON/JSONL/CSV results when useful,
-- summaries,
-- configs,
+- short text snapshots,
+- summaries (markdown / CSV),
+- benchmark configs and the commands used to run them,
 - scripts,
 - markdown write-ups,
-- reproducibility metadata.
+- reproducibility metadata (e.g. `record_environment.json` per run).
 
-If a result is large, commit only the summary and the reproduction instructions.
+If a result is large, commit only the summary, the run identifier / git hash, the
+local path, and instructions to reproduce.
+
+If a secret leaks, rotate it (HF token, GitHub key/token, W&B / cloud token if used)
+and audit git history for further exposure.
 
 ## Git rules
 
