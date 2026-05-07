@@ -79,7 +79,7 @@ Read these before making non-trivial changes:
 
 - `docs/ROADMAP_v_1_0.md` - current scope, phases, and definition of done.
 - `docs/infrastructure_v_1_0.md` - machine roles and workflow.
-- `docs/server-first-session.md` - runbook for the first server session (env snapshot + vLLM setup decision).
+- `docs/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap (env snapshot + vLLM setup decision).
 - `docs/reading-list.md` - papers by phase.
 - `docs/nvidia_self_paced_courses.md` - optional NVIDIA courses.
 - `AGENTS.md` - Codex-specific repo instructions.
@@ -96,22 +96,14 @@ OpenWebUI is connected and can be used for interactive checks.
 
 Immediate next steps (in order):
 
-1. ~~README and agent coordination docs committed and pushed~~ (done)
-2. ~~Laptop-safe scaffolding committed~~ (done)
-3. ~~Run `uv run python -m scripts.check_server_env` on the server~~ (done, 2026-05-06)
-4. ~~Commit `results/raw/server_env_snapshot.json`~~ (done, 2026-05-06)
-5. ~~Decide vLLM setup path: Docker~~ (done, 2026-05-06)
-6. ~~Wait for Kimi-K2.6 + Eagle3 model download to complete~~ (done, 2026-05-06)
-7. ~~Start vLLM serving stack~~ (done, 2026-05-06; working configuration is TP=8, not DEP)
-8. ~~Expose interactive UI through OpenWebUI connected to vLLM~~ (done, 2026-05-06)
-9. Record the exact working TP=8 `vllm serve` command and runtime parameters
+1. Record the exact working TP=8 `vllm serve` command and runtime parameters
    in `infra/compose/README.md` or a dedicated TP=8 compose/runbook file.
-10. Tune launch parameters, especially GPU memory utilization/reservation, to
+2. Tune launch parameters, especially GPU memory utilization/reservation, to
    leave room for a second smaller model.
-11. Smoke test API path explicitly: `curl http://localhost:8000/v1/models`
-12. First scripted inference: `uv run python -m scripts.request_once`
-13. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
-14. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
+3. Smoke test API path explicitly: `curl http://localhost:8000/v1/models`
+4. First scripted inference: `uv run python -m scripts.request_once`
+5. First TTFT measurement: `uv run python -m scripts.measure_ttft_once`
+6. Sequential benchmark: `uv run python -m scripts.run_sequential_benchmark`
 
 ---
 
@@ -167,7 +159,6 @@ uv run python -m scripts.check_server_env
   model to fit on the same server?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
 - [ ] Should raw result files be committed directly or summarized after first GPU run?
-- [ ] Should the roadmap be copied/renamed to root `ROADMAP.md`, or should `docs/ROADMAP_v_1_0.md` remain canonical?
 
 ---
 
@@ -206,40 +197,5 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 - Validation: skipped (docs-only cleanup).
 - Next: commit the exact working TP=8 launch configuration, then run scripted smoke/TTFT/benchmark commands against the live vLLM endpoint.
 
-### 2026-05-06 - sync-state routine + Model B refactor
-
-- Why: avoid drift between agent-state, CLAUDE.md, AGENTS.md and prevent agent-state bloat.
-- Did: stripped phase blocks from CLAUDE.md/AGENTS.md (now point to agent-state); added Summary cursor; created `docs/templates/sync-state-agent.md`; compacted older handoff entries and compressed remaining log to new format.
-- Range: `d39eff3..3981367` (3 commits)
-- Validation: skipped (doc-only).
-- Next: invoke `/sync-state` after future meaningful commits.
-
-### 2026-05-06 - vLLM Kimi-K2.6 single-node DEP compose
-
-- Why: enable first vLLM run on 8xH200 with Kimi-K2.6 per recipe single_node_dep.
-- Did: added `infra/compose/docker-compose.kimi-k2.6.yml` (vLLM 0.20.0-cu130, DP=8 + EP, Eagle3 MTP, named volume `nanoserve-hf-cache`, port 8000), `.env.example`, README.
-- Range: `7c5e755..3f20c5e` (5 commits)
-- Validation: ruff/pytest OK (32 passed).
-- Next: wait for K2.6 + Eagle3 download, `docker compose up -d`, `curl /v1/models`.
-
-### 2026-05-05 - company H200 plan: capacity, routing, shared-node Kimi
-
-- Why: align `docs/company-ai-support-h200-plan.md` with roadmap and 8xH200 reality.
-- Did: added capacity estimates (DeepSeek-V4-Pro/Flash, concurrency 1/4/8/16); LiteLLM Proxy + vLLM Semantic Router scope; Kimi-K2.6 + faster-model shared-node experiment with measurement matrix.
-- Range: 3 docs commits on 2026-05-05
-- Validation: skipped (docs only).
-- Next: review proposed SLOs; decide whether vLLM Semantic Router is hard or optional.
-
-### 2026-05-03 - Efficient LLM Serving Survey paper note
-
-- Why: foundational Phase 1 paper required before benchmark methodology.
-- Did: added `docs/papers-notes/efficient-llm-serving-survey.md` (full template), updated `docs/reading-list.md`.
-- Validation: ruff/pytest OK (32 passed).
-- Next: when vLLM is up, run `request_once` → `measure_ttft_once` → sequential benchmark.
-
-### 2026-05-03 - paper reading workflow + Keshav alignment
-
-- Why: standardize 3-pass paper reading + lite/full note templates.
-- Did: added `docs/paper-reading-guide.md`, `docs/templates/paper-note-{template,lite}.md`; refined guide per Keshav review.
-- Validation: ruff/pytest OK (32 passed).
-- Next: use lite template by default for new papers; full template only for foundational works.
+> Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
+> Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
