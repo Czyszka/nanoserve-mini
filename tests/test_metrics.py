@@ -3,10 +3,20 @@
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 
-from scripts._metrics import RunControls, get_git_commit, percentile, resolve_output_path, summarize
+from scripts._metrics import (
+    RunControls,
+    build_workload_spec,
+    get_git_commit,
+    make_run_uuid,
+    null_server_metrics,
+    percentile,
+    resolve_output_path,
+    summarize,
+)
 
 
 def test_percentile_single_value() -> None:
@@ -69,8 +79,11 @@ def test_run_controls_as_dict_roundtrip() -> None:
         decoding={"temperature": 0.0},
         warmup_runs=1,
         measured_runs=5,
+        concurrency=2,
         workload="smoke",
+        workload_spec={"name": "smoke", "concurrency": 2},
         run_id="r1",
+        run_uuid="uuid-1",
         script_name="foo.py",
         git_commit="deadbeef",
     )
@@ -79,18 +92,74 @@ def test_run_controls_as_dict_roundtrip() -> None:
     assert data["dtype"] == "bfloat16"
     assert data["decoding"] == {"temperature": 0.0}
     assert data["measured_runs"] == 5
+    assert data["concurrency"] == 2
     assert data["run_id"] == "r1"
+    assert data["run_uuid"] == "uuid-1"
     assert data["script_name"] == "foo.py"
     assert data["git_commit"] == "deadbeef"
+    assert data["workload_spec"] == {"name": "smoke", "concurrency": 2}
     # all expected keys are present even if None
     for key in (
         "model", "base_url", "dtype", "quantization", "gpu_model",
         "vllm_version", "max_model_len", "max_num_seqs",
         "max_num_batched_tokens", "decoding", "warmup_runs",
-        "measured_runs", "workload", "notes",
-        "run_id", "script_name", "git_commit",
+        "measured_runs", "concurrency", "workload", "workload_spec", "notes",
+        "run_id", "run_uuid", "script_name", "git_commit",
     ):
         assert key in data
+
+
+def test_run_controls_defaults_concurrency_one_and_no_uuid() -> None:
+    controls = RunControls(model="m", base_url="http://x")
+    data = controls.as_dict()
+    assert data["concurrency"] == 1
+    assert data["run_uuid"] is None
+    assert data["workload_spec"] is None
+
+
+def test_make_run_uuid_returns_unique_hex() -> None:
+    a = make_run_uuid()
+    b = make_run_uuid()
+    assert a != b
+    # uuid4().hex is 32 lowercase hex chars
+    assert re.fullmatch(r"[0-9a-f]{32}", a) is not None
+
+
+def test_null_server_metrics_keys_present_with_none_values() -> None:
+    stub = null_server_metrics()
+    assert set(stub.keys()) == {
+        "gpu_memory_used_gb",
+        "kv_cache_usage",
+        "prefix_cache_hit_rate",
+    }
+    for v in stub.values():
+        assert v is None
+
+
+def test_build_workload_spec_minimum_fields() -> None:
+    spec = build_workload_spec(
+        name="smoke",
+        prompt="hello",
+        max_tokens=8,
+        decoding={"temperature": 0.0, "max_tokens": 8},
+        concurrency=1,
+        arrival_process="single",
+    )
+    assert spec["name"] == "smoke"
+    assert spec["prompt_chars"] == len("hello")
+    assert spec["max_tokens"] == 8
+    assert spec["concurrency"] == 1
+    assert spec["arrival_process"] == "single"
+    assert spec["shared_prefixes"] is False
+    assert spec["prompt_source"] == "literal"
+    # the decoding block is copied (mutating the input later must not affect spec)
+    decoding = {"temperature": 0.5}
+    spec2 = build_workload_spec(
+        name=None, prompt="x", max_tokens=1,
+        decoding=decoding, concurrency=1, arrival_process="single",
+    )
+    decoding["temperature"] = 0.9
+    assert spec2["decoding"]["temperature"] == 0.5
 
 
 def test_get_git_commit_returns_string_or_none() -> None:

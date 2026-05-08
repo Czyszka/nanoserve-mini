@@ -9,6 +9,7 @@ Aligned with the "Benchmark Contract" section of ROADMAP_v_1_0.md.
 from __future__ import annotations
 
 import subprocess
+import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -30,6 +31,60 @@ def get_git_commit() -> str | None:
     return None
 
 
+def make_run_uuid() -> str:
+    """Hex uuid4 — unique per script invocation.
+
+    `run_id` is a human-friendly group label (e.g. ``2026-05-11_kimi_tp8_baseline``)
+    and may collide across re-runs that overwrite the same output path.
+    `run_uuid` is the unique key for a single execution and lets a dashboard
+    deduplicate when aggregating.
+    """
+    return uuid.uuid4().hex
+
+
+def null_server_metrics() -> dict[str, Any]:
+    """Stub block for vLLM/GPU-side metrics.
+
+    Always written with `None` values until ``scripts/collect_metrics_snapshot.py``
+    or ``/metrics`` scraping is wired up. Keeping the keys present (rather than
+    omitting the block entirely) gives downstream consumers a stable shape.
+    """
+    return {
+        "gpu_memory_used_gb": None,
+        "kv_cache_usage": None,
+        "prefix_cache_hit_rate": None,
+    }
+
+
+def build_workload_spec(
+    *,
+    name: str | None,
+    prompt: str,
+    max_tokens: int,
+    decoding: dict[str, Any],
+    concurrency: int,
+    arrival_process: str,
+    shared_prefixes: bool = False,
+    prompt_source: str = "literal",
+) -> dict[str, Any]:
+    """Structured workload definition matching the ROADMAP Benchmark Contract.
+
+    `prompt_chars` is included as a cheap proxy for input size when no tokenizer
+    is available client-side. Real input/output token counts come from the server
+    `usage` block when available.
+    """
+    return {
+        "name": name,
+        "prompt_source": prompt_source,
+        "prompt_chars": len(prompt),
+        "max_tokens": max_tokens,
+        "decoding": dict(decoding),
+        "concurrency": concurrency,
+        "arrival_process": arrival_process,
+        "shared_prefixes": shared_prefixes,
+    }
+
+
 @dataclass
 class RunControls:
     """Reproduction context for a benchmark run."""
@@ -46,9 +101,12 @@ class RunControls:
     decoding: dict[str, Any] = field(default_factory=dict)
     warmup_runs: int = 0
     measured_runs: int = 1
+    concurrency: int = 1
     workload: str | None = None
+    workload_spec: dict[str, Any] | None = None
     notes: str | None = None
     run_id: str | None = None
+    run_uuid: str | None = None
     script_name: str | None = None
     git_commit: str | None = None
 
@@ -66,9 +124,14 @@ class RunControls:
             "decoding": dict(self.decoding),
             "warmup_runs": self.warmup_runs,
             "measured_runs": self.measured_runs,
+            "concurrency": self.concurrency,
             "workload": self.workload,
+            "workload_spec": (
+                dict(self.workload_spec) if self.workload_spec is not None else None
+            ),
             "notes": self.notes,
             "run_id": self.run_id,
+            "run_uuid": self.run_uuid,
             "script_name": self.script_name,
             "git_commit": self.git_commit,
         }

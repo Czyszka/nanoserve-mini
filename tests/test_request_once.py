@@ -112,7 +112,7 @@ def test_main_raw_with_output_writes_json_and_prints_raw(
     # JSON file must be written even though --raw is set
     assert out_file.exists()
     record = json.loads(out_file.read_text(encoding="utf-8"))
-    assert record["schema"] == "nanoserve-mini.request-once.v1"
+    assert record["schema"] == "nanoserve-mini.request-once.v2"
     assert record["benchmark_mode"] == "singlestream_lite_correctness"
 
     # stdout must still be the raw server response, not the normalized record
@@ -162,7 +162,7 @@ def test_main_writes_json_when_output_provided(
     assert out_file.exists()
 
     record = json.loads(out_file.read_text(encoding="utf-8"))
-    assert record["schema"] == "nanoserve-mini.request-once.v1"
+    assert record["schema"] == "nanoserve-mini.request-once.v2"
     assert record["methodology"] == "mlperf_inspired_lite"
     assert record["benchmark_mode"] == "singlestream_lite_correctness"
     assert record["error"] is None
@@ -175,6 +175,14 @@ def test_main_writes_json_when_output_provided(
     assert record["response"]["id"] == "cmpl-xyz"
     assert record["controls"]["script_name"] == "request_once.py"
     assert record["controls"]["git_commit"] == "abc123"
+    assert record["controls"]["concurrency"] == 1
+    assert record["controls"]["run_uuid"] is not None
+    assert record["controls"]["workload_spec"]["arrival_process"] == "single"
+    assert record["server_metrics"] == {
+        "gpu_memory_used_gb": None,
+        "kv_cache_usage": None,
+        "prefix_cache_hit_rate": None,
+    }
 
 
 def test_main_uses_run_id_path(

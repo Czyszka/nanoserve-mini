@@ -72,7 +72,7 @@ def test_build_summary_counts_only_measured_runs() -> None:
 
     summary = build_summary(request=request, controls=controls, rows=rows)
 
-    assert summary["schema"] == "nanoserve-mini.sequential-bench.v2"
+    assert summary["schema"] == "nanoserve-mini.sequential-bench.v3"
     assert summary["methodology"] == "mlperf_inspired_lite"
     assert summary["benchmark_mode"] == "singlestream_lite_repeated"
     assert summary["error"] is None
@@ -121,8 +121,8 @@ def test_write_jsonl_one_line_per_row_with_schema(tmp_path: Path) -> None:
     assert parsed[0]["index"] == 0
     assert parsed[1]["index"] == 1
     assert all(p["phase"] == "measured" for p in parsed)
-    # v2 schema fields
-    assert parsed[0]["schema"] == "nanoserve-mini.sequential-bench-row.v2"
+    # v3 schema fields
+    assert parsed[0]["schema"] == "nanoserve-mini.sequential-bench-row.v3"
     assert parsed[0]["methodology"] == "mlperf_inspired_lite"
     assert parsed[0]["benchmark_mode"] == "singlestream_lite_repeated"
 
@@ -183,12 +183,12 @@ def test_main_writes_jsonl_and_summary(
     parsed = [json.loads(line) for line in lines]
     assert parsed[0]["phase"] == "warmup"
     assert sum(1 for p in parsed if p["phase"] == "measured") == 3
-    # v2 row fields
-    assert parsed[0]["schema"] == "nanoserve-mini.sequential-bench-row.v2"
+    # v3 row fields
+    assert parsed[0]["schema"] == "nanoserve-mini.sequential-bench-row.v3"
     assert parsed[0]["benchmark_mode"] == "singlestream_lite_repeated"
 
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    assert summary["schema"] == "nanoserve-mini.sequential-bench.v2"
+    assert summary["schema"] == "nanoserve-mini.sequential-bench.v3"
     assert summary["methodology"] == "mlperf_inspired_lite"
     assert summary["benchmark_mode"] == "singlestream_lite_repeated"
     assert summary["error"] is None
@@ -284,7 +284,7 @@ def test_error_run_jsonl_row_is_strict_json(tmp_path: Path) -> None:
     # NaN is not valid JSON, so this also acts as a regression check
     assert "NaN" not in line
     # v2 schema
-    assert parsed["schema"] == "nanoserve-mini.sequential-bench-row.v2"
+    assert parsed["schema"] == "nanoserve-mini.sequential-bench-row.v3"
 
 
 def test_build_summary_includes_measured_only_throughput() -> None:
@@ -305,3 +305,101 @@ def test_build_summary_includes_measured_only_throughput() -> None:
     assert s["measured_wall_clock_seconds"] == pytest.approx(2.0)
     assert s["request_throughput"] == pytest.approx(1.0)  # 2 measured runs / 2.0 s
     assert s["output_chars_per_second"] is not None
+
+
+def test_build_summary_aggregates_token_metrics_when_available() -> None:
+    rows = [
+        # warmup row excluded from aggregates
+        RunRow(
+            index=0, phase="warmup", timestamp="t",
+            ttft_seconds=0.1, e2e_seconds=0.6, chunks_received=3,
+            output_chars=8, error=None,
+            tpot_seconds=0.05, prompt_tokens=4, completion_tokens=11,
+            output_tokens_per_second=18.3,
+        ),
+        RunRow(
+            index=0, phase="measured", timestamp="t",
+            ttft_seconds=0.1, e2e_seconds=0.6, chunks_received=3,
+            output_chars=8, error=None,
+            tpot_seconds=0.10, prompt_tokens=4, completion_tokens=6,
+            output_tokens_per_second=10.0,
+        ),
+        RunRow(
+            index=1, phase="measured", timestamp="t",
+            ttft_seconds=0.2, e2e_seconds=1.2, chunks_received=3,
+            output_chars=8, error=None,
+            tpot_seconds=0.20, prompt_tokens=4, completion_tokens=6,
+            output_tokens_per_second=5.0,
+        ),
+    ]
+    request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=8)
+    controls = RunControls(model="m", base_url="http://x", warmup_runs=1, measured_runs=2)
+    summary = build_summary(
+        request=request, controls=controls, rows=rows, measured_wall_clock_seconds=2.0,
+    )
+    s = summary["summary"]
+    assert s["tpot_seconds"]["count"] == 2
+    assert s["tpot_seconds"]["min"] == pytest.approx(0.10)
+    assert s["tpot_seconds"]["max"] == pytest.approx(0.20)
+    assert s["prompt_tokens"]["count"] == 2
+    assert s["prompt_tokens"]["mean"] == pytest.approx(4.0)
+    assert s["completion_tokens"]["count"] == 2
+    assert s["completion_tokens"]["mean"] == pytest.approx(6.0)
+    # output tokens/s = total measured completion tokens / measured wall clock
+    assert s["output_tokens_per_second"] == pytest.approx(12 / 2.0)
+
+
+def test_build_summary_token_aggregates_are_none_when_usage_missing() -> None:
+    rows = [_ok_row(0, phase="measured"), _ok_row(1, phase="measured")]
+    request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=8)
+    controls = RunControls(model="m", base_url="http://x", measured_runs=2)
+    summary = build_summary(
+        request=request, controls=controls, rows=rows, measured_wall_clock_seconds=1.0,
+    )
+    s = summary["summary"]
+    assert s["tpot_seconds"]["count"] == 0
+    assert s["prompt_tokens"]["count"] == 0
+    assert s["completion_tokens"]["count"] == 0
+    # No completion tokens recorded => tokens-per-second is None (not 0)
+    assert s["output_tokens_per_second"] is None
+
+
+def test_build_summary_includes_server_metrics_stub() -> None:
+    rows = [_ok_row(0)]
+    request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=8)
+    controls = RunControls(model="m", base_url="http://x", measured_runs=1)
+    summary = build_summary(request=request, controls=controls, rows=rows)
+    assert summary["server_metrics"] == {
+        "gpu_memory_used_gb": None,
+        "kv_cache_usage": None,
+        "prefix_cache_hit_rate": None,
+    }
+
+
+def test_main_summary_includes_token_blocks_and_server_metrics(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _mock_streaming_client(monkeypatch)
+    summary_path = tmp_path / "summary.json"
+    rc = run_sequential_benchmark.main([
+        "--model", "m",
+        "--warmup", "0",
+        "--runs", "2",
+        "--output-jsonl", str(tmp_path / "rows.jsonl"),
+        "--output-summary", str(summary_path),
+    ])
+    assert rc == 0
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    s = summary["summary"]
+    # Mock SSE has no usage chunk, so token blocks exist with count=0
+    for key in ("tpot_seconds", "prompt_tokens", "completion_tokens"):
+        assert key in s
+        assert s[key]["count"] == 0
+    assert "output_tokens_per_second" in s
+    # server_metrics stub at the top level of summary
+    assert summary["server_metrics"]["gpu_memory_used_gb"] is None
+    # controls carry workload_spec and run_uuid
+    assert summary["controls"]["workload_spec"]["arrival_process"] == "sequential"
+    assert summary["controls"]["concurrency"] == 1
+    assert summary["controls"]["run_uuid"] is not None
