@@ -276,3 +276,10 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
 > Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
+
+### 2026-05-08 - Tighten Task 01 PowerShell specification
+
+- Why: make Task 01 deterministic and testable for coding-agent benchmark execution.
+- Did: updated `benchmarks/coding-agent-tasks/01_powershell_environment_and_backup/TASK.md` with deterministic `-Timestamp` naming/validation, explicit Docker and endpoint fatal vs non-fatal behavior, include/exclude precedence, expanded summary schema with file lists, exit code contract, optional `-DryRun`, and revised public/hidden test expectations plus checklist.
+- Validation: not run in this environment (`uv` unavailable in PATH).
+- Next: run `uv run ruff check .` and `uv run pytest` in a full local dev shell if required.
