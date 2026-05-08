@@ -107,12 +107,17 @@ def measure_stream(
             usage = chunk_usage
 
     e2e = clock() - start_time
+    # `completed` reflects whether the stream produced any actual content. A
+    # role-only stream that ends cleanly is technically a successful HTTP
+    # response, but it carries zero generated tokens and so is not a "completed"
+    # generation for benchmark purposes. Hard failures during iteration raise
+    # and are turned into a failure record by the caller.
     return StreamRunResult(
         ttft_seconds=ttft,
         e2e_seconds=e2e,
         chunks_received=chunks_received,
         output_text="".join(output_parts),
-        completed=True,
+        completed=bool(output_parts),
         usage=usage,
     )
 
@@ -188,6 +193,7 @@ def build_record(
     request: CompletionRequest,
     controls: RunControls,
     result: StreamRunResult,
+    error: str | None = None,
 ) -> dict[str, Any]:
     usage = result.usage or {}
     prompt_tokens = usage.get("prompt_tokens")
@@ -229,8 +235,25 @@ def build_record(
         },
         "server_metrics": null_server_metrics(),
         "output_text": result.output_text,
-        "error": None,
+        "error": error,
     }
+
+
+def _failure_result(*, start: float, clock: Any = _now) -> StreamRunResult:
+    """Build a StreamRunResult representing a failed/aborted run.
+
+    Used by ``main()`` when ``chat_completion_stream`` or ``measure_stream``
+    raises before any content was observed. ``e2e_seconds`` reflects the time
+    actually spent before the failure so dashboards can still bucket it.
+    """
+    return StreamRunResult(
+        ttft_seconds=None,
+        e2e_seconds=max(0.0, clock() - start),
+        chunks_received=0,
+        output_text="",
+        completed=False,
+        usage=None,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -284,10 +307,17 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     start = _now()
-    stream = chat_completion_stream(request, timeout=args.timeout)
-    result = measure_stream(stream, start_time=start)
+    error: str | None = None
+    try:
+        stream = chat_completion_stream(request, timeout=args.timeout)
+        result = measure_stream(stream, start_time=start)
+    except Exception as exc:  # noqa: BLE001 - capture any HTTP/transport/stream failure
+        error = f"{type(exc).__name__}: {exc}"
+        result = _failure_result(start=start)
 
-    record = build_record(request=request, controls=controls, result=result)
+    record = build_record(
+        request=request, controls=controls, result=result, error=error,
+    )
 
     output_path = Path(output_path_str)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -295,6 +325,11 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(record, indent=2, ensure_ascii=False, allow_nan=False),
         encoding="utf-8",
     )
+
+    if error is not None:
+        print(f"ERROR:  {error}", file=sys.stderr)
+        print(f"saved:  {output_path}")
+        return 1
 
     ttft = result.ttft_seconds
     ttft_str = f"{ttft * 1000:.1f} ms" if ttft is not None else "n/a"

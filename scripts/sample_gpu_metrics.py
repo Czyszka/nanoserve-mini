@@ -235,6 +235,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.interval_ms <= 0:
         print("--interval-ms must be > 0", file=sys.stderr)
         return 2
+    if args.duration_s is not None and args.duration_s <= 0:
+        print("--duration-s must be > 0 when provided", file=sys.stderr)
+        return 2
+    if args.samples is not None and args.samples <= 0:
+        print("--samples must be > 0 when provided", file=sys.stderr)
+        return 2
     if args.duration_s is None and args.samples is None:
         print(
             "must specify at least one of --duration-s or --samples",

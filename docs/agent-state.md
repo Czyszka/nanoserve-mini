@@ -212,13 +212,14 @@ uv run python -m scripts.run_sequential_benchmark \
 
 ## Last validation
 
-Local laptop validation on 2026-05-08 after server-metrics scripts
-(`collect_metrics_snapshot.py`, `sample_gpu_metrics.py`) added on top
-of the Wave A + B benchmark schema upgrade:
+Local laptop validation on 2026-05-08 after PR #7 review follow-ups
+(failure-record path in `measure_ttft_once`, `completed=False` on
+no-content streams, stricter argument guards in `sample_gpu_metrics`)
+on top of the merged `origin/main`:
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 95 passed
+uv run pytest           OK, 102 passed
 ```
 
 Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`, `resolve_output_path(None)`, and measured-only sequential throughput before merge.
@@ -230,6 +231,38 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-08 - PR #7 review follow-up + merge with main
+
+- Why: PR #7 went `dirty` after the Task 01-04 spec tightening on main; reviewer
+  also flagged three correctness issues in the new code.
+- Did:
+  - Merged `origin/main` into the PR branch and resolved the only conflict
+    (`docs/agent-state.md`); kept both narratives (server-metrics work +
+    coding-agent task tightening).
+  - `scripts/measure_ttft_once.py`: HTTP/transport/stream errors now produce
+    a v2-schema failure record (controls + request + server_metrics stub
+    preserved, `completed=False`, all token-derived metrics `None`,
+    non-null `error` string with type and message). `main()` returns 1 on
+    failure and prints the error to stderr. Helper `_failure_result()` keeps
+    the e2e_seconds field meaningful (elapsed-until-failure).
+  - `scripts/measure_ttft_once.measure_stream`: `completed` is now
+    `bool(output_parts)` rather than always True. A role-only stream that
+    ends cleanly returns `completed=False` so dashboards do not count zero-
+    token responses as successful generations.
+  - `scripts/sample_gpu_metrics.py`: argparse-side guards added for
+    `--duration-s > 0` and `--samples > 0` when provided; the existing
+    "at least one of them required" rule is preserved.
+  - Tests: added `test_measure_stream_handles_empty_stream`,
+    extended the role-only test to assert `completed is False`, added
+    `test_main_writes_failure_record_on_connect_error` and
+    `test_main_writes_failure_record_on_http_5xx` (failure record shape,
+    rc=1, error string contents, strict JSON, server_metrics stub kept,
+    workload_spec kept), added 4 sampler argument-guard tests
+    (zero/negative duration, zero/negative samples). 95 → 102 passing.
+- Commands run: `uv run ruff check .` (pass), `uv run pytest -q` (102 passed).
+- Next: unchanged — pick from live-run on server, fact-table aggregator
+  (Wave C), or recording the working TP=8 `vllm serve` command.
 
 ### 2026-05-08 - Tightened all coding-agent task specifications
 

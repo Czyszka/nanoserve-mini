@@ -192,6 +192,46 @@ def test_main_rejects_zero_interval(capsys: pytest.CaptureFixture[str]) -> None:
     assert "interval-ms" in capsys.readouterr().err
 
 
+def test_main_rejects_zero_duration(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = sample_gpu_metrics.main([
+        "--run-id", "x",
+        "--interval-ms", "100",
+        "--duration-s", "0",
+    ])
+    assert rc == 2
+    assert "duration-s" in capsys.readouterr().err
+
+
+def test_main_rejects_negative_duration(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = sample_gpu_metrics.main([
+        "--run-id", "x",
+        "--interval-ms", "100",
+        "--duration-s", "-2.5",
+    ])
+    assert rc == 2
+    assert "duration-s" in capsys.readouterr().err
+
+
+def test_main_rejects_zero_samples(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = sample_gpu_metrics.main([
+        "--run-id", "x",
+        "--interval-ms", "100",
+        "--samples", "0",
+    ])
+    assert rc == 2
+    assert "samples" in capsys.readouterr().err
+
+
+def test_main_rejects_negative_samples(capsys: pytest.CaptureFixture[str]) -> None:
+    rc = sample_gpu_metrics.main([
+        "--run-id", "x",
+        "--interval-ms", "100",
+        "--samples", "-3",
+    ])
+    assert rc == 2
+    assert "samples" in capsys.readouterr().err
+
+
 def test_main_rejects_when_neither_duration_nor_samples_given(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
