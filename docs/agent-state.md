@@ -2,22 +2,18 @@
 
 This file is the repo-tracked handoff state for Claude Code, Codex, and human work.
 
-Keep it concise and current. Update it after meaningful repo changes, especially before
-committing, pushing, or handing work to another agent.
+Keep it concise and current. Update it after meaningful repo changes, especially before committing, pushing, or handing work to another agent.
 
-The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to
-this file. The `tidy-docs` routine (see `docs/templates/tidy-docs-agent.md`)
-compacts it in place. Git is the archive — no separate handoff archive directory.
+The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to this file. The `tidy-docs` routine (see `docs/templates/tidy-docs-agent.md`) compacts it in place. Git is the archive — no separate handoff archive directory.
 
 ---
 
 ## Summary cursor
 
-- Last summarized commit: `1ba9cc6`
-- Last summarized at: 2026-05-06
+- Last summarized commit: `f83ef7a`
+- Last summarized at: 2026-05-08
 
-The `sync-state` routine reads this block to find the diff window. Update only
-via the routine.
+The `sync-state` routine reads this block to find the diff window. Update only via the routine.
 
 ---
 
@@ -28,28 +24,28 @@ via the routine.
 - `docs/agent-state.md` - current project state, decisions, next step, and blockers.
 - `ROADMAP.md` - project scope; do not change it without an explicit decision.
 
-Note: the current roadmap content in this repo is stored as `docs/ROADMAP_v_1_0.md`.
-Treat it as the current scope document unless a root `ROADMAP.md` is added later.
+Note: the current roadmap content in this repo is stored as `docs/ROADMAP_v_1_0.md`. Treat it as the current scope document unless a root `ROADMAP.md` is added later.
 
 ---
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent task specs tightened.**
 
-Server is up, environment snapshot is committed, Docker vLLM image is installed,
-Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
+Server is up, environment snapshot is committed, Docker vLLM image is installed, Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
+
 OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible endpoint.
 
-The repo now also has:
+The repo now has:
 
 - MLPerf-inspired lite output layout for the first benchmark scripts.
 - Token-level metrics in benchmark output: TPOT, prompt/completion tokens, output tokens/s
   (via `stream_options.include_usage=true`).
 - Structured `controls.workload_spec`, explicit `controls.concurrency`, unique `run_uuid`
-  per execution, and a `server_metrics` null-stub block for future GPU/KV/prefix-cache scraping.
+  per execution, and a `server_metrics` null-stub block populated by the new
+  `scripts/collect_metrics_snapshot.py` and `scripts/sample_gpu_metrics.py` helpers.
 - Shared schema/mode/methodology constants in `scripts/_schemas.py`.
-- Synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
+- Tightened synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
 - A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
 
 ---
@@ -63,23 +59,21 @@ The repo now also has:
 - `.gitattributes` exists to normalize line endings.
 - Local research PDFs are kept outside Git in ignored `docs/papers/`.
 - **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
-- **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated
-  with `scripts/check_server_env.py` on ubuntusrv2 and records Ubuntu 24.04.2,
-  Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL,
-  driver 595.58.03, CUDA 13.2.
+- **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated with `scripts/check_server_env.py` on ubuntusrv2 and records Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL, driver 595.58.03, CUDA 13.2.
 - **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
 - **Kimi-K2.6 model download completed** in named volume `nanoserve-hf-cache`.
 - **Kimi-K2.6 serves successfully through `vllm serve` with TP=8.**
 - **Single-node DEP attempt did not work** for this run; current working path is TP=8.
-- **Speculative decoding works correctly** with the Eagle3 speculative head
-  (`lightseekorg/kimi-k2.6-eagle3-mla`).
-- **OpenWebUI container is running on the server** and connected to `vllm serve`;
-  Kimi-K2.6 is visible in OpenWebUI and answers requests.
-- Current Kimi-K2.6 launch parameters still need tuning, especially GPU memory
-  reservation/utilization, so a second smaller model can fit on the same server.
-- Compose file currently tracked for the earlier DEP attempt:
-  `infra/compose/docker-compose.kimi-k2.6.yml`.
+- **Speculative decoding works correctly** with Eagle3 speculative head (`lightseekorg/kimi-k2.6-eagle3-mla`).
+- **OpenWebUI container is running on the server** and connected to `vllm serve`; Kimi-K2.6 is visible in OpenWebUI and answers requests.
+- Current Kimi-K2.6 launch parameters still need tuning, especially GPU memory reservation/utilization, so a second smaller model can fit on the same server.
+- Compose file currently tracked for the earlier DEP attempt: `infra/compose/docker-compose.kimi-k2.6.yml`.
 - `.claude/` remains untracked locally.
+- **Task specs 01-04 are now tightened on `main`:**
+  - Task 01 PowerShell export/environment backup.
+  - Task 02 Python OpenAI-compatible streaming probe.
+  - Task 03 C++ TokenBuffer correctness/safety/hot path.
+  - Task 04 C# allocation-aware parser refactor.
 
 ---
 
@@ -104,10 +98,9 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 
 ## Current technical direction
 
-Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8.
-OpenWebUI is connected and can be used for interactive checks.
+Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8. OpenWebUI is connected and can be used for interactive checks.
 
-The benchmark scripts now use these MLPerf-inspired lite modes:
+The benchmark scripts use these MLPerf-inspired lite modes:
 
 | Script | Benchmark mode |
 |---|---|
@@ -121,11 +114,10 @@ All three support `--run-id` and write under:
 results/runs/<run_id>/<benchmark_mode>/
 ```
 
-Immediate next steps (in order):
+Immediate next steps, in order:
 
 1. On the server, `git pull` latest `main` and run `uv sync --extra dev` if needed.
-2. Record the exact working TP=8 `vllm serve` command and runtime parameters
-   in `infra/compose/README.md` or a dedicated TP=8 compose/runbook file.
+2. Record the exact working TP=8 `vllm serve` command and runtime parameters in `infra/compose/README.md` or a dedicated TP=8 compose/runbook file.
 3. Add metrics scripts:
    - `scripts/collect_metrics_snapshot.py` for GPU/vLLM/Docker/system snapshots.
    - `scripts/sample_gpu_metrics.py` for interval GPU CSV sampling.
@@ -211,8 +203,7 @@ uv run python -m scripts.run_sequential_benchmark \
 ## Open questions
 
 - [ ] Record exact working TP=8 server command/config in repo.
-- [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow a second smaller
-  model to fit on the same server?
+- [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow a second smaller model to fit on the same server?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
 - [ ] Should raw result files be committed directly or summarized after first GPU run?
 - [ ] Does Claude Code CLI work directly with local vLLM in this setup, or do we need OpenCode?
@@ -230,13 +221,24 @@ uv run ruff check .     OK, all checks passed
 uv run pytest           OK, 95 passed
 ```
 
+Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`, `resolve_output_path(None)`, and measured-only sequential throughput before merge.
+
+The 2026-05-08 task-spec tightening on `main` was documentation-only and was applied through GitHub connector commits; `uv run ruff check .` / `uv run pytest` were not rerun after those documentation changes.
+
 ---
 
 ## Handoff log
 
-Newest entry first. Appended by the `sync-state` routine
-(`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
-routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-08 - Tightened all coding-agent task specifications
+
+- Why: close the task-spec review loop before moving to metrics scripts and server execution.
+- Did: merged PR #3 for Task 01 PowerShell; applied Task 02 Python, Task 03 C++, and Task 04 C# TASK.md updates directly to `main` because their PRs conflicted only on stale `docs/agent-state.md` hunks; closed PRs #4/#5/#6 as superseded after preserving their intended TASK.md changes.
+- Commits: `c149c79` Task 01, `69d9f6f` Task 02, `57a5e0b` Task 03, `f83ef7a` Task 04.
+- Current repo state: all four synthetic coding-agent task specs are tightened and ready for starter-repo/hidden-test generation later.
+- Validation: not rerun after docs-only updates.
+- Next: implement metrics snapshot/sampling scripts, then run live `--run-id` benchmark sequence on the server.
 
 ### 2026-05-08 - Compliance-status disclaimer in benchmark methodology
 
@@ -384,9 +386,7 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 - Why: sync local laptop with Claude's latest work and remove obsolete/redundant repo artifacts.
 - Did: pulled `origin/main` to `1ba9cc6`, verified tidy-docs/sync-state additions, removed `CODEX_BOOTSTRAP_CONFIG_TASK.md`, removed tracked `docs/handoff-archive/2026-05.md`, and restored current server status to TP=8/OpenWebUI.
-- Note: current templates now say Git is the archive; no separate handoff archive
-  directory should be recreated. Tracked `.claude/commands/sync-state.md` and
-  `.claude/settings.json` remain present; tidy-docs slash command was not tracked.
+- Note: current templates now say Git is the archive; no separate handoff archive directory should be recreated. Tracked `.claude/commands/sync-state.md` and `.claude/settings.json` remain present; tidy-docs slash command was not tracked.
 - Validation: skipped (docs-only cleanup).
 - Next: commit the exact working TP=8 launch configuration, then run scripted smoke/TTFT/benchmark commands against the live vLLM endpoint.
 
