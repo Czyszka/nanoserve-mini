@@ -23,6 +23,15 @@ You may edit source files, tests, and benchmark-like checks.
 
 ---
 
+## .NET baseline and dependency expectations
+
+- .NET 8 is the baseline target. Code should remain compatible with .NET 9 unless the starter project explicitly requires otherwise.
+- Do not change the target framework unless the starter project already allows it.
+- Do not add heavy dependencies just to solve parsing.
+- Benchmark project dependencies may exist in the starter, but the parser library should remain lightweight.
+
+---
+
 ## Starter repository layout
 
 ```text
@@ -47,51 +56,243 @@ You may edit source files, tests, and benchmark-like checks.
 
 ---
 
-## Example input domain
+## Public API contract and preservation rules
 
-The parser should support query strings such as:
+The starter public API is the source of truth. Treat the shape below as a behavioral contract example:
 
-- `level:error service:api text:"timeout while reading"`
-- `user:123 action:login`
-- quoted values,
-- escaped quotes,
-- whitespace normalization.
+```csharp
+public static class QueryParser
+{
+    public static QueryParseResult Parse(string query);
+}
+
+public sealed class QueryParseResult
+{
+    public bool Success { get; }
+    public IReadOnlyList<QueryToken> Tokens { get; }
+    public IReadOnlyList<QueryParseError> Errors { get; }
+}
+
+public sealed class QueryToken
+{
+    public string Key { get; }
+    public string Value { get; }
+}
+```
+
+Rules:
+
+- Do not rename public classes, methods, or properties.
+- Do not change public method signatures unless absolutely necessary.
+- Internal/private parser implementation may be refactored freely.
+- New internal helpers are allowed.
+- New public overloads are allowed only if they do not break existing API.
+- If any public API change is made, justify it in `SOLUTION_NOTES.md`.
 
 ---
 
-## Required behavior
+## Query grammar and parsing semantics
 
-### Stage 1 — correctness with API preservation
+Formal grammar:
 
-- Preserve current public API signatures and return-shape behavior.
-- Fix parsing correctness issues.
-- Add or adjust tests to document expected behavior.
+```text
+query        := whitespace* pair (whitespace+ pair)* whitespace*
+pair         := key ":" value
+key          := one or more non-whitespace characters excluding ":"
+value        := quoted_value | bare_value
+bare_value   := one or more non-whitespace characters
+quoted_value := '"' characters_or_escapes '"'
+```
 
-### Stage 2 — edge case handling
+Whitespace rules:
 
-Handle at least:
+- Leading and trailing whitespace is ignored.
+- Spaces, tabs, and newlines outside quotes are separators.
+- Repeated whitespace outside quotes is treated as a single separator.
+- Whitespace inside quoted values is preserved.
 
-- empty query,
-- repeated spaces,
-- quoted values,
-- escaped quotes,
-- malformed/unclosed quotes,
-- duplicate keys (with explicit, consistent policy).
+Example:
 
-### Stage 3 — allocation-aware refactor
+```text
+level:error    text:"timeout while reading"
+```
 
-Refactor parser internals to reduce allocations:
+Produces:
 
-- avoid excessive `Split`/temporary arrays,
-- avoid unnecessary intermediate strings,
-- use spans or careful indexing where appropriate,
-- keep logic readable and maintainable.
+- `level = error`
+- `text = timeout while reading`
 
-### Stage 4 — performance stability
+---
 
-- Public tests must still pass.
+## Duplicate keys policy
+
+Duplicate keys are allowed and preserved in input order.
+
+Example:
+
+```text
+tag:api tag:slow
+```
+
+Produces tokens in order:
+
+1. `tag = api`
+2. `tag = slow`
+
+Clarifications:
+
+- Do not silently collapse duplicate keys.
+- Do not use “last value wins” unless the starter API already explicitly requires a dictionary-like result.
+- If the starter API is dictionary-like, document the conflict and preserve existing public API behavior.
+
+---
+
+## Malformed input behavior
+
+Malformed user input should not crash the parser. It should return a failed `QueryParseResult` with errors.
+
+Examples of malformed input:
+
+- `level:`
+- `:error`
+- `level error`
+- `text:"unterminated`
+- `text:"bad \q escape"` (when unsupported escapes are invalid)
+
+Policy:
+
+- Empty query is valid and returns zero tokens.
+- Malformed query returns `Success = false`.
+- Malformed query includes at least one error object/message.
+- The parser should not broadly catch and swallow unexpected defects.
+- Exceptions are acceptable for programmer errors only (for example null input per policy below).
+
+---
+
+## Null input policy
+
+`Parse(null)` should throw `ArgumentNullException`.
+
+Clarifications:
+
+- Null input is a programmer error.
+- Empty string or whitespace-only string is valid user input and should return success with zero tokens.
+
+---
+
+## Quoted values and escape semantics
+
+Required behavior examples:
+
+- `text:"timeout while reading"` -> `text = timeout while reading`
+- `text:"he said \"hello\""` -> `text = he said "hello"`
+- `path:"C:\\Temp"` -> `path = C:\Temp`
+
+Escapes to support inside quoted values:
+
+- `\"` means literal `"`
+- `\\` means literal `\`
+
+Rules:
+
+- Escapes are interpreted only inside quoted values.
+- Unsupported escape sequences are malformed input.
+- Unclosed quotes are malformed input.
+- Quoted values may be empty (`text:""` is valid and yields empty value).
+
+---
+
+## Case sensitivity and culture behavior
+
+- Keys and values are preserved exactly as written.
+- The parser should not perform culture-sensitive casing or normalization.
+- Any internal comparisons should use ordinal semantics.
+- Behavior should be stable under different current cultures, including `tr-TR`.
+- Do not lower-case or upper-case keys unless the starter API already requires it.
+
+---
+
+## Allocation-aware refactor expectations
+
+- Avoid a `Split`-heavy implementation as the main strategy.
+- Prefer a single-pass parser using indexing or `ReadOnlySpan<char>` where it improves allocation behavior without harming readability.
+- Final string allocations for public `Key`/`Value` outputs are acceptable (public API exposes strings).
+- Goal is not zero allocation; goal is removing unnecessary intermediate arrays/substrings.
+- Correctness and API compatibility are more important than allocation reduction.
+
+Guardrails:
+
+- Do not introduce unsafe code.
+- Do not make parser unreadable just to reduce small allocations.
+- Avoid broad try/catch blocks that hide parser defects.
+- Avoid regex-heavy implementation unless clearly justified and benchmarked.
+
+---
+
+## Performance and benchmark expectations
+
+Use benchmark-like checks for representative workloads:
+
+- many small queries,
+- one large query,
+- many-token query,
+- quoted values with spaces and escaped characters,
+- malformed inputs.
+
+Track where possible:
+
+- allocated bytes,
+- elapsed time,
+- optionally Gen0 collections.
+
+Interpretation:
+
+- Do not require a fixed percentage improvement (environment dependent).
+- Allocation behavior should improve or at least remain bounded for representative valid queries.
 - No major wall-clock regression in parser hot paths.
-- Allocation behavior should improve or remain bounded relative to baseline.
+- Benchmark-like checks are diagnostic, not the only judge.
+- Correctness must not be sacrificed for benchmark results.
+
+---
+
+## Build, test, and benchmark commands
+
+Expected commands:
+
+```bash
+dotnet restore
+dotnet test
+dotnet run --project benchmarks/LogQueryParser.Benchmarks -c Release
+```
+
+If BenchmarkDotNet exists in the starter, targeted run may be used:
+
+```bash
+dotnet run --project benchmarks/LogQueryParser.Benchmarks -c Release -- --filter '*Parser*'
+```
+
+Notes:
+
+- Exact benchmark command may vary by starter `README.md`.
+- The agent may run tests and benchmarks.
+- Public tests must pass after refactor.
+
+---
+
+## SOLUTION_NOTES.md requirement
+
+Agent should create or update `SOLUTION_NOTES.md` describing briefly:
+
+- what was broken,
+- parsing policy,
+- duplicate key policy,
+- malformed input policy,
+- API compatibility decisions,
+- allocation/performance rationale,
+- tests run,
+- benchmarks run (if any).
+
+This supports later LLM-as-judge review and commit comparison.
 
 ---
 
@@ -99,9 +300,18 @@ Refactor parser internals to reduce allocations:
 
 Public tests should verify:
 
-- basic parsing correctness,
-- quoted value parsing,
-- invalid input behavior,
+- empty query returns success with zero tokens,
+- whitespace-only query returns success with zero tokens,
+- null input throws `ArgumentNullException`,
+- basic `key:value`,
+- multiple pairs,
+- quoted value with spaces,
+- escaped quote,
+- escaped backslash,
+- repeated spaces/tabs/newlines outside quotes,
+- malformed unclosed quote returns failure,
+- missing key or missing value returns failure,
+- duplicate keys preserved in input order,
 - public API compatibility.
 
 ---
@@ -110,12 +320,44 @@ Public tests should verify:
 
 Hidden tests should verify:
 
+- very long query,
+- many-token query,
+- duplicate keys with order verification,
+- tabs and newlines as separators,
+- culture-sensitive behavior under non-invariant culture (such as `tr-TR`),
+- malformed missing key,
+- malformed missing value,
+- malformed unsupported escape,
+- escaped backslash,
+- large quoted string,
 - allocation-sensitive cases,
-- large query strings,
-- many-token queries,
-- malformed quoting,
-- duplicate-key policy consistency,
-- culture-invariant behavior.
+- no broad catch swallowing errors,
+- public API reflection check,
+- benchmark-like allocation regression check where feasible.
+
+---
+
+## Expected examples
+
+| Input | Success | Tokens / Error |
+|---|---|---|
+| `level:error` | true | `(level, error)` |
+| `level:error service:api` | true | `(level, error), (service, api)` |
+| `text:"timeout while reading"` | true | `(text, timeout while reading)` |
+| `tag:api tag:slow` | true | `(tag, api), (tag, slow)` |
+| `text:"he said \"hello\""` | true | `(text, he said "hello")` |
+| `""` | true | zero tokens |
+| `"   "` | true | zero tokens |
+| `text:"unterminated` | false | parse error |
+| `level error` | false | parse error |
+
+---
+
+## Anti-hardcoding guidance
+
+- Do not hard-code public test examples.
+- Hidden tests will use different keys, values, whitespace, quotes, cultures, and query sizes.
+- Do not weaken tests or change expected behavior to match a broken implementation.
 
 ---
 
@@ -123,9 +365,15 @@ Hidden tests should verify:
 
 LLM-as-judge should inspect:
 
-- idiomatic C# (.NET 8/.NET 9 compatible),
-- explicit API-preservation discipline,
-- real allocation improvements (not cosmetic),
-- no unsafe code unless strongly justified,
-- readable parser logic,
-- no broad try/catch blocks that swallow defects.
+- public API compatibility,
+- correctness against documented grammar,
+- duplicate key behavior,
+- malformed input behavior,
+- clear null input policy,
+- culture-invariant behavior,
+- allocation-aware implementation with readable code,
+- no unnecessary unsafe code,
+- no regex-heavy or Split-heavy implementation unless justified,
+- quality of `SOLUTION_NOTES.md`,
+- whether tests and benchmark-like checks were run,
+- whether correctness was prioritized over micro-optimization.
