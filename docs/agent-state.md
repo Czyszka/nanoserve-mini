@@ -276,3 +276,11 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
 > Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
+
+
+## 2026-05-08 - Codex task spec tightening (Task 02 Python)
+
+- Updated `benchmarks/coding-agent-tasks/02_python_cli_and_streaming_client/TASK.md` to tighten HTTP contract, SSE parsing rules, TTFT/E2E semantics, strict JSON/error schemas, exit codes, JSONL append behavior, and explicit public/hidden test expectations.
+- Commands run: branch create, file update, `uv run ruff check .`, `uv run pytest`.
+- Validation: `uv` is unavailable in this execution environment; `ruff`/`pytest` could not be run.
+- Next recommended action: open/review PR for task-spec wording and merge if approved.
