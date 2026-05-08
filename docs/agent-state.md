@@ -276,3 +276,10 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
 > Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
+
+## 2026-05-08 - Codex task-spec tightening (Task 04 C#)
+
+- Updated `benchmarks/coding-agent-tasks/04_csharp_allocation_aware_refactor/TASK.md` to tighten .NET baseline, API contract, formal grammar, null/malformed handling, duplicate-key policy, escape semantics, culture behavior, allocation/perf expectations, test expectations, anti-hardcoding guidance, and review checklist.
+- Commands run: `git status --short` (pre/post), `uv run ruff check .`, `uv run pytest`.
+- Validation: `uv` was unavailable in this environment (`uv run ruff check .` and `uv run pytest` could not run).
+- Next recommended action: review wording for benchmark portability, then open/merge PR.
