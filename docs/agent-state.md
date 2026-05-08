@@ -238,6 +238,23 @@ Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-08 - Compliance-status disclaimer in benchmark methodology
+
+- Why: make it impossible to mistake `mlperf_inspired_lite` results for
+  MLPerf-compliant submissions in write-ups, slides, or CV claims, and give
+  a ready-to-use phrasing for that distinction.
+- Did: added a "Compliance status" section near the top of
+  `docs/benchmark-methodology.md` (right after the intro, before
+  "Why MLPerf matters") with: a blockquote warning, a side-by-side table of
+  what MLPerf requires vs what this lab provides, what the lab borrows from
+  MLPerf (scenarios, warmup/measured discipline, controls), and a verbatim
+  communication-rule paragraph for portfolio/CV use. The
+  `methodology` label in result files remains `mlperf_inspired_lite` — the
+  doc now reinforces why the `_lite` matters.
+- Validation: `uv run ruff check .` (pass), `uv run pytest -q` (95 passed).
+- Next: unchanged — pick from live-run on server, aggregator (Wave C), or
+  recording the working TP=8 `vllm serve` command.
+
 ### 2026-05-08 - Server metrics scripts (collect_metrics_snapshot, sample_gpu_metrics)
 
 - Why: populate the `server_metrics` null-stub block introduced this morning so
