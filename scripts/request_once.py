@@ -23,10 +23,21 @@ from pathlib import Path
 from typing import Any
 
 from scripts._client import CompletionRequest, chat_completion, extract_assistant_text
-from scripts._metrics import RunControls, get_git_commit, now_iso, resolve_output_path
+from scripts._metrics import (
+    RunControls,
+    build_workload_spec,
+    get_git_commit,
+    make_run_uuid,
+    now_iso,
+    null_server_metrics,
+    resolve_output_path,
+)
+from scripts._schemas import (
+    METHODOLOGY,
+    MODE_SINGLESTREAM_LITE_CORRECTNESS,
+    SCHEMA_REQUEST_ONCE,
+)
 
-_BENCHMARK_MODE = "singlestream_lite_correctness"
-_METHODOLOGY = "mlperf_inspired_lite"
 _SCRIPT_NAME = "request_once.py"
 
 
@@ -81,7 +92,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--run-id",
         default=None,
         help="Run identifier. Sets output to results/runs/<run_id>/"
-             f"{_BENCHMARK_MODE}/result.json unless --output is also given.",
+             f"{MODE_SINGLESTREAM_LITE_CORRECTNESS}/result.json unless --output is also given.",
     )
     parser.add_argument("--dtype", default=None, help="Model dtype, e.g. bfloat16.")
     parser.add_argument("--quantization", default=None)
@@ -107,9 +118,9 @@ def build_record(
         text = extract_assistant_text(response)
         usage = response.get("usage") or {}
         record: dict[str, Any] = {
-            "schema": "nanoserve-mini.request-once.v1",
-            "methodology": _METHODOLOGY,
-            "benchmark_mode": _BENCHMARK_MODE,
+            "schema": SCHEMA_REQUEST_ONCE,
+            "methodology": METHODOLOGY,
+            "benchmark_mode": MODE_SINGLESTREAM_LITE_CORRECTNESS,
             "timestamp": now_iso(),
             "controls": controls.as_dict(),
             "request": {
@@ -125,6 +136,7 @@ def build_record(
                 "total_tokens": usage.get("total_tokens"),
                 "completed": True,
             },
+            "server_metrics": null_server_metrics(),
             "response": {
                 "id": response.get("id", ""),
                 "model": response.get("model", request.model),
@@ -134,9 +146,9 @@ def build_record(
         }
     else:
         record = {
-            "schema": "nanoserve-mini.request-once.v1",
-            "methodology": _METHODOLOGY,
-            "benchmark_mode": _BENCHMARK_MODE,
+            "schema": SCHEMA_REQUEST_ONCE,
+            "methodology": METHODOLOGY,
+            "benchmark_mode": MODE_SINGLESTREAM_LITE_CORRECTNESS,
             "timestamp": now_iso(),
             "controls": controls.as_dict(),
             "request": {
@@ -152,6 +164,7 @@ def build_record(
                 "total_tokens": None,
                 "completed": False,
             },
+            "server_metrics": null_server_metrics(),
             "response": None,
             "output_text": None,
             "error": error,
@@ -165,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     output_path_str = resolve_output_path(
         run_id=args.run_id,
         explicit_path=args.output,
-        benchmark_mode=_BENCHMARK_MODE,
+        benchmark_mode=MODE_SINGLESTREAM_LITE_CORRECTNESS,
         filename="result.json",
         fallback=None,
     )
@@ -177,6 +190,15 @@ def main(argv: list[str] | None = None) -> int:
         max_tokens=args.max_tokens,
         temperature=args.temperature,
     )
+    decoding = {"temperature": args.temperature, "max_tokens": args.max_tokens}
+    workload_spec = build_workload_spec(
+        name=args.workload,
+        prompt=args.prompt,
+        max_tokens=args.max_tokens,
+        decoding=decoding,
+        concurrency=1,
+        arrival_process="single",
+    )
     controls = RunControls(
         model=args.model,
         base_url=args.base_url,
@@ -187,12 +209,15 @@ def main(argv: list[str] | None = None) -> int:
         max_model_len=args.max_model_len,
         max_num_seqs=args.max_num_seqs,
         max_num_batched_tokens=args.max_num_batched_tokens,
-        decoding={"temperature": args.temperature, "max_tokens": args.max_tokens},
+        decoding=decoding,
         warmup_runs=0,
         measured_runs=1,
+        concurrency=1,
         workload=args.workload,
+        workload_spec=workload_spec,
         notes=args.notes,
         run_id=args.run_id,
+        run_uuid=make_run_uuid(),
         script_name=_SCRIPT_NAME,
         git_commit=get_git_commit(),
     )

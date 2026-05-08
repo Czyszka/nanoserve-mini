@@ -30,7 +30,7 @@ Note: the current roadmap content in this repo is stored as `docs/ROADMAP_v_1_0.
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization completed; coding-agent task specs tightened.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent task specs tightened.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed, Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
 
@@ -39,6 +39,12 @@ OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible e
 The repo now has:
 
 - MLPerf-inspired lite output layout for the first benchmark scripts.
+- Token-level metrics in benchmark output: TPOT, prompt/completion tokens, output tokens/s
+  (via `stream_options.include_usage=true`).
+- Structured `controls.workload_spec`, explicit `controls.concurrency`, unique `run_uuid`
+  per execution, and a `server_metrics` null-stub block populated by the new
+  `scripts/collect_metrics_snapshot.py` and `scripts/sample_gpu_metrics.py` helpers.
+- Shared schema/mode/methodology constants in `scripts/_schemas.py`.
 - Tightened synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
 - A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
 
@@ -206,22 +212,57 @@ uv run python -m scripts.run_sequential_benchmark \
 
 ## Last validation
 
-Most recent validation reported by Claude Code in PR #2 (2026-05-07):
+Local laptop validation on 2026-05-08 after PR #7 review follow-ups
+(failure-record path in `measure_ttft_once`, `completed=False` on
+no-content streams, stricter argument guards in `sample_gpu_metrics`)
+on top of the merged `origin/main`:
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, tests passed
+uv run pytest           OK, 102 passed
 ```
 
 Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`, `resolve_output_path(None)`, and measured-only sequential throughput before merge.
 
-The 2026-05-08 task-spec tightening was documentation-only and was applied through GitHub connector commits; `uv run ruff check .` / `uv run pytest` were not rerun after those documentation changes.
+The 2026-05-08 task-spec tightening on `main` was documentation-only and was applied through GitHub connector commits; `uv run ruff check .` / `uv run pytest` were not rerun after those documentation changes.
 
 ---
 
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-08 - PR #7 review follow-up + merge with main
+
+- Why: PR #7 went `dirty` after the Task 01-04 spec tightening on main; reviewer
+  also flagged three correctness issues in the new code.
+- Did:
+  - Merged `origin/main` into the PR branch and resolved the only conflict
+    (`docs/agent-state.md`); kept both narratives (server-metrics work +
+    coding-agent task tightening).
+  - `scripts/measure_ttft_once.py`: HTTP/transport/stream errors now produce
+    a v2-schema failure record (controls + request + server_metrics stub
+    preserved, `completed=False`, all token-derived metrics `None`,
+    non-null `error` string with type and message). `main()` returns 1 on
+    failure and prints the error to stderr. Helper `_failure_result()` keeps
+    the e2e_seconds field meaningful (elapsed-until-failure).
+  - `scripts/measure_ttft_once.measure_stream`: `completed` is now
+    `bool(output_parts)` rather than always True. A role-only stream that
+    ends cleanly returns `completed=False` so dashboards do not count zero-
+    token responses as successful generations.
+  - `scripts/sample_gpu_metrics.py`: argparse-side guards added for
+    `--duration-s > 0` and `--samples > 0` when provided; the existing
+    "at least one of them required" rule is preserved.
+  - Tests: added `test_measure_stream_handles_empty_stream`,
+    extended the role-only test to assert `completed is False`, added
+    `test_main_writes_failure_record_on_connect_error` and
+    `test_main_writes_failure_record_on_http_5xx` (failure record shape,
+    rc=1, error string contents, strict JSON, server_metrics stub kept,
+    workload_spec kept), added 4 sampler argument-guard tests
+    (zero/negative duration, zero/negative samples). 95 → 102 passing.
+- Commands run: `uv run ruff check .` (pass), `uv run pytest -q` (102 passed).
+- Next: unchanged — pick from live-run on server, fact-table aggregator
+  (Wave C), or recording the working TP=8 `vllm serve` command.
 
 ### 2026-05-08 - Tightened all coding-agent task specifications
 
@@ -231,6 +272,118 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
 - Current repo state: all four synthetic coding-agent task specs are tightened and ready for starter-repo/hidden-test generation later.
 - Validation: not rerun after docs-only updates.
 - Next: implement metrics snapshot/sampling scripts, then run live `--run-id` benchmark sequence on the server.
+
+### 2026-05-08 - Compliance-status disclaimer in benchmark methodology
+
+- Why: make it impossible to mistake `mlperf_inspired_lite` results for
+  MLPerf-compliant submissions in write-ups, slides, or CV claims, and give
+  a ready-to-use phrasing for that distinction.
+- Did: added a "Compliance status" section near the top of
+  `docs/benchmark-methodology.md` (right after the intro, before
+  "Why MLPerf matters") with: a blockquote warning, a side-by-side table of
+  what MLPerf requires vs what this lab provides, what the lab borrows from
+  MLPerf (scenarios, warmup/measured discipline, controls), and a verbatim
+  communication-rule paragraph for portfolio/CV use. The
+  `methodology` label in result files remains `mlperf_inspired_lite` — the
+  doc now reinforces why the `_lite` matters.
+- Validation: `uv run ruff check .` (pass), `uv run pytest -q` (95 passed).
+- Next: unchanged — pick from live-run on server, aggregator (Wave C), or
+  recording the working TP=8 `vllm serve` command.
+
+### 2026-05-08 - Server metrics scripts (collect_metrics_snapshot, sample_gpu_metrics)
+
+- Why: populate the `server_metrics` null-stub block introduced this morning so
+  benchmark JSON files can report real GPU/KV/prefix-cache numbers; provide
+  interval GPU sampling for time-series GPU charts.
+- Did:
+  - Added `scripts/_server_metrics.py` with two pure parsers
+    (`parse_prometheus_text`, `parse_nvidia_smi_csv`), an `nvidia-smi` query
+    field set used by both scripts (`NVIDIA_SMI_QUERY_FIELDS`,
+    `NVIDIA_SMI_FIELD_MAP`, `CSV_COLUMNS`), helpers `first_value`,
+    `select_vllm_aggregate`, `total_gpu_memory_used_gb`. NaN/+Inf/-Inf are
+    converted to `None` so strict-JSON output stays valid.
+  - Added `scripts/collect_metrics_snapshot.py`: one-shot scrape of vLLM
+    `/metrics` + `nvidia-smi`. Output:
+    `results/runs/<run_id>/server_metrics/snapshot_<phase>.json` with phases
+    `pre`/`mid`/`post`/`adhoc`. Writes `aggregate` block matching the
+    `server_metrics` stub keys (`gpu_memory_used_gb`, `kv_cache_usage`,
+    `prefix_cache_hit_rate`). Best-effort: scrape failures are recorded
+    inline, file is still written. Schema:
+    `nanoserve-mini.server-metrics-snapshot.v1`.
+  - Added `scripts/sample_gpu_metrics.py`: interval CSV sampling via repeated
+    `nvidia-smi` calls. Output:
+    `results/runs/<run_id>/server_metrics/gpu_samples.csv` plus sidecar
+    `gpu_samples_meta.json` (schema `nanoserve-mini.gpu-samples-meta.v1`)
+    with `interval_ms`, `duration_s`, `samples`, run_id/run_uuid, summary
+    (ticks, samples_written, errors). Requires `--duration-s` or `--samples`.
+    Loop body, clocks, and runner are injectable for tests.
+  - Tests: `tests/test_server_metrics.py` (parsers, NaN/Inf handling,
+    nvidia-smi malformed rows, total-GPU-memory aggregator),
+    `tests/test_collect_metrics_snapshot.py` (mocked httpx for /metrics +
+    mocked subprocess for nvidia-smi; success/5xx/missing-cmd/timeout/
+    nonzero-exit paths; main() with `--run-id` and `--output`; strict JSON),
+    `tests/test_sample_gpu_metrics.py` (sample loop with FakeClock,
+    deadline stop, error-resilient loop, CSV + meta sidecar; CLI guards
+    on interval and stop conditions). 67 → 95 passing.
+  - `_schemas.py` gained `SCHEMA_SERVER_METRICS_SNAPSHOT` and
+    `SCHEMA_GPU_SAMPLES_META` constants.
+  - `docs/benchmark-methodology.md`: extended `--run-id` layout to include
+    `server_metrics/` directory; new "Server-side metrics" section
+    describing both scripts and the aggregator hook.
+- Commands run: `uv run ruff check .` (pass after autofix sorted imports
+  in three new test files), `uv run pytest -q` (95 passed).
+- Decision: aggregator (planned `scripts/aggregate_runs.py`) deferred to a
+  later session; this session's focus was the producer side.
+- Next: pick one of (a) live-run end-to-end on the server, (b) write the
+  fact-table aggregator, (c) record the working TP=8 `vllm serve` command/runbook.
+
+### 2026-05-08 - Benchmark harness review + Wave A+B schema upgrade
+
+- Why: validate yesterday's benchmark scripts against the MLPerf-inspired-lite
+  methodology and against the ROADMAP Benchmark Contract; tighten the JSON
+  output shape so it can feed a future dashboard.
+- Did:
+  - Added `scripts/_schemas.py` with shared `METHODOLOGY`, mode identifiers,
+    and schema-version constants imported by all three scripts.
+  - Extended `RunControls` with `concurrency`, `run_uuid` (unique per
+    execution; `make_run_uuid()` helper), and structured `workload_spec`
+    (built by `build_workload_spec()`); added `null_server_metrics()` stub
+    helper.
+  - `_client.py` now injects `stream_options.include_usage=true` by default
+    in `chat_completion_stream` (caller-supplied options win); added
+    `extract_stream_usage`.
+  - `measure_ttft_once.py` now records `prompt_tokens`, `completion_tokens`,
+    `total_tokens`, `tpot_seconds` (decode-only:
+    `(e2e - ttft) / max(1, completion_tokens - 1)`), `output_tokens_per_second`,
+    `server_metrics` stub, structured `workload_spec`, `run_uuid`,
+    explicit `concurrency=1`. Schema bumped `ttft-once.v1 → v2`.
+  - `run_sequential_benchmark.py` per-row JSONL gains `tpot_seconds`,
+    `prompt_tokens`, `completion_tokens`, `output_tokens_per_second`;
+    summary gains `summary.tpot_seconds`, `summary.prompt_tokens`,
+    `summary.completion_tokens` aggregate blocks and
+    `summary.output_tokens_per_second` (token-level throughput);
+    top-level `server_metrics` stub. Schema bumped
+    `sequential-bench.v2 → v3`, `sequential-bench-row.v2 → v3`.
+  - `request_once.py` schema bumped `request-once.v1 → v2`; record now carries
+    `controls.run_uuid`, `controls.concurrency`, `controls.workload_spec`,
+    and `server_metrics` stub.
+  - Added `docs/benchmark-methodology.md` "Result schema contract" section
+    documenting the dashboard-facing field/type/units table per mode.
+  - Tests updated and extended (49 → 67 passing): new tests for
+    `make_run_uuid`, `null_server_metrics`, `build_workload_spec`,
+    `compute_tpot_seconds`, `compute_output_tokens_per_second`, usage chunk
+    handling in `measure_stream`, `chat_completion_stream` injecting
+    `stream_options.include_usage`, sequential summary token aggregates,
+    and server_metrics stub in summary.
+- Commands run: `uv sync --extra dev`, `uv run ruff check .` (pass),
+  `uv run pytest -q` (67 passed).
+- Decision: not bumping ROADMAP scope — these are MLPerf-inspired-lite
+  refinements consistent with the existing Benchmark Contract section.
+  Server-side `gpu_memory_used_gb`, `kv_cache_usage`, `prefix_cache_hit_rate`
+  remain `null` until `scripts/collect_metrics_snapshot.py` lands.
+- Next: implement `scripts/collect_metrics_snapshot.py` and
+  `scripts/sample_gpu_metrics.py` to populate `server_metrics`; then run
+  the live `--run-id` benchmark sequence on the server.
 
 ### 2026-05-07 - End-of-day state after benchmark/task merges
 
