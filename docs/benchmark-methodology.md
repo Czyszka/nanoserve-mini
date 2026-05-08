@@ -128,8 +128,9 @@ All identifiers are exported from `scripts/_schemas.py` so downstream consumers
 
 ## Output layout with --run-id
 
-All three scripts accept `--run-id <run_id>`. When provided, results are written
-under a shared directory tree so runs can be grouped and compared:
+All three benchmark scripts and both server-metrics scripts accept
+`--run-id <run_id>`. When provided, results are written under a shared
+directory tree so runs can be grouped and compared:
 
 ```
 results/runs/<run_id>/
@@ -140,11 +141,62 @@ results/runs/<run_id>/
   singlestream_lite_repeated/
     results.jsonl
     summary.json
+  server_metrics/
+    snapshot_pre.json
+    snapshot_post.json
+    gpu_samples.csv
+    gpu_samples_meta.json
 ```
 
 Explicit `--output`, `--output-jsonl`, and `--output-summary` flags override
 the `--run-id` path. If neither `--run-id` nor explicit flags are supplied,
 each script falls back to its legacy default path under `results/raw/`.
+
+## Server-side metrics
+
+`server_metrics/` is populated by two helper scripts. They are always optional
+relative to a benchmark run, but the dashboard contract assumes both are
+available when GPU/KV/prefix-cache fields need real values rather than the
+per-result `null` stubs.
+
+### `scripts/collect_metrics_snapshot.py`
+
+One-shot snapshot taken before/after (or mid) a benchmark run.
+
+- Scrapes vLLM `/metrics` (Prometheus exposition) and stores the full parsed
+  metric map.
+- Runs `nvidia-smi --query-gpu=...` once and stores per-GPU rows.
+- Computes a 3-field `aggregate` block matching the per-result `server_metrics`
+  stub keys (`gpu_memory_used_gb`, `kv_cache_usage`, `prefix_cache_hit_rate`).
+- Writes `results/runs/<run_id>/server_metrics/snapshot_<phase>.json` with
+  schema `nanoserve-mini.server-metrics-snapshot.v1`.
+- Best-effort: if vLLM is unreachable or `nvidia-smi` is missing, the file is
+  still written with `scrape_ok=false` / `available=false` and an `error` field
+  populated. A dashboard can tell "not collected" from "zero".
+
+Phases: `pre`, `mid`, `post`, `adhoc`.
+
+### `scripts/sample_gpu_metrics.py`
+
+Interval CSV sampling driven by repeated `nvidia-smi` invocations.
+
+- Writes `results/runs/<run_id>/server_metrics/gpu_samples.csv` with one row
+  per (tick, GPU). CSV columns are stable and exported from
+  `scripts/_server_metrics.CSV_COLUMNS`.
+- Sidecar `gpu_samples_meta.json` records the `nvidia-smi` command, interval,
+  duration / sample budget, `run_id`, `run_uuid`, and a summary block (ticks
+  attempted, samples written, errors). Schema:
+  `nanoserve-mini.gpu-samples-meta.v1`.
+
+Stop conditions: `--duration-s` wall budget, `--samples` cap, or both
+(whichever fires first). At least one of them is required.
+
+### Aggregator hook
+
+The fact-table aggregator (planned for Wave C) joins benchmark result files to
+their corresponding `server_metrics/snapshot_*.json` by `run_id`. The
+`aggregate` block can be lifted directly into each result's `server_metrics`
+stub at presentation time without renaming.
 
 ## Mapping to current scripts
 

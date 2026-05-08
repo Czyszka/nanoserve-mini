@@ -221,13 +221,13 @@ uv run python -m scripts.run_sequential_benchmark \
 
 ## Last validation
 
-Local laptop validation on 2026-05-08 after Wave A + B benchmark schema
-upgrade (token metrics, run_uuid, workload_spec, server_metrics stub,
-shared `_schemas.py`):
+Local laptop validation on 2026-05-08 after server-metrics scripts
+(`collect_metrics_snapshot.py`, `sample_gpu_metrics.py`) added on top
+of the Wave A + B benchmark schema upgrade:
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 67 passed
+uv run pytest           OK, 95 passed
 ```
 
 ---
@@ -237,6 +237,53 @@ uv run pytest           OK, 67 passed
 Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-08 - Server metrics scripts (collect_metrics_snapshot, sample_gpu_metrics)
+
+- Why: populate the `server_metrics` null-stub block introduced this morning so
+  benchmark JSON files can report real GPU/KV/prefix-cache numbers; provide
+  interval GPU sampling for time-series GPU charts.
+- Did:
+  - Added `scripts/_server_metrics.py` with two pure parsers
+    (`parse_prometheus_text`, `parse_nvidia_smi_csv`), an `nvidia-smi` query
+    field set used by both scripts (`NVIDIA_SMI_QUERY_FIELDS`,
+    `NVIDIA_SMI_FIELD_MAP`, `CSV_COLUMNS`), helpers `first_value`,
+    `select_vllm_aggregate`, `total_gpu_memory_used_gb`. NaN/+Inf/-Inf are
+    converted to `None` so strict-JSON output stays valid.
+  - Added `scripts/collect_metrics_snapshot.py`: one-shot scrape of vLLM
+    `/metrics` + `nvidia-smi`. Output:
+    `results/runs/<run_id>/server_metrics/snapshot_<phase>.json` with phases
+    `pre`/`mid`/`post`/`adhoc`. Writes `aggregate` block matching the
+    `server_metrics` stub keys (`gpu_memory_used_gb`, `kv_cache_usage`,
+    `prefix_cache_hit_rate`). Best-effort: scrape failures are recorded
+    inline, file is still written. Schema:
+    `nanoserve-mini.server-metrics-snapshot.v1`.
+  - Added `scripts/sample_gpu_metrics.py`: interval CSV sampling via repeated
+    `nvidia-smi` calls. Output:
+    `results/runs/<run_id>/server_metrics/gpu_samples.csv` plus sidecar
+    `gpu_samples_meta.json` (schema `nanoserve-mini.gpu-samples-meta.v1`)
+    with `interval_ms`, `duration_s`, `samples`, run_id/run_uuid, summary
+    (ticks, samples_written, errors). Requires `--duration-s` or `--samples`.
+    Loop body, clocks, and runner are injectable for tests.
+  - Tests: `tests/test_server_metrics.py` (parsers, NaN/Inf handling,
+    nvidia-smi malformed rows, total-GPU-memory aggregator),
+    `tests/test_collect_metrics_snapshot.py` (mocked httpx for /metrics +
+    mocked subprocess for nvidia-smi; success/5xx/missing-cmd/timeout/
+    nonzero-exit paths; main() with `--run-id` and `--output`; strict JSON),
+    `tests/test_sample_gpu_metrics.py` (sample loop with FakeClock,
+    deadline stop, error-resilient loop, CSV + meta sidecar; CLI guards
+    on interval and stop conditions). 67 → 95 passing.
+  - `_schemas.py` gained `SCHEMA_SERVER_METRICS_SNAPSHOT` and
+    `SCHEMA_GPU_SAMPLES_META` constants.
+  - `docs/benchmark-methodology.md`: extended `--run-id` layout to include
+    `server_metrics/` directory; new "Server-side metrics" section
+    describing both scripts and the aggregator hook.
+- Commands run: `uv run ruff check .` (pass after autofix sorted imports
+  in three new test files), `uv run pytest -q` (95 passed).
+- Decision: aggregator (planned `scripts/aggregate_runs.py`) deferred to a
+  later session; this session's focus was the producer side.
+- Next: pick one of (a) live-run end-to-end on the server, (b) write the
+  fact-table aggregator, (c) record the working TP=8 `vllm serve` command/runbook.
 
 ### 2026-05-08 - Benchmark harness review + Wave A+B schema upgrade
 

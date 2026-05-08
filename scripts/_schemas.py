@@ -24,3 +24,7 @@ SCHEMA_REQUEST_ONCE: Final[str] = "nanoserve-mini.request-once.v2"
 SCHEMA_TTFT_ONCE: Final[str] = "nanoserve-mini.ttft-once.v2"
 SCHEMA_SEQUENTIAL_BENCH: Final[str] = "nanoserve-mini.sequential-bench.v3"
 SCHEMA_SEQUENTIAL_BENCH_ROW: Final[str] = "nanoserve-mini.sequential-bench-row.v3"
+
+# Server-side observability artifacts.
+SCHEMA_SERVER_METRICS_SNAPSHOT: Final[str] = "nanoserve-mini.server-metrics-snapshot.v1"
+SCHEMA_GPU_SAMPLES_META: Final[str] = "nanoserve-mini.gpu-samples-meta.v1"
