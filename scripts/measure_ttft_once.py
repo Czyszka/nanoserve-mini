@@ -8,6 +8,8 @@ Defined timings:
   are ignored — they are protocol bookkeeping, not generated tokens.
 - E2E (end-to-end): from the moment we send the request to the moment the
   stream ends (server sends ``[DONE]`` or closes the connection).
+- TPOT (time per output token, decode-only): ``(e2e - ttft) / (completion_tokens - 1)``
+  when ``completion_tokens`` is known and >= 2; otherwise ``None``.
 
 Output shape follows the Benchmark Contract (controls + metrics + raw run).
 Default output path: ``results/raw/first_ttft.json``.
@@ -30,7 +32,7 @@ import json
 import sys
 import time
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -38,11 +40,23 @@ from scripts._client import (
     CompletionRequest,
     chat_completion_stream,
     extract_stream_delta_text,
+    extract_stream_usage,
 )
-from scripts._metrics import RunControls, get_git_commit, now_iso, resolve_output_path
+from scripts._metrics import (
+    RunControls,
+    build_workload_spec,
+    get_git_commit,
+    make_run_uuid,
+    now_iso,
+    null_server_metrics,
+    resolve_output_path,
+)
+from scripts._schemas import (
+    METHODOLOGY,
+    MODE_SINGLESTREAM_LITE_LATENCY,
+    SCHEMA_TTFT_ONCE,
+)
 
-_BENCHMARK_MODE = "singlestream_lite_latency"
-_METHODOLOGY = "mlperf_inspired_lite"
 _SCRIPT_NAME = "measure_ttft_once.py"
 _FALLBACK_OUTPUT = "results/raw/first_ttft.json"
 
@@ -54,6 +68,7 @@ class StreamRunResult:
     chunks_received: int
     output_text: str
     completed: bool
+    usage: dict[str, Any] | None = field(default=None)
 
 
 def _now() -> float:
@@ -66,16 +81,19 @@ def measure_stream(
     start_time: float,
     clock: callable = _now,
 ) -> StreamRunResult:
-    """Walk a stream of chunks, recording TTFT and E2E.
+    """Walk a stream of chunks, recording TTFT, E2E, and usage if reported.
 
     ``start_time`` is the wall clock (``perf_counter`` seconds) captured right
     before sending the request. ``clock`` is injectable for tests.
 
     TTFT is anchored on the first chunk that carries non-empty ``delta.content``.
+    Usage is taken from the last chunk that carries a ``usage`` block (vLLM
+    emits this when ``stream_options.include_usage`` is set).
     """
     ttft: float | None = None
     chunks_received = 0
     output_parts: list[str] = []
+    usage: dict[str, Any] | None = None
 
     for chunk in chunks:
         chunks_received += 1
@@ -84,6 +102,9 @@ def measure_stream(
             if ttft is None:
                 ttft = clock() - start_time
             output_parts.append(text)
+        chunk_usage = extract_stream_usage(chunk)
+        if chunk_usage is not None:
+            usage = chunk_usage
 
     e2e = clock() - start_time
     return StreamRunResult(
@@ -92,7 +113,40 @@ def measure_stream(
         chunks_received=chunks_received,
         output_text="".join(output_parts),
         completed=True,
+        usage=usage,
     )
+
+
+def compute_tpot_seconds(
+    *,
+    ttft_seconds: float | None,
+    e2e_seconds: float | None,
+    completion_tokens: int | None,
+) -> float | None:
+    """Decode-phase time per output token.
+
+    Returns ``None`` when any input is missing or when ``completion_tokens < 2``
+    (decode-phase has no inter-token interval to measure with a single output
+    token).
+    """
+    if ttft_seconds is None or e2e_seconds is None or completion_tokens is None:
+        return None
+    if completion_tokens < 2:
+        return None
+    decode_seconds = e2e_seconds - ttft_seconds
+    if decode_seconds <= 0:
+        return None
+    return decode_seconds / (completion_tokens - 1)
+
+
+def compute_output_tokens_per_second(
+    *,
+    e2e_seconds: float | None,
+    completion_tokens: int | None,
+) -> float | None:
+    if e2e_seconds is None or completion_tokens is None or e2e_seconds <= 0:
+        return None
+    return completion_tokens / e2e_seconds
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -115,7 +169,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--run-id",
         default=None,
         help="Run identifier. Sets output to results/runs/<run_id>/"
-             f"{_BENCHMARK_MODE}/result.json unless --output is also given.",
+             f"{MODE_SINGLESTREAM_LITE_LATENCY}/result.json unless --output is also given.",
     )
     parser.add_argument("--dtype", default=None, help="Model dtype, e.g. bfloat16.")
     parser.add_argument("--quantization", default=None)
@@ -135,10 +189,25 @@ def build_record(
     controls: RunControls,
     result: StreamRunResult,
 ) -> dict[str, Any]:
+    usage = result.usage or {}
+    prompt_tokens = usage.get("prompt_tokens")
+    completion_tokens = usage.get("completion_tokens")
+    total_tokens = usage.get("total_tokens")
+
+    tpot_seconds = compute_tpot_seconds(
+        ttft_seconds=result.ttft_seconds,
+        e2e_seconds=result.e2e_seconds,
+        completion_tokens=completion_tokens,
+    )
+    output_tokens_per_second = compute_output_tokens_per_second(
+        e2e_seconds=result.e2e_seconds,
+        completion_tokens=completion_tokens,
+    )
+
     return {
-        "schema": "nanoserve-mini.ttft-once.v1",
-        "methodology": _METHODOLOGY,
-        "benchmark_mode": _BENCHMARK_MODE,
+        "schema": SCHEMA_TTFT_ONCE,
+        "methodology": METHODOLOGY,
+        "benchmark_mode": MODE_SINGLESTREAM_LITE_LATENCY,
         "timestamp": now_iso(),
         "controls": controls.as_dict(),
         "request": {
@@ -149,10 +218,16 @@ def build_record(
         "metrics": {
             "ttft_seconds": result.ttft_seconds,
             "e2e_seconds": result.e2e_seconds,
+            "tpot_seconds": tpot_seconds,
+            "output_tokens_per_second": output_tokens_per_second,
             "chunks_received": result.chunks_received,
             "output_chars": len(result.output_text),
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
             "completed": result.completed,
         },
+        "server_metrics": null_server_metrics(),
         "output_text": result.output_text,
         "error": None,
     }
@@ -164,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     output_path_str = resolve_output_path(
         run_id=args.run_id,
         explicit_path=args.output,
-        benchmark_mode=_BENCHMARK_MODE,
+        benchmark_mode=MODE_SINGLESTREAM_LITE_LATENCY,
         filename="result.json",
         fallback=_FALLBACK_OUTPUT,
     )
@@ -176,6 +251,15 @@ def main(argv: list[str] | None = None) -> int:
         max_tokens=args.max_tokens,
         temperature=args.temperature,
     )
+    decoding = {"temperature": args.temperature, "max_tokens": args.max_tokens}
+    workload_spec = build_workload_spec(
+        name=args.workload,
+        prompt=args.prompt,
+        max_tokens=args.max_tokens,
+        decoding=decoding,
+        concurrency=1,
+        arrival_process="single",
+    )
     controls = RunControls(
         model=args.model,
         base_url=args.base_url,
@@ -186,12 +270,15 @@ def main(argv: list[str] | None = None) -> int:
         max_model_len=args.max_model_len,
         max_num_seqs=args.max_num_seqs,
         max_num_batched_tokens=args.max_num_batched_tokens,
-        decoding={"temperature": args.temperature, "max_tokens": args.max_tokens},
+        decoding=decoding,
         warmup_runs=0,
         measured_runs=1,
+        concurrency=1,
         workload=args.workload,
+        workload_spec=workload_spec,
         notes=args.notes,
         run_id=args.run_id,
+        run_uuid=make_run_uuid(),
         script_name=_SCRIPT_NAME,
         git_commit=get_git_commit(),
     )
@@ -211,8 +298,11 @@ def main(argv: list[str] | None = None) -> int:
 
     ttft = result.ttft_seconds
     ttft_str = f"{ttft * 1000:.1f} ms" if ttft is not None else "n/a"
+    tpot = record["metrics"]["tpot_seconds"]
+    tpot_str = f"{tpot * 1000:.2f} ms/tok" if tpot is not None else "n/a"
     print(f"TTFT:   {ttft_str}")
     print(f"E2E:    {result.e2e_seconds * 1000:.1f} ms")
+    print(f"TPOT:   {tpot_str}")
     print(f"chunks: {result.chunks_received}")
     print(f"saved:  {output_path}")
     return 0

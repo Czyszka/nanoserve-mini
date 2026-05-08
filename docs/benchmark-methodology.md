@@ -116,11 +116,15 @@ Expected behavior:
 Each script uses a fixed `benchmark_mode` identifier in its JSON output.
 All results carry `"methodology": "mlperf_inspired_lite"`.
 
-| Script | `benchmark_mode` |
-|---|---|
-| `scripts/request_once.py` | `singlestream_lite_correctness` |
-| `scripts/measure_ttft_once.py` | `singlestream_lite_latency` |
-| `scripts/run_sequential_benchmark.py` | `singlestream_lite_repeated` |
+| Script | `benchmark_mode` | Schema |
+|---|---|---|
+| `scripts/request_once.py` | `singlestream_lite_correctness` | `nanoserve-mini.request-once.v2` |
+| `scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
+| `scripts/run_sequential_benchmark.py` (summary) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
+| `scripts/run_sequential_benchmark.py` (row) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
+
+All identifiers are exported from `scripts/_schemas.py` so downstream consumers
+(aggregator, future dashboard) import the same source of truth.
 
 ## Output layout with --run-id
 
@@ -151,6 +155,112 @@ each script falls back to its legacy default path under `results/raw/`.
 | Sequential latency | implemented | `scripts/run_sequential_benchmark.py` | Warmup + measured runs, `concurrency = 1`. |
 | Offline-lite throughput | future | `scripts/run_offline_benchmark.py` | Fixed prompt set, controlled concurrency. |
 | Server-lite arrival | future | `scripts/run_server_like_benchmark.py` | Target QPS, arrival process, tail latency. |
+
+## Result schema contract
+
+This is the dashboard-facing contract. Every result file shares the top-level
+shape below; per-mode `metrics` and `summary` blocks add fields specific to the
+benchmark mode.
+
+### Common top-level shape
+
+| Field | Type | Notes |
+|---|---|---|
+| `schema` | string | Versioned identifier from `_schemas.py`. |
+| `methodology` | string | Always `mlperf_inspired_lite`. |
+| `benchmark_mode` | string | One of the mode identifiers above. |
+| `timestamp` | string | ISO-8601 UTC. |
+| `controls` | object | Reproduction context — see below. |
+| `request` | object | `prompt`, `max_tokens`, `temperature`. |
+| `metrics` (single-result files) or `summary` (sequential) | object | Mode-specific. |
+| `server_metrics` | object | vLLM/GPU-side block, all `null` until `/metrics` scraping is wired. Keys: `gpu_memory_used_gb`, `kv_cache_usage`, `prefix_cache_hit_rate`. |
+| `error` | string\|null | Top-level error string when the file represents a failed run. |
+
+### Controls block
+
+| Field | Type | Notes |
+|---|---|---|
+| `model` | string | HF repo id or vLLM-registered name. |
+| `base_url` | string | vLLM endpoint. |
+| `dtype` / `quantization` | string\|null | Model precision. |
+| `gpu_model` / `vllm_version` | string\|null | Hardware/runtime context. |
+| `max_model_len` / `max_num_seqs` / `max_num_batched_tokens` | int\|null | Server config. |
+| `decoding` | object | `temperature`, `max_tokens`, etc. |
+| `warmup_runs` / `measured_runs` | int | Phase counts. |
+| `concurrency` | int | Always `1` for SingleStream-lite. Used by Offline-lite/Server-lite later. |
+| `workload` | string\|null | Human-readable workload name. |
+| `workload_spec` | object\|null | Structured workload definition (see below). |
+| `notes` | string\|null | Free-form notes. |
+| `run_id` | string\|null | Group label across files. |
+| `run_uuid` | string | Unique per script invocation; lets a dashboard deduplicate when two runs share `run_id`. |
+| `script_name` | string | E.g. `measure_ttft_once.py`. |
+| `git_commit` | string\|null | HEAD at run time. |
+
+### Workload spec
+
+`controls.workload_spec` is the structured form of the workload definition
+required by the ROADMAP Benchmark Contract:
+
+| Field | Type | Notes |
+|---|---|---|
+| `name` | string\|null | Same as `controls.workload`. |
+| `prompt_source` | string | `literal` for now; later: `sharegpt`, `mmlu`, etc. |
+| `prompt_chars` | int | Cheap proxy for input size when no client-side tokenizer is available. |
+| `max_tokens` | int | Output cap. |
+| `decoding` | object | Mirrors `controls.decoding`. |
+| `concurrency` | int | Mirrors `controls.concurrency`. |
+| `arrival_process` | string | `single`, `sequential`; future: `poisson`, `closed_loop`. |
+| `shared_prefixes` | bool | Whether the workload reuses prefixes (cache experiments). |
+
+### Metrics — `singlestream_lite_correctness` (`request_once.py`)
+
+| Field | Type | Units |
+|---|---|---|
+| `metrics.e2e_seconds` | float\|null | seconds |
+| `metrics.output_chars` | int | characters |
+| `metrics.prompt_tokens` / `completion_tokens` / `total_tokens` | int\|null | tokens (from server `usage`) |
+| `metrics.completed` | bool | |
+
+### Metrics — `singlestream_lite_latency` (`measure_ttft_once.py`)
+
+| Field | Type | Units |
+|---|---|---|
+| `metrics.ttft_seconds` | float\|null | seconds |
+| `metrics.e2e_seconds` | float | seconds |
+| `metrics.tpot_seconds` | float\|null | seconds per output token (decode-only) |
+| `metrics.output_tokens_per_second` | float\|null | tokens/s |
+| `metrics.chunks_received` | int | streaming chunks |
+| `metrics.output_chars` | int | characters |
+| `metrics.prompt_tokens` / `completion_tokens` / `total_tokens` | int\|null | tokens |
+| `metrics.completed` | bool | |
+
+TPOT is `(e2e - ttft) / max(1, completion_tokens - 1)`; `null` when
+`completion_tokens` is missing or `< 2`.
+
+### Summary — `singlestream_lite_repeated` (`run_sequential_benchmark.py`)
+
+`summary.json` aggregates only error-free measured rows.
+
+| Field | Type | Notes |
+|---|---|---|
+| `summary.measured_runs` | int | error-free measured count |
+| `summary.errors` | int | error count among measured runs |
+| `summary.ttft_seconds` / `e2e_seconds` / `tpot_seconds` | object | each is a `{count, min, p50, p95, max, mean}` block |
+| `summary.prompt_tokens` / `completion_tokens` | object | per-request token-count distribution |
+| `summary.measured_wall_clock_seconds` | float\|null | denominator for throughput; excludes warmup |
+| `summary.request_throughput` | float\|null | requests/s |
+| `summary.output_chars_per_second` | float\|null | chars/s |
+| `summary.output_tokens_per_second` | float\|null | tokens/s — `null` when no `usage` was returned |
+
+Per-row JSONL (`results.jsonl`) carries the same token-level fields plus a
+`phase` of `warmup` or `measured`. Warmup rows are written for traceability but
+excluded from summary aggregates.
+
+### Empty/missing values
+
+All numeric aggregates use `null`, never `NaN`/`Infinity`. Files are written
+with `allow_nan=False` so a regression that tries to emit `NaN` raises at write
+time instead of producing invalid JSON.
 
 ## Required metrics
 

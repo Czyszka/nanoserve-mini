@@ -78,14 +78,22 @@ def chat_completion_stream(
     *,
     client: httpx.Client | None = None,
     timeout: float = 120.0,
+    include_usage: bool = True,
 ) -> Iterator[dict[str, Any]]:
     """Streaming call. Yields each parsed SSE chunk in order.
 
     Iteration stops cleanly when the server sends ``data: [DONE]`` or closes the
     stream. The ``[DONE]`` sentinel itself is **not** yielded — callers detect
     end-of-stream by the iterator finishing.
+
+    When ``include_usage`` is True (the default), the request is sent with
+    ``stream_options.include_usage = true`` so vLLM emits a final chunk that
+    carries a populated ``usage`` field. Callers that already pass
+    ``stream_options`` via ``CompletionRequest.extra`` win — we never override.
     """
     payload = build_payload(req, stream=True)
+    if include_usage and "stream_options" not in payload:
+        payload["stream_options"] = {"include_usage": True}
     url = _endpoint(req.base_url)
 
     owns_client = client is None
@@ -133,3 +141,14 @@ def extract_stream_delta_text(chunk: dict[str, Any]) -> str:
     delta = choices[0].get("delta") or {}
     content = delta.get("content")
     return content if isinstance(content, str) else ""
+
+
+def extract_stream_usage(chunk: dict[str, Any]) -> dict[str, Any] | None:
+    """Pull the ``usage`` block from a streaming chunk if present.
+
+    With ``stream_options.include_usage=true`` vLLM emits a final chunk that
+    carries usage. Some chunks may have an empty ``choices`` array — that is
+    expected for the usage-only chunk and is not an error.
+    """
+    usage = chunk.get("usage")
+    return usage if isinstance(usage, dict) else None

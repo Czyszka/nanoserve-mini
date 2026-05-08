@@ -35,7 +35,7 @@ Treat it as the current scope document unless a root `ROADMAP.md` is added later
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization completed.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed,
 Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
@@ -44,6 +44,11 @@ OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible e
 The repo now also has:
 
 - MLPerf-inspired lite output layout for the first benchmark scripts.
+- Token-level metrics in benchmark output: TPOT, prompt/completion tokens, output tokens/s
+  (via `stream_options.include_usage=true`).
+- Structured `controls.workload_spec`, explicit `controls.concurrency`, unique `run_uuid`
+  per execution, and a `server_metrics` null-stub block for future GPU/KV/prefix-cache scraping.
+- Shared schema/mode/methodology constants in `scripts/_schemas.py`.
 - Synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
 - A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
 
@@ -216,15 +221,14 @@ uv run python -m scripts.run_sequential_benchmark \
 
 ## Last validation
 
-Most recent validation reported by Claude Code in PR #2 (2026-05-07):
+Local laptop validation on 2026-05-08 after Wave A + B benchmark schema
+upgrade (token metrics, run_uuid, workload_spec, server_metrics stub,
+shared `_schemas.py`):
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, tests passed
+uv run pytest           OK, 67 passed
 ```
-
-Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`,
-`resolve_output_path(None)`, and measured-only sequential throughput before merge.
 
 ---
 
@@ -233,6 +237,54 @@ Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`
 Newest entry first. Appended by the `sync-state` routine
 (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs`
 routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-08 - Benchmark harness review + Wave A+B schema upgrade
+
+- Why: validate yesterday's benchmark scripts against the MLPerf-inspired-lite
+  methodology and against the ROADMAP Benchmark Contract; tighten the JSON
+  output shape so it can feed a future dashboard.
+- Did:
+  - Added `scripts/_schemas.py` with shared `METHODOLOGY`, mode identifiers,
+    and schema-version constants imported by all three scripts.
+  - Extended `RunControls` with `concurrency`, `run_uuid` (unique per
+    execution; `make_run_uuid()` helper), and structured `workload_spec`
+    (built by `build_workload_spec()`); added `null_server_metrics()` stub
+    helper.
+  - `_client.py` now injects `stream_options.include_usage=true` by default
+    in `chat_completion_stream` (caller-supplied options win); added
+    `extract_stream_usage`.
+  - `measure_ttft_once.py` now records `prompt_tokens`, `completion_tokens`,
+    `total_tokens`, `tpot_seconds` (decode-only:
+    `(e2e - ttft) / max(1, completion_tokens - 1)`), `output_tokens_per_second`,
+    `server_metrics` stub, structured `workload_spec`, `run_uuid`,
+    explicit `concurrency=1`. Schema bumped `ttft-once.v1 → v2`.
+  - `run_sequential_benchmark.py` per-row JSONL gains `tpot_seconds`,
+    `prompt_tokens`, `completion_tokens`, `output_tokens_per_second`;
+    summary gains `summary.tpot_seconds`, `summary.prompt_tokens`,
+    `summary.completion_tokens` aggregate blocks and
+    `summary.output_tokens_per_second` (token-level throughput);
+    top-level `server_metrics` stub. Schema bumped
+    `sequential-bench.v2 → v3`, `sequential-bench-row.v2 → v3`.
+  - `request_once.py` schema bumped `request-once.v1 → v2`; record now carries
+    `controls.run_uuid`, `controls.concurrency`, `controls.workload_spec`,
+    and `server_metrics` stub.
+  - Added `docs/benchmark-methodology.md` "Result schema contract" section
+    documenting the dashboard-facing field/type/units table per mode.
+  - Tests updated and extended (49 → 67 passing): new tests for
+    `make_run_uuid`, `null_server_metrics`, `build_workload_spec`,
+    `compute_tpot_seconds`, `compute_output_tokens_per_second`, usage chunk
+    handling in `measure_stream`, `chat_completion_stream` injecting
+    `stream_options.include_usage`, sequential summary token aggregates,
+    and server_metrics stub in summary.
+- Commands run: `uv sync --extra dev`, `uv run ruff check .` (pass),
+  `uv run pytest -q` (67 passed).
+- Decision: not bumping ROADMAP scope — these are MLPerf-inspired-lite
+  refinements consistent with the existing Benchmark Contract section.
+  Server-side `gpu_memory_used_gb`, `kv_cache_usage`, `prefix_cache_hit_rate`
+  remain `null` until `scripts/collect_metrics_snapshot.py` lands.
+- Next: implement `scripts/collect_metrics_snapshot.py` and
+  `scripts/sample_gpu_metrics.py` to populate `server_metrics`; then run
+  the live `--run-id` benchmark sequence on the server.
 
 ### 2026-05-07 - End-of-day state after benchmark/task merges
 

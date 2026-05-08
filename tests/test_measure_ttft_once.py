@@ -19,7 +19,12 @@ import pytest
 from scripts import _client, measure_ttft_once
 from scripts._client import CompletionRequest
 from scripts._metrics import RunControls
-from scripts.measure_ttft_once import build_record, measure_stream
+from scripts.measure_ttft_once import (
+    build_record,
+    compute_output_tokens_per_second,
+    compute_tpot_seconds,
+    measure_stream,
+)
 
 
 class _FakeClock:
@@ -86,6 +91,57 @@ def test_measure_stream_handles_no_content_chunks() -> None:
     assert result.ttft_seconds is None
     assert result.e2e_seconds == pytest.approx(0.05)
     assert result.output_text == ""
+    assert result.usage is None
+
+
+def test_measure_stream_captures_usage_when_present() -> None:
+    clock = _FakeClock([0.10, 0.30])
+
+    def chunks_with_usage() -> Iterator[dict[str, Any]]:
+        yield {"choices": [{"delta": {"role": "assistant"}}]}
+        yield {"choices": [{"delta": {"content": "hi"}}]}
+        yield {"choices": [{"delta": {"content": " there"}}]}
+        yield {
+            "choices": [],
+            "usage": {"prompt_tokens": 4, "completion_tokens": 5, "total_tokens": 9},
+        }
+
+    result = measure_stream(chunks_with_usage(), start_time=0.0, clock=clock)
+    assert result.usage == {"prompt_tokens": 4, "completion_tokens": 5, "total_tokens": 9}
+    assert result.ttft_seconds == pytest.approx(0.10)
+    assert result.e2e_seconds == pytest.approx(0.30)
+
+
+def test_compute_tpot_seconds_basic() -> None:
+    # 100 ms TTFT, 600 ms E2E, 6 tokens => 500 ms / 5 = 100 ms per token
+    assert compute_tpot_seconds(
+        ttft_seconds=0.1, e2e_seconds=0.6, completion_tokens=6,
+    ) == pytest.approx(0.1)
+
+
+def test_compute_tpot_seconds_returns_none_when_inputs_missing() -> None:
+    assert compute_tpot_seconds(ttft_seconds=None, e2e_seconds=0.5, completion_tokens=2) is None
+    assert compute_tpot_seconds(ttft_seconds=0.1, e2e_seconds=None, completion_tokens=2) is None
+    assert compute_tpot_seconds(ttft_seconds=0.1, e2e_seconds=0.5, completion_tokens=None) is None
+
+
+def test_compute_tpot_seconds_returns_none_for_one_or_zero_tokens() -> None:
+    assert compute_tpot_seconds(ttft_seconds=0.1, e2e_seconds=0.5, completion_tokens=1) is None
+    assert compute_tpot_seconds(ttft_seconds=0.1, e2e_seconds=0.5, completion_tokens=0) is None
+
+
+def test_compute_tpot_seconds_returns_none_for_nonpositive_decode_window() -> None:
+    # ttft >= e2e means we have no decode window — guard against pathological data
+    assert compute_tpot_seconds(ttft_seconds=0.5, e2e_seconds=0.5, completion_tokens=4) is None
+
+
+def test_compute_output_tokens_per_second_basic() -> None:
+    assert compute_output_tokens_per_second(
+        e2e_seconds=2.0, completion_tokens=10,
+    ) == pytest.approx(5.0)
+    assert compute_output_tokens_per_second(e2e_seconds=None, completion_tokens=10) is None
+    assert compute_output_tokens_per_second(e2e_seconds=2.0, completion_tokens=None) is None
+    assert compute_output_tokens_per_second(e2e_seconds=0.0, completion_tokens=10) is None
 
 
 def test_build_record_shape() -> None:
@@ -107,7 +163,7 @@ def test_build_record_shape() -> None:
     )
     record = build_record(request=request, controls=controls, result=result)
 
-    assert record["schema"] == "nanoserve-mini.ttft-once.v1"
+    assert record["schema"] == "nanoserve-mini.ttft-once.v2"
     assert record["methodology"] == "mlperf_inspired_lite"
     assert record["benchmark_mode"] == "singlestream_lite_latency"
     assert record["error"] is None
@@ -141,7 +197,7 @@ def test_main_writes_result_json(
     assert output.exists()
 
     record = json.loads(output.read_text(encoding="utf-8"))
-    assert record["schema"] == "nanoserve-mini.ttft-once.v1"
+    assert record["schema"] == "nanoserve-mini.ttft-once.v2"
     assert record["methodology"] == "mlperf_inspired_lite"
     assert record["benchmark_mode"] == "singlestream_lite_latency"
     assert record["error"] is None
@@ -150,11 +206,28 @@ def test_main_writes_result_json(
     assert record["metrics"]["completed"] is True
     assert record["metrics"]["ttft_seconds"] is not None
     assert record["metrics"]["e2e_seconds"] >= record["metrics"]["ttft_seconds"]
+    # mock SSE has no usage chunk; token-derived metrics fall back to None
+    assert record["metrics"]["prompt_tokens"] is None
+    assert record["metrics"]["completion_tokens"] is None
+    assert record["metrics"]["tpot_seconds"] is None
+    assert record["metrics"]["output_tokens_per_second"] is None
+    # server_metrics stub is always present with null values for now
+    assert record["server_metrics"] == {
+        "gpu_memory_used_gb": None,
+        "kv_cache_usage": None,
+        "prefix_cache_hit_rate": None,
+    }
+    # controls carry the new contract fields
+    assert record["controls"]["concurrency"] == 1
+    assert record["controls"]["run_uuid"] is not None
+    assert record["controls"]["workload_spec"]["arrival_process"] == "single"
+    assert record["controls"]["workload_spec"]["concurrency"] == 1
     assert record["output_text"] == "hi there"
 
     out = capsys.readouterr().out
     assert "TTFT:" in out
     assert "E2E:" in out
+    assert "TPOT:" in out
 
 
 def test_main_uses_run_id_path(

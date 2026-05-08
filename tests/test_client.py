@@ -21,6 +21,7 @@ from scripts._client import (
     chat_completion_stream,
     extract_assistant_text,
     extract_stream_delta_text,
+    extract_stream_usage,
 )
 
 
@@ -145,3 +146,87 @@ def test_extract_stream_delta_text_handles_missing_fields() -> None:
     assert extract_stream_delta_text({}) == ""
     assert extract_stream_delta_text({"choices": [{"delta": {}}]}) == ""
     assert extract_stream_delta_text({"choices": [{"delta": {"role": "assistant"}}]}) == ""
+
+
+def test_extract_stream_usage_returns_dict_or_none() -> None:
+    assert extract_stream_usage({}) is None
+    assert extract_stream_usage({"choices": []}) is None
+    usage = {"prompt_tokens": 3, "completion_tokens": 7, "total_tokens": 10}
+    assert extract_stream_usage({"choices": [], "usage": usage}) == usage
+    # malformed usage is rejected
+    assert extract_stream_usage({"usage": "nope"}) is None
+
+
+def test_chat_completion_stream_injects_include_usage_by_default() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = json.loads(request.content.decode("utf-8"))
+        return httpx.Response(
+            200,
+            content=b"data: [DONE]\n\n",
+            headers={"content-type": "text/event-stream"},
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    try:
+        list(chat_completion_stream(_request(), client=client))
+    finally:
+        client.close()
+
+    body = captured["body"]
+    assert isinstance(body, dict)
+    assert body["stream"] is True
+    assert body.get("stream_options") == {"include_usage": True}
+
+
+def test_chat_completion_stream_caller_stream_options_wins() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = json.loads(request.content.decode("utf-8"))
+        return httpx.Response(
+            200,
+            content=b"data: [DONE]\n\n",
+            headers={"content-type": "text/event-stream"},
+        )
+
+    request = CompletionRequest(
+        base_url="http://x",
+        model="m",
+        prompt="p",
+        max_tokens=1,
+        extra={"stream_options": {"include_usage": False}},
+    )
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    try:
+        list(chat_completion_stream(request, client=client))
+    finally:
+        client.close()
+
+    body = captured["body"]
+    assert isinstance(body, dict)
+    # caller-provided stream_options must not be overwritten
+    assert body["stream_options"] == {"include_usage": False}
+
+
+def test_chat_completion_stream_include_usage_false_omits_field() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["body"] = json.loads(request.content.decode("utf-8"))
+        return httpx.Response(
+            200,
+            content=b"data: [DONE]\n\n",
+            headers={"content-type": "text/event-stream"},
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    try:
+        list(chat_completion_stream(_request(), client=client, include_usage=False))
+    finally:
+        client.close()
+
+    body = captured["body"]
+    assert isinstance(body, dict)
+    assert "stream_options" not in body
