@@ -276,3 +276,10 @@ routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
 > Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
+
+### 2026-05-08 - Tighten Task 03 C++ benchmark spec
+
+- Why: make Task 03 instructions more explicit for API, safety, performance, and hidden-test robustness.
+- Did: refined `benchmarks/coding-agent-tasks/03_cpp_buffer_and_hotpath/TASK.md` with C++17 baseline, API/TokenId contract, clear/reserve semantics, accessor/lifetime rules, sanitizer/build/test guidance, stronger public+hidden test expectations, benchmark guidance, anti-hardcoding, and `SOLUTION_NOTES.md` requirement.
+- Validation: not run (`uv` not available in this container).
+- Next: run `uv run ruff check .` and `uv run pytest` in a full dev environment.
