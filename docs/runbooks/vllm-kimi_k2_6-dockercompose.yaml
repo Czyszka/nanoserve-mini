@@ -1,0 +1,30 @@
+services:
+  vllm:
+    image: vllm/vllm-openai:latest-cu130-ubuntu2404
+    container_name: vllm-kimi-k2
+    privileged: true
+    ipc: host
+    ports:
+      - "8000:8000"
+    volumes:
+      - /home/ubuntusrv2/.vllm/models:/root/.cache/huggingface
+    command:
+      - "moonshotai/Kimi-K2.6"
+      - "--trust-remote-code"
+      - "--tensor-parallel-size"
+      - "8"
+      - "--reasoning-parser"
+      - "kimi_k2"
+      - "--language-model-only"
+      - "--speculative-config"
+      - '{"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3}'
+      - "--tool-call-parser"
+      - "kimi_k2"
+      - "--enable-auto-tool-choice"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
