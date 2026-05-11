@@ -22,7 +22,7 @@ services:
       - "kimi_k2"
       - "--enable-auto-tool-choice"
     deploy:
-      resources:ost.docker.internal
+      resources:
         reservations:
           devices:
             - driver: nvidia
