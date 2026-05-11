@@ -8,6 +8,50 @@ Ten plan jest operacyjny. Nie jest finalnym benchmark write-upem.
 
 ---
 
+## Aktualizacja po sesji serwerowej
+
+Status po pracy na serwerze 2026-05-11:
+
+- Zmiany z ostatniej pracy na serwerze nie zostały jeszcze w całości
+  wypchnięte do repo. Pierwszy krok kolejnej sesji to odzyskanie i commit
+  artefaktów z serwera.
+- Utworzono roboczy Docker Compose z trzema usługami:
+  - duży model `moonshotai/Kimi-K2.6`,
+  - mały model `deepseek-ai/DeepSeek-V4-Flash`,
+  - OpenWebUI.
+- Mały model działa jako `vllm-small` i jest celowo ograniczony do ok. 20%
+  VRAM na 8 GPU. Reszta VRAM ma zostać dla dużego modelu.
+- Dla `deepseek-ai/DeepSeek-V4-Flash` wykonano benchmarki:
+  - `request_once`,
+  - TTFT,
+  - repeated / sequential benchmark.
+- Wyniki benchmarków DeepSeek-V4-Flash i dokładna wersja compose z serwera
+  muszą zostać przeniesione do repo w następnej sesji.
+- Tracked compose po stronie repo został uzupełniony o:
+  - Kimi `--gpu-memory-utilization 0.75`,
+  - DeepSeek `--gpu-memory-utilization 0.20`,
+  - wspólne env/ulimits/restart dla obu usług vLLM.
+
+Priorytet kolejnej sesji:
+
+1. Na serwerze: `git pull --ff-only`, sprawdzić `git status`, a następnie
+   odzyskać lokalne zmiany compose i wyniki benchmarków, które nie trafiły
+   jeszcze do GitHub.
+2. Porównać live compose z `infra/compose/docker-compose.kimi-k2.6.yml` i
+   rozstrzygnąć, czy plik w repo jest kanoniczny.
+3. Przypiąć obrazy Docker do konkretnej wersji albo digestu przed kolejnymi
+   porównywalnymi benchmarkami. Aktualne tagi `latest...` / `main` są robocze.
+4. Dokończyć testy programistyczne DeepSeek-V4-Flash.
+5. Pobrać drugi mały model do porównania, uruchomić go w analogicznym trybie,
+   wykonać benchmarki i testy programistyczne.
+6. Porównać małe modele pod kątem: latency, stabilności, jakości odpowiedzi
+   w zadaniach programistycznych, VRAM i współdziałania z dużym modelem.
+7. OpenWebUI może na razie zostać podpięte ręcznie. Docelowo sprawdzić:
+   `OPENAI_API_BASE_URLS` z wieloma endpointami rozdzielonymi średnikami albo
+   routing przez LiteLLM / LLM proxy.
+
+---
+
 ## Założenia
 
 - Główny serwer: Ubuntu 24.04, 8x H200 NVL.

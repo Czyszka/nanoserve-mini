@@ -292,6 +292,13 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-11 - Server plan updated after DeepSeek run
+
+- Why: keep `docs/plans/2026-05-11-server-work-plan.md` aligned with the actual post-session state.
+- Did: added a top-level update noting unpushed server artifacts, completed DeepSeek-V4-Flash request/TTFT/repeated benchmarks, compose VRAM split, image-pinning TODO, and next-session comparison work.
+- Validation: docs-only; no code tests run.
+- Next: push the plan update, then start the next server session by importing the missing compose/results artifacts.
+
 ### 2026-05-11 - Compose README aligned with YAML
 
 - Why: remove stale single-node DEP/runbook text from `infra/compose/README.md`.
