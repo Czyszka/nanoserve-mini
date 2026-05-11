@@ -1,116 +1,225 @@
-# vLLM Compose - Kimi-K2.6 (single-node DEP)
+# vLLM Compose - Kimi-K2.6 + small model + OpenWebUI
 
-Stos `docker compose` do uruchomienia vLLM 0.20.0 (CUDA 13) z modelem
-`moonshotai/Kimi-K2.6` na serwerze 8x H200 NVL w strategii
-**single-node DEP** (Data Parallel + Expert Parallel) zgodnie z
-[vLLM recipes](https://recipes.vllm.ai/moonshotai/Kimi-K2.6?strategy=single_node_dep).
+Ten katalog zawiera roboczy `docker compose` dla serwera GPU `ubuntusrv2`
+z 8x H200 NVL.
 
-## Założenia środowiska
+Aktualny plik:
 
-Z `results/raw/server_env_snapshot.json`:
+```text
+docker-compose.kimi-k2.6.yml
+```
 
-- Ubuntu 24.04, kernel 6.8, x86_64
-- 8x NVIDIA H200 NVL 143 GB (driver 595.58.03, CUDA 13.2)
-- Docker 28.5.0, Docker Compose v2.39.4
-- 3 TiB RAM, 1.8 TB system disk + 11 TB SAS RAID
+Definiuje trzy uslugi:
 
-Wymagany jest zainstalowany **NVIDIA Container Toolkit**
-(`/etc/docker/daemon.json` z runtime `nvidia`). Jeśli nie ma:
-`sudo apt install nvidia-container-toolkit && sudo systemctl restart docker`.
+| Service | Container | Port hosta | Rola |
+|---|---|---:|---|
+| `vllm` | `vllm-kimi-k2-6` | `8000` | duzy model `moonshotai/Kimi-K2.6` |
+| `vllm-small` | `vllm-small` | `8004` | maly model `deepseek-ai/DeepSeek-V4-Flash` |
+| `open-webui` | `open-webui` | `3000` | UI podlaczone do `vllm:8000` |
 
-## Uruchomienie
+Compose jest dokumentacja aktualnego eksperymentu, nie finalnym runbookiem
+produkcyjnym. Po kazdej zmianie launch command z serwera trzeba zsynchronizowac
+ten plik i `docs/agent-state.md`.
+
+## Wymagania
+
+- Ubuntu 24.04 na serwerze GPU.
+- Docker + Docker Compose.
+- NVIDIA Container Toolkit.
+- Dostep do modeli na Hugging Face.
+- Lokalny katalog cache modeli:
+
+```text
+/home/ubuntusrv2/.vllm/models
+```
+
+Ten katalog jest montowany do kontenerow jako:
+
+```text
+/root/.cache/huggingface
+```
+
+Nie commituj tokenow, wag modeli, cache HF ani duzych logow.
+
+## Konfiguracja
+
+Skopiuj przyklad env i ustaw token:
 
 ```bash
 cd infra/compose
 cp .env.example .env
-# edytuj .env i ustaw HF_TOKEN
-
-docker compose -f docker-compose.kimi-k2.6.yml up -d
-docker compose -f docker-compose.kimi-k2.6.yml logs -f vllm
 ```
 
-Pierwszy start pobiera wagi modelu (~setki GB) do nazwanego wolumenu
-`nanoserve-hf-cache`. Kolejne starty są szybkie - cache jest trwały.
+Wymagane:
+
+```bash
+HF_TOKEN=...
+```
+
+Uzywane przez YAML:
+
+- `HF_TOKEN` - wymagany dla uslugi `vllm`.
+- `VLLM_HOST_PORT` - opcjonalny port hosta dla Kimi, domyslnie `8000`.
+- `OPEN_WEBUI_HOST_PORT` - opcjonalny port hosta dla OpenWebUI, domyslnie `3000`.
+- `OPENWEBUI_OPENAI_API_KEY` - opcjonalny dummy/API key dla OpenWebUI.
+- `SERVED_MODEL_NAME` - opcjonalna nazwa serwowana przez `vllm-small`, domyslnie `DeepSeek-V4-Flash`.
+
+Uwaga: `.env.example` moze zawierac starsze zmienne tuningowe. Obecny YAML ich
+nie odczytuje, dopoki nie zostana jawnie podlaczone w `command`.
+
+## Uruchomienie
+
+Start calego stosu:
+
+```bash
+docker compose -f docker-compose.kimi-k2.6.yml up -d
+```
+
+Logi:
+
+```bash
+docker compose -f docker-compose.kimi-k2.6.yml logs -f vllm
+docker compose -f docker-compose.kimi-k2.6.yml logs -f vllm-small
+docker compose -f docker-compose.kimi-k2.6.yml logs -f open-webui
+```
 
 Status:
 
 ```bash
 docker compose -f docker-compose.kimi-k2.6.yml ps
-docker volume inspect nanoserve-hf-cache
 ```
 
-## Test z hosta
-
-```bash
-# health
-curl -fsS http://localhost:8000/health
-
-# lista modeli
-curl -s http://localhost:8000/v1/models | jq .
-
-# chat (OpenAI-compatible)
-curl -s http://localhost:8000/v1/chat/completions \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "model": "kimi-k2.6",
-    "messages": [{"role":"user","content":"Powiedz cześć po polsku."}],
-    "max_tokens": 64
-  }' | jq .
-```
-
-## Claude Code CLI
-
-Endpoint vLLM jest **OpenAI-compatible** (`/v1/chat/completions`), nie
-Anthropic-native. Claude Code CLI rozmawia w protokole Anthropic
-(`/v1/messages`), więc samo ustawienie `ANTHROPIC_BASE_URL` na
-`http://<host>:8000` nie wystarczy.
-
-Dwie opcje:
-
-1. **LiteLLM Proxy** (zgodnie z roadmap-em):
-   uruchom LiteLLM jako tłumacza Anthropic <-> OpenAI, wystaw na np. 4000,
-   skonfiguruj model `kimi-k2.6` -> `openai/kimi-k2.6` z `api_base`
-   wskazującym na `http://vllm:8000/v1`, a w Claude Code:
-
-   ```bash
-   export ANTHROPIC_BASE_URL=http://<host>:4000
-   export ANTHROPIC_AUTH_TOKEN=<klucz_litellm>
-   export ANTHROPIC_MODEL=kimi-k2.6
-   ```
-
-2. **claude-code-router / anthropic-proxy** - lekki shim Anthropic->OpenAI.
-
-Do samego `curl` z hosta wystarczy port `8000` wystawiony przez ten compose.
-
-## Strategia DEP - co tu się dzieje
-
-`single_node_dep` = jeden węzeł, **8 rank-ów Data Parallel** (po jednej GPU
-na rank), **Expert Parallel** rozłożony na wszystkie 8 GPU
-(`--enable-expert-parallel`), TP=1. Dla MoE jak Kimi-K2.6 daje to wyższą
-przepustowość niż czyste TP=8, kosztem nieco większego narzutu komunikacji
-między ekspertami. Recipe Kimi-K2.5/K2.6 używa też:
-
-- `--mm-encoder-tp-mode data` - vision encoder w trybie DP,
-- `--tool-call-parser kimi_k2` + `--reasoning-parser kimi_k2` - obowiązkowe
-  dla tool-calling i reasoning mode w K2.x,
-- `--enable-auto-tool-choice`,
-- `--trust-remote-code`.
-
-## Tuning / parametry
-
-W `.env`:
-
-- `MAX_MODEL_LEN` - domyślnie 65536. Zwiększ tylko jeśli widzisz, że
-  workload wymaga (większy KV cache).
-- `MAX_NUM_BATCHED_TOKENS` - 16384 to bezpieczny start; 32768 dla
-  prompt-heavy, 8192 dla niskich latencji.
-- `MAX_NUM_SEQS` - 256 dla wysokiego concurrency.
-- `GPU_MEMORY_UTILIZATION` - 0.90 -> 0.95 jeśli chcesz maksymalny KV cache.
-
-## Sprzątanie
+Stop:
 
 ```bash
 docker compose -f docker-compose.kimi-k2.6.yml down
-# wagi zostają w wolumenie:
-docker volume rm nanoserve-hf-cache   # tylko jeśli chcesz skasować cache
 ```
+
+## Endpointy
+
+Kimi-K2.6:
+
+```bash
+curl -fsS http://localhost:8000/health
+curl -s http://localhost:8000/v1/models | jq .
+```
+
+DeepSeek-V4-Flash:
+
+```bash
+curl -fsS http://localhost:8004/health
+curl -s http://localhost:8004/v1/models | jq .
+```
+
+OpenWebUI:
+
+```text
+http://localhost:3000
+```
+
+W obecnym YAML OpenWebUI jest podlaczone tylko do:
+
+```text
+http://vllm:8000/v1
+```
+
+Jesli UI ma widziec rowniez maly model, trzeba rozszerzyc
+`OPENAI_API_BASE_URLS` o endpoint `vllm-small:8004`. OpenWebUI obsluguje wiele
+OpenAI-compatible base URL przez liste rozdzielona srednikami, np.:
+
+```text
+OPENAI_API_BASE_URLS=http://vllm:8000/v1;http://vllm-small:8004/v1
+OPENAI_API_KEYS=dummy;dummy
+```
+
+Na razie zostawiamy jeden endpoint w compose; docelowo moze to obslugiwac
+LiteLLM/LLM proxy.
+
+## Aktualne parametry modeli
+
+### Kimi-K2.6
+
+`vllm` uruchamia:
+
+- image: `vllm/vllm-openai:latest-cu130-ubuntu2404`
+- model: `moonshotai/Kimi-K2.6`
+- served model name: `kimi-k2.6`
+- port w kontenerze: `8000`
+- `--enable-expert-parallel`
+- `--data-parallel-size=8`
+- `--gpu-memory-utilization 0.75`
+- `--tool-call-parser=kimi_k2`
+- `--reasoning-parser=kimi_k2`
+- `--enable-auto-tool-choice`
+- `--language-model-only`
+- Eagle3 speculative head: `lightseekorg/kimi-k2.6-eagle3-mla`
+
+Ten wariant trzeba nadal porownac z faktycznie dzialajaca komenda z serwera,
+zwlaszcza jesli poprzedni stabilny run byl czystym TP=8.
+
+### DeepSeek-V4-Flash
+
+`vllm-small` uruchamia:
+
+- image: `vllm/vllm-openai:latest-cu130-ubuntu2404`
+- model: `deepseek-ai/DeepSeek-V4-Flash`
+- port w kontenerze: `8004`
+- `--tensor-parallel-size 8`
+- `--gpu-memory-utilization 0.20`
+- `--max-model-len 65536`
+- `--max-num-seqs 2`
+- `--max-num-batched-tokens 4096`
+- `--kv-cache-dtype fp8`
+- `--tokenizer-mode deepseek_v4`
+- `--tool-call-parser deepseek_v4`
+- `--reasoning-parser deepseek_v4`
+- MTP speculative config: `{"method":"mtp","num_speculative_tokens":1}`
+
+Intencja: maly model ma uzywac ok. 20% VRAM na 8 GPU, a reszta VRAM ma zostac
+dostepna dla duzego modelu.
+
+## Benchmark smoke
+
+Przykladowy run dla malego modelu:
+
+```bash
+RUN_ID=2026-05-11_deepseek-v4-flash_small
+
+uv run python -m scripts.request_once \
+  --base-url http://127.0.0.1:8004 \
+  --model DeepSeek-V4-Flash \
+  --run-id "$RUN_ID"
+
+uv run python -m scripts.measure_ttft_once \
+  --base-url http://127.0.0.1:8004 \
+  --model DeepSeek-V4-Flash \
+  --run-id "$RUN_ID"
+
+uv run python -m scripts.run_sequential_benchmark \
+  --base-url http://127.0.0.1:8004 \
+  --model DeepSeek-V4-Flash \
+  --warmup 1 --runs 5 \
+  --run-id "$RUN_ID"
+```
+
+Przykladowy run dla Kimi:
+
+```bash
+RUN_ID=2026-05-11_kimi-k2-6
+
+uv run python -m scripts.request_once \
+  --base-url http://127.0.0.1:8000 \
+  --model kimi-k2.6 \
+  --run-id "$RUN_ID"
+```
+
+## Najblizsze TODO
+
+1. Wrzucic z serwera najnowsza wersje compose i wyniki benchmarkow
+   DeepSeek-V4-Flash.
+2. Potwierdzic, czy konfiguracja `vllm` dla Kimi w YAML odpowiada realnie
+   dzialajacej komendzie.
+3. Przypiac obrazy Docker do konkretnej wersji albo digestu zamiast `latest`
+   / `main` przed porownywalnymi benchmarkami.
+4. Dokonczyc testy programistyczne malego modelu.
+5. Pobrac drugi maly model i wykonac ten sam zestaw benchmarkow oraz testow.

@@ -146,20 +146,22 @@ Immediate next steps, in order:
    - DeepSeek-V4-Flash `request_once`, TTFT, and repeated benchmark outputs,
    - short summary of launch parameters, including the 20% VRAM cap for the small model across 8 GPUs.
 2. Reconcile the latest server compose with `infra/compose/docker-compose.kimi-k2.6.yml` and decide whether TP=8 Kimi, EP/DP Kimi, and small-model services should live in one compose file or separate profiles/files.
-3. Finish DeepSeek-V4-Flash coding-agent/programming tests using the existing synthetic task specs or a clearly documented subset.
-4. Download one additional smaller model for comparison, run the same benchmark sequence, and run the same programming tests.
-5. Compare DeepSeek-V4-Flash vs the additional small model on latency, output quality for coding tasks, stability, VRAM use, and fit alongside the large model.
-6. Validate the metrics scripts live on the server:
+3. Pin Docker images to exact versions or digests before collecting comparable benchmark runs.
+4. Decide whether OpenWebUI should keep one endpoint, use semicolon-separated `OPENAI_API_BASE_URLS`, or move this routing behind LiteLLM/LLM proxy.
+5. Finish DeepSeek-V4-Flash coding-agent/programming tests using the existing synthetic task specs or a clearly documented subset.
+6. Download one additional smaller model for comparison, run the same benchmark sequence, and run the same programming tests.
+7. Compare DeepSeek-V4-Flash vs the additional small model on latency, output quality for coding tasks, stability, VRAM use, and fit alongside the large model.
+8. Validate the metrics scripts live on the server:
    - `scripts/collect_metrics_snapshot.py --phase pre`
    - `scripts/sample_gpu_metrics.py` during a benchmark window
    - `scripts/collect_metrics_snapshot.py --phase post`
-7. Run or repeat the normalized benchmark sequence with one shared `--run-id` per model:
+9. Run or repeat the normalized benchmark sequence with one shared `--run-id` per model:
    - `uv run python -m scripts.request_once ... --run-id <run_id>`
    - `uv run python -m scripts.measure_ttft_once ... --run-id <run_id>`
    - `uv run python -m scripts.run_sequential_benchmark ... --run-id <run_id>`
-8. Inspect the generated `results/runs/<run_id>/` trees and decide whether to commit raw results directly or summarize them first.
-9. Check whether already-installed Claude Code CLI can talk to local vLLM; if not, install/use OpenCode fallback.
-10. Later: implement fact-table aggregator (`scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+10. Inspect the generated `results/runs/<run_id>/` trees and decide whether to commit raw results directly or summarize them first.
+11. Check whether already-installed Claude Code CLI can talk to local vLLM; if not, install/use OpenCode fallback.
+12. Later: implement fact-table aggregator (`scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
 
 ---
 
@@ -240,6 +242,7 @@ uv run python -m scripts.collect_metrics_snapshot \
 | Compose capture | Use tracked Compose/runbook files for reproducible Kimi/OpenWebUI launch notes, but verify them against the live server command before treating them as canonical |
 | Secondary model experiment | DeepSeek-V4-Flash is the current small-model experiment; human-reported server run completed request_once, TTFT, and repeated benchmarks, but artifacts are not yet pushed |
 | VRAM split | Current target is small model capped at 20% VRAM across all 8 GPUs, leaving the rest for the large model |
+| Image pinning | Current compose still uses floating image tags; pin exact image versions/digests before comparable benchmark runs |
 | Coding agent | Check Claude Code CLI with local vLLM first; if blocked, use OpenCode fallback |
 | Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
 | Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` plus `results/runs/<run_id>/server_metrics/` |
@@ -260,6 +263,7 @@ uv run python -m scripts.collect_metrics_snapshot \
 - [ ] Did `deepseek-ai/DeepSeek-V4-Flash` coding-agent/programming tests pass, and what failure modes appeared?
 - [ ] Which second small model should be downloaded for direct comparison with DeepSeek-V4-Flash?
 - [ ] Should OpenWebUI connect only to Kimi on port 8000 or expose both Kimi and the smaller/experimental endpoint?
+- [ ] Which exact Docker image tags/digests should replace floating `latest`/`main` tags for reproducible runs?
 - [ ] Validate benchmark + metrics scripts end-to-end on the server.
 - [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow a second smaller model to fit on the same server?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
@@ -287,6 +291,13 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-11 - Compose README aligned with YAML
+
+- Why: remove stale single-node DEP/runbook text from `infra/compose/README.md`.
+- Did: rewrote the README around the actual compose services: Kimi on 8000, DeepSeek-V4-Flash `vllm-small` on 8004, and OpenWebUI on 3000.
+- Validation: `git diff --check` OK; no code tests run for docs-only change.
+- Next: import the unpushed server compose/results, then verify the documented service commands against the live server.
 
 ### 2026-05-11 - Human server-session note: unpushed DeepSeek benchmark work
 
