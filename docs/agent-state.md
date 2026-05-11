@@ -10,8 +10,8 @@ The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to t
 
 ## Summary cursor
 
-- Last summarized commit: `b5f0ab7`
-- Last summarized at: 2026-05-08
+- Last summarized commit: `46e2129`
+- Last summarized at: 2026-05-11
 
 The `sync-state` routine reads this block to find the diff window. Update only via the routine.
 
@@ -30,7 +30,7 @@ Note: the current roadmap content in this repo is stored as `docs/ROADMAP_v_1_0.
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent task specs tightened.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; Kimi/OpenWebUI compose capture in progress.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed, Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
 
@@ -45,6 +45,8 @@ The repo now has:
 - Tightened synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
 - MLPerf-inspired-lite compliance disclaimer in `docs/benchmark-methodology.md`.
 - A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
+- A first tracked Docker Compose/runbook capture for Kimi-K2.6, OpenWebUI, and an experimental smaller-model service.
+- Human-reported server work that is not yet pushed: DeepSeek-V4-Flash benchmark outputs and the latest compose need to be imported at the start of the next session.
 
 ---
 
@@ -65,7 +67,9 @@ The repo now has:
 - **Speculative decoding works correctly** with Eagle3 speculative head (`lightseekorg/kimi-k2.6-eagle3-mla`).
 - **OpenWebUI container is running on the server** and connected to `vllm serve`; Kimi-K2.6 is visible in OpenWebUI and answers requests.
 - Current Kimi-K2.6 launch parameters still need tuning, especially GPU memory reservation/utilization, so a second smaller model can fit on the same server.
-- Compose file currently tracked for the earlier DEP attempt: `infra/compose/docker-compose.kimi-k2.6.yml`.
+- `infra/compose/docker-compose.kimi-k2.6.yml` now tracks a Docker Compose setup for Kimi-K2.6 + OpenWebUI plus experimental `vllm-small` on port 8004 using `deepseek-ai/DeepSeek-V4-Flash`.
+- `docs/runbooks/vllm-kimi_k2_6-dockercompose.yaml` records a smaller Kimi/OpenWebUI compose reference, but it may not match the latest compose command exactly.
+- Human report from 2026-05-11 server session: latest server-side changes were not pushed; DeepSeek-V4-Flash completed `request_once`, TTFT, and repeated benchmark tests; latest compose has large model + small model + OpenWebUI, with the small model capped at 20% VRAM across 8 GPUs so remaining VRAM can be reserved for the large model.
 - `.claude/` remains untracked locally.
 - **Task specs 01-04 are tightened on `main`:**
   - Task 01 PowerShell export/environment backup.
@@ -102,7 +106,7 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 
 ## Current technical direction
 
-Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8. OpenWebUI is connected and can be used for interactive checks.
+Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8. OpenWebUI is connected and can be used for interactive checks. Today's repo changes moved from loose launch notes toward a tracked Compose setup, but the repo is behind the latest server work: DeepSeek-V4-Flash benchmark results and the final compose from the server session still need to be brought back into Git.
 
 The benchmark scripts use these MLPerf-inspired lite modes:
 
@@ -137,21 +141,25 @@ results/runs/<run_id>/
 
 Immediate next steps, in order:
 
-1. On the server, `git pull` latest `main` and run `uv sync --extra dev` if needed.
-2. Record the exact working TP=8 `vllm serve` command and runtime parameters in `infra/compose/README.md` or a dedicated TP=8 compose/runbook file.
-3. Validate the metrics scripts live on the server:
+1. At the start of the next server session, recover and commit the unpushed server-side artifacts:
+   - latest Docker Compose with large model + `vllm-small` + OpenWebUI,
+   - DeepSeek-V4-Flash `request_once`, TTFT, and repeated benchmark outputs,
+   - short summary of launch parameters, including the 20% VRAM cap for the small model across 8 GPUs.
+2. Reconcile the latest server compose with `infra/compose/docker-compose.kimi-k2.6.yml` and decide whether TP=8 Kimi, EP/DP Kimi, and small-model services should live in one compose file or separate profiles/files.
+3. Finish DeepSeek-V4-Flash coding-agent/programming tests using the existing synthetic task specs or a clearly documented subset.
+4. Download one additional smaller model for comparison, run the same benchmark sequence, and run the same programming tests.
+5. Compare DeepSeek-V4-Flash vs the additional small model on latency, output quality for coding tasks, stability, VRAM use, and fit alongside the large model.
+6. Validate the metrics scripts live on the server:
    - `scripts/collect_metrics_snapshot.py --phase pre`
    - `scripts/sample_gpu_metrics.py` during a benchmark window
    - `scripts/collect_metrics_snapshot.py --phase post`
-4. Run the normalized benchmark sequence live against vLLM using one shared `--run-id`:
+7. Run or repeat the normalized benchmark sequence with one shared `--run-id` per model:
    - `uv run python -m scripts.request_once ... --run-id <run_id>`
    - `uv run python -m scripts.measure_ttft_once ... --run-id <run_id>`
    - `uv run python -m scripts.run_sequential_benchmark ... --run-id <run_id>`
-5. Inspect the generated `results/runs/<run_id>/` tree and decide whether to commit raw results directly or summarize them first.
-6. Download and test `MiniMaxAI/MiniMax-M2.7` as the primary smaller coding model candidate.
-7. Check whether already-installed Claude Code CLI can talk to local vLLM; if not, install/use OpenCode fallback.
-8. Attempt dual-model serving: Kimi-K2.6 + MiniMax-M2.7, then repeat the benchmark sequence with GPU/vLLM metrics.
-9. Later: implement fact-table aggregator (`scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+8. Inspect the generated `results/runs/<run_id>/` trees and decide whether to commit raw results directly or summarize them first.
+9. Check whether already-installed Claude Code CLI can talk to local vLLM; if not, install/use OpenCode fallback.
+10. Later: implement fact-table aggregator (`scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
 
 ---
 
@@ -227,8 +235,11 @@ uv run python -m scripts.collect_metrics_snapshot \
 | Model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
 | Smaller coding model candidate | Primary: `MiniMaxAI/MiniMax-M2.7`; research: `poolside/Laguna-XS.2`; fallback: `Qwen/Qwen3.6-35B-A3B`; stretch: `deepseek-ai/DeepSeek-V4-Flash` |
 | HF weights storage | named Docker volume `nanoserve-hf-cache` |
-| Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` currently documents the earlier DEP attempt; TP=8 working config still needs to be recorded |
+| Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` is the current tracked compose draft for Kimi/OpenWebUI plus experimental `vllm-small`; verify it against the live server before treating it as canonical |
 | Interactive UI | OpenWebUI container connected to vLLM OpenAI-compatible endpoint |
+| Compose capture | Use tracked Compose/runbook files for reproducible Kimi/OpenWebUI launch notes, but verify them against the live server command before treating them as canonical |
+| Secondary model experiment | DeepSeek-V4-Flash is the current small-model experiment; human-reported server run completed request_once, TTFT, and repeated benchmarks, but artifacts are not yet pushed |
+| VRAM split | Current target is small model capped at 20% VRAM across all 8 GPUs, leaving the rest for the large model |
 | Coding agent | Check Claude Code CLI with local vLLM first; if blocked, use OpenCode fallback |
 | Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
 | Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` plus `results/runs/<run_id>/server_metrics/` |
@@ -244,6 +255,11 @@ uv run python -m scripts.collect_metrics_snapshot \
 ## Open questions
 
 - [ ] Record exact working TP=8 server command/config in repo.
+- [ ] Does the latest Kimi compose command actually match the working server launch, or should TP=8 and EP/DP variants be split into separate files?
+- [ ] Import unpushed server-side compose and DeepSeek-V4-Flash benchmark results.
+- [ ] Did `deepseek-ai/DeepSeek-V4-Flash` coding-agent/programming tests pass, and what failure modes appeared?
+- [ ] Which second small model should be downloaded for direct comparison with DeepSeek-V4-Flash?
+- [ ] Should OpenWebUI connect only to Kimi on port 8000 or expose both Kimi and the smaller/experimental endpoint?
 - [ ] Validate benchmark + metrics scripts end-to-end on the server.
 - [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow a second smaller model to fit on the same server?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
@@ -271,6 +287,21 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-11 - Human server-session note: unpushed DeepSeek benchmark work
+
+- Why: record server work that was completed but not yet pushed back into the repo.
+- Did: DeepSeek-V4-Flash was benchmarked with request_once, TTFT, and repeated runs; latest server compose includes large model, small model, and OpenWebUI, with small model capped at 20% VRAM across 8 GPUs.
+- Validation: server-side only; artifacts and exact commands still need to be imported.
+- Next: first action next session is to recover/push server artifacts, then finish small-model coding tests and compare against one more downloaded small model.
+
+### 2026-05-11 - Compose capture for Kimi/OpenWebUI and small-model attempt
+
+- Why: capture today's server launch work in repo-tracked infrastructure instead of leaving it only in shell history.
+- Did: added a Kimi-K2.6 compose/runbook reference, folded OpenWebUI into compose, and added an experimental `vllm-small` service for `deepseek-ai/DeepSeek-V4-Flash`.
+- Range: `b5f0ab7..46e2129` (5 infra/docs commits, plus one prior state-refresh commit skipped)
+- Validation: skipped locally; live server behavior must be verified from the GPU host.
+- Next: reconcile compose against the exact working server command, then record success/failure for Kimi, OpenWebUI, and the `vllm-small` service.
 
 ### 2026-05-08 - Refreshed state after PR #7 merge
 
