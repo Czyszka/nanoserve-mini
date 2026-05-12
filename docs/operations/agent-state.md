@@ -21,10 +21,9 @@ The `sync-state` routine reads this block to find the diff window. Update only v
 
 - `CLAUDE.md` - stable instructions for Claude Code.
 - `AGENTS.md` - stable instructions for Codex.
-- `docs/agent-state.md` - current project state, decisions, next step, and blockers.
-- `ROADMAP.md` - project scope; do not change it without an explicit decision.
-
-Note: the current roadmap content in this repo is stored as `docs/project/roadmap.md`. Treat it as the current scope document unless a root `ROADMAP.md` is added later.
+- `docs/operations/agent-state.md` - current project state, decisions, next step, and blockers.
+- `docs/project/roadmap.md` - project scope; do not change it without an explicit decision.
+- `docs/index.md` - documentation map after the docs tree reorganization.
 
 ---
 
@@ -43,9 +42,10 @@ The repo now has:
 - Structured `controls.workload_spec`, explicit `controls.concurrency`, unique `run_uuid` per execution, and a `server_metrics` block populated by `scripts/collect_metrics_snapshot.py` and `scripts/sample_gpu_metrics.py`.
 - Shared schema/mode/methodology constants in `scripts/_schemas.py`.
 - Tightened synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
-- MLPerf-inspired-lite compliance disclaimer in `docs/benchmark-methodology.md`.
+- MLPerf-inspired-lite compliance disclaimer in `docs/operations/benchmark-methodology.md`.
 - A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
 - A first tracked Docker Compose/runbook capture for Kimi-K2.6, OpenWebUI, and an experimental smaller-model service.
+- Documentation grouped under `docs/project/`, `docs/operations/`, `docs/learning/`, `docs/plans/`, `docs/templates/`, and `docs/weekly/`, with `docs/index.md` as the map.
 - Human-reported server work that is not yet pushed: DeepSeek-V4-Flash benchmark outputs and the latest compose need to be imported at the start of the next session.
 
 ---
@@ -57,7 +57,8 @@ The repo now has:
 - Python workflow uses `uv`.
 - `ruff` and `pytest` are configured.
 - `.gitattributes` exists to normalize line endings.
-- Local research PDFs are kept outside Git in ignored `docs/learning/papers/`.
+- Local research PDFs are kept outside Git in ignored `docs/**/papers/`.
+- Local Claude worktrees are kept outside Git in ignored `.claude/worktrees/`.
 - **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
 - **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated with `scripts/check_server_env.py` on ubuntusrv2 and records Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL, driver 595.58.03, CUDA 13.2.
 - **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
@@ -92,11 +93,12 @@ Read these before making non-trivial changes:
 - `docs/project/roadmap.md` - current scope, phases, and definition of done.
 - `docs/operations/infrastructure.md` - machine roles and workflow.
 - `docs/operations/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap (env snapshot + vLLM setup decision).
-- `docs/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes, result schema contract, compliance disclaimer, `--run-id` layout, and server metrics.
+- `docs/operations/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes, result schema contract, compliance disclaimer, `--run-id` layout, and server metrics.
 - `docs/plans/2026-05-11-server-work-plan.md` - Monday server work plan: MiniMax-M2.7, coding agent check, dual-model benchmarks.
 - `benchmarks/coding-agent-tasks/README.md` - synthetic coding-agent task suite overview.
-- `docs/reading-list.md` - papers by phase.
+- `docs/learning/reading-list.md` - papers by phase.
 - `docs/learning/nvidia-self-paced-courses.md` - optional NVIDIA courses.
+- `docs/index.md` - documentation map.
 - `AGENTS.md` - Codex-specific repo instructions.
 - `CLAUDE.md` - Claude Code-specific repo instructions.
 
@@ -247,11 +249,12 @@ uv run python -m scripts.collect_metrics_snapshot \
 | Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
 | Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` plus `results/runs/<run_id>/server_metrics/` |
 | Coding tasks | Synthetic, separate temp repo during evaluation; final result compared by model/agent commit |
-| Agent memory | `docs/agent-state.md` is repo-tracked shared handoff |
+| Agent memory | `docs/operations/agent-state.md` is repo-tracked shared handoff |
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
-| State updates | Codex and Claude Code must update `docs/agent-state.md` after meaningful work and before commit/push handoff |
-| Local papers | Store read scientific papers in ignored `docs/learning/papers/`; commit bibliographic notes/summaries separately if useful |
+| State updates | Codex and Claude Code must update `docs/operations/agent-state.md` after meaningful work and before commit/push handoff |
+| Local papers | Store read scientific papers in ignored `docs/**/papers/`; commit bibliographic notes/summaries separately if useful |
+| Local Claude worktrees | `.claude/worktrees/` is ignored and stays outside Git |
 
 ---
 
@@ -291,6 +294,26 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-12 - Documentation tree reorganized
+
+- Why: make `docs/` readable before further repo-wide cleanup, while preserving important planning, operations, learning, runbook, template, and handoff content.
+- Did:
+  - Grouped documentation by category:
+    - `docs/project/` for project direction and scope.
+    - `docs/operations/` for agent state, infrastructure, benchmark methodology, and runbooks.
+    - `docs/learning/` for reading lists, NVIDIA courses, paper-reading guide, and paper notes.
+    - `docs/plans/`, `docs/templates/`, and `docs/weekly/` kept as dedicated categories.
+  - Added `docs/index.md` as the documentation map.
+  - Fixed stale links after renaming/moving docs.
+  - Updated `.gitignore` so local paper PDFs under `docs/**/papers/` and Claude local worktrees under `.claude/worktrees/` stay outside Git.
+- Validation:
+  - `git ls-files docs | Sort-Object` showed the new docs layout on local `main`.
+  - `git ls-tree -r --name-only origin/main docs | Sort-Object` showed the same layout on `origin/main`.
+  - `git status --short` was clean after the ignore update.
+- Next:
+  - Continue repo cleanup outside `docs/`: root files, scripts, infra, benchmarks, results, and tests.
+  - Keep future cleanup commits category-scoped and avoid deleting content before inventory/classification.
 
 ### 2026-05-11 - Server plan updated after DeepSeek run
 
