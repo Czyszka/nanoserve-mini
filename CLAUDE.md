@@ -46,13 +46,18 @@ Python workflow:
 - Do not install global Python packages.
 - Do not add GPU-heavy dependencies to the laptop environment.
 
-Standard local validation:
+Standard local validation for code changes:
 
 ```bash
 uv sync --extra dev
 uv run ruff check .
 uv run pytest
 ```
+
+For documentation-only changes, do not run `ruff` or `pytest` unless the change
+touches executable examples, generated docs, or code-adjacent configuration.
+Use documentation-appropriate checks instead, such as `git diff --check`,
+Markdown link checks, or rendering checks when relevant.
 
 ## Scope boundaries
 
@@ -149,13 +154,18 @@ Before editing:
 git status
 ```
 
-Before finishing:
+Before finishing code changes:
 
 ```bash
 uv run ruff check .
 uv run pytest
 git status
 ```
+
+Before finishing documentation-only changes, `git status` and
+`git diff --check` are sufficient by default. Run `ruff` and `pytest` only when
+the documentation change also affects code, scripts, test fixtures, generated
+artifacts, or executable snippets.
 
 Use small commits. Preferred commit prefixes:
 
