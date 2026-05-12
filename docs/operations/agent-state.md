@@ -303,7 +303,7 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
   - Added a "Human + Codex collaboration workflow" section covering ChatGPT task shaping, small GitHub issues, Codex App branch implementation, PR summary/validation, manual human review, Codex PR review, and human final merge.
   - Added explicit reminders not to commit secrets, model weights, Hugging Face caches, large benchmark artifacts, large logs, Nsight traces, database dumps, or unrelated files.
 - Validation: `uv sync --extra dev` passed; `uv run pytest` passed with 102 tests. `uv run ruff check .` was skipped at user request because the change is docs-only.
-- Next: commit, push, and open a PR for issue #12.
+- Next: human review of PR #13, then merge after validation/review are acceptable.
 
 ### 2026-05-12 - Documentation tree reorganized
 
