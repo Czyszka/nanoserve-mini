@@ -295,6 +295,16 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-12 - AGENTS.md collaboration workflow updated
+
+- Why: issue #12 requested that the Codex entrypoint match the reorganized docs tree and describe the intended human + ChatGPT + Codex App + PR review workflow.
+- Did:
+  - Updated `AGENTS.md` links from root `ROADMAP.md` / `docs/agent-state.md` to `docs/project/roadmap.md` and `docs/operations/agent-state.md`.
+  - Added a "Human + Codex collaboration workflow" section covering ChatGPT task shaping, small GitHub issues, Codex App branch implementation, PR summary/validation, manual human review, Codex PR review, and human final merge.
+  - Added explicit reminders not to commit secrets, model weights, Hugging Face caches, large benchmark artifacts, large logs, Nsight traces, database dumps, or unrelated files.
+- Validation: `uv sync --extra dev` passed; `uv run pytest` passed with 102 tests. `uv run ruff check .` was skipped at user request because the change is docs-only.
+- Next: human review of PR #13, then merge after validation/review are acceptable.
+
 ### 2026-05-12 - Documentation tree reorganized
 
 - Why: make `docs/` readable before further repo-wide cleanup, while preserving important planning, operations, learning, runbook, template, and handoff content.
