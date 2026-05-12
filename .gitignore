@@ -35,3 +35,7 @@ tmp/
 
 # Local research papers
 docs/papers/
+docs/**/papers/
+
+# Local Claude worktrees
+.claude/worktrees/
