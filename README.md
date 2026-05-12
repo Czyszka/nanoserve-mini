@@ -12,7 +12,8 @@ notes, and small result summaries.
 Current phase: Phase 1 — first vLLM run completed. Kimi-K2.6 is served through
 `vllm serve` with TP=8 + Eagle3 speculative decoding on the 8×H200 NVL server,
 and OpenWebUI is connected to the OpenAI-compatible endpoint. For up-to-date
-phase, decisions, and next step, see [`docs/agent-state.md`](docs/agent-state.md).
+phase, decisions, and next step, see
+[`docs/operations/agent-state.md`](docs/operations/agent-state.md).
 
 The local Windows laptop is used for code, documentation, benchmark preparation, and
 result analysis. GPU runtime work happens on the GPU server.
@@ -89,10 +90,11 @@ or large benchmark artifacts.
 
 ## Key Docs
 
-- [Roadmap](docs/ROADMAP_v_1_0.md)
-- [Infrastructure and workflow](docs/infrastructure_v_1_0.md)
-- [Reading list](docs/reading-list.md)
-- [NVIDIA self-paced courses](docs/nvidia_self_paced_courses.md)
+- [Documentation map](docs/README.md)
+- [Roadmap](docs/project/roadmap.md)
+- [Infrastructure and workflow](docs/operations/infrastructure.md)
+- [Reading list](docs/learning/reading-list.md)
+- [NVIDIA self-paced courses](docs/learning/nvidia-self-paced-courses.md)
 
 ## Suggested GitHub Description
 
