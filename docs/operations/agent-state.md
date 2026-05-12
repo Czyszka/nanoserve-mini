@@ -23,7 +23,7 @@ The `sync-state` routine reads this block to find the diff window. Update only v
 - `AGENTS.md` - stable instructions for Codex.
 - `docs/operations/agent-state.md` - current project state, decisions, next step, and blockers.
 - `docs/project/roadmap.md` - project scope; do not change it without an explicit decision.
-- `docs/index.md` - documentation map after the docs tree reorganization.
+- `docs/README.md` - documentation map after the docs tree reorganization.
 
 ---
 
@@ -45,7 +45,7 @@ The repo now has:
 - MLPerf-inspired-lite compliance disclaimer in `docs/operations/benchmark-methodology.md`.
 - A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
 - A first tracked Docker Compose/runbook capture for Kimi-K2.6, OpenWebUI, and an experimental smaller-model service.
-- Documentation grouped under `docs/project/`, `docs/operations/`, `docs/learning/`, `docs/plans/`, `docs/templates/`, and `docs/weekly/`, with `docs/index.md` as the map.
+- Documentation grouped under `docs/project/`, `docs/operations/`, `docs/learning/`, `docs/plans/`, `docs/templates/`, and `docs/weekly/`, with `docs/README.md` as the map.
 - Human-reported server work that is not yet pushed: DeepSeek-V4-Flash benchmark outputs and the latest compose need to be imported at the start of the next session.
 
 ---
@@ -98,7 +98,7 @@ Read these before making non-trivial changes:
 - `benchmarks/coding-agent-tasks/README.md` - synthetic coding-agent task suite overview.
 - `docs/learning/reading-list.md` - papers by phase.
 - `docs/learning/nvidia-self-paced-courses.md` - optional NVIDIA courses.
-- `docs/index.md` - documentation map.
+- `docs/README.md` - documentation map.
 - `AGENTS.md` - Codex-specific repo instructions.
 - `CLAUDE.md` - Claude Code-specific repo instructions.
 
@@ -296,6 +296,14 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 
+### 2026-05-12 - docs README created for issue #14
+
+- Why: GitHub issue #14 requested a `docs/README.md` based on `docs/index.md`, with formatting fixed and links checked.
+- Did: added `docs/README.md` as the canonical documentation map, removed the obsolete `docs/index.md`, and fixed stale documentation links in the root `README.md`.
+- Validation: tracked Markdown link check passed; `git diff --check`, `uv run ruff check .`, and `uv run pytest` passed.
+- Next: open PR for review, then merge after documentation review.
+
+
 ### 2026-05-12 - Validation rules made conditional
 
 - Why: docs-only changes should not require Python lint/test validation when they do not affect code, executable snippets, generated docs, or code-adjacent configuration.
@@ -314,6 +322,7 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
   - Added explicit reminders not to commit secrets, model weights, Hugging Face caches, large benchmark artifacts, large logs, Nsight traces, database dumps, or unrelated files.
 - Validation: `uv sync --extra dev` passed; `uv run pytest` passed with 102 tests. `uv run ruff check .` was skipped at user request because the change is docs-only.
 - Next: human review of PR #13, then merge after validation/review are acceptable.
+
 
 
 ### 2026-05-12 - Documentation tree reorganized
