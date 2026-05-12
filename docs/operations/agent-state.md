@@ -295,6 +295,13 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-12 - Codex repo command approvals relaxed
+
+- Why: reduce repeated approval clicks for routine `git` and `gh` work in this repo.
+- Did: set project Codex `approval_policy` to `never` while keeping `sandbox_mode = "workspace-write"`.
+- Validation: TOML parsed successfully; `git diff --check` passed.
+- Next: open a draft PR for review.
+
 ### 2026-05-12 - Roadmap and template link cleanup
 
 - Why: keep roadmap as a stable direction/scope document and align agent templates with the reorganized docs tree.
