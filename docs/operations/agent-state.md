@@ -24,7 +24,7 @@ The `sync-state` routine reads this block to find the diff window. Update only v
 - `docs/agent-state.md` - current project state, decisions, next step, and blockers.
 - `ROADMAP.md` - project scope; do not change it without an explicit decision.
 
-Note: the current roadmap content in this repo is stored as `docs/ROADMAP_v_1_0.md`. Treat it as the current scope document unless a root `ROADMAP.md` is added later.
+Note: the current roadmap content in this repo is stored as `docs/project/roadmap.md`. Treat it as the current scope document unless a root `ROADMAP.md` is added later.
 
 ---
 
@@ -57,7 +57,7 @@ The repo now has:
 - Python workflow uses `uv`.
 - `ruff` and `pytest` are configured.
 - `.gitattributes` exists to normalize line endings.
-- Local research PDFs are kept outside Git in ignored `docs/papers/`.
+- Local research PDFs are kept outside Git in ignored `docs/learning/papers/`.
 - **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
 - **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated with `scripts/check_server_env.py` on ubuntusrv2 and records Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL, driver 595.58.03, CUDA 13.2.
 - **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
@@ -68,7 +68,7 @@ The repo now has:
 - **OpenWebUI container is running on the server** and connected to `vllm serve`; Kimi-K2.6 is visible in OpenWebUI and answers requests.
 - Current Kimi-K2.6 launch parameters still need tuning, especially GPU memory reservation/utilization, so a second smaller model can fit on the same server.
 - `infra/compose/docker-compose.kimi-k2.6.yml` now tracks a Docker Compose setup for Kimi-K2.6 + OpenWebUI plus experimental `vllm-small` on port 8004 using `deepseek-ai/DeepSeek-V4-Flash`.
-- `docs/runbooks/vllm-kimi_k2_6-dockercompose.yaml` records a smaller Kimi/OpenWebUI compose reference, but it may not match the latest compose command exactly.
+- `docs/operations/runbooks/vllm-kimi_k2_6-dockercompose.yaml` records a smaller Kimi/OpenWebUI compose reference, but it may not match the latest compose command exactly.
 - Human report from 2026-05-11 server session: latest server-side changes were not pushed; DeepSeek-V4-Flash completed `request_once`, TTFT, and repeated benchmark tests; latest compose has large model + small model + OpenWebUI, with the small model capped at 20% VRAM across 8 GPUs so remaining VRAM can be reserved for the large model.
 - `.claude/` remains untracked locally.
 - **Task specs 01-04 are tightened on `main`:**
@@ -89,14 +89,14 @@ The repo now has:
 
 Read these before making non-trivial changes:
 
-- `docs/ROADMAP_v_1_0.md` - current scope, phases, and definition of done.
-- `docs/infrastructure_v_1_0.md` - machine roles and workflow.
-- `docs/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap (env snapshot + vLLM setup decision).
+- `docs/project/roadmap.md` - current scope, phases, and definition of done.
+- `docs/operations/infrastructure.md` - machine roles and workflow.
+- `docs/operations/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap (env snapshot + vLLM setup decision).
 - `docs/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes, result schema contract, compliance disclaimer, `--run-id` layout, and server metrics.
 - `docs/plans/2026-05-11-server-work-plan.md` - Monday server work plan: MiniMax-M2.7, coding agent check, dual-model benchmarks.
 - `benchmarks/coding-agent-tasks/README.md` - synthetic coding-agent task suite overview.
 - `docs/reading-list.md` - papers by phase.
-- `docs/nvidia_self_paced_courses.md` - optional NVIDIA courses.
+- `docs/learning/nvidia-self-paced-courses.md` - optional NVIDIA courses.
 - `AGENTS.md` - Codex-specific repo instructions.
 - `CLAUDE.md` - Claude Code-specific repo instructions.
 
@@ -251,7 +251,7 @@ uv run python -m scripts.collect_metrics_snapshot \
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
 | State updates | Codex and Claude Code must update `docs/agent-state.md` after meaningful work and before commit/push handoff |
-| Local papers | Store read scientific papers in ignored `docs/papers/`; commit bibliographic notes/summaries separately if useful |
+| Local papers | Store read scientific papers in ignored `docs/learning/papers/`; commit bibliographic notes/summaries separately if useful |
 
 ---
 

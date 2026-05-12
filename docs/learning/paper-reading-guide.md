@@ -243,7 +243,7 @@ a fundamenty dostały pełną notatkę dopiero kiedy realnie wpływają na decyz
 
 ## Konwencja notatek
 
-- PDF-y trzymaj lokalnie w `docs/papers/`; ten katalog jest ignorowany przez Git.
+- PDF-y trzymaj lokalnie w `docs/learning/papers/`; ten katalog jest ignorowany przez Git.
 - Notatki Markdown trzymaj jako commitowalne artefakty, najlepiej zwięzłe.
 - Do większości paperów używaj `docs/templates/paper-note-lite.md`. Pełnego
   `docs/templates/paper-note-template.md` używaj tylko dla prac wymienionych

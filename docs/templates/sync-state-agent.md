@@ -15,8 +15,8 @@ cursor. Append, do not compact. Compaction lives in
 1. **Allowlist of editable files** (anything else = forbidden without explicit
    user request):
    - `docs/agent-state.md` (always)
-2. **Forbidden files** unless the user explicitly asks: `docs/ROADMAP_v_1_0.md`,
-   `CLAUDE.md`, `AGENTS.md`, `docs/infrastructure_v_1_0.md`, anything in
+2. **Forbidden files** unless the user explicitly asks: `docs/project/roadmap.md`,
+   `CLAUDE.md`, `AGENTS.md`, `docs/operations/infrastructure.md`, anything in
    `scripts/`, `infra/`, `results/`, `tests/`, `benchmarks/`.
 3. **No code changes**: do not run `ruff` / `pytest`; this routine is doc-only.
 4. **Branch**: stay on the current branch. Do not create or switch.

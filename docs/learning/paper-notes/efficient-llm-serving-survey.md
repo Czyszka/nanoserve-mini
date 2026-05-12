@@ -3,7 +3,7 @@
 - **Status:** done
 - **Date read:** 2026-05-03
 - **Authors / venue / year:** Xupeng Miao, Gabriele Oliaro, Zhihao Zhang, Xinhao Cheng, Hongyi Jin, Tianqi Chen, Zhihao Jia; ACM Computing Surveys / arXiv:2312.15234v2; 2025
-- **URL / DOI / local PDF:** https://arxiv.org/abs/2312.15234, https://doi.org/10.1145/3754448, local ignored PDF at `docs/papers/Efficient LLM Serving Survey.pdf`
+- **URL / DOI / local PDF:** https://arxiv.org/abs/2312.15234, https://doi.org/10.1145/3754448, local ignored PDF at `docs/learning/papers/Efficient LLM Serving Survey.pdf`
 - **Project phase:** Phase 1
 - **Why now:** It gives the Phase 1 mental model for vLLM serving, metrics, memory pressure, scheduling, and benchmark design before the first GPU-server measurements.
 - **Verdict:** must-read
