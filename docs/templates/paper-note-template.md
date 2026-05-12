@@ -3,7 +3,7 @@
 - **Status:** unread / pass 1 / pass 2 / pass 3 / done / skipped
 - **Date read:** YYYY-MM-DD
 - **Authors / venue / year:** <authors>, <venue>, <year>
-- **URL / DOI / local PDF:** <link or docs/papers/...>
+- **URL / DOI / local PDF:** <link or docs/learning/papers/...>
 - **Project phase:** Phase 1 / Phase 2 / Phase 3 / Phase 4
 - **Why now:** <one sentence>
 - **Verdict:** must-read / useful background / maybe later / out of scope

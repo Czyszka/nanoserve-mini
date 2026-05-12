@@ -171,7 +171,7 @@ Cadence pisania: co ~1.7 tygodnia jeden write-up (W1 koniec F1, W2-W3 w F2, W4-W
 
 Kanon papers — `docs/reading-list.md` (CS349D-inspired). Czytane *w trakcie* odpowiedniej fazy, nie przed startem.
 
-NVIDIA self-paced courses — `docs/nvidia_self_paced_courses.md`. Najwartościowsze dla projektu: **Sizing LLM Inference Systems** (faza 1), **Find the Bottleneck: Optimize AI Pipelines with Nsight Systems** (faza 3). Reszta beyond scope tego projektu.
+NVIDIA self-paced courses — `docs/learning/nvidia-self-paced-courses.md`. Najwartościowsze dla projektu: **Sizing LLM Inference Systems** (faza 1), **Find the Bottleneck: Optimize AI Pipelines with Nsight Systems** (faza 3). Reszta beyond scope tego projektu.
 
 ---
 

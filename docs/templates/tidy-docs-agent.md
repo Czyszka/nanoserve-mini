@@ -34,8 +34,8 @@ Reduce documentation surface area in the repo. Specifically:
    - `CLAUDE.md` (only operation d)
    - `AGENTS.md` (only operation d)
 
-3. **Forbidden** unless the user explicitly asks: `docs/ROADMAP_v_1_0.md`,
-   `docs/infrastructure_v_1_0.md`, `docs/templates/**`, `docs/papers-notes/**`,
+3. **Forbidden** unless the user explicitly asks: `docs/project/roadmap.md`,
+   `docs/operations/infrastructure.md`, `docs/templates/**`, `docs/learning/paper-notes/**`,
    `scripts/**`, `infra/**`, `tests/**`, `results/**`, application code,
    anything under `.claude/`.
 
@@ -89,7 +89,7 @@ For each, record path, line range, and a short note. Use this checklist:
 - **Phase mismatch**: compare any phase phrase found in `CLAUDE.md` or
   `AGENTS.md` against the "Current phase" section in `agent-state.md`.
 - **Sizes**: byte size of `docs/agent-state.md`. Flag if > 6 KB.
-- **Doc files > 10 KB** under `docs/` (excluding `docs/papers-notes/`).
+- **Doc files > 10 KB** under `docs/` (excluding `docs/learning/paper-notes/`).
 
 ### 4. Print audit report
 

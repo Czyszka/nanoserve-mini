@@ -53,7 +53,7 @@ who has worked on or near MLPerf:
 Moving closer to compliance is a deliberate scope expansion (closer to the
 optional `nanoserve` full continuation), not a fix. The cost ramp from a
 ShareGPT/OpenOrca workload up to LoadGen + audit is laid out in
-`docs/ROADMAP_v_1_0.md` and is intentionally outside the 12-week mini scope.
+`docs/project/roadmap.md` and is intentionally outside the 12-week mini scope.
 
 ## Why MLPerf matters
 
