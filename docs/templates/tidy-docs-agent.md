@@ -12,12 +12,12 @@ deduplicates. The frequent counterpart is `sync-state` (see
 
 Reduce documentation surface area in the repo. Specifically:
 
-1. Remove answered (`[x]`) entries from "Open questions" in `docs/agent-state.md`.
+1. Remove answered (`[x]`) entries from "Open questions" in `docs/operations/agent-state.md`.
 2. Remove crossed-off (`~~done~~`) steps from "Current technical direction"
    when they are older than the Summary cursor.
 3. Compact handoff log in-place when it exceeds 5 entries (Git is the archive).
 4. Remove dynamic-state duplication (phase, status) from `CLAUDE.md` and
-   `AGENTS.md`, replacing with a link to `docs/agent-state.md`.
+   `AGENTS.md`, replacing with a link to `docs/operations/agent-state.md`.
 5. Report cap violations and drift that require human judgment. Never
    auto-prune to satisfy a counter.
 
@@ -30,7 +30,7 @@ Reduce documentation surface area in the repo. Specifically:
      user reviews and commits manually.
 
 2. **Allowlist** (apply mode only):
-   - `docs/agent-state.md`
+   - `docs/operations/agent-state.md`
    - `CLAUDE.md` (only operation d)
    - `AGENTS.md` (only operation d)
 
@@ -67,8 +67,8 @@ else: mode = audit
 
 ### 2. Load state
 
-Read `docs/agent-state.md`, `CLAUDE.md`, `AGENTS.md`. Parse sections by
-markdown headings. Resolve Summary cursor SHA from `docs/agent-state.md`.
+Read `docs/operations/agent-state.md`, `CLAUDE.md`, `AGENTS.md`. Parse sections by
+markdown headings. Resolve Summary cursor SHA from `docs/operations/agent-state.md`.
 
 ### 3. Detection passes (always run, both modes)
 
@@ -88,7 +88,7 @@ For each, record path, line range, and a short note. Use this checklist:
   explicit SHA, "current phase".
 - **Phase mismatch**: compare any phase phrase found in `CLAUDE.md` or
   `AGENTS.md` against the "Current phase" section in `agent-state.md`.
-- **Sizes**: byte size of `docs/agent-state.md`. Flag if > 6 KB.
+- **Sizes**: byte size of `docs/operations/agent-state.md`. Flag if > 6 KB.
 - **Doc files > 10 KB** under `docs/` (excluding `docs/learning/paper-notes/`).
 
 ### 4. Print audit report
@@ -120,7 +120,7 @@ No edits. No further commands.
 
 ### 6. Apply mode → clean-tree gate
 
-Run `git status --short -- docs/agent-state.md CLAUDE.md AGENTS.md`. If
+Run `git status --short -- docs/operations/agent-state.md CLAUDE.md AGENTS.md`. If
 output is non-empty, abort:
 
 ```
@@ -133,11 +133,11 @@ Exit. Do not edit anything.
 
 Perform these in order. Each is idempotent.
 
-**a. Remove `[x]` items from Open questions** in `docs/agent-state.md`.
+**a. Remove `[x]` items from Open questions** in `docs/operations/agent-state.md`.
 Strip the entire bullet line.
 
 **b. Remove `~~strikethrough~~` steps** from "Current technical direction"
-in `docs/agent-state.md` when the step is wholly wrapped in `~~ ~~`. Keep
+in `docs/operations/agent-state.md` when the step is wholly wrapped in `~~ ~~`. Keep
 steps with partial strikethrough untouched (those usually carry context).
 
 **c. Compact handoff log in-place** when entry count > 5. Keep the 5
@@ -145,7 +145,7 @@ newest entries verbatim. Replace older entries with one block:
 
 ```
 > Pre-<DATE> handoff entries compacted. Source: `<sha>`.
-> Full history: `git show <sha>:docs/agent-state.md`.
+> Full history: `git show <sha>:docs/operations/agent-state.md`.
 ```
 
 `<DATE>` = the date of the oldest *kept* entry.
@@ -157,7 +157,7 @@ If a compaction block already exists and entry count is ≤5, this is a no-op.
 duplicate `agent-state.md`. Only replace whole sentences or sub-bullets
 that name a phase/status; **do not touch** scope-boundaries lists,
 validation-command blocks, file-roles blocks, or agent-specific rules.
-Replacement text: `For current phase, see docs/agent-state.md.`
+Replacement text: `For current phase, see docs/operations/agent-state.md.`
 
 If the file already contains an equivalent link and no offending phrase
 remains, this is a no-op.
@@ -165,7 +165,7 @@ remains, this is a no-op.
 ### 8. Print diff stat and final report
 
 ```
-git diff --stat -- docs/agent-state.md CLAUDE.md AGENTS.md
+git diff --stat -- docs/operations/agent-state.md CLAUDE.md AGENTS.md
 ```
 
 Then print:
@@ -177,14 +177,14 @@ Mechanical edits applied: <list>.
 Review needed (not auto-fixed): <list>.
 
 No commit, no push. Review the diff and commit yourself, e.g.:
-  git add -p docs/agent-state.md CLAUDE.md AGENTS.md
+  git add -p docs/operations/agent-state.md CLAUDE.md AGENTS.md
   git commit -m "docs: tidy docs - <topic>"
   git push origin HEAD:main
 ```
 
 ## Section length budget
 
-Same target as `sync-state-agent.md`: `docs/agent-state.md` should fit in
+Same target as `sync-state-agent.md`: `docs/operations/agent-state.md` should fit in
 roughly 4-6 KB / ~5 K tokens. `tidy-docs` reports when over budget but
 does not prune to satisfy the budget.
 
@@ -192,7 +192,7 @@ does not prune to satisfy the budget.
 
 This routine is on-demand. Recommended triggers:
 - handoff log > 5 entries,
-- `docs/agent-state.md` > 6 KB,
+- `docs/operations/agent-state.md` > 6 KB,
 - after a phase change,
 - otherwise every ~2 weeks.
 

@@ -2,7 +2,19 @@
 
 > 12-tygodniowy projekt portfolio z LLM inference. Preludium do pełnego nanoserve, ale samodzielny i skończony artefakt sam w sobie. Cel kompetencyjny: zbudować weryfikowalną kompetencję w LLM serving, observability, KV cache i kernel performance — wystarczającą do podjęcia świadomej decyzji co dalej.
 
-**Status:** plan ogólny. Szczegółowe plany każdej fazy — w osobnych dokumentach (`docs/phase-N-plan.md`), pisane na początku danej fazy, nie wcześniej.
+**Status:** plan kierunkowy. Szczegółowe plany faz, sesji i tygodni są w `docs/plans/` oraz `docs/weekly/`; bieżący stan jest w `docs/operations/agent-state.md`.
+
+---
+
+## Rola dokumentu
+
+Ten plik opisuje **kierunek, zakres, kryteria ukończenia i kolejność prac**.
+Nie jest miejscem na bieżący status projektu, aktualne decyzje operacyjne,
+ostatnie wyniki, listę blokad ani następny konkretny krok sesji.
+
+Bieżący stan projektu żyje w `docs/operations/agent-state.md`. Jeśli roadmapa
+i agent-state są niespójne, roadmapa odpowiada na pytanie "dokąd idziemy i
+dlaczego", a agent-state odpowiada na pytanie "gdzie jesteśmy teraz i co dalej".
 
 ---
 
@@ -85,7 +97,7 @@ Każdy benchmark w projekcie musi zapisywać metryki i warunki uruchomienia w sp
 | **F3 — Triton kernel + profiling + semantic routing** | 8-10 | Jeden kernel z benchmarkiem i profilem + eksperyment z vLLM Semantic Router | Kernel credibility, memory bandwidth thinking, świadoma ocena production routing strategies |
 | **F4 — Polish + decision** | 11-12 | README, final summary, decision doc, opcjonalny upstream PR/issue | Umiesz komunikować efekt, podejmujesz świadomą decyzję |
 
-Szczegółowy plan tygodnia każdej fazy → osobny `docs/phase-N-plan.md`, pisany **na początku tej fazy** (nie wcześniej, bo wnioski z poprzedniej fazy zmieniają plan następnej).
+Szczegółowe plany faz, tygodni i większych sesji roboczych trafiają do `docs/plans/` albo `docs/weekly/`, pisane **w momencie wejścia w dany etap**. Roadmapa nie powinna być aktualizowana po każdej zmianie stanu; od tego jest `docs/operations/agent-state.md`.
 
 ---
 
@@ -169,7 +181,7 @@ Cadence pisania: co ~1.7 tygodnia jeden write-up (W1 koniec F1, W2-W3 w F2, W4-W
 
 ## Reading
 
-Kanon papers — `docs/reading-list.md` (CS349D-inspired). Czytane *w trakcie* odpowiedniej fazy, nie przed startem.
+Kanon papers — `docs/learning/reading-list.md` (CS349D-inspired). Czytane *w trakcie* odpowiedniej fazy, nie przed startem.
 
 NVIDIA self-paced courses — `docs/learning/nvidia-self-paced-courses.md`. Najwartościowsze dla projektu: **Sizing LLM Inference Systems** (faza 1), **Find the Bottleneck: Optimize AI Pipelines with Nsight Systems** (faza 3). Reszta beyond scope tego projektu.
 
@@ -183,14 +195,27 @@ NVIDIA self-paced courses — `docs/learning/nvidia-self-paced-courses.md`. Najw
 
 ---
 
-## Co teraz
+## Jak aktualizować roadmapę
 
-Plik powstał, kierunek jest. **Następny ruch nie jest "więcej planowania".** Następny ruch to:
+Roadmapę zmieniaj tylko wtedy, gdy zmienia się jeden z trwałych elementów
+projektu:
 
-1. Założyć puste repo `nanoserve-mini`.
-2. Skopiować ten plik jako `ROADMAP.md`, `reading-list.md` jako `docs/reading-list.md`.
-3. Postawić vLLM gdzieś gdzie masz GPU.
-4. Zmierzyć pierwszy TTFT.
-5. Skomitować README z trzema linijkami: co to za projekt, sprzęt, pierwszy pomiar.
+1. zakres projektu,
+2. definicja ukończenia,
+3. kolejność lub treść faz,
+4. benchmark contract,
+5. świadome granice scope,
+6. plan write-upów albo końcowy kierunek portfolio.
 
-Szczegółowy plan Fazy 1 piszesz **po** tych 5 krokach, nie przed. Bo dopiero z pozycji "mam vLLM odpalony" wiesz co realnie jest priorytetem do zaplanowania.
+Nie dopisuj tutaj:
+
+- aktualnego statusu serwera,
+- wyników ostatnich benchmarków,
+- bieżących blokad,
+- listy następnych komend,
+- szczegółowego logu sesji,
+- decyzji operacyjnych, które mogą zmienić się w kolejnej iteracji.
+
+Te informacje należą do `docs/operations/agent-state.md`, planów roboczych w
+`docs/plans/`, runbooków w `docs/operations/runbooks/` albo tygodniówek w
+`docs/weekly/`.

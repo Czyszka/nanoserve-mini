@@ -6,7 +6,7 @@ file to evolve the routine; the slash commands point at it.
 
 ## Goal
 
-Update `docs/agent-state.md` to reflect commits made since the last summary
+Update `docs/operations/agent-state.md` to reflect commits made since the last summary
 cursor. Append, do not compact. Compaction lives in
 `docs/templates/tidy-docs-agent.md`.
 
@@ -14,7 +14,7 @@ cursor. Append, do not compact. Compaction lives in
 
 1. **Allowlist of editable files** (anything else = forbidden without explicit
    user request):
-   - `docs/agent-state.md` (always)
+   - `docs/operations/agent-state.md` (always)
 2. **Forbidden files** unless the user explicitly asks: `docs/project/roadmap.md`,
    `CLAUDE.md`, `AGENTS.md`, `docs/operations/infrastructure.md`, anything in
    `scripts/`, `infra/`, `results/`, `tests/`, `benchmarks/`.
@@ -27,7 +27,7 @@ cursor. Append, do not compact. Compaction lives in
 
 ### 1. Find the last sync point
 
-Read `docs/agent-state.md` and look for the `## Summary cursor` block:
+Read `docs/operations/agent-state.md` and look for the `## Summary cursor` block:
 
 ```
 ## Summary cursor
@@ -39,7 +39,7 @@ If found, use that SHA as `LAST_SYNC`.
 
 If missing or unparseable, fall back in this order:
 1. `git log --grep='^docs: sync project state' -n 1 --format=%H`
-2. `git log --diff-filter=A --format=%H -- docs/agent-state.md | tail -1`
+2. `git log --diff-filter=A --format=%H -- docs/operations/agent-state.md | tail -1`
 
 ### 2. List changes since LAST_SYNC
 
@@ -68,7 +68,7 @@ For each commit in range:
 
 If no commits are `Logged`, early-exit per step 3.
 
-### 5. Edit `docs/agent-state.md`
+### 5. Edit `docs/operations/agent-state.md`
 
 Touch only these sections, in this order:
 
@@ -121,7 +121,7 @@ h. **Handoff log** — prepend ONE entry using the compressed template below.
 ### 7. Commit and push
 
 ```bash
-git add docs/agent-state.md
+git add docs/operations/agent-state.md
 git -c commit.gpgsign=false commit -m "docs: sync project state - <topic from new entry>"
 git push origin HEAD:main
 ```
@@ -141,7 +141,7 @@ Single concise message to the user:
 
 ## Section length budget
 
-Whole `docs/agent-state.md` should fit in roughly 4-6 KB / ~5 K tokens. If a
+Whole `docs/operations/agent-state.md` should fit in roughly 4-6 KB / ~5 K tokens. If a
 sync would push it past that, prune harder:
 - Tighten existing handoff entries (must obey 8-line cap).
 - Remove "skipped" steps from technical direction.
