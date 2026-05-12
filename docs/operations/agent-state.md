@@ -295,6 +295,15 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-12 - Validation rules made conditional
+
+- Why: docs-only changes should not require Python lint/test validation when they do not affect code, executable snippets, generated docs, or code-adjacent configuration.
+- Did:
+  - Updated `CLAUDE.md` so `uv sync --extra dev`, `uv run ruff check .`, and `uv run pytest` are the standard path for code changes, while docs-only changes default to documentation-appropriate checks such as `git diff --check`, link checks, or rendering checks when relevant.
+  - Updated `AGENTS.md` with the same conditional validation rule for Codex.
+- Validation: documentation-only policy change; `git diff --check` passed. `ruff` and `pytest` intentionally skipped under the new docs-only rule.
+- Next: keep PR summaries explicit about which checks were run or intentionally skipped.
+
 ### 2026-05-12 - Documentation tree reorganized
 
 - Why: make `docs/` readable before further repo-wide cleanup, while preserving important planning, operations, learning, runbook, template, and handoff content.

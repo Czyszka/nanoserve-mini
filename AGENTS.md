@@ -23,10 +23,15 @@ Primary local development happens on a Windows 11 laptop.
 - GitHub CLI: `gh`.
 - Windows package manager for system tools: `winget`.
 - Local validation script: `scripts/check_local.ps1`.
-- Preferred validation commands:
+- Preferred validation commands for code changes:
   - `uv sync --extra dev`
   - `uv run ruff check .`
   - `uv run pytest`
+
+For documentation-only changes, do not run `ruff` or `pytest` unless the change
+touches executable examples, generated docs, or code-adjacent configuration.
+Use documentation-appropriate checks instead, such as `git diff --check`,
+Markdown link checks, or rendering checks when relevant.
 
 Do not install or configure GPU runtime dependencies on the Windows laptop unless
 explicitly requested.
