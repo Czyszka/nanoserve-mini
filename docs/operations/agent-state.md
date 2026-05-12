@@ -295,6 +295,13 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-12 - Roadmap and template link cleanup
+
+- Why: keep roadmap as a stable direction/scope document and align agent templates with the reorganized docs tree.
+- Did: removed obsolete reviewer smoke-test plan, updated template links to `docs/operations/agent-state.md`, and clarified that current status belongs in agent-state rather than roadmap.
+- Validation: `git diff --check` passed; code checks skipped for docs-only changes.
+- Next: open a draft PR for human review.
+
 
 ### 2026-05-12 - docs README created for issue #14
 
