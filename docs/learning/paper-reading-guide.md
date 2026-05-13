@@ -248,7 +248,7 @@ a fundamenty dostały pełną notatkę dopiero kiedy realnie wpływają na decyz
 - Do większości paperów używaj `docs/templates/paper-note-lite.md`. Pełnego
   `docs/templates/paper-note-template.md` używaj tylko dla prac wymienionych
   w sekcji "Recommended first use".
-- Po każdym ważnym paperze dopisz w `docs/reading-list.md` 2-3 zdania w sekcji notatek
+- Po każdym ważnym paperze dopisz w `docs/learning/reading-list.md` 2-3 zdania w sekcji notatek
   własnych albo dodaj osobny plik z pełną notatką, jeżeli paper będzie użyty w write-upie.
 - W notatce nie przepisuj całego paperu. Zapisuj decyzje, dowody, ograniczenia i pomiary,
   które wpływają na projekt.

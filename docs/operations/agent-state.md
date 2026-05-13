@@ -307,6 +307,27 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
 - Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed (102 existing + 17 harness tests). Per-starter build/test smoke checks deferred until the scaffold PR lands.
 - Next: merge the harness PR, then stack the starter-scaffold PR. On the next server session, after `git pull`, run `bash benchmarks/coding-agent-tasks/<id>/public/run.sh` against each starter to confirm the expected red/green test split before pointing the harness at MiniMax-M2.7.
 
+### 2026-05-13 - Codex team workflow added to AGENTS
+
+- Why: capture the successful team-lead plus sub-agent workflow as reusable guidance for future Codex work.
+- Did: added an English `Codex team workflow` section to `AGENTS.md` covering solo-vs-team triage, team lead responsibilities, sub-agent task boundaries, central integration, draft PR self-review, and ready-for-review gates.
+- Validation: `git diff --check` passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
+- Next: open a small PR for review.
+
+### 2026-05-13 - Documentation navigation cleanup
+
+- Why: test the team-lead plus sub-agent workflow on a small docs-only task and remove stale paths after the docs tree reorganization.
+- Did: clarified `docs/README.md` as the documentation map, updated live references from old `docs/agent-state.md` / `ROADMAP.md` paths to `docs/operations/agent-state.md` / `docs/project/roadmap.md`, and fixed stale learning/template references.
+- Validation: `git diff --check` passed; local Markdown relative-link check passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
+- Next: open a small PR for review, then merge after documentation review is acceptable.
+
+### 2026-05-12 - Codex repo command approvals relaxed
+
+- Why: reduce repeated approval clicks for routine `git` and `gh` work in this repo.
+- Did: set project Codex `approval_policy` to `never` while keeping `sandbox_mode = "workspace-write"`.
+- Validation: TOML parsed successfully; `git diff --check` passed.
+- Next: open a draft PR for review.
+
 ### 2026-05-12 - Roadmap and template link cleanup
 
 - Why: keep roadmap as a stable direction/scope document and align agent templates with the reorganized docs tree.

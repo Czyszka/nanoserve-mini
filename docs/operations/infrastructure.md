@@ -6,7 +6,8 @@ techniczne reguły specyficzne dla maszyn (cache HF, reproducibility, Docker/nat
 
 To dokument organizacyjny dotyczący sprzętu i lokalizacji. Reguły wspólne (scope,
 sekrety, wyniki, commit conventions, walidacja) są w `CLAUDE.md`. Aktualny stan
-projektu jest w `docs/agent-state.md`. Zakres techniczny faz jest w `ROADMAP.md`.
+projektu jest w `docs/operations/agent-state.md`. Zakres techniczny faz jest w
+`docs/project/roadmap.md`.
 
 ---
 

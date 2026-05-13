@@ -7,7 +7,7 @@ For foundational papers (e.g. *Efficient LLM Serving Survey*, *PagedAttention /
 vLLM*, *Efficiently Scaling Transformer Inference*, *Orca*, *Sarathi-Serve*,
 *FlashAttention*) use `docs/templates/paper-note-template.md` instead.
 
-See `docs/paper-reading-guide.md` -> "Recommended first use" for which template
+See `docs/learning/paper-reading-guide.md` -> "Recommended first use" for which template
 to pick.
 
 ---

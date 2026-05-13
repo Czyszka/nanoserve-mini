@@ -68,7 +68,7 @@ Skrypt nie failuje, jeśli któraś komenda nie jest zainstalowana — zapisuje 
 
 ## Krok 4 — inspect `results/raw/server_env_snapshot.json`
 
-Otwieramy plik i odpowiadamy na pytania z `docs/agent-state.md` ("Open questions"):
+Otwieramy plik i odpowiadamy na pytania z `docs/operations/agent-state.md` ("Open questions"):
 
 - [ ] `nvidia_smi`: 8x H200 NVL widoczne? `returncode == 0`, w `stdout` 8 GPU.
 - [ ] `nvidia_smi_query`: każde GPU ma `memory.total ~= 141 GB` i ten sam `driver_version`?
@@ -107,7 +107,7 @@ Jeśli plik byłby duży (>~100 KB) — committujemy tylko summary, nie raw. Na 
 
 ## Krok 6 — decyzja: Docker vs uv/native dla vLLM
 
-Wybieramy **jedną** ścieżkę i zapisujemy decyzję w `docs/agent-state.md`. Kryteria:
+Wybieramy **jedną** ścieżkę i zapisujemy decyzję w `docs/operations/agent-state.md`. Kryteria:
 
 **Wybierz Docker, jeśli:**
 
@@ -123,7 +123,7 @@ Wybieramy **jedną** ścieżkę i zapisujemy decyzję w `docs/agent-state.md`. K
 
 **Default tie-breaker:** jeśli oba dostępne — Docker. Łatwiej powtórzyć i łatwiej przekazać innej osobie.
 
-Aktualizujemy `docs/agent-state.md`:
+Aktualizujemy `docs/operations/agent-state.md`:
 
 - "Current decisions" → wpis `vLLM setup` z konkretną wartością (`Docker` / `uv-native`).
 - "Open questions" → odhaczamy odpowiedzi z kroku 4.
@@ -132,7 +132,7 @@ Aktualizujemy `docs/agent-state.md`:
 Commit:
 
 ```bash
-git add docs/agent-state.md
+git add docs/operations/agent-state.md
 git commit -m "docs: record vLLM setup decision after server env snapshot"
 git push origin main
 ```
@@ -153,7 +153,7 @@ Wszystko powyżej jest dopiero **po** decyzji z kroku 6, w osobnym slocie serwer
 ## Definicja "bootstrap udany"
 
 1. `results/raw/server_env_snapshot.json` (lub odpowiednik per-maszyna) jest na `origin/main`.
-2. Decyzja Docker vs native jest zapisana w `docs/agent-state.md` na `origin/main`.
+2. Decyzja Docker vs native jest zapisana w `docs/operations/agent-state.md` na `origin/main`.
 3. Wiemy, jaki jest następny konkretny krok (np. "pull obrazu vLLM X.Y.Z" albo "uv add vllm w nowym extras").
 
 Jeśli te 3 punkty są spełnione — bootstrap zaliczony, niezależnie od tego ile czasu zostało w slocie. Resztę slotu można zostawić, nie ma sensu rozpoczynać kolejnego dużego kroku w stresie.

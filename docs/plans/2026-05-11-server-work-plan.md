@@ -478,4 +478,4 @@ git commit -m "bench: record minimax coding eval and dual-model baseline"
 git push
 ```
 
-- [ ] Zaktualizować `docs/agent-state.md`.
+- [ ] Zaktualizować `docs/operations/agent-state.md`.
