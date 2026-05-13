@@ -18,6 +18,7 @@ METHODOLOGY: Final[str] = "mlperf_inspired_lite"
 MODE_SINGLESTREAM_LITE_CORRECTNESS: Final[str] = "singlestream_lite_correctness"
 MODE_SINGLESTREAM_LITE_LATENCY: Final[str] = "singlestream_lite_latency"
 MODE_SINGLESTREAM_LITE_REPEATED: Final[str] = "singlestream_lite_repeated"
+MODE_CODING_AGENT_EVAL: Final[str] = "coding_agent_eval"
 
 # Result schema versions.
 SCHEMA_REQUEST_ONCE: Final[str] = "nanoserve-mini.request-once.v2"
@@ -28,3 +29,6 @@ SCHEMA_SEQUENTIAL_BENCH_ROW: Final[str] = "nanoserve-mini.sequential-bench-row.v
 # Server-side observability artifacts.
 SCHEMA_SERVER_METRICS_SNAPSHOT: Final[str] = "nanoserve-mini.server-metrics-snapshot.v1"
 SCHEMA_GPU_SAMPLES_META: Final[str] = "nanoserve-mini.gpu-samples-meta.v1"
+
+# Coding-agent evaluation row schema (one row per task × agent × model run).
+SCHEMA_CODING_AGENT_EVAL_ROW: Final[str] = "nanoserve-mini.coding-agent-eval-row.v1"

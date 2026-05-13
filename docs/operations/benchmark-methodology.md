@@ -159,6 +159,65 @@ Expected behavior:
 - target QPS is configured explicitly,
 - server-side metrics are correlated with client-side latency.
 
+### 5. Coding agent eval
+
+Purpose:
+
+- measure practical programming usefulness of a served model via a coding-agent
+  CLI (Claude Code first, OpenCode fallback),
+- run a synthetic, hidden-test-graded task in a temp work-dir against a vLLM
+  endpoint,
+- capture wall-clock, public/hidden test outcomes, token usage, file-change
+  count, and pre/post server metrics for each `(task_id, agent, model)` run.
+
+Per-task on-disk layout:
+
+```text
+benchmarks/coding-agent-tasks/<task_id>/
+  TASK.md
+  README.md
+  starter/   # code the agent edits in its temp work-dir
+  public/    # test runner visible to the agent (run.sh or run.ps1)
+  hidden/    # test runner the harness runs separately; not copied into the agent's work-dir
+```
+
+Per-run output tree:
+
+```text
+results/runs/<run_id>/coding_agent_eval/
+  results.jsonl                 # one row per (task_id, agent, model)
+  tasks_summary.md
+  transcripts/
+    <task_id>__prompt.txt
+    <task_id>__stdout.log
+    <task_id>__stderr.log
+    <task_id>__public_tests.log
+    <task_id>__hidden_tests.log
+  server_metrics/<task_id>/
+    pre_server_metrics.json
+    pre_nvidia_smi.json
+    post_server_metrics.json
+    post_nvidia_smi.json
+```
+
+Each row in `results.jsonl` carries schema
+`nanoserve-mini.coding-agent-eval-row.v1` (`SCHEMA_CODING_AGENT_EVAL_ROW` in
+`scripts/_schemas.py`). Key fields:
+
+- `task_id`, `agent`, `model`, `base_url`, `run_id`, `run_uuid`
+- `started_at`, `ended_at`, `wall_clock_seconds`, `timed_out`
+- `agent_exit_code`, `agent_version`, `error`
+- `public_tests`, `hidden_tests` — each `{ran, exit_code, log_path, duration_s}`
+- `changed_files`, `baseline_commit`, `final_commit`
+- `tokens` — `{input_tokens, output_tokens, num_turns}`
+- `server_metrics` — paths to pre/post snapshot JSONs
+- `transcript_path`
+
+Driver: `scripts/run_coding_agent_task.py`. The harness copies
+`starter/` + `public/` into a temp work-dir, runs the agent CLI, then runs
+`hidden/run.{sh,ps1}` outside the agent's work-dir against the resulting
+solution.
+
 ## Benchmark mode identifiers
 
 Each script uses a fixed `benchmark_mode` identifier in its JSON output.
@@ -170,6 +229,7 @@ All results carry `"methodology": "mlperf_inspired_lite"`.
 | `scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
 | `scripts/run_sequential_benchmark.py` (summary) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
 | `scripts/run_sequential_benchmark.py` (row) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
+| `scripts/run_coding_agent_task.py` (row) | `coding_agent_eval` | `nanoserve-mini.coding-agent-eval-row.v1` |
 
 All identifiers are exported from `scripts/_schemas.py` so downstream consumers
 (aggregator, future dashboard) import the same source of truth.
