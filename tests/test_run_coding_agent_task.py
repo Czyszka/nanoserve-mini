@@ -122,6 +122,27 @@ def _runner_factory(
     return runner
 
 
+def _recording_runner_factory(
+    calls: list[dict[str, Any]],
+    *,
+    agent_exit: int = 0,
+    public_exit: int = 0,
+    hidden_exit: int = 0,
+) -> Any:
+    def runner(cmd: list[str], **kwargs: Any) -> Any:
+        calls.append({"cmd": cmd, "cwd": str(kwargs.get("cwd", ""))})
+        is_test_runner = any(
+            "run.sh" in part or "run.ps1" in part for part in cmd
+        )
+        if is_test_runner:
+            cwd = str(kwargs.get("cwd", ""))
+            rc = hidden_exit if "hidden" in cwd else public_exit
+            return SimpleNamespace(returncode=rc, stdout="ok", stderr="")
+        return SimpleNamespace(returncode=agent_exit, stdout="", stderr="")
+
+    return runner
+
+
 def _no_metrics(**kwargs: Any) -> dict[str, Any]:
     return {
         "server_metrics_path": str(Path(kwargs["out_dir"]) / "stub.json"),
@@ -139,12 +160,13 @@ def _args(
     timeout_s: float = 30.0,
     require_hidden: bool = False,
     skip_server_metrics: bool = True,
+    agent_command: str = "fake-agent {prompt}",
     notes: str | None = None,
 ) -> Any:
     return SimpleNamespace(
         task_id=task_id,
         agent="fake",
-        agent_command="fake-agent {prompt_file}",
+        agent_command=agent_command,
         model="m1",
         base_url="http://x",
         run_id=run_id,
@@ -209,13 +231,145 @@ def test_agent_timeout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         git_runner=_fake_git_runner(),
         server_metrics_collector=_no_metrics,
     )
-    assert rc == harness.EXIT_OK
+    assert rc == harness.EXIT_AGENT_TIMEOUT
     results = _read_jsonl(tmp_path / "results/runs/run-x/coding_agent_eval/results.jsonl")
     row = results[0]
     assert row["timed_out"] is True
     assert row["agent_exit_code"] is None
     assert row["public_tests"]["ran"] is False
     assert row["hidden_tests"]["ran"] is False
+
+
+def test_agent_command_receives_prompt_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    _make_task(tasks, "task-01")
+    monkeypatch.chdir(tmp_path)
+    calls: list[dict[str, Any]] = []
+
+    rc = harness.run_one(
+        _args(
+            tasks_root=tasks,
+            work_dir=tmp_path / "w",
+            agent_command="fake-agent --prompt {prompt}",
+        ),
+        now=_now_iter(),
+        runner=_recording_runner_factory(calls),
+        git_runner=_fake_git_runner(),
+        server_metrics_collector=_no_metrics,
+    )
+
+    assert rc == harness.EXIT_OK
+    assert calls[0]["cmd"] == ["fake-agent", "--prompt", "Do the thing.\n"]
+
+
+def test_agent_command_receives_absolute_prompt_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    _make_task(tasks, "task-01")
+    monkeypatch.chdir(tmp_path)
+    calls: list[dict[str, Any]] = []
+
+    rc = harness.run_one(
+        _args(
+            tasks_root=tasks,
+            work_dir=tmp_path / "w",
+            agent_command="fake-agent --prompt-file {prompt_file}",
+        ),
+        now=_now_iter(),
+        runner=_recording_runner_factory(calls),
+        git_runner=_fake_git_runner(),
+        server_metrics_collector=_no_metrics,
+    )
+
+    assert rc == harness.EXIT_OK
+    prompt_file = Path(calls[0]["cmd"][-1])
+    assert prompt_file.is_absolute()
+    assert prompt_file.read_text(encoding="utf-8") == "Do the thing.\n"
+
+
+def test_agent_command_windows_split_preserves_backslashes(tmp_path: Path) -> None:
+    prompt_path = tmp_path / "results" / "runs" / "run-x" / "prompt.txt"
+    prompt_path.parent.mkdir(parents=True)
+    prompt_path.write_text("prompt\n", encoding="utf-8")
+
+    cmd = harness._build_agent_command(
+        "fake-agent --prompt-file {prompt_file}",
+        prompt_path=prompt_path,
+        prompt_body="prompt\n",
+        posix=False,
+    )
+
+    assert cmd == ["fake-agent", "--prompt-file", str(prompt_path.resolve())]
+
+
+def test_agent_launch_error_returns_harness_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    _make_task(tasks, "task-01")
+    monkeypatch.chdir(tmp_path)
+
+    def missing_agent(cmd: list[str], **kwargs: Any) -> Any:
+        raise FileNotFoundError("fake-agent")
+
+    rc = harness.run_one(
+        _args(tasks_root=tasks, work_dir=tmp_path / "w"),
+        now=_now_iter(),
+        runner=missing_agent,
+        git_runner=_fake_git_runner(),
+        server_metrics_collector=_no_metrics,
+    )
+
+    assert rc == harness.EXIT_HARNESS_ERROR
+    row = _read_jsonl(
+        tmp_path / "results/runs/run-x/coding_agent_eval/results.jsonl"
+    )[0]
+    assert row["error"].startswith("agent command not found:")
+
+
+def test_public_tests_run_from_fresh_canonical_copy(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tasks = tmp_path / "tasks"
+    tasks.mkdir()
+    _make_task(tasks, "task-01")
+    work = tmp_path / "w"
+    monkeypatch.chdir(tmp_path)
+    calls: list[dict[str, Any]] = []
+
+    def runner(cmd: list[str], **kwargs: Any) -> Any:
+        calls.append({"cmd": cmd, "cwd": str(kwargs.get("cwd", ""))})
+        is_test_runner = any(
+            "run.sh" in part or "run.ps1" in part for part in cmd
+        )
+        if not is_test_runner:
+            mutable_public_runner = work / harness.PUBLIC_SUBDIR / "run.sh"
+            mutable_public_runner.write_text("#!/bin/sh\nexit 99\n", encoding="utf-8")
+            return SimpleNamespace(returncode=0, stdout="", stderr="")
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    rc = harness.run_one(
+        _args(tasks_root=tasks, work_dir=work),
+        now=_now_iter(),
+        runner=runner,
+        git_runner=_fake_git_runner(),
+        server_metrics_collector=_no_metrics,
+    )
+
+    assert rc == harness.EXIT_OK
+    test_cwds = [
+        call["cwd"]
+        for call in calls
+        if any("run.sh" in part or "run.ps1" in part for part in call["cmd"])
+    ]
+    assert str(work / harness.PUBLIC_SUBDIR) not in test_cwds
+    assert any(str(work) + "__public" == cwd for cwd in test_cwds)
 
 
 def test_test_failures_recorded(

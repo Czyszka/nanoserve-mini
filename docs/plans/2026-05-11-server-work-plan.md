@@ -224,7 +224,7 @@ results/runs/<run_id>/coding_agent_eval/agent_selection.md
   - model id,
   - wynik minimalnego testu,
   - ewentualne ograniczenia.
-- [ ] Po działającym OpenCode wskazać `--agent opencode --agent-command "opencode -p {prompt_file}"` w `scripts/run_coding_agent_task.py`.
+- [ ] Po działającym OpenCode wskazać `--agent opencode --agent-command "opencode -p {prompt}"` w `scripts/run_coding_agent_task.py`.
 
 ## A5. Test weryfikujący model w coding agent CLI
 
