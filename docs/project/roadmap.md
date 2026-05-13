@@ -125,7 +125,7 @@ Po skończeniu projektu wybierasz jedną z czterech:
 
 **Ścieżka D — Stop.** LLM inference nie jest dla mnie jako career direction. Zostajesz w obecnej roli albo szukasz czegoś bliżej obecnego stacka. Kryteria: projekt męczył przez większość czasu, kernel/perf nie dawały satysfakcji, gdyby nie commitment to byś rzucił w połowie.
 
-Decision doc (`docs/decision.md`) pisany w tygodniu 12 jest częścią Definition of done — niezależnie od ścieżki.
+Decision doc (`docs/project/decision.md`) pisany w tygodniu 12 jest częścią Definition of done — niezależnie od ścieżki.
 
 ---
 

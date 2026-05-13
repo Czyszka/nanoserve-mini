@@ -295,6 +295,13 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-13 - Documentation navigation cleanup
+
+- Why: test the team-lead plus sub-agent workflow on a small docs-only task and remove stale paths after the docs tree reorganization.
+- Did: clarified `docs/README.md` as the documentation map, updated live references from old `docs/agent-state.md` / `ROADMAP.md` paths to `docs/operations/agent-state.md` / `docs/project/roadmap.md`, and fixed stale learning/template references.
+- Validation: `git diff --check` passed; local Markdown relative-link check passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
+- Next: open a small PR for review, then merge after documentation review is acceptable.
+
 ### 2026-05-12 - Codex repo command approvals relaxed
 
 - Why: reduce repeated approval clicks for routine `git` and `gh` work in this repo.
