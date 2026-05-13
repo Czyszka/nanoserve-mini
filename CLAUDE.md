@@ -22,9 +22,11 @@ Core scope:
 
 Before making changes, read:
 
-1. `ROADMAP.md` or the current roadmap/scope document named in `docs/agent-state.md`
-2. the current infrastructure/workflow document named in `docs/agent-state.md`
-3. `docs/agent-state.md`
+1. `docs/project/roadmap.md` or the current roadmap/scope document named in
+   `docs/operations/agent-state.md`
+2. the current infrastructure/workflow document named in
+   `docs/operations/agent-state.md`
+3. `docs/operations/agent-state.md`
 4. `AGENTS.md` if present
 
 Then summarize the current state in 3-5 bullets before proposing work.
@@ -67,38 +69,39 @@ Do not add or implement unless explicitly requested:
 - TensorRT-LLM,
 - SGLang integration,
 - Kubernetes,
-- multi-GPU / tensor parallelism experiments,
+- new multi-GPU / tensor parallelism experiments beyond the documented Kimi TP=8 baseline,
 - FP8 quantization,
 - MoE,
-- speculative decoding,
+- new speculative decoding experiments beyond the documented Kimi Eagle3 baseline,
 - production HA/autoscaling,
 - large cloud infrastructure.
 
-Do not rewrite `ROADMAP.md` unless explicitly asked.
+Do not rewrite `docs/project/roadmap.md` unless explicitly asked.
 
 ## Immediate project state
 
-For current phase, status, decisions, and next step, see `docs/agent-state.md`.
+For current phase, status, decisions, and next step, see
+`docs/operations/agent-state.md`.
 Do not duplicate that content here.
 
 ## Agent state protocol
 
-`docs/agent-state.md` is the shared, repo-tracked memory for all coding agents.
+`docs/operations/agent-state.md` is the shared, repo-tracked memory for all coding agents.
 
 File roles:
 
 - `CLAUDE.md` - stable instructions for Claude Code.
 - `AGENTS.md` - stable instructions for Codex.
-- `docs/agent-state.md` - current project state, decisions, next step, and blockers.
-- `ROADMAP.md` - project scope; do not change it without an explicit decision.
+- `docs/operations/agent-state.md` - current project state, decisions, next step, and blockers.
+- `docs/project/roadmap.md` - project scope; do not change it without an explicit decision.
 
 At the beginning of a task:
 
-1. read `docs/agent-state.md`,
+1. read `docs/operations/agent-state.md`,
 2. verify whether it matches the current repo state,
 3. avoid duplicating stale assumptions.
 
-At the end of a meaningful task, update `docs/agent-state.md` with:
+At the end of a meaningful task, update `docs/operations/agent-state.md` with:
 
 - what changed,
 - commands run,
@@ -107,10 +110,11 @@ At the end of a meaningful task, update `docs/agent-state.md` with:
 - next recommended action,
 - open blockers.
 
-Always update `docs/agent-state.md` before committing, pushing, or handing work to
-another agent when the task changed the repository state.
+Always update `docs/operations/agent-state.md` before committing, pushing, or handing work
+to another agent when the task changed the repository state.
 
-Keep `docs/agent-state.md` concise. It should be a handoff document, not a full diary.
+Keep `docs/operations/agent-state.md` concise. It should be a handoff document, not a full
+diary.
 
 For periodic documentation hygiene, use `docs/templates/tidy-docs-agent.md`.
 
