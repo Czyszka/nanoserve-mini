@@ -295,6 +295,13 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-13 - Codex team workflow added to AGENTS
+
+- Why: capture the successful team-lead plus sub-agent workflow as reusable guidance for future Codex work.
+- Did: added an English `Codex team workflow` section to `AGENTS.md` covering solo-vs-team triage, team lead responsibilities, sub-agent task boundaries, central integration, draft PR self-review, and ready-for-review gates.
+- Validation: `git diff --check` passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
+- Next: open a small PR for review.
+
 ### 2026-05-13 - Documentation navigation cleanup
 
 - Why: test the team-lead plus sub-agent workflow on a small docs-only task and remove stale paths after the docs tree reorganization.
