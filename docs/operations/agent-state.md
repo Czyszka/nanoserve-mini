@@ -29,7 +29,7 @@ The `sync-state` routine reads this block to find the diff window. Update only v
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; Kimi/OpenWebUI compose capture in progress.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent harness ready; starter scaffolds are queued in a follow-up PR; Kimi/OpenWebUI compose capture in progress.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed, Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
 
@@ -294,6 +294,18 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-13 - Coding-agent harness and v1 row schema
+
+- Why: next server session (per `docs/plans/2026-05-11-server-work-plan.md` Part A) runs the 4 synthetic coding tasks against MiniMax-M2.7 / DeepSeek-V4-Flash through Claude Code CLI / OpenCode. Before the session, the suite needed a non-interactive harness, row schema, and docs that define the expected scaffold layout.
+- Did:
+  - Added `scripts/run_coding_agent_task.py` (wrapper harness: copies `<task>/starter/` + `<task>/public/` into a temp work-dir, renders prompt from `TASK.md` "## Agent prompt" section, runs `--agent-command` with `{prompt}` or `{prompt_file}` substitution and timeout, runs fresh public tests plus hidden test runners, appends one `coding-agent-eval-row.v1` row to `results/runs/<run_id>/coding_agent_eval/results.jsonl`).
+  - Added `tests/test_run_coding_agent_task.py` (17 tests; injected `now`/`runner`/`git_runner`/`server_metrics_collector` for unit testability).
+  - Extended `scripts/_schemas.py` with `MODE_CODING_AGENT_EVAL` and `SCHEMA_CODING_AGENT_EVAL_ROW = "nanoserve-mini.coding-agent-eval-row.v1"`.
+  - Documented the expected `<task>/{starter,public,hidden}/` scaffold layout; actual starter scaffolds are queued in the follow-up `feat/coding-agent-starter-scaffolds` PR.
+  - Updated `benchmarks/coding-agent-tasks/README.md` (layout + harness section, v1 row schema), each `TASK.md` 01-04 (appended "Harness invocation" section), `docs/operations/benchmark-methodology.md` (new `coding_agent_eval` mode + section), `docs/plans/2026-05-11-server-work-plan.md` A4.3/A6 (point at harness instead of manual metrics checklist).
+- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed (102 existing + 17 harness tests). Per-starter build/test smoke checks deferred until the scaffold PR lands.
+- Next: merge the harness PR, then stack the starter-scaffold PR. On the next server session, after `git pull`, run `bash benchmarks/coding-agent-tasks/<id>/public/run.sh` against each starter to confirm the expected red/green test split before pointing the harness at MiniMax-M2.7.
 
 ### 2026-05-13 - Codex team workflow added to AGENTS
 
