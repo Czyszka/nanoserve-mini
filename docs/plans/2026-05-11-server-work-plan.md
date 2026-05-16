@@ -224,6 +224,7 @@ results/runs/<run_id>/coding_agent_eval/agent_selection.md
   - model id,
   - wynik minimalnego testu,
   - ewentualne ograniczenia.
+- [ ] Po działającym OpenCode wskazać `--agent opencode --agent-command "opencode -p {prompt}"` w `scripts/run_coding_agent_task.py`.
 
 ## A5. Test weryfikujący model w coding agent CLI
 
@@ -280,25 +281,7 @@ Każde zadanie powinno mieć:
 
 ## A6. Metryki dla coding agent eval
 
-Dla każdego zadania zapisać:
-
-- [ ] agent (`claude_code` albo `opencode`),
-- [ ] model,
-- [ ] start timestamp,
-- [ ] end timestamp,
-- [ ] wall-clock time,
-- [ ] pass/fail,
-- [ ] liczba requestów do modelu, jeśli dostępna,
-- [ ] input tokens, jeśli dostępne,
-- [ ] output tokens, jeśli dostępne,
-- [ ] liczba zmienionych plików,
-- [ ] liczba uruchomień testów,
-- [ ] czy model sam naprawił błąd po failed test,
-- [ ] E2E latency dla requestów, jeśli dostępna,
-- [ ] GPU metrics przed/po,
-- [ ] vLLM metrics przed/po,
-- [ ] skrócony transcript albo ścieżka do transcriptu,
-- [ ] commit hash z roboczego repo po wykonaniu zadania.
+Metryki agenta + testów są zbierane automatycznie przez `scripts/run_coding_agent_task.py`. Każde uruchomienie dopisuje jeden wiersz do `results/runs/<run_id>/coding_agent_eval/results.jsonl` zgodny ze schematem `nanoserve-mini.coding-agent-eval-row.v1` (pola: `task_id`, `agent`, `model`, `wall_clock_seconds`, `agent_exit_code`, `public_tests`, `hidden_tests`, `changed_files`, `tokens`, `server_metrics`, `transcript_path`).
 
 Wyniki zapisać do:
 
