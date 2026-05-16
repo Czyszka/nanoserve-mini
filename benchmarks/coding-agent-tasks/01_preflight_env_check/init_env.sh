@@ -4,7 +4,7 @@
 # Usage:
 #   ./init_env.sh --model <model> --run-number <NN> [--base-dir <path>]
 #
-# 1. Checks for required tools (OS, claude, git, python, uv, jq). Bash itself is skipped - if the script started, it is available.
+# 1. Checks for required tools (OS, claude, git, uv, jq). Bash itself is skipped - if the script started, it is available.
 # 2. Creates work-dir <base-dir>/<YYYY-MM-DD>_<model>_run<NN>/.
 # 3. Copies PROMPT.md, preflight.sh, public_tests/{cases.json,run.sh}.
 # 4. Initializes git + initial commit.
@@ -60,13 +60,19 @@ echo "[ok]      OS $(uname -srm)"
 missing=0
 check_tool claude --version || missing=$((missing+1))
 check_tool git    --version || missing=$((missing+1))
-check_tool python --version || missing=$((missing+1))
 check_tool uv     --version || missing=$((missing+1))
 check_tool jq     --version || missing=$((missing+1))
 
 if [[ $missing -gt 0 ]]; then
     echo ""
     echo "[error] missing $missing tool(s) - aborting." >&2
+    exit 1
+fi
+
+if uv_python="$(uv run python --version 2>&1)"; then
+    echo "[ok]      uv python ${uv_python}"
+else
+    echo "[error] uv run python --version failed: ${uv_python}" >&2
     exit 1
 fi
 

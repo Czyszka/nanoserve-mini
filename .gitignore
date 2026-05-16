@@ -32,6 +32,10 @@ Thumbs.db
 # Large local-only artifacts
 artifacts/
 tmp/
+runs/
+benchmarks/coding-agent-tasks/*/runs*/
+**/bin/
+**/obj/
 
 # Local research papers
 docs/papers/

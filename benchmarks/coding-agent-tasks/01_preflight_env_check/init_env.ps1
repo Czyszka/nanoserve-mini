@@ -4,7 +4,7 @@
   Initializes the test environment for task 01_preflight_env_check (PowerShell variant).
 
 .DESCRIPTION
-  1. Checks for required tools (OS, claude, git, python, uv). PowerShell itself is skipped - if the script started, it is available.
+  1. Checks for required tools (OS, claude, git, uv). PowerShell itself is skipped - if the script started, it is available.
   2. Creates work-dir <BaseDir>/<YYYY-MM-DD>_<Model>_run<RunNumber>/.
   3. Copies PROMPT.md, preflight.ps1, public_tests/{cases.json,run.ps1}.
   4. Initializes git + initial commit.
@@ -59,7 +59,6 @@ $missing = 0
 foreach ($t in @(
     @{ Name = "claude"; Arg = "--version" },
     @{ Name = "git";    Arg = "--version" },
-    @{ Name = "python"; Arg = "--version" },
     @{ Name = "uv";     Arg = "--version" }
 )) {
     if (-not (Test-Tool -Name $t.Name -VersionArg $t.Arg)) { $missing++ }
@@ -68,6 +67,20 @@ foreach ($t in @(
 if ($missing -gt 0) {
     Write-Host ""
     Write-Host "[error] missing $missing tool(s) - aborting."
+    exit 1
+}
+
+try {
+    $uvPythonOutput = & uv run python --version 2>&1
+    $uvPythonExitCode = $LASTEXITCODE
+    $uvPython = $uvPythonOutput | Select-Object -First 1
+    if ($uvPythonExitCode -ne 0) {
+        Write-Host "[error] uv run python --version failed: $uvPython"
+        exit 1
+    }
+    Write-Host "[ok]      uv python $uvPython"
+} catch {
+    Write-Host "[error] uv run python --version failed: $($_.Exception.Message)"
     exit 1
 }
 

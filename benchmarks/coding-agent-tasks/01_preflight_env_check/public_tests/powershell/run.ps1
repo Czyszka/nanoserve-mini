@@ -23,6 +23,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Here = $PSScriptRoot
+$PowerShellExe = Join-Path $PSHOME "powershell.exe"
 
 if (-not $PreflightPath) {
     # runner lives at .../public_tests/powershell/run.ps1
@@ -76,6 +77,37 @@ function Get-DottedPath {
     return @{ found = $true; value = $cur }
 }
 
+function Join-ProcessArguments {
+    param([string[]]$Values)
+    $quoted = @()
+    foreach ($v in $Values) {
+        if ($v -match '[\s"]') {
+            $quoted += '"' + ($v -replace '"', '\"') + '"'
+        } else {
+            $quoted += $v
+        }
+    }
+    return ($quoted -join " ")
+}
+
+function Invoke-Preflight {
+    param([string[]]$RawArgs)
+    $invokeArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $PreflightPath) + $RawArgs
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $PowerShellExe
+    $psi.Arguments = Join-ProcessArguments -Values $invokeArgs
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
+    [void]$proc.Start()
+    $stdoutText = $proc.StandardOutput.ReadToEnd()
+    [void]$proc.StandardError.ReadToEnd()
+    $proc.WaitForExit()
+    return @{ stdout = $stdoutText.Trim(); exit_code = $proc.ExitCode }
+}
+
 function Run-Case {
     param($Case)
 
@@ -95,17 +127,14 @@ function Run-Case {
     }
 
     try {
-        # Invoke preflight via powershell.exe so $args parsing works and exit code is captured.
-        $invokeArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $PreflightPath) + $rawArgs
-        $stdout = & powershell.exe @invokeArgs 2>$null
-        $exitCode = $LASTEXITCODE
+        $procResult = Invoke-Preflight -RawArgs $rawArgs
+        $stdoutText = $procResult.stdout
+        $exitCode = $procResult.exit_code
     } finally {
         foreach ($k in $oldEnv.Keys) {
             [System.Environment]::SetEnvironmentVariable($k, $oldEnv[$k], "Process")
         }
     }
-
-    $stdoutText = ($stdout | Out-String).Trim()
 
     $failures = @()
 
