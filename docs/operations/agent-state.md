@@ -295,6 +295,23 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-16 - Coding-agent task 01_preflight_env_check (step 2: scaffold + runner)
+
+- Why: pair-built with subagent the full step 2 of the eval pipeline. Goal: real buggy preflight + tests + own Python runner that invokes claude and scores hidden tests.
+- Did:
+  - Real `scaffold/powershell/preflight.ps1` with 5 checks (docker/gpus/disk/ports/versions) and 4 seeded bugs (1=docker available always true; 2=disk string-compare; 3=port timeout=free; 4=exit always 0). Bugs renumbered 1-4 (was 1/3/4/5).
+  - Refactored: `--min-free-gb` → `--min-free-mb` (smaller unit makes lex vs num pairs differ more often → bug 2 discriminating test possible).
+  - Added `--host <ip>` flag (default 127.0.0.1) on port check, so hidden test can use 198.51.100.1 (TEST-NET-2, guaranteed non-routable) to force timeout → bug 3 discriminating test possible.
+  - `PROMPT.md` rewritten in English with new flags and bug descriptions.
+  - `public_tests/cases.json` (4 cases) + `public_tests/powershell/run.ps1` (real runner: dotted-path assertions, env restore, JSONL line/field assertions, `{TMP}`/`{EMPTY_DIR}` placeholder substitution).
+  - `hidden_tests/cases.json` (10 cases incl. bug 1/2/3/4 discriminating cases) + `hidden_tests/powershell/run.ps1` (same logic, emits `SUMMARY_JSON <json>` parsed by run_eval).
+  - `run_eval.py` (stdlib only): invokes `claude -p <prompt> --output-format json --model X --permission-mode acceptEdits`, parses usage tokens, runs hidden tests against work-dir, auto-commits agent edits, writes `results.jsonl` with schema `preflight-env-check-eval.v1`. Bonus `--skip-agent` for pipeline smoke tests.
+  - `init_env.{ps1,sh}` translated to English; next-step command now points at `run_eval.py`.
+  - Old `01_powershell_environment_and_backup/` removed; `benchmarks/coding-agent-tasks/README.md` task table updated.
+  - Bash variant scaffolds + hidden tests left as placeholders — next iteration (server smoke).
+- Validation: no smoke test executed in this commit (context budget). Pipeline must be smoke-tested on laptop before pointing at real models on the server.
+- Next: smoke test `init_env.ps1 → run_eval.py` with claude-haiku-4-5 on laptop (3 runs). Then design `scripts/run_bench.{ps1,sh}` driver + `scripts/aggregate_results.py` per-task aggregator (decisions: aggregator scans `runs/*/results.jsonl` directly, median per stage, --task flag for reuse). Then bash variant + server smoke.
+
 ### 2026-05-16 - New coding-agent task 01_preflight_env_check (init scripts only)
 
 - Why: existing first task (`01_powershell_environment_and_backup`) was too bloated (335-line spec, 6 stages, no scaffold) for the planned model-vs-model bench. New task is being designed step-by-step with the user: goal is to compare LLM coding-agents on the same task, scored by % hidden tests passed + total tokens consumed.

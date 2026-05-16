@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "stage1_disk_min_free_too_high_reports_not_ok",
+    "stage": 1,
+    "args": ["--path", "{TMP}", "--min-free-mb", "999999999"],
+    "expect_exit_code": 1,
+    "expect_json_path": {
+      "checks.disk.ok": false
+    }
+  },
+  {
+    "id": "stage1_disk_min_free_zero_reports_ok",
+    "stage": 1,
+    "args": ["--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_json_path": {
+      "checks.disk.ok": true
+    }
+  },
+  {
+    "id": "stage1_exit_code_reflects_all_ok_false",
+    "stage": 1,
+    "args": ["--path", "{TMP}", "--min-free-mb", "999999999"],
+    "expect_exit_code": 1
+  },
+  {
+    "id": "stage2_watch_3_ticks_writes_3_lines",
+    "stage": 2,
+    "args": ["--watch", "--interval-s", "1", "--duration-s", "3", "--output", "{TMP}/watch.jsonl", "--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_jsonl_line_count": {
+      "path": "{TMP}/watch.jsonl",
+      "count": 3
+    }
+  }
+]

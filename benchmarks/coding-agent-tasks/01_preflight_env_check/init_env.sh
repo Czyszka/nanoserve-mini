@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# init_env.sh - inicjalizuje srodowisko testowe dla zadania 01_preflight_env_check (wariant bash).
+# init_env.sh - initializes the test environment for task 01_preflight_env_check (bash variant).
 #
-# Uzycie:
+# Usage:
 #   ./init_env.sh --model <model> --run-number <NN> [--base-dir <path>]
 #
-# 1. Sprawdza dostepnosc narzedzi (OS, claude, git, python, uv, jq). Bash pomijamy - skoro skrypt sie uruchomil, jest dostepny.
-# 2. Tworzy work-dir <base-dir>/<YYYY-MM-DD>_<model>_run<NN>/.
-# 3. Kopiuje PROMPT.md, preflight.sh, public_tests/{cases.json,run.sh}.
-# 4. Inicjalizuje git + initial commit.
-# 5. Wypisuje gotowa komende uruchomienia harnessu.
+# 1. Checks for required tools (OS, claude, git, python, uv, jq). Bash itself is skipped - if the script started, it is available.
+# 2. Creates work-dir <base-dir>/<YYYY-MM-DD>_<model>_run<NN>/.
+# 3. Copies PROMPT.md, preflight.sh, public_tests/{cases.json,run.sh}.
+# 4. Initializes git + initial commit.
+# 5. Prints the ready-to-run harness command.
 
 set -euo pipefail
 
@@ -20,7 +20,7 @@ RUN_NUMBER=""
 BASE_DIR="./runs"
 
 usage() {
-    echo "uzycie: $0 --model <model> --run-number <NN> [--base-dir <path>]" >&2
+    echo "usage: $0 --model <model> --run-number <NN> [--base-dir <path>]" >&2
 }
 
 while [[ $# -gt 0 ]]; do
@@ -29,33 +29,33 @@ while [[ $# -gt 0 ]]; do
         --run-number)  RUN_NUMBER="${2:-}"; shift 2 ;;
         --base-dir)    BASE_DIR="${2:-}"; shift 2 ;;
         -h|--help)     usage; exit 0 ;;
-        *)             echo "[error] nieznany argument: $1" >&2; usage; exit 1 ;;
+        *)             echo "[error] unknown argument: $1" >&2; usage; exit 1 ;;
     esac
 done
 
 if [[ -z "$MODEL" ]]; then
-    echo "[error] brak wymaganego --model" >&2; usage; exit 1
+    echo "[error] missing required --model" >&2; usage; exit 1
 fi
 if [[ -z "$RUN_NUMBER" ]]; then
-    echo "[error] brak wymaganego --run-number" >&2; usage; exit 1
+    echo "[error] missing required --run-number" >&2; usage; exit 1
 fi
 
 check_tool() {
     local name="$1"
     local version_arg="${2:---version}"
     if ! command -v "$name" >/dev/null 2>&1; then
-        echo "[brak] $name"
+        echo "[missing] $name"
         return 1
     fi
     local ver
-    ver="$("$name" "$version_arg" 2>&1 | head -n 1 || echo '(brak wersji)')"
-    echo "[ok]   $name $ver"
+    ver="$("$name" "$version_arg" 2>&1 | head -n 1 || echo '(no version)')"
+    echo "[ok]      $name $ver"
     return 0
 }
 
-# --- 1. Check srodowiska -----------------------------------------------------
-echo "== check srodowiska =="
-echo "[ok]   OS $(uname -srm)"
+# --- 1. Environment check ----------------------------------------------------
+echo "== environment check =="
+echo "[ok]      OS $(uname -srm)"
 
 missing=0
 check_tool claude --version || missing=$((missing+1))
@@ -66,11 +66,11 @@ check_tool jq     --version || missing=$((missing+1))
 
 if [[ $missing -gt 0 ]]; then
     echo ""
-    echo "[error] brakuje $missing narzedzi - przerywam." >&2
+    echo "[error] missing $missing tool(s) - aborting." >&2
     exit 1
 fi
 
-# --- 2. Konstrukcja i walidacja work-dir -------------------------------------
+# --- 2. Construct and validate work-dir --------------------------------------
 MODEL_SAN="${MODEL//\//-}"
 MODEL_SAN="${MODEL_SAN//\\/-}"
 DATE_UTC="$(date -u +%Y-%m-%d)"
@@ -87,16 +87,16 @@ echo "  $WORK_DIR"
 if [[ -d "$WORK_DIR" ]]; then
     if [[ -n "$(ls -A "$WORK_DIR" 2>/dev/null)" ]]; then
         echo ""
-        echo "[error] work-dir $WORK_DIR istnieje i nie jest pusty; usun go lub podaj inny --run-number" >&2
+        echo "[error] work-dir $WORK_DIR exists and is not empty; remove it or pass a different --run-number" >&2
         exit 1
     fi
 else
     mkdir -p "$WORK_DIR"
 fi
 
-# --- 3. Kopiowanie scaffoldu -------------------------------------------------
+# --- 3. Copy scaffold --------------------------------------------------------
 echo ""
-echo "== kopiowanie scaffoldu =="
+echo "== copying scaffold =="
 
 SRC_PROMPT="${SCRIPT_ROOT}/PROMPT.md"
 SRC_PREFLIGHT="${SCRIPT_ROOT}/scaffold/bash/preflight.sh"
@@ -105,7 +105,7 @@ SRC_RUNNER="${SCRIPT_ROOT}/public_tests/bash/run.sh"
 
 for f in "$SRC_PROMPT" "$SRC_PREFLIGHT" "$SRC_CASES" "$SRC_RUNNER"; do
     if [[ ! -f "$f" ]]; then
-        echo "[error] brak pliku zrodlowego: $f" >&2
+        echo "[error] missing source file: $f" >&2
         exit 1
     fi
 done
@@ -138,13 +138,11 @@ echo "== git init =="
 echo ""
 echo "== next step =="
 RUN_ID="$WORK_DIR_NAME"
+RUNNER_PATH="${SCRIPT_ROOT}/run_eval.py"
 cat <<EOF
-uv run python -m scripts.run_coding_agent_task \\
-  --task-id ${TASK_ID} \\
+uv run python ${RUNNER_PATH} \\
   --work-dir ${WORK_DIR} \\
-  --agent claude_code \\
-  --model ${MODEL} \\
-  --run-id ${RUN_ID}
+  --model ${MODEL}
 EOF
 
 exit 0

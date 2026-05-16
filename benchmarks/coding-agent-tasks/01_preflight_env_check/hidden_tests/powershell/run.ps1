@@ -1,34 +1,24 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-  Public test runner for preflight.ps1.
-
-.DESCRIPTION
-  Reads ../cases.json (or sibling cases.json), substitutes placeholders
-  ({TMP}, {EMPTY_DIR}) and runs preflight.ps1 with each case's args/env.
-  Validates expect_exit_code and several JSON-shape assertions.
-  Exits 0 if all cases pass, 1 otherwise.
+  Hidden test runner for preflight.ps1. Same logic as public/run.ps1 but reads ../cases.json from this hidden_tests tree.
 
 .PARAMETER PreflightPath
-  Path to preflight.ps1. Default: ../../preflight.ps1 (relative to this runner).
+  Path to preflight.ps1 (the agent's solution). REQUIRED for hidden runs because this script lives in the task repo, not the work-dir.
 
 .PARAMETER CasesPath
-  Path to cases.json. Default: sibling ../cases.json.
+  Optional override; default = sibling ../cases.json.
 #>
 [CmdletBinding()]
 param(
-    [string]$PreflightPath = "",
+    [Parameter(Mandatory = $true)]
+    [string]$PreflightPath,
     [string]$CasesPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 $Here = $PSScriptRoot
 
-if (-not $PreflightPath) {
-    # runner lives at .../public_tests/powershell/run.ps1
-    # preflight.ps1 lives at .../preflight.ps1
-    $PreflightPath = Join-Path $Here "..\..\preflight.ps1"
-}
 if (-not $CasesPath) {
     $CasesPath = Join-Path $Here "..\cases.json"
 }
@@ -36,8 +26,7 @@ if (-not $CasesPath) {
 $PreflightPath = (Resolve-Path -LiteralPath $PreflightPath).Path
 $CasesPath = (Resolve-Path -LiteralPath $CasesPath).Path
 
-# Create per-run scratch dir for {TMP} substitution.
-$TmpRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("preflight-tests-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
+$TmpRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("preflight-hidden-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
 New-Item -ItemType Directory -Path $TmpRoot | Out-Null
 $EmptyDir = Join-Path $TmpRoot "empty"
 New-Item -ItemType Directory -Path $EmptyDir | Out-Null
@@ -56,7 +45,6 @@ function Get-DottedPath {
     $cur = $Obj
     foreach ($p in $parts) {
         if ($null -eq $cur) { return @{ found = $false; value = $null } }
-        # array index like ports[0]?
         $m = [regex]::Match($p, '^([^\[]+)(?:\[(\d+)\])?$')
         if (-not $m.Success) { return @{ found = $false; value = $null } }
         $name = $m.Groups[1].Value
@@ -95,7 +83,6 @@ function Run-Case {
     }
 
     try {
-        # Invoke preflight via powershell.exe so $args parsing works and exit code is captured.
         $invokeArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $PreflightPath) + $rawArgs
         $stdout = & powershell.exe @invokeArgs 2>$null
         $exitCode = $LASTEXITCODE
@@ -106,28 +93,22 @@ function Run-Case {
     }
 
     $stdoutText = ($stdout | Out-String).Trim()
-
     $failures = @()
 
-    # expect_exit_code
     if ($Case.PSObject.Properties.Name -contains "expect_exit_code") {
         if ($exitCode -ne $Case.expect_exit_code) {
             $failures += "exit_code expected=$($Case.expect_exit_code) got=$exitCode"
         }
     }
 
-    # JSON-based assertions (only parse if we need them)
     $needsJson = ($Case.PSObject.Properties.Name -contains "expect_json_path") -or
                  ($Case.PSObject.Properties.Name -contains "expect_json_path_exists")
 
     if ($needsJson) {
         $parsed = $null
-        try {
-            $parsed = $stdoutText | ConvertFrom-Json
-        } catch {
+        try { $parsed = $stdoutText | ConvertFrom-Json } catch {
             $failures += "stdout not valid JSON: $($_.Exception.Message)"
         }
-
         if ($null -ne $parsed) {
             if ($Case.PSObject.Properties.Name -contains "expect_json_path") {
                 foreach ($p in $Case.expect_json_path.PSObject.Properties) {
@@ -150,7 +131,6 @@ function Run-Case {
         }
     }
 
-    # expect_jsonl_line_count
     if ($Case.PSObject.Properties.Name -contains "expect_jsonl_line_count") {
         $spec = $Case.expect_jsonl_line_count
         $p = Substitute-Placeholders -s ([string]$spec.path)
@@ -164,7 +144,6 @@ function Run-Case {
         }
     }
 
-    # expect_jsonl_lines_field
     if ($Case.PSObject.Properties.Name -contains "expect_jsonl_lines_field") {
         $spec = $Case.expect_jsonl_lines_field
         $p = Substitute-Placeholders -s ([string]$spec.path)
@@ -189,34 +168,43 @@ function Run-Case {
         }
     }
 
-    return @{ id = $caseId; failures = $failures }
+    $stage = 0
+    if ($Case.PSObject.Properties.Name -contains "stage") { $stage = [int]$Case.stage }
+    return @{ id = $caseId; stage = $stage; failures = $failures }
 }
 
 # --- main --------------------------------------------------------------------
 $casesRaw = Get-Content -LiteralPath $CasesPath -Raw | ConvertFrom-Json
 
-$pass = 0
-$fail = 0
 $results = @()
-
 foreach ($case in $casesRaw) {
     $r = Run-Case -Case $case
     if ($r.failures.Count -eq 0) {
-        Write-Host "[PASS] $($r.id)"
-        $pass++
+        Write-Host "[PASS] stage$($r.stage) $($r.id)"
     } else {
-        Write-Host "[FAIL] $($r.id)"
+        Write-Host "[FAIL] stage$($r.stage) $($r.id)"
         foreach ($f in $r.failures) { Write-Host "       - $f" }
-        $fail++
     }
     $results += $r
 }
 
-$total = $pass + $fail
+# Emit machine-readable summary on a single line at the end (consumed by run_eval.py).
+$summary = @{
+    schema = "preflight-hidden-tests-summary.v1"
+    cases = @()
+}
+foreach ($r in $results) {
+    $summary.cases += @{
+        id = $r.id
+        stage = $r.stage
+        passed = ($r.failures.Count -eq 0)
+        failures = $r.failures
+    }
+}
 Write-Host ""
-Write-Host "$pass/$total passed"
+Write-Host ("SUMMARY_JSON " + ($summary | ConvertTo-Json -Depth 6 -Compress))
 
-# Cleanup scratch dir (best-effort)
 try { Remove-Item -LiteralPath $TmpRoot -Recurse -Force -ErrorAction SilentlyContinue } catch {}
 
-if ($fail -gt 0) { exit 1 } else { exit 0 }
+$failed = ($results | Where-Object { $_.failures.Count -gt 0 }).Count
+if ($failed -gt 0) { exit 1 } else { exit 0 }

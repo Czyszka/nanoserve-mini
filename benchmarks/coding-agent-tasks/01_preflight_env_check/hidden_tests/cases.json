@@ -1,0 +1,88 @@
+[
+  {
+    "id": "stage1_bug1_docker_missing_reports_unavailable",
+    "stage": 1,
+    "comment": "Bug 1: with docker not on PATH the docker check should report available=false. Buggy version sets available=true in catch.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "0"],
+    "env": {"PATH": "{EMPTY_DIR}"},
+    "expect_json_path": {
+      "checks.docker.available": false
+    }
+  },
+  {
+    "id": "stage1_bug2_disk_lex_vs_num_min_9_passes_with_fix",
+    "stage": 1,
+    "comment": "Bug 2: with min-free-mb=9 and typical free_mb starting with a digit other than 9 (e.g. 100000), lex compare gives '100000' < '9' = true so ok=false (buggy); numeric compare gives 100000 >= 9 = true so ok=true (fixed). Test expects fixed behavior.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "9"],
+    "expect_json_path": {
+      "checks.disk.ok": true
+    }
+  },
+  {
+    "id": "stage1_bug2_disk_min_free_too_high_reports_not_ok",
+    "stage": 1,
+    "comment": "Bug 2 sanity (both versions agree here): unreachable threshold should give ok=false regardless of fix. Test mainly catches bug 4 via exit code.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "999999999"],
+    "expect_json_path": {
+      "checks.disk.ok": false
+    }
+  },
+  {
+    "id": "stage1_bug2_disk_min_free_zero_reports_ok",
+    "stage": 1,
+    "comment": "Trivial: min=0 means always ok.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_json_path": {
+      "checks.disk.ok": true
+    }
+  },
+  {
+    "id": "stage1_bug3_port_unreachable_host_timeout_not_free",
+    "stage": 1,
+    "comment": "Bug 3: 198.51.100.1 is in TEST-NET-2 (RFC5737), guaranteed non-routable. TCP connect will time out. Buggy version says free=true on timeout; fixed must say free=false with error=timeout.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "0", "--host", "198.51.100.1", "--port", "8000"],
+    "expect_json_path": {
+      "checks.ports[0].free": false,
+      "checks.ports[0].error": "timeout"
+    }
+  },
+  {
+    "id": "stage1_bug4_exit_code_reflects_all_ok_false",
+    "stage": 1,
+    "comment": "Bug 4: exit code must follow all_ok. Buggy version always exits 0.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "999999999"],
+    "expect_exit_code": 1
+  },
+  {
+    "id": "stage1_bug4_exit_code_zero_when_all_ok",
+    "stage": 1,
+    "comment": "Sanity: when all_ok=true, exit should be 0. Both buggy and fixed give 0 here; ensures we did not over-correct.",
+    "args": ["--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_exit_code": 0
+  },
+  {
+    "id": "stage1_versions_block_present",
+    "stage": 1,
+    "args": ["--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_json_path_exists": ["checks.versions.python"]
+  },
+  {
+    "id": "stage2_watch_3_ticks_writes_3_lines",
+    "stage": 2,
+    "args": ["--watch", "--interval-s", "1", "--duration-s", "3", "--output", "{TMP}/watch.jsonl", "--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_jsonl_line_count": {
+      "path": "{TMP}/watch.jsonl",
+      "count": 3
+    }
+  },
+  {
+    "id": "stage2_watch_each_line_has_tick_field",
+    "stage": 2,
+    "args": ["--watch", "--interval-s", "1", "--duration-s", "3", "--output", "{TMP}/watch.jsonl", "--path", "{TMP}", "--min-free-mb", "0"],
+    "expect_jsonl_lines_field": {
+      "path": "{TMP}/watch.jsonl",
+      "field": "tick",
+      "expected_values": [0, 1, 2]
+    }
+  }
+]

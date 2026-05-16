@@ -1,23 +1,23 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-  Inicjalizuje srodowisko testowe dla zadania 01_preflight_env_check (wariant PowerShell).
+  Initializes the test environment for task 01_preflight_env_check (PowerShell variant).
 
 .DESCRIPTION
-  1. Sprawdza dostepnosc narzedzi (OS, claude, git, python, uv). Sam PowerShell pomijamy - skoro skrypt sie uruchomil, jest dostepny.
-  2. Tworzy work-dir <BaseDir>/<YYYY-MM-DD>_<Model>_run<RunNumber>/.
-  3. Kopiuje PROMPT.md, preflight.ps1, public_tests/{cases.json,run.ps1}.
-  4. Inicjalizuje git + initial commit.
-  5. Wypisuje gotowa komende uruchomienia harnessu.
+  1. Checks for required tools (OS, claude, git, python, uv). PowerShell itself is skipped - if the script started, it is available.
+  2. Creates work-dir <BaseDir>/<YYYY-MM-DD>_<Model>_run<RunNumber>/.
+  3. Copies PROMPT.md, preflight.ps1, public_tests/{cases.json,run.ps1}.
+  4. Initializes git + initial commit.
+  5. Prints the ready-to-run harness command.
 
 .PARAMETER Model
-  Identyfikator modelu (np. minimax-m2.7). Slashe sa zamieniane na myslniki.
+  Model identifier (e.g. minimax-m2.7). Slashes are replaced with dashes.
 
 .PARAMETER RunNumber
-  Numer runu (np. "01", "02").
+  Run number (e.g. "01", "02").
 
 .PARAMETER BaseDir
-  Katalog bazowy dla work-dirow. Default: .\runs
+  Base directory for work-dirs. Default: .\runs
 #>
 [CmdletBinding()]
 param(
@@ -39,21 +39,21 @@ function Test-Tool {
     param([string]$Name, [string]$VersionArg = "--version")
     $cmd = Get-Command $Name -ErrorAction SilentlyContinue
     if ($null -eq $cmd) {
-        Write-Host "[brak] $Name"
+        Write-Host "[missing] $Name"
         return $false
     }
     try {
         $ver = & $Name $VersionArg 2>&1 | Select-Object -First 1
     } catch {
-        $ver = "(brak wersji)"
+        $ver = "(no version)"
     }
-    Write-Host "[ok]   $Name $ver"
+    Write-Host "[ok]      $Name $ver"
     return $true
 }
 
-# --- 1. Check srodowiska -----------------------------------------------------
-Write-Host "== check srodowiska =="
-Write-Host "[ok]   OS Windows ($([System.Environment]::OSVersion.VersionString))"
+# --- 1. Environment check ----------------------------------------------------
+Write-Host "== environment check =="
+Write-Host "[ok]      OS Windows ($([System.Environment]::OSVersion.VersionString))"
 
 $missing = 0
 foreach ($t in @(
@@ -67,11 +67,11 @@ foreach ($t in @(
 
 if ($missing -gt 0) {
     Write-Host ""
-    Write-Host "[error] brakuje $missing narzedzi - przerywam."
+    Write-Host "[error] missing $missing tool(s) - aborting."
     exit 1
 }
 
-# --- 2. Konstrukcja i walidacja work-dir -------------------------------------
+# --- 2. Construct and validate work-dir --------------------------------------
 $ModelSan = $Model -replace "[\\/]", "-"
 $DateUtc = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd")
 $WorkDirName = "${DateUtc}_${ModelSan}_run${RunNumber}"
@@ -90,16 +90,16 @@ if (Test-Path -LiteralPath $WorkDir) {
     $children = Get-ChildItem -LiteralPath $WorkDir -Force
     if ($children.Count -gt 0) {
         Write-Host ""
-        Write-Host "[error] work-dir $WorkDir istnieje i nie jest pusty; usun go lub podaj inny -RunNumber"
+        Write-Host "[error] work-dir $WorkDir exists and is not empty; remove it or pass a different -RunNumber"
         exit 1
     }
 } else {
     New-Item -ItemType Directory -Path $WorkDir | Out-Null
 }
 
-# --- 3. Kopiowanie scaffoldu -------------------------------------------------
+# --- 3. Copy scaffold --------------------------------------------------------
 Write-Host ""
-Write-Host "== kopiowanie scaffoldu =="
+Write-Host "== copying scaffold =="
 
 $Src = @{
     Prompt    = Join-Path $ScriptRoot "PROMPT.md"
@@ -110,7 +110,7 @@ $Src = @{
 
 foreach ($k in $Src.Keys) {
     if (-not (Test-Path -LiteralPath $Src[$k])) {
-        Write-Host "[error] brak pliku zrodlowego: $($Src[$k])"
+        Write-Host "[error] missing source file: $($Src[$k])"
         exit 1
     }
 }
@@ -145,14 +145,11 @@ try {
 # --- 5. Next step ------------------------------------------------------------
 Write-Host ""
 Write-Host "== next step =="
-$RunId = $WorkDirName
+$RunnerPath = Join-Path $ScriptRoot "run_eval.py"
 $Cmd = @"
-uv run python -m scripts.run_coding_agent_task ``
-  --task-id $TaskId ``
-  --work-dir $WorkDir ``
-  --agent claude_code ``
-  --model $Model ``
-  --run-id $RunId
+uv run python "$RunnerPath" ``
+  --work-dir "$WorkDir" ``
+  --model $Model
 "@
 Write-Host $Cmd
 exit 0
