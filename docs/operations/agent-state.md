@@ -295,7 +295,18 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
-### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04
+### 2026-05-16 - New coding-agent task 01_preflight_env_check (init scripts only)
+
+- Why: existing first task (`01_powershell_environment_and_backup`) was too bloated (335-line spec, 6 stages, no scaffold) for the planned model-vs-model bench. New task is being designed step-by-step with the user: goal is to compare LLM coding-agents on the same task, scored by % hidden tests passed + total tokens consumed.
+- Did:
+  - Added new task directory `benchmarks/coding-agent-tasks/01_preflight_env_check/` with two cross-platform init scripts: `init_env.ps1` (Windows laptop, PowerShell variant) and `init_env.sh` (Linux server, bash variant).
+  - Init script behavior: check env tools (claude, git, python, uv; jq only for bash), create work-dir `<base-dir>/<YYYY-MM-DD>_<model-sanitized>_run<NN>/`, copy scaffold (`PROMPT.md`, `preflight.<ext>`, `public_tests/{cases.json,run.<ext>}`), `git init` + baseline commit, print next-step harness command.
+  - Added placeholder scaffold files (PROMPT.md, preflight stubs, empty `cases.json`, runner stubs) so init can complete end-to-end. Actual buggy preflight + real test cases are step 2 of the pipeline.
+  - Layout in repo: shared `PROMPT.md` and `public_tests/cases.json` (deduplicated across shells); per-shell `scaffold/<shell>/preflight.<ext>` and `public_tests/<shell>/run.<ext>`.
+- Validation: smoke-tested `init_env.ps1` on Windows laptop — 3 scenarios pass: success (exit 0, work-dir with all 4 files + git baseline commit), repeated invocation (exit 1, non-empty work-dir error), missing `-Model` (exit 1, native PS MissingMandatoryParameter). `init_env.sh` not yet tested on Linux server.
+- Next: design step 2 of pipeline — real `preflight.<ext>` with bugs 1/3/4/5, real `cases.json`, real per-shell runners. Also decide fate of old `01_powershell_environment_and_backup/` (delete / archive / overwrite). Plan file: `C:\Users\Dom\.claude\plans\przygotujemy-dzis-od-nowa-glowing-crescent.md`.
+
+### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04 (PR #22)
 
 - Why: after the coding-agent harness landed, each synthetic task needed concrete `starter/`, `public/`, and `hidden/` scaffolds so the next server session can run agent evaluations instead of only reading specs.
 - Did:
@@ -306,7 +317,8 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
   - Task 04 C# starter covers allocation-aware query parsing with xUnit public/hidden tests.
   - Adjusted scaffold test runners/configs to accept both repo smoke layout (`<task>/starter`) and harness layout (starter contents copied directly into `WORK_DIR`).
 - Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed; `git diff --check` clean. Task 01 public/hidden runners execute locally via Windows PowerShell and fail on intentional starter bugs. Task 02 public/hidden pytest suites import correctly and fail on intentional starter bugs. Task 03/04 runner execution still needs `cmake`/compiler and `dotnet`.
-- Next: finish PR #22 review, then run C++/C# scaffold smoke checks on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
+- Note: task 01 starter (`01_powershell_environment_and_backup/`) is being replaced by `01_preflight_env_check/` in the follow-up commits on this branch; the dir is removed in commit `ad549b7`.
+- Next: run C++/C# scaffold smoke checks (tasks 03/04) on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
 
 ### 2026-05-13 - Coding-agent harness and v1 row schema
 
