@@ -295,6 +295,71 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-16 - Task 01 run_eval.py: stream-json + transport-crash classification
+
+- Why: first laptop smoke test of `01_preflight_env_check` failed on two issues:
+  (1) `subprocess.run(..., text=True)` decoded Claude Code stdout with Windows
+  cp1250 codepage, hit a non-ASCII byte from CLI output and crashed the reader
+  thread (`UnicodeDecodeError`), leaving `stdout=None` and a `'NoneType'.strip()`
+  traceback in `run_eval.py`. (2) Even after fixing decoding, Claude Code's Bun
+  runtime 1.3.10 sometimes panics at exit on Windows (`panic(main thread): switch
+  on corrupt value`), producing `agent_exit_code=3` and empty stdout because the
+  final JSON blob is never flushed — making `tokens=0/0/0` and the row look like
+  a total failure even when the agent solved the task.
+- Did:
+  - Forced UTF-8 + `errors="replace"` on every `subprocess.run(..., text=True)`
+    in `run_eval.py` (agent invocation, hidden test runner, all git helpers).
+    Defended against `proc.stdout is None`.
+  - Switched the agent command from `--output-format json` to
+    `--verbose --output-format stream-json`. stream-json emits one JSON event
+    per line as the agent works, so token usage from earlier `assistant`/`result`
+    events survives even if Bun crashes at exit.
+  - Added `parse_stream_events(stdout)` that walks newline-delimited events,
+    skips non-JSON warning lines, and returns `(last_result_event,
+    last_usage_event, event_count)`.
+  - Reworked `extract_tokens(agent_result)` to prefer the canonical
+    `{type:"result"}` event and fall back to the most recent usage-bearing event
+    when the result event is missing. Records `tokens.source` =
+    `"result" | "last_usage_event" | None`.
+  - Added `detect_transport_status(rc, timed_out, stderr)` returning
+    `("ok" | "transport_crash" | "timeout", "bun_panic" | "nonzero_exit" | None)`.
+    `BUN_CRASH_PATTERNS` matches `panic(main thread):`, `oh no: Bun has crashed`,
+    and `bun.report` URLs.
+  - Bumped row schema `preflight-env-check-eval.v1 → v2`. New fields:
+    `agent_transport_status`, `agent_crash_signature`, `agent_did_work`
+    (computed from `baseline_commit != final_commit`), `agent_event_count`.
+    `agent_exit_code` is still recorded for reference.
+  - Console summary now prints transport status, crash signature (if any),
+    `did_work`, event count, and token source alongside totals.
+- Validation:
+  - `uv run ruff check .` clean.
+  - `uv run pytest -q` = 119 passed.
+  - Inline self-tests of `parse_stream_events`, `extract_tokens`,
+    `detect_transport_status`, and `BUN_CRASH_PATTERNS` against synthetic
+    happy-path, missing-result-event, Bun-panic-stderr, and timeout inputs:
+    all green.
+  - Live laptop smoke (`claude-haiku-4-5`, stream-json, `acceptEdits`):
+    `agent_exit=0 transport=ok did_work=True events=127`,
+    `tokens: in=346 out=15264 total=15610 (source=result)`,
+    `stage1: 8/8`, `stage2: 2/2`, `total: 10/10`. Bun did not panic this run;
+    the v2 row would still have recorded usable tokens via
+    `last_usage_event` if it had.
+- Note on tool permissions: the smoke run's `permission_denials` block shows
+  Haiku tried to run `git add`/`git commit`/`pwsh public_tests/run.ps1` and was
+  blocked by `acceptEdits` (which allows Edit/Write only, not Bash). The hidden
+  test runner inside `run_eval.py` is independent, so scoring was unaffected.
+  If we later want the agent to self-verify against `public_tests/`, add
+  `--allowed-tools "Bash(pwsh:*)"` or similar to the harness invocation.
+- Next:
+  - Open PR for `fix/task01-agent-crash`, merge to `main`.
+  - Capture at least one run where Bun actually panics to confirm the
+    `last_usage_event` fallback path end-to-end (the current smoke run only
+    exercised the `source=result` happy path).
+  - Decide on tidy of `benchmarks/coding-agent-tasks/01_preflight_env_check/runs/`:
+    ignored locally, but per-run dirs accumulate; consider adding a
+    `--cleanup-on-success` flag or documenting a manual cleanup command.
+  - Implement bash scaffold + public runner for task 01 (still placeholder).
+
 ### 2026-05-16 - Task 01 README + bash hidden-test runner
 
 - Why: make `01_preflight_env_check` understandable before redesigning task 02, and complete the hidden-test runner path for the bash variant.
