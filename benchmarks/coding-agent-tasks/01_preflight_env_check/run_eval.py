@@ -24,12 +24,21 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 TASK_ROOT = Path(__file__).resolve().parent
+
+# Bun panic signatures observed on Windows when Claude Code CLI crashes after
+# completing the task. These do not indicate the task itself failed.
+BUN_CRASH_PATTERNS = (
+    re.compile(r"^panic\(main thread\):", re.MULTILINE),
+    re.compile(r"^oh no: Bun has crashed", re.MULTILINE),
+    re.compile(r"https?://bun\.report/"),
+)
 
 
 def git_cmd(work_dir: Path, *args: str) -> list[str]:
@@ -61,9 +70,11 @@ def git_rev(work_dir: Path) -> str | None:
             cwd=work_dir,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=True,
         )
-        return out.stdout.strip()
+        return (out.stdout or "").strip()
     except Exception:
         return None
 
@@ -77,9 +88,11 @@ def git_auto_commit_final(work_dir: Path) -> None:
             cwd=work_dir,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=True,
         )
-        if status.stdout.strip():
+        if (status.stdout or "").strip():
             subprocess.run(
                 git_cmd(
                     work_dir,
@@ -108,15 +121,19 @@ def run_agent(
     permission_mode: str,
     timeout_s: int,
 ) -> dict:
-    """Invoke claude in non-interactive print mode. Returns a dict with
-    keys: returncode, stdout, stderr, parsed (claude JSON or None),
-    timed_out, wall_clock_s.
+    """Invoke claude in non-interactive stream-json mode.
+
+    stream-json writes one JSON event per line as the agent works, so even if
+    the Claude Code runtime (Bun) crashes at exit we still recover token usage
+    from earlier events. Returns dict with keys: returncode, stdout, stderr,
+    last_result_event, last_usage_event, event_count, timed_out, wall_clock_s.
     """
     cmd = [
         claude_bin,
         "-p",
+        "--verbose",
         "--output-format",
-        "json",
+        "stream-json",
         "--model",
         model,
         "--permission-mode",
@@ -124,7 +141,7 @@ def run_agent(
     ]
     print(
         "[info] invoking: "
-        f"{claude_bin} -p <stdin prompt> --output-format json "
+        f"{claude_bin} -p <stdin prompt> --verbose --output-format stream-json "
         f"--model {model} --permission-mode {permission_mode}"
     )
     start = time.time()
@@ -136,10 +153,12 @@ def run_agent(
             input=prompt,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout_s,
         )
-        stdout = proc.stdout
-        stderr = proc.stderr
+        stdout = proc.stdout or ""
+        stderr = proc.stderr or ""
         rc = proc.returncode
     except subprocess.TimeoutExpired as e:
         stdout = e.stdout or ""
@@ -148,43 +167,96 @@ def run_agent(
         timed_out = True
     elapsed = time.time() - start
 
-    parsed = None
-    if stdout.strip():
-        try:
-            parsed = json.loads(stdout)
-        except json.JSONDecodeError:
-            # claude --output-format json sometimes prints non-JSON warnings first; try last line
-            last = stdout.strip().splitlines()[-1]
-            try:
-                parsed = json.loads(last)
-            except json.JSONDecodeError:
-                parsed = None
+    last_result_event, last_usage_event, event_count = parse_stream_events(stdout)
 
     return {
         "returncode": rc,
         "stdout": stdout,
         "stderr": stderr,
-        "parsed": parsed,
+        "last_result_event": last_result_event,
+        "last_usage_event": last_usage_event,
+        "event_count": event_count,
         "timed_out": timed_out,
         "wall_clock_s": elapsed,
     }
 
 
-def extract_tokens(parsed: dict | None) -> dict:
-    """Pull token usage out of claude's --output-format json response.
+def parse_stream_events(stdout: str) -> tuple[dict | None, dict | None, int]:
+    """Parse newline-delimited JSON events from `claude --output-format stream-json`.
 
-    Schema (observed): {"usage": {"input_tokens": N, "output_tokens": N,
-    "cache_creation_input_tokens": N, "cache_read_input_tokens": N}, ...}
-    Be defensive: anything missing -> 0.
+    Returns (last_result_event, last_usage_event, event_count):
+    - last_result_event: the most recent event with type=="result" (canonical
+      final summary; may be missing if Bun crashed before emitting it).
+    - last_usage_event: the most recent event containing a `usage` dict
+      (best-effort token recovery when the result event is missing).
+    - event_count: total events successfully parsed.
     """
-    if not isinstance(parsed, dict):
-        return {"input": 0, "output": 0, "total": 0}
-    usage = parsed.get("usage") or {}
-    if not isinstance(usage, dict):
-        return {"input": 0, "output": 0, "total": 0}
+    last_result: dict | None = None
+    last_usage: dict | None = None
+    count = 0
+    for line in stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            ev = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(ev, dict):
+            continue
+        count += 1
+        if ev.get("type") == "result":
+            last_result = ev
+        if _find_usage(ev) is not None:
+            last_usage = ev
+    return last_result, last_usage, count
+
+
+def _find_usage(ev: dict) -> dict | None:
+    """Return the `usage` dict from a stream-json event, if any."""
+    direct = ev.get("usage")
+    if isinstance(direct, dict):
+        return direct
+    msg = ev.get("message")
+    if isinstance(msg, dict):
+        nested = msg.get("usage")
+        if isinstance(nested, dict):
+            return nested
+    return None
+
+
+def extract_tokens(agent_result: dict) -> dict:
+    """Pull token usage from the agent result, preferring the canonical
+    {type:"result"} event but falling back to the most recent usage-bearing
+    event if Bun crashed before the result event was emitted.
+
+    Observed usage schema: {"input_tokens": N, "output_tokens": N,
+    "cache_creation_input_tokens": N, "cache_read_input_tokens": N}.
+    """
+    source = agent_result.get("last_result_event") or agent_result.get("last_usage_event")
+    if not isinstance(source, dict):
+        return {"input": 0, "output": 0, "total": 0, "source": None}
+    usage = _find_usage(source) or {}
     inp = int(usage.get("input_tokens", 0) or 0)
     out = int(usage.get("output_tokens", 0) or 0)
-    return {"input": inp, "output": out, "total": inp + out}
+    src = "result" if agent_result.get("last_result_event") is source else "last_usage_event"
+    return {"input": inp, "output": out, "total": inp + out, "source": src}
+
+
+def detect_transport_status(rc: int | None, timed_out: bool, stderr: str) -> tuple[str, str | None]:
+    """Classify the agent invocation outcome.
+
+    Returns (status, crash_signature):
+    - status: "ok" | "transport_crash" | "timeout"
+    - crash_signature: "bun_panic" when stderr matches a Bun panic, else None
+    """
+    if timed_out:
+        return "timeout", None
+    if any(pat.search(stderr or "") for pat in BUN_CRASH_PATTERNS):
+        return "transport_crash", "bun_panic"
+    if rc not in (0, None):
+        return "transport_crash", "nonzero_exit"
+    return "ok", None
 
 
 def run_hidden_tests(
@@ -219,9 +291,11 @@ def run_hidden_tests(
         print(f"[warn] hidden runner not found at {runner}; skipping hidden tests")
         return _empty_test_result()
 
-    proc = subprocess.run(cmd, capture_output=True, text=True)
-    stdout = proc.stdout
-    stderr = proc.stderr
+    proc = subprocess.run(
+        cmd, capture_output=True, text=True, encoding="utf-8", errors="replace"
+    )
+    stdout = proc.stdout or ""
+    stderr = proc.stderr or ""
 
     # Parse SUMMARY_JSON line from runner.
     summary = None
@@ -299,7 +373,9 @@ def main(argv: list[str] | None = None) -> int:
             "returncode": None,
             "stdout": "",
             "stderr": "",
-            "parsed": None,
+            "last_result_event": None,
+            "last_usage_event": None,
+            "event_count": 0,
             "timed_out": False,
             "wall_clock_s": 0.0,
         }
@@ -323,10 +399,20 @@ def main(argv: list[str] | None = None) -> int:
     ended_at = dt.datetime.now(dt.UTC).isoformat()
     wall_clock_s = round(time.time() - wall_start, 2)
 
-    tokens = extract_tokens(agent_result["parsed"])
+    tokens = extract_tokens(agent_result)
+    transport_status, crash_signature = (
+        ("skipped", None)
+        if args.skip_agent
+        else detect_transport_status(
+            agent_result["returncode"], agent_result["timed_out"], agent_result["stderr"]
+        )
+    )
+    agent_did_work = bool(
+        baseline_commit and final_commit and baseline_commit != final_commit
+    )
 
     row = {
-        "schema": "preflight-env-check-eval.v1",
+        "schema": "preflight-env-check-eval.v2",
         "model": args.model,
         "run_id": run_id,
         "shell": shell,
@@ -335,6 +421,10 @@ def main(argv: list[str] | None = None) -> int:
         "wall_clock_s": wall_clock_s,
         "agent_wall_clock_s": round(agent_result["wall_clock_s"], 2),
         "agent_exit_code": agent_result["returncode"],
+        "agent_transport_status": transport_status,
+        "agent_crash_signature": crash_signature,
+        "agent_did_work": agent_did_work,
+        "agent_event_count": agent_result["event_count"],
         "timed_out": agent_result["timed_out"],
         "baseline_commit": baseline_commit,
         "final_commit": final_commit,
@@ -360,8 +450,16 @@ def main(argv: list[str] | None = None) -> int:
     print("== summary ==")
     print(f"  model        : {args.model}")
     print(f"  shell        : {shell}")
-    print(f"  agent_exit   : {agent_result['returncode']}  timed_out={agent_result['timed_out']}")
-    print(f"  tokens       : in={tokens['input']} out={tokens['output']} total={tokens['total']}")
+    print(
+        f"  agent        : exit={agent_result['returncode']} "
+        f"transport={transport_status}"
+        + (f" ({crash_signature})" if crash_signature else "")
+        + f" did_work={agent_did_work} events={agent_result['event_count']}"
+    )
+    print(
+        f"  tokens       : in={tokens['input']} out={tokens['output']} "
+        f"total={tokens['total']} (source={tokens['source']})"
+    )
     print(
         "  stage1       : "
         f"{hidden['stage1']['passed']}/{hidden['stage1']['total']} "
