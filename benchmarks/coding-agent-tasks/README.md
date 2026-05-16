@@ -54,7 +54,7 @@ Core scoring dimensions:
 
 | ID | Language | Difficulty | Focus |
 |---|---|---:|---|
-| `01_powershell_environment_and_backup` | PowerShell | A | Docker/vLLM status, validation, export/backup. |
+| `01_preflight_env_check` | PowerShell / bash | A | Env preflight: fix 4 bugs in docker/disk/ports/exit-code checks, then add `--watch` mode. |
 | `02_python_cli_and_streaming_client` | Python | B | CLI parser, streaming OpenAI-compatible client, JSON/JSONL reporting. |
 | `03_cpp_buffer_and_hotpath` | C++ | B | Buffer/allocator-like bug, correctness, hot path performance. |
 | `04_csharp_allocation_aware_refactor` | C# | C | Allocation-aware refactor, public API preservation, performance-sensitive tests. |

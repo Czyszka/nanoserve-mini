@@ -295,7 +295,35 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
-### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04
+### 2026-05-16 - Coding-agent task 01_preflight_env_check (step 2: scaffold + runner)
+
+- Why: pair-built with subagent the full step 2 of the eval pipeline. Goal: real buggy preflight + tests + own Python runner that invokes claude and scores hidden tests.
+- Did:
+  - Real `scaffold/powershell/preflight.ps1` with 5 checks (docker/gpus/disk/ports/versions) and 4 seeded bugs (1=docker available always true; 2=disk string-compare; 3=port timeout=free; 4=exit always 0). Bugs renumbered 1-4 (was 1/3/4/5).
+  - Refactored: `--min-free-gb` → `--min-free-mb` (smaller unit makes lex vs num pairs differ more often → bug 2 discriminating test possible).
+  - Added `--host <ip>` flag (default 127.0.0.1) on port check, so hidden test can use 198.51.100.1 (TEST-NET-2, guaranteed non-routable) to force timeout → bug 3 discriminating test possible.
+  - `PROMPT.md` rewritten in English with new flags and bug descriptions.
+  - `public_tests/cases.json` (4 cases) + `public_tests/powershell/run.ps1` (real runner: dotted-path assertions, env restore, JSONL line/field assertions, `{TMP}`/`{EMPTY_DIR}` placeholder substitution).
+  - `hidden_tests/cases.json` (10 cases incl. bug 1/2/3/4 discriminating cases) + `hidden_tests/powershell/run.ps1` (same logic, emits `SUMMARY_JSON <json>` parsed by run_eval).
+  - `run_eval.py` (stdlib only): invokes `claude -p <prompt> --output-format json --model X --permission-mode acceptEdits`, parses usage tokens, runs hidden tests against work-dir, auto-commits agent edits, writes `results.jsonl` with schema `preflight-env-check-eval.v1`. Bonus `--skip-agent` for pipeline smoke tests.
+  - `init_env.{ps1,sh}` translated to English; next-step command now points at `run_eval.py`.
+  - Old `01_powershell_environment_and_backup/` removed; `benchmarks/coding-agent-tasks/README.md` task table updated.
+  - Bash variant scaffolds + hidden tests left as placeholders — next iteration (server smoke).
+- Validation: no smoke test executed in this commit (context budget). Pipeline must be smoke-tested on laptop before pointing at real models on the server.
+- Next: smoke test `init_env.ps1 → run_eval.py` with claude-haiku-4-5 on laptop (3 runs). Then design `scripts/run_bench.{ps1,sh}` driver + `scripts/aggregate_results.py` per-task aggregator (decisions: aggregator scans `runs/*/results.jsonl` directly, median per stage, --task flag for reuse). Then bash variant + server smoke.
+
+### 2026-05-16 - New coding-agent task 01_preflight_env_check (init scripts only)
+
+- Why: existing first task (`01_powershell_environment_and_backup`) was too bloated (335-line spec, 6 stages, no scaffold) for the planned model-vs-model bench. New task is being designed step-by-step with the user: goal is to compare LLM coding-agents on the same task, scored by % hidden tests passed + total tokens consumed.
+- Did:
+  - Added new task directory `benchmarks/coding-agent-tasks/01_preflight_env_check/` with two cross-platform init scripts: `init_env.ps1` (Windows laptop, PowerShell variant) and `init_env.sh` (Linux server, bash variant).
+  - Init script behavior: check env tools (claude, git, python, uv; jq only for bash), create work-dir `<base-dir>/<YYYY-MM-DD>_<model-sanitized>_run<NN>/`, copy scaffold (`PROMPT.md`, `preflight.<ext>`, `public_tests/{cases.json,run.<ext>}`), `git init` + baseline commit, print next-step harness command.
+  - Added placeholder scaffold files (PROMPT.md, preflight stubs, empty `cases.json`, runner stubs) so init can complete end-to-end. Actual buggy preflight + real test cases are step 2 of the pipeline.
+  - Layout in repo: shared `PROMPT.md` and `public_tests/cases.json` (deduplicated across shells); per-shell `scaffold/<shell>/preflight.<ext>` and `public_tests/<shell>/run.<ext>`.
+- Validation: smoke-tested `init_env.ps1` on Windows laptop — 3 scenarios pass: success (exit 0, work-dir with all 4 files + git baseline commit), repeated invocation (exit 1, non-empty work-dir error), missing `-Model` (exit 1, native PS MissingMandatoryParameter). `init_env.sh` not yet tested on Linux server.
+- Next: design step 2 of pipeline — real `preflight.<ext>` with bugs 1/3/4/5, real `cases.json`, real per-shell runners. Also decide fate of old `01_powershell_environment_and_backup/` (delete / archive / overwrite). Plan file: `C:\Users\Dom\.claude\plans\przygotujemy-dzis-od-nowa-glowing-crescent.md`.
+
+### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04 (PR #22)
 
 - Why: after the coding-agent harness landed, each synthetic task needed concrete `starter/`, `public/`, and `hidden/` scaffolds so the next server session can run agent evaluations instead of only reading specs.
 - Did:
@@ -306,7 +334,8 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
   - Task 04 C# starter covers allocation-aware query parsing with xUnit public/hidden tests.
   - Adjusted scaffold test runners/configs to accept both repo smoke layout (`<task>/starter`) and harness layout (starter contents copied directly into `WORK_DIR`).
 - Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed; `git diff --check` clean. Task 01 public/hidden runners execute locally via Windows PowerShell and fail on intentional starter bugs. Task 02 public/hidden pytest suites import correctly and fail on intentional starter bugs. Task 03/04 runner execution still needs `cmake`/compiler and `dotnet`.
-- Next: finish PR #22 review, then run C++/C# scaffold smoke checks on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
+- Note: task 01 starter (`01_powershell_environment_and_backup/`) is being replaced by `01_preflight_env_check/` in the follow-up commits on this branch; the dir is removed in commit `ad549b7`.
+- Next: run C++/C# scaffold smoke checks (tasks 03/04) on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
 
 ### 2026-05-13 - Coding-agent harness and v1 row schema
 
