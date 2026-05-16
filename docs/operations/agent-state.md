@@ -29,7 +29,7 @@ The `sync-state` routine reads this block to find the diff window. Update only v
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent harness ready; starter scaffolds are queued in a follow-up PR; Kimi/OpenWebUI compose capture in progress.**
+**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent harness + starter scaffolds for tasks 01-04 ready; Kimi/OpenWebUI compose capture in progress.**
 
 Server is up, environment snapshot is committed, Docker vLLM image is installed, Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
 
@@ -294,6 +294,19 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04
+
+- Why: after the coding-agent harness landed, each synthetic task needed concrete `starter/`, `public/`, and `hidden/` scaffolds so the next server session can run agent evaluations instead of only reading specs.
+- Did:
+  - Added task-specific README files and scaffold directories under `benchmarks/coding-agent-tasks/<id>/{starter,public,hidden}/` for all four tasks.
+  - Task 01 PowerShell starter covers export/environment backup behavior with public and hidden Pester tests.
+  - Task 02 Python starter covers OpenAI-compatible streaming CLI behavior with pytest public/hidden tests.
+  - Task 03 C++ starter covers `TokenBuffer` correctness and hot-path behavior with CMake public/hidden tests.
+  - Task 04 C# starter covers allocation-aware query parsing with xUnit public/hidden tests.
+  - Adjusted scaffold test runners/configs to accept both repo smoke layout (`<task>/starter`) and harness layout (starter contents copied directly into `WORK_DIR`).
+- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed; `git diff --check` clean. Task 01 public/hidden runners execute locally via Windows PowerShell and fail on intentional starter bugs. Task 02 public/hidden pytest suites import correctly and fail on intentional starter bugs. Task 03/04 runner execution still needs `cmake`/compiler and `dotnet`.
+- Next: finish PR #22 review, then run C++/C# scaffold smoke checks on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
 
 ### 2026-05-13 - Coding-agent harness and v1 row schema
 
