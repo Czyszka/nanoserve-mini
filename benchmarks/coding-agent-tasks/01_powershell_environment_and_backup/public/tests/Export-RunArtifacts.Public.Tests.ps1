@@ -15,6 +15,12 @@ if (-not $WorkDir) {
     $WorkDir = (Resolve-Path "$PSScriptRoot/../..").Path
 }
 
+$PowerShellExe = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
+    'pwsh'
+} else {
+    'powershell'
+}
+
 $script:Failed  = 0
 $script:Passed  = 0
 $script:Results = New-Object System.Collections.Generic.List[string]
@@ -38,18 +44,26 @@ function Assert-True {
     }
 }
 
+function Resolve-WorkPath {
+    param([string] $RelativePath)
+    $direct = Join-Path $WorkDir $RelativePath
+    if (Test-Path -LiteralPath $direct) { return $direct }
+    return (Join-Path (Join-Path $WorkDir 'starter') $RelativePath)
+}
+
 function Invoke-ExportScript {
     param([string[]] $ScriptArgs)
-    $scriptPath = Join-Path $WorkDir 'starter/Export-RunArtifacts.ps1'
+    $scriptPath = Resolve-WorkPath 'Export-RunArtifacts.ps1'
     if (-not (Test-Path -LiteralPath $scriptPath)) {
         throw "Export-RunArtifacts.ps1 not found at $scriptPath"
     }
     $allArgs = @('-NoProfile', '-File', $scriptPath) + $ScriptArgs
-    $proc = Start-Process -FilePath 'pwsh' -ArgumentList $allArgs `
-        -NoNewWindow -Wait -PassThru `
-        -RedirectStandardOutput ([System.IO.Path]::GetTempFileName()) `
-        -RedirectStandardError  ([System.IO.Path]::GetTempFileName())
-    return $proc.ExitCode
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & $PowerShellExe @allArgs 1>$null 2>$null
+    $exitCode = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+    $ErrorActionPreference = $oldErrorActionPreference
+    return $exitCode
 }
 
 # ---------------------------------------------------------------------------
@@ -65,7 +79,7 @@ Assert-True 'missing_run_directory_exits_1' ($code -eq 1) "got exit code $code"
 # ---------------------------------------------------------------------------
 # Test 2: invalid -Timestamp -> exit 1
 # ---------------------------------------------------------------------------
-$runDir = Join-Path $WorkDir 'starter/fixtures/sample-run'
+$runDir = Resolve-WorkPath 'fixtures/sample-run'
 $code = Invoke-ExportScript -ScriptArgs @(
     '-RunDirectory',    $runDir,
     '-OutputDirectory', $outRoot,

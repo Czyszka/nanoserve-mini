@@ -13,6 +13,12 @@ if (-not $WorkDir) {
     $WorkDir = (Resolve-Path "$PSScriptRoot/../..").Path
 }
 
+$PowerShellExe = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
+    'pwsh'
+} else {
+    'powershell'
+}
+
 $script:Failed = 0
 $script:Passed = 0
 
@@ -29,23 +35,29 @@ function Assert-True {
     }
 }
 
+function Resolve-WorkPath {
+    param([string] $RelativePath)
+    $direct = Join-Path $WorkDir $RelativePath
+    if (Test-Path -LiteralPath $direct) { return $direct }
+    return (Join-Path (Join-Path $WorkDir 'starter') $RelativePath)
+}
+
 function Invoke-ExportScript {
     param([string[]] $ScriptArgs)
-    $scriptPath = Join-Path $WorkDir 'starter/Export-RunArtifacts.ps1'
+    $scriptPath = Resolve-WorkPath 'Export-RunArtifacts.ps1'
     if (-not (Test-Path -LiteralPath $scriptPath)) {
         throw "Export-RunArtifacts.ps1 not found at $scriptPath"
     }
-    $stdoutPath = [System.IO.Path]::GetTempFileName()
-    $stderrPath = [System.IO.Path]::GetTempFileName()
     $allArgs = @('-NoProfile', '-File', $scriptPath) + $ScriptArgs
-    $proc = Start-Process -FilePath 'pwsh' -ArgumentList $allArgs `
-        -NoNewWindow -Wait -PassThru `
-        -RedirectStandardOutput $stdoutPath `
-        -RedirectStandardError  $stderrPath
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $output = (& $PowerShellExe @allArgs 2>&1 | Out-String)
+    $exitCode = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+    $ErrorActionPreference = $oldErrorActionPreference
     return [pscustomobject]@{
-        ExitCode = $proc.ExitCode
-        StdOut   = (Get-Content -LiteralPath $stdoutPath -Raw -ErrorAction SilentlyContinue)
-        StdErr   = (Get-Content -LiteralPath $stderrPath -Raw -ErrorAction SilentlyContinue)
+        ExitCode = $exitCode
+        StdOut   = $output
+        StdErr   = ''
     }
 }
 
@@ -56,7 +68,7 @@ function Read-Summary {
     return (Get-Content -LiteralPath $path -Raw | ConvertFrom-Json)
 }
 
-$fixtureSrc = Join-Path $WorkDir 'starter/fixtures/sample-run'
+$fixtureSrc = Resolve-WorkPath 'fixtures/sample-run'
 
 # ---------------------------------------------------------------------------
 # Test: paths with spaces in -RunDirectory and -OutputDirectory

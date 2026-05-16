@@ -304,8 +304,9 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
   - Task 02 Python starter covers OpenAI-compatible streaming CLI behavior with pytest public/hidden tests.
   - Task 03 C++ starter covers `TokenBuffer` correctness and hot-path behavior with CMake public/hidden tests.
   - Task 04 C# starter covers allocation-aware query parsing with xUnit public/hidden tests.
-- Validation: `uv run ruff check .` and `uv run pytest -q` should remain the repo-level checks; per-starter runtime smoke tests still need local toolchain/server validation (`pwsh`, `bash`/`cmake`, `dotnet`).
-- Next: review PR #22, then run public/hidden scaffold smoke checks before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
+  - Adjusted scaffold test runners/configs to accept both repo smoke layout (`<task>/starter`) and harness layout (starter contents copied directly into `WORK_DIR`).
+- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed; `git diff --check` clean. Task 01 public/hidden runners execute locally via Windows PowerShell and fail on intentional starter bugs. Task 02 public/hidden pytest suites import correctly and fail on intentional starter bugs. Task 03/04 runner execution still needs `cmake`/compiler and `dotnet`.
+- Next: finish PR #22 review, then run C++/C# scaffold smoke checks on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
 
 ### 2026-05-13 - Coding-agent harness and v1 row schema
 
