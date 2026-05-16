@@ -11,7 +11,10 @@
       "Bash(uv run *)",
       "Bash(git add *)",
       "Bash(git commit -m 'chore: allow common git ops in project settings *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'fix\\(task01\\): stream-json + transport-crash classification in run_eval' --body ' *)",
+      "Bash(git commit -m 'chore: allow git push and gh pr create *)"
     ]
   },
   "hooks": {
