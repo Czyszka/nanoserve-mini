@@ -1,4 +1,18 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git worktree *)",
+      "Bash(git merge *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git reset *)",
+      "Bash(git clean *)",
+      "Bash(xargs git branch -D)",
+      "Bash(uv run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'chore: allow common git ops in project settings *)"
+    ]
+  },
   "hooks": {
     "Stop": [
       {
