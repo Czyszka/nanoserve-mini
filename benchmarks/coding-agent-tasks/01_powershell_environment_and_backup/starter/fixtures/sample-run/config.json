@@ -1,6 +1,0 @@
-{
-  "run_id": "sample-run",
-  "model": "MiniMaxAI/MiniMax-M2.7",
-  "endpoint": "http://127.0.0.1:8000",
-  "scenario": "singlestream_lite_latency"
-}
