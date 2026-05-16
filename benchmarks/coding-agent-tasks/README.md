@@ -61,7 +61,8 @@ Core scoring dimensions:
 
 ## Layout
 
-Each task has the following per-task directory layout:
+The harness expects each scaffolded task to use the following per-task directory
+layout. The current task specs may exist before the scaffold files land:
 
 ```text
 benchmarks/coding-agent-tasks/<task_id>/
@@ -72,9 +73,10 @@ benchmarks/coding-agent-tasks/<task_id>/
   hidden/    # test runner the harness runs separately; never copied into the agent's work-dir
 ```
 
-Rule: the harness copies `starter/` + `public/` into the agent's temp work-dir, then
-runs `hidden/run.{sh,ps1}` separately against the agent's solution. The agent
-cannot read or modify `hidden/`.
+Rule: the harness copies `starter/` + `public/` into the agent's temp work-dir so
+the agent can inspect public tests. After the agent exits, the harness runs a
+fresh copy of `public/run.{sh,ps1}` and then `hidden/run.{sh,ps1}` separately
+against the agent's solution. The agent cannot read or modify `hidden/`.
 
 ## Harness
 
@@ -84,11 +86,15 @@ Tasks are executed by `scripts/run_coding_agent_task.py`. Canonical invocation:
 uv run python -m scripts.run_coding_agent_task \
   --task-id <id> \
   --agent claude_code \
-  --agent-command "claude -p {prompt_file}" \
+  --agent-command "claude -p {prompt}" \
   --model <model-id> \
   --base-url http://127.0.0.1:8001 \
   --run-id <run-id>
 ```
+
+Use `{prompt}` for CLIs such as Claude Code that accept prompt text as an
+argument. Use `{prompt_file}` only for CLIs that explicitly accept a prompt-file
+path.
 
 Output goes to `results/runs/<run_id>/coding_agent_eval/`:
 

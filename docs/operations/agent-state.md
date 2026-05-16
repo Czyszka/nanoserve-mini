@@ -295,21 +295,50 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
-### 2026-05-13 - Coding-agent harness + starter scaffolds for tasks 01-04
+### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04
 
-- Why: next server session (per `docs/plans/2026-05-11-server-work-plan.md` Part A) runs the 4 synthetic coding tasks against MiniMax-M2.7 / DeepSeek-V4-Flash through Claude Code CLI / OpenCode. Before the session, the suite needed a non-interactive harness, scaffolds (starter + public + hidden tests), and aligned docs.
+- Why: after the coding-agent harness landed, each synthetic task needed concrete `starter/`, `public/`, and `hidden/` scaffolds so the next server session can run agent evaluations instead of only reading specs.
 - Did:
-  - Added `scripts/run_coding_agent_task.py` (wrapper harness: copies `<task>/starter/` + `<task>/public/` into a temp work-dir, renders prompt from `TASK.md` "## Agent prompt" section, runs `--agent-command` with `{prompt_file}` substitution and timeout, runs public+hidden test runners, appends one `coding-agent-eval-row.v1` row to `results/runs/<run_id>/coding_agent_eval/results.jsonl`).
-  - Added `tests/test_run_coding_agent_task.py` (12 tests; injected `now`/`runner`/`git_runner`/`server_metrics_collector` for unit testability).
+  - Added task-specific README files and scaffold directories under `benchmarks/coding-agent-tasks/<id>/{starter,public,hidden}/` for all four tasks.
+  - Task 01 PowerShell starter covers export/environment backup behavior with public and hidden Pester tests.
+  - Task 02 Python starter covers OpenAI-compatible streaming CLI behavior with pytest public/hidden tests.
+  - Task 03 C++ starter covers `TokenBuffer` correctness and hot-path behavior with CMake public/hidden tests.
+  - Task 04 C# starter covers allocation-aware query parsing with xUnit public/hidden tests.
+- Validation: `uv run ruff check .` and `uv run pytest -q` should remain the repo-level checks; per-starter runtime smoke tests still need local toolchain/server validation (`pwsh`, `bash`/`cmake`, `dotnet`).
+- Next: review PR #22, then run public/hidden scaffold smoke checks before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
+
+### 2026-05-13 - Coding-agent harness and v1 row schema
+
+- Why: next server session (per `docs/plans/2026-05-11-server-work-plan.md` Part A) runs the 4 synthetic coding tasks against MiniMax-M2.7 / DeepSeek-V4-Flash through Claude Code CLI / OpenCode. Before the session, the suite needed a non-interactive harness, row schema, and docs that define the expected scaffold layout.
+- Did:
+  - Added `scripts/run_coding_agent_task.py` (wrapper harness: copies `<task>/starter/` + `<task>/public/` into a temp work-dir, renders prompt from `TASK.md` "## Agent prompt" section, runs `--agent-command` with `{prompt}` or `{prompt_file}` substitution and timeout, runs fresh public tests plus hidden test runners, appends one `coding-agent-eval-row.v1` row to `results/runs/<run_id>/coding_agent_eval/results.jsonl`).
+  - Added `tests/test_run_coding_agent_task.py` (17 tests; injected `now`/`runner`/`git_runner`/`server_metrics_collector` for unit testability).
   - Extended `scripts/_schemas.py` with `MODE_CODING_AGENT_EVAL` and `SCHEMA_CODING_AGENT_EVAL_ROW = "nanoserve-mini.coding-agent-eval-row.v1"`.
-  - Built starter scaffolds under `benchmarks/coding-agent-tasks/<id>/{starter,public,hidden}/` for all 4 tasks, each with documented planned bugs the agent is expected to fix:
-    - Task 01 PowerShell: 3 bugs (timestamp reformat, partial `skipped_reasons` keys, include-vs-exclude precedence).
-    - Task 02 Python: 4 bugs (URL slash, role-only chunk counted as content, unhandled SSE JSON decode error, non-strict JSON).
-    - Task 03 C++: 3 bugs (off-by-one in `append_many`, shallow copy ctor/assign, `clear()` drops capacity).
-    - Task 04 C#: 4 bugs (no escape handling, malformed input throws, Split-on-space only, `\q` accepted).
+  - Documented the expected `<task>/{starter,public,hidden}/` scaffold layout; actual starter scaffolds are queued in the follow-up `feat/coding-agent-starter-scaffolds` PR.
   - Updated `benchmarks/coding-agent-tasks/README.md` (layout + harness section, v1 row schema), each `TASK.md` 01-04 (appended "Harness invocation" section), `docs/operations/benchmark-methodology.md` (new `coding_agent_eval` mode + section), `docs/plans/2026-05-11-server-work-plan.md` A4.3/A6 (point at harness instead of manual metrics checklist).
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 114 passed (102 existing + 12 new). Per-starter build/test smoke checks deferred to the server (no .NET/cmake/pwsh execution available in the sandbox); scaffold layouts modeled directly after TASK.md specs.
-- Next: open PR(s); recommended split — (1) harness + `_schemas.py` + docs, (2) starter scaffolds per task (or 4 separate PRs). On the next server session, after `git pull`, run `bash benchmarks/coding-agent-tasks/<id>/public/run.sh` against each starter to confirm the expected red/green test split before pointing the harness at MiniMax-M2.7.
+- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed (102 existing + 17 harness tests). Per-starter build/test smoke checks deferred until the scaffold PR lands.
+- Next: merge the harness PR, then stack the starter-scaffold PR. On the next server session, after `git pull`, run `bash benchmarks/coding-agent-tasks/<id>/public/run.sh` against each starter to confirm the expected red/green test split before pointing the harness at MiniMax-M2.7.
+
+### 2026-05-13 - Codex team workflow added to AGENTS
+
+- Why: capture the successful team-lead plus sub-agent workflow as reusable guidance for future Codex work.
+- Did: added an English `Codex team workflow` section to `AGENTS.md` covering solo-vs-team triage, team lead responsibilities, sub-agent task boundaries, central integration, draft PR self-review, and ready-for-review gates.
+- Validation: `git diff --check` passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
+- Next: open a small PR for review.
+
+### 2026-05-13 - Documentation navigation cleanup
+
+- Why: test the team-lead plus sub-agent workflow on a small docs-only task and remove stale paths after the docs tree reorganization.
+- Did: clarified `docs/README.md` as the documentation map, updated live references from old `docs/agent-state.md` / `ROADMAP.md` paths to `docs/operations/agent-state.md` / `docs/project/roadmap.md`, and fixed stale learning/template references.
+- Validation: `git diff --check` passed; local Markdown relative-link check passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
+- Next: open a small PR for review, then merge after documentation review is acceptable.
+
+### 2026-05-12 - Codex repo command approvals relaxed
+
+- Why: reduce repeated approval clicks for routine `git` and `gh` work in this repo.
+- Did: set project Codex `approval_policy` to `never` while keeping `sandbox_mode = "workspace-write"`.
+- Validation: TOML parsed successfully; `git diff --check` passed.
+- Next: open a draft PR for review.
 
 ### 2026-05-12 - Roadmap and template link cleanup
 

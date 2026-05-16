@@ -2,7 +2,9 @@
 # Keep permissions conservative while the repo is being bootstrapped.
 
 model = "gpt-5.5"
-approval_policy = "on-request"
+# Let Codex run routine repo commands such as git and gh without per-command
+# approval prompts, while keeping writes constrained to this workspace.
+approval_policy = "never"
 sandbox_mode = "workspace-write"
 web_search = "cached"
 default_permissions = ":workspace"

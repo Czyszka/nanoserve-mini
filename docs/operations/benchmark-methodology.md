@@ -170,7 +170,7 @@ Purpose:
 - capture wall-clock, public/hidden test outcomes, token usage, file-change
   count, and pre/post server metrics for each `(task_id, agent, model)` run.
 
-Per-task on-disk layout:
+Expected per-task on-disk layout once scaffold files are present:
 
 ```text
 benchmarks/coding-agent-tasks/<task_id>/
@@ -214,9 +214,9 @@ Each row in `results.jsonl` carries schema
 - `transcript_path`
 
 Driver: `scripts/run_coding_agent_task.py`. The harness copies
-`starter/` + `public/` into a temp work-dir, runs the agent CLI, then runs
-`hidden/run.{sh,ps1}` outside the agent's work-dir against the resulting
-solution.
+`starter/` + `public/` into a temp work-dir, runs the agent CLI, then runs a
+fresh copy of `public/run.{sh,ps1}` and `hidden/run.{sh,ps1}` outside the
+agent's work-dir against the resulting solution.
 
 ## Benchmark mode identifiers
 

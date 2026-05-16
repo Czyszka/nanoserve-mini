@@ -64,6 +64,8 @@ HIDDEN_SUBDIR: Final[str] = "hidden"
 RUN_SCRIPT_BASENAME: Final[str] = "run"
 
 DEFAULT_AGENT_TIMEOUT_S: Final[float] = 1800.0
+PROMPT_SENTINEL: Final[str] = "__NANOSERVE_MINI_PROMPT__"
+PROMPT_FILE_SENTINEL: Final[str] = "__NANOSERVE_MINI_PROMPT_FILE__"
 
 EXIT_OK: Final[int] = 0
 EXIT_INVALID_ARGS: Final[int] = 1
@@ -150,8 +152,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--agent-command",
         required=True,
         help=(
-            "Shell command template. May include {prompt_file} which is "
-            "substituted with the path to the rendered prompt."
+            "Shell command template. May include {prompt}, substituted with "
+            "the rendered prompt text as one argv item, or {prompt_file}, "
+            "substituted with the absolute rendered-prompt file path."
         ),
     )
     parser.add_argument("--model", required=True)
@@ -253,8 +256,49 @@ def _find_runner(directory: Path) -> Path | None:
 
 def _runner_command(runner: Path) -> list[str]:
     if runner.suffix == ".ps1":
-        return ["pwsh", "-NoProfile", "-File", str(runner)]
+        exe = shutil.which("pwsh") or shutil.which("powershell") or "pwsh"
+        cmd = [exe, "-NoProfile"]
+        if Path(exe).name.lower().startswith("powershell"):
+            cmd.extend(["-ExecutionPolicy", "Bypass"])
+        cmd.extend(["-File", str(runner)])
+        return cmd
     return ["bash", str(runner)]
+
+
+def _strip_outer_quotes(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
+def _build_agent_command(
+    template: str,
+    *,
+    prompt_path: Path,
+    prompt_body: str,
+    posix: bool | None = None,
+) -> list[str]:
+    """Build argv from an agent command template.
+
+    Prompt placeholders are replaced after splitting so the prompt body and
+    Windows paths remain single argv items.
+    """
+    split_posix = os.name != "nt" if posix is None else posix
+    command = template.replace("{prompt_file}", PROMPT_FILE_SENTINEL).replace(
+        "{prompt}", PROMPT_SENTINEL
+    )
+    parts = shlex.split(command, posix=split_posix)
+    resolved_prompt_path = str(prompt_path.resolve())
+    argv: list[str] = []
+    for part in parts:
+        normalized = _strip_outer_quotes(part)
+        if normalized == PROMPT_SENTINEL:
+            argv.append(prompt_body)
+        elif normalized == PROMPT_FILE_SENTINEL:
+            argv.append(resolved_prompt_path)
+        else:
+            argv.append(normalized)
+    return argv
 
 
 def _git(
@@ -456,8 +500,11 @@ def run_one(
     # ----- Run agent ----------------------------------------------------
     started_dt = now_fn()
     started_at = started_dt.isoformat()
-    cmd_str = args.agent_command.replace("{prompt_file}", str(prompt_path))
-    cmd_list = shlex.split(cmd_str, posix=True)
+    cmd_list = _build_agent_command(
+        args.agent_command,
+        prompt_path=prompt_path,
+        prompt_body=prompt_body,
+    )
 
     stdout_path = transcripts_dir / f"{args.task_id}__stdout.log"
     stderr_path = transcripts_dir / f"{args.task_id}__stderr.log"
@@ -524,7 +571,11 @@ def run_one(
 
     # ----- Public tests -------------------------------------------------
     public_result = TestRunResult(ran=False)
-    public_work = work_dir / PUBLIC_SUBDIR
+    public_work = Path(str(work_dir) + "__public")
+    if public_work.exists():
+        shutil.rmtree(public_work, ignore_errors=True)
+    if public_src.is_dir() and not timed_out:
+        shutil.copytree(public_src, public_work)
     public_runner = _find_runner(public_work) if public_work.is_dir() else None
     if public_runner is not None and not timed_out:
         log_path = transcripts_dir / f"{args.task_id}__public_tests.log"
@@ -672,7 +723,9 @@ def run_one(
     )
 
     if timed_out:
-        return EXIT_OK
+        return EXIT_AGENT_TIMEOUT
+    if error is not None:
+        return EXIT_HARNESS_ERROR
     return EXIT_OK
 
 

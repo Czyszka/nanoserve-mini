@@ -347,14 +347,14 @@ LLM-as-judge should inspect:
 
 ## Harness invocation
 
-> Layout note: the actual scaffold lives at the task-dir level (`<task>/public/` and `<task>/hidden/`), not under `<task>/starter/tests/public/` and `<task>/starter/tests/hidden/`. The harness runs them outside the agent's work-dir.
+> Layout note: when scaffold files land, public and hidden tests live at the task-dir level (`<task>/public/` and `<task>/hidden/`), not under `<task>/starter/tests/public/` and `<task>/starter/tests/hidden/`. The harness runs them outside the agent's work-dir.
 
 This task is run by `scripts/run_coding_agent_task.py`. Example:
 
     uv run python -m scripts.run_coding_agent_task \
       --task-id 02_python_cli_and_streaming_client \
       --agent claude_code \
-      --agent-command "claude -p {prompt_file}" \
+      --agent-command "claude -p {prompt}" \
       --model <model-id> \
       --base-url http://127.0.0.1:8001 \
       --run-id 2026-05-13_smoke
