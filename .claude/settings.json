@@ -10,7 +10,8 @@
       "Bash(xargs git branch -D)",
       "Bash(uv run *)",
       "Bash(git add *)",
-      "Bash(git commit -m 'chore: allow common git ops in project settings *)"
+      "Bash(git commit -m 'chore: allow common git ops in project settings *)",
+      "Bash(git commit -m ' *)"
     ]
   },
   "hooks": {
