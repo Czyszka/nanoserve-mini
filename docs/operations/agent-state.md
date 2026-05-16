@@ -295,6 +295,28 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
+### 2026-05-16 - Task 01 README + bash hidden-test runner
+
+- Why: make `01_preflight_env_check` understandable before redesigning task 02, and complete the hidden-test runner path for the bash variant.
+- Did:
+  - Added `benchmarks/coding-agent-tasks/01_preflight_env_check/README.md` as a concise human-facing guide: task goal, directory roles, Windows/Linux quickstarts, public-test commands, eval commands, and result files.
+  - Added `benchmarks/coding-agent-tasks/01_preflight_env_check/hidden_tests/bash/run.sh`, mirroring the PowerShell hidden runner contract: reads `hidden_tests/cases.json`, substitutes `{TMP}`/`{EMPTY_DIR}`, runs the agent's `preflight.sh`, validates exit-code/JSON/JSONL assertions, and emits `SUMMARY_JSON` for `run_eval.py`.
+  - Fixed PowerShell public/hidden runners to invoke the tested script through a captured child process, so stderr from the tested script does not abort the runner before `SUMMARY_JSON`.
+  - Fixed `run_eval.py` git helper calls for sandbox-created work-dirs by passing `-c safe.directory=<work-dir>`.
+  - Removed the global `python` requirement from task 01 `init_env.{ps1,sh}`; the project uses `uv run python`.
+  - Added `.gitignore` coverage for local task run directories under `benchmarks/coding-agent-tasks/*/runs*/`.
+  - README now records the current limitation: bash hidden scoring exists, but the bash scaffold and public runner are still placeholders.
+- Validation:
+  - `git diff --check` passed for tracked-file diffs.
+  - No trailing whitespace found in the new README or bash hidden runner.
+  - Bash runner was not executed locally because this Windows environment has no installed WSL distro and no `jq` on PATH.
+  - PowerShell pipeline-only smoke passed end-to-end with `--skip-agent`; expected baseline score from the buggy scaffold: stage1 4/8, stage2 0/2, total 4/10.
+  - Human ran `init_env.ps1` successfully from the Windows Terminal after adding Docker to PATH; `uv run python --version`, Docker, Docker Compose, `nvidia-smi`, and Claude Code were visible.
+  - Human ran `run_eval.py --skip-agent` successfully: stage1 4/8, stage2 0/2, total 4/10.
+  - Human ran a real local Haiku smoke (`claude-haiku-4-5`): the agent solved the task (stage1 8/8, stage2 2/2, total 10/10), but Claude Code/Bun crashed after doing the work (`agent_exit_code=3`, usage tokens unavailable).
+  - `run_eval.py` now passes the prompt to `claude -p` through stdin instead of as a giant argv value; this avoided the initial prompt-argument issue, but Claude Code/Bun can still crash after completing work on Windows.
+- Next: decide how to handle Claude Code transport crashes in scoring: either parse a stable output mode if available, or record `agent_transport_error` separately from task correctness when hidden tests pass. Then implement the real bash `preflight.sh` scaffold and public bash runner, and smoke-test `init_env.sh -> run_eval.py --shell bash` on Linux.
+
 ### 2026-05-16 - Coding-agent task 01_preflight_env_check (step 2: scaffold + runner)
 
 - Why: pair-built with subagent the full step 2 of the eval pipeline. Goal: real buggy preflight + tests + own Python runner that invokes claude and scores hidden tests.

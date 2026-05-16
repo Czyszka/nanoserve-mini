@@ -24,14 +24,17 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
-import os
-import re
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 TASK_ROOT = Path(__file__).resolve().parent
+
+
+def git_cmd(work_dir: Path, *args: str) -> list[str]:
+    """Build a git command that accepts sandbox-owned work directories."""
+    return ["git", "-c", f"safe.directory={work_dir}", *args]
 
 
 def detect_shell(work_dir: Path) -> str:
@@ -54,7 +57,7 @@ def read_prompt(work_dir: Path) -> str:
 def git_rev(work_dir: Path) -> str | None:
     try:
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
+            git_cmd(work_dir, "rev-parse", "HEAD"),
             cwd=work_dir,
             capture_output=True,
             text=True,
@@ -68,9 +71,9 @@ def git_rev(work_dir: Path) -> str | None:
 def git_auto_commit_final(work_dir: Path) -> None:
     """Stage any agent changes and commit them so we can record final_commit."""
     try:
-        subprocess.run(["git", "add", "-A"], cwd=work_dir, check=True)
+        subprocess.run(git_cmd(work_dir, "add", "-A"), cwd=work_dir, check=True)
         status = subprocess.run(
-            ["git", "status", "--porcelain"],
+            git_cmd(work_dir, "status", "--porcelain"),
             cwd=work_dir,
             capture_output=True,
             text=True,
@@ -78,8 +81,8 @@ def git_auto_commit_final(work_dir: Path) -> None:
         )
         if status.stdout.strip():
             subprocess.run(
-                [
-                    "git",
+                git_cmd(
+                    work_dir,
                     "-c",
                     "user.name=nanoserve-eval",
                     "-c",
@@ -88,7 +91,7 @@ def git_auto_commit_final(work_dir: Path) -> None:
                     "--quiet",
                     "-m",
                     "final: agent solution",
-                ],
+                ),
                 cwd=work_dir,
                 check=True,
             )
@@ -112,7 +115,6 @@ def run_agent(
     cmd = [
         claude_bin,
         "-p",
-        prompt,
         "--output-format",
         "json",
         "--model",
@@ -120,13 +122,18 @@ def run_agent(
         "--permission-mode",
         permission_mode,
     ]
-    print(f"[info] invoking: {claude_bin} -p <prompt> --output-format json --model {model} --permission-mode {permission_mode}")
+    print(
+        "[info] invoking: "
+        f"{claude_bin} -p <stdin prompt> --output-format json "
+        f"--model {model} --permission-mode {permission_mode}"
+    )
     start = time.time()
     timed_out = False
     try:
         proc = subprocess.run(
             cmd,
             cwd=work_dir,
+            input=prompt,
             capture_output=True,
             text=True,
             timeout=timeout_s,
@@ -282,7 +289,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline_commit = git_rev(work_dir)
 
     run_id = work_dir.name
-    started_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    started_at = dt.datetime.now(dt.UTC).isoformat()
     wall_start = time.time()
 
     agent_result: dict
@@ -313,7 +320,7 @@ def main(argv: list[str] | None = None) -> int:
     # Run hidden tests against the work-dir.
     hidden = run_hidden_tests(shell=shell, work_dir=work_dir)
 
-    ended_at = dt.datetime.now(dt.timezone.utc).isoformat()
+    ended_at = dt.datetime.now(dt.UTC).isoformat()
     wall_clock_s = round(time.time() - wall_start, 2)
 
     tokens = extract_tokens(agent_result["parsed"])
@@ -355,9 +362,21 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  shell        : {shell}")
     print(f"  agent_exit   : {agent_result['returncode']}  timed_out={agent_result['timed_out']}")
     print(f"  tokens       : in={tokens['input']} out={tokens['output']} total={tokens['total']}")
-    print(f"  stage1       : {hidden['stage1']['passed']}/{hidden['stage1']['total']} ({hidden['stage1']['pct']}%)")
-    print(f"  stage2       : {hidden['stage2']['passed']}/{hidden['stage2']['total']} ({hidden['stage2']['pct']}%)")
-    print(f"  total        : {hidden['total']['passed']}/{hidden['total']['total']} ({hidden['total']['pct']}%)")
+    print(
+        "  stage1       : "
+        f"{hidden['stage1']['passed']}/{hidden['stage1']['total']} "
+        f"({hidden['stage1']['pct']}%)"
+    )
+    print(
+        "  stage2       : "
+        f"{hidden['stage2']['passed']}/{hidden['stage2']['total']} "
+        f"({hidden['stage2']['pct']}%)"
+    )
+    print(
+        "  total        : "
+        f"{hidden['total']['passed']}/{hidden['total']['total']} "
+        f"({hidden['total']['pct']}%)"
+    )
     print(f"  results.jsonl: {results_path}")
 
     return 0
