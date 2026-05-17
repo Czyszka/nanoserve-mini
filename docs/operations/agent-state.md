@@ -60,7 +60,6 @@ Phase 1 is not done; the blockers below are scoped to fixing that, not to expand
 - **OpenWebUI container runs on the server** and answers requests against the vLLM endpoint.
 - Kimi-K2.6 launch parameters still need GPU memory tuning so the small model fits next to it.
 - `serving/compose/docker-compose.kimi-k2.6.yml` tracks Kimi/OpenWebUI plus experimental `vllm-small` on port 8004 with `deepseek-ai/DeepSeek-V4-Flash`.
-- `serving/runbooks/vllm-kimi_k2_6-dockercompose.yaml` is a smaller compose reference that may not exactly match the latest server command.
 - **Human report from 2026-05-11 server session, not yet pushed**: latest compose has large + small model + OpenWebUI, small model capped at 20% VRAM across 8 GPUs; DeepSeek-V4-Flash completed `request_once`, TTFT, and repeated benchmark tests; artifacts are still on the server.
 - Benchmark/metrics producer scripts on `main`:
   - `benchmarks/scripts/request_once.py`
