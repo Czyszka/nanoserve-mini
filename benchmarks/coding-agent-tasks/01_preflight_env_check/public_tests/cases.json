@@ -1,5 +1,23 @@
 [
   {
+    "id": "stage1_docker_missing_reports_unavailable",
+    "stage": 1,
+    "args": ["--path", "{TMP}", "--min-free-mb", "0"],
+    "env": {"PATH": "{EMPTY_DIR}"},
+    "expect_json_path": {
+      "checks.docker.available": false
+    }
+  },
+  {
+    "id": "stage1_port_unreachable_host_timeout_not_free",
+    "stage": 1,
+    "args": ["--path", "{TMP}", "--min-free-mb", "0", "--host", "198.51.100.1", "--port", "8000"],
+    "expect_json_path": {
+      "checks.ports[0].free": false,
+      "checks.ports[0].error": "timeout"
+    }
+  },
+  {
     "id": "stage1_disk_min_free_too_high_reports_not_ok",
     "stage": 1,
     "args": ["--path", "{TMP}", "--min-free-mb", "999999999"],

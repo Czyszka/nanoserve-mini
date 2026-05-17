@@ -84,5 +84,12 @@
       "field": "tick",
       "expected_values": [0, 1, 2]
     }
+  },
+  {
+    "id": "stage2_watch_exit_code_reflects_failure",
+    "stage": 2,
+    "comment": "Watch mode must exit 1 if any tick had a failed check. With --min-free-mb 999999999 every tick has disk.ok=false, so all_ok=false on every tick; final exit must be 1.",
+    "args": ["--watch", "--interval-s", "1", "--duration-s", "2", "--output", "{TMP}/watch_fail.jsonl", "--path", "{TMP}", "--min-free-mb", "999999999"],
+    "expect_exit_code": 1
   }
 ]

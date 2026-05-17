@@ -26,12 +26,35 @@ $Here = $PSScriptRoot
 $PowerShellExe = Join-Path $PSHOME "powershell.exe"
 
 if (-not $PreflightPath) {
-    # runner lives at .../public_tests/powershell/run.ps1
-    # preflight.ps1 lives at .../preflight.ps1
-    $PreflightPath = Join-Path $Here "..\..\preflight.ps1"
+    # Two valid layouts:
+    #   source tree: .../public_tests/powershell/run.ps1 -> ..\..\preflight.ps1
+    #   work-dir:    .../public_tests/run.ps1            -> ..\preflight.ps1   (init_env flattens)
+    $candidates = @(
+        (Join-Path $Here "..\preflight.ps1"),
+        (Join-Path $Here "..\..\preflight.ps1")
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path -LiteralPath $c) { $PreflightPath = $c; break }
+    }
+    if (-not $PreflightPath) {
+        Write-Error "preflight.ps1 not found near runner; pass -PreflightPath explicitly"
+        exit 2
+    }
 }
 if (-not $CasesPath) {
-    $CasesPath = Join-Path $Here "..\cases.json"
+    # source tree: public_tests/powershell/run.ps1 -> ..\cases.json
+    # work-dir:    public_tests/run.ps1            -> cases.json (sibling)
+    $candidates = @(
+        (Join-Path $Here "cases.json"),
+        (Join-Path $Here "..\cases.json")
+    )
+    foreach ($c in $candidates) {
+        if (Test-Path -LiteralPath $c) { $CasesPath = $c; break }
+    }
+    if (-not $CasesPath) {
+        Write-Error "cases.json not found near runner; pass -CasesPath explicitly"
+        exit 2
+    }
 }
 
 $PreflightPath = (Resolve-Path -LiteralPath $PreflightPath).Path
