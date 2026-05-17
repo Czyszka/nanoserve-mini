@@ -21,7 +21,7 @@ Definiuje cztery uslugi:
 
 Compose jest dokumentacja aktualnego eksperymentu, nie finalnym runbookiem
 produkcyjnym. Po kazdej zmianie launch command z serwera trzeba zsynchronizowac
-ten plik i `docs/agent-state.md`.
+ten plik i `docs/operations/agent-state.md`.
 
 ## Wymagania
 
@@ -143,7 +143,7 @@ smoke serwera.
 
 `vllm` uruchamia:
 
-- image: `vllm/vllm-openai:latest-cu130-ubuntu2404`
+- image: `vllm/vllm-openai:v0.20.0-cu130-ubuntu2404`
 - model: `moonshotai/Kimi-K2.6`
 - served model name: `kimi-k2.6`
 - port w kontenerze: `8000`
@@ -163,7 +163,7 @@ zwlaszcza jesli poprzedni stabilny run byl czystym TP=8.
 
 `vllm-small` uruchamia:
 
-- image: `vllm/vllm-openai:latest-cu130-ubuntu2404`
+- image: `vllm/vllm-openai:v0.20.0-cu130-ubuntu2404`
 - model: `deepseek-ai/DeepSeek-V4-Flash`
 - port w kontenerze: `8004`
 - `--tensor-parallel-size 8`
