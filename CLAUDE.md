@@ -1,54 +1,42 @@
 # CLAUDE.md
 
-This file is the project entrypoint for Claude Code.
+Project entrypoint for Claude Code.
 
 ## Project
 
-Repository: `nanoserve-mini`
-
-`nanoserve-mini` is a 12-week LLM inference performance lab. The project is a smaller, finished artifact before any possible full `nanoserve` continuation.
-
-Core scope:
-
-- vLLM serving baseline,
-- Prometheus/Grafana observability,
-- benchmark harness,
-- workload and KV/prefix cache analysis,
-- one Triton kernel later in the project,
-- technical write-ups,
-- final decision document.
+`nanoserve-mini` — 12-week LLM inference performance lab. vLLM serving
+baseline, observability, benchmark harness, workload + KV/prefix cache
+analysis, one Triton kernel, technical write-ups, final decision doc.
+Standalone portfolio artifact and a decision gate for a possible full
+`nanoserve` follow-up.
 
 ## Required reading at session start
 
-Before making changes, read:
+Before proposing or making changes, read:
 
-1. `docs/project/roadmap.md` or the current roadmap/scope document named in
-   `docs/operations/agent-state.md`
-2. the current infrastructure/workflow document named in
-   `docs/operations/agent-state.md`
-3. `docs/operations/agent-state.md`
-4. `AGENTS.md` if present
+1. `docs/operations/agent-state.md` — current phase, status, next steps, open blockers.
+2. `docs/project/roadmap.md` — scope, definition of done, phase plan, decision points.
+3. `docs/operations/infrastructure.md` — machine roles, workflow, secrets policy.
+4. `AGENTS.md` — Codex entrypoint (may carry recent operational rules shared across agents).
 
-Then summarize the current state in 3-5 bullets before proposing work.
+Then summarise the current state in 3-5 bullets before proposing work.
 
-## Current workflow
+## Machines
 
-GitHub is the single source of truth.
+- **Windows 11 laptop** — dev, docs, analysis, benchmark script preparation.
+- **Ubuntu 24 server, 8×H200 NVL** — primary GPU execution environment.
+- **Optional GPU cloud** — support buffer for off-hours tests; not the primary path.
 
-Machines:
-
-- Windows 11 laptop: dev, docs, analysis, benchmark script preparation.
-- Ubuntu 24 server with 8x H200 NVL: primary GPU execution environment.
-- Optional GPU cloud: only a support buffer for off-hours GPU tests.
-
-Python workflow:
+## Python workflow
 
 - Use `uv` on both laptop and server.
-- Prefer `uv run ...` over global Python commands.
+- Prefer `uv run …` over global Python.
 - Do not install global Python packages.
 - Do not add GPU-heavy dependencies to the laptop environment.
 
-Standard local validation for code changes:
+## Standard validation
+
+For code changes:
 
 ```bash
 uv sync --extra dev
@@ -56,99 +44,94 @@ uv run ruff check .
 uv run pytest
 ```
 
-For documentation-only changes, do not run `ruff` or `pytest` unless the change
-touches executable examples, generated docs, or code-adjacent configuration.
-Use documentation-appropriate checks instead, such as `git diff --check`,
-Markdown link checks, or rendering checks when relevant.
+For documentation-only changes, `git status` + `git diff --check` are
+sufficient by default. Only run `ruff` / `pytest` when the doc change
+also touches executable examples, generated artefacts, test fixtures,
+or code-adjacent configuration.
+
+## Repository layout
+
+```text
+benchmarks/scripts/         CLI benchmark + metrics producers and shared library.
+benchmarks/scripts_tests/   Pytest suite for the above (mocked, runs on laptop).
+serving/compose/            Docker Compose for vLLM + OpenWebUI.
+serving/runbooks/           Operational instructions.
+results/{raw,runs,summaries}/   Tracked benchmark output.
+docs/{project,operations,learning,plans,templates,weekly}/
+```
 
 ## Scope boundaries
 
-Do not add or implement unless explicitly requested:
+The roadmap (`docs/project/roadmap.md`) is authoritative on scope. Two
+sections matter most:
 
-- custom inference engine,
-- TensorRT-LLM,
-- SGLang integration,
-- Kubernetes,
-- new multi-GPU / tensor parallelism experiments beyond the documented Kimi TP=8 baseline,
-- FP8 quantization,
-- MoE,
-- new speculative decoding experiments beyond the documented Kimi Eagle3 baseline,
-- production HA/autoscaling,
-- large cloud infrastructure.
+- **"W scope dzięki projektowi firmowemu"** — multi-GPU / TP scaling,
+  MoE serving, FP8 quantization, multi-tenant routing are *in scope as
+  synthesis material* measured on the company H200 stack. Do not stand
+  up new experiments for these on the private project, but expect
+  results and write-ups to reference them.
+- **"Świadomie poza scope"** — own inference engine, full PagedAttention
+  reimplementation, Kubernetes / Helm / GPU Operator, fused attention as
+  the first kernel, TensorRT-LLM / SGLang, speculative decoding beyond
+  the documented Kimi Eagle3 baseline, disaggregated serving, production
+  HA / autoscaling / multi-region, full prefix-cache reimplementation.
+  Do not add or implement these unless the user explicitly asks.
 
 Do not rewrite `docs/project/roadmap.md` unless explicitly asked.
 
 ## Immediate project state
 
-For current phase, status, decisions, and next step, see
-`docs/operations/agent-state.md`.
-Do not duplicate that content here.
+For current phase, status, decisions, and the next concrete step, see
+`docs/operations/agent-state.md`. Do not duplicate that content here.
 
 ## Agent state protocol
 
-`docs/operations/agent-state.md` is the shared, repo-tracked memory for all coding agents.
+`docs/operations/agent-state.md` is the shared, repo-tracked memory for
+all coding agents.
 
 File roles:
 
-- `CLAUDE.md` - stable instructions for Claude Code.
-- `AGENTS.md` - stable instructions for Codex.
-- `docs/operations/agent-state.md` - current project state, decisions, next step, and blockers.
-- `docs/project/roadmap.md` - project scope; do not change it without an explicit decision.
+- `CLAUDE.md` — stable instructions for Claude Code (this file).
+- `AGENTS.md` — stable instructions for Codex.
+- `docs/operations/agent-state.md` — current state, decisions, next step, blockers.
+- `docs/project/roadmap.md` — project scope.
 
-At the beginning of a task:
+Procedure:
 
-1. read `docs/operations/agent-state.md`,
-2. verify whether it matches the current repo state,
-3. avoid duplicating stale assumptions.
+- **At the start of a task**: read `agent-state.md`, verify it matches the
+  current repo state, and avoid duplicating stale assumptions.
+- **At the end of a meaningful task**: update `agent-state.md` with what
+  changed, commands run, validation results, new decisions, the next
+  recommended action, and any open blockers — before committing or
+  handing work over.
 
-At the end of a meaningful task, update `docs/operations/agent-state.md` with:
-
-- what changed,
-- commands run,
-- validation results,
-- new decisions,
-- next recommended action,
-- open blockers.
-
-Always update `docs/operations/agent-state.md` before committing, pushing, or handing work
-to another agent when the task changed the repository state.
-
-Keep `docs/operations/agent-state.md` concise. It should be a handoff document, not a full
-diary.
-
-For periodic documentation hygiene, use `docs/templates/tidy-docs-agent.md`.
+Keep `agent-state.md` concise — handoff document, not a diary. For
+periodic compaction use `docs/templates/tidy-docs-agent.md`.
 
 ## Results and secrets policy
 
 Never commit:
 
-- `.env`,
-- API keys,
-- Hugging Face tokens,
-- GitHub tokens (or W&B / cloud provider credentials),
-- model weights,
-- Hugging Face cache,
-- large logs,
-- full Nsight traces (`*.ncu-rep`, `*.nsys-rep`),
-- database dumps,
-- large benchmark artifacts.
+- `.env`, API keys, Hugging Face tokens, GitHub / W&B / cloud tokens,
+- model weights, Hugging Face cache,
+- large logs, full Nsight traces (`*.ncu-rep`, `*.nsys-rep`),
+- database dumps, large benchmark artefacts.
 
-Commit:
+Do commit:
 
 - `.env.example` (no real values),
-- small JSON/JSONL/CSV results when useful,
-- short text snapshots,
-- summaries (markdown / CSV),
+- small JSON / JSONL / CSV results when useful,
+- short text snapshots, summaries (Markdown / CSV),
 - benchmark configs and the commands used to run them,
 - scripts,
-- markdown write-ups,
+- Markdown write-ups,
 - reproducibility metadata (e.g. `record_environment.json` per run).
 
-If a result is large, commit only the summary, the run identifier / git hash, the
-local path, and instructions to reproduce.
+If a result is large, commit only the summary, run identifier / git
+hash, local path, and instructions to reproduce.
 
-If a secret leaks, rotate it (HF token, GitHub key/token, W&B / cloud token if used)
-and audit git history for further exposure.
+If a secret leaks, rotate it (HF / GitHub / W&B / cloud) and audit git
+history for further exposure.
 
 ## Git rules
 
@@ -166,29 +149,21 @@ uv run pytest
 git status
 ```
 
-Before finishing documentation-only changes, `git status` and
-`git diff --check` are sufficient by default. Run `ruff` and `pytest` only when
-the documentation change also affects code, scripts, test fixtures, generated
-artifacts, or executable snippets.
+Before finishing doc-only changes: `git status` + `git diff --check` is
+the default; add `ruff` / `pytest` only when the change also touches
+code, scripts, fixtures, generated artefacts, or executable snippets.
 
-Use small commits. Preferred commit prefixes:
+Use small commits. Preferred prefixes:
 
-- `docs:`
-- `feat:`
-- `fix:`
-- `bench:`
-- `infra:`
-- `chore:`
+- `docs:`, `feat:`, `fix:`, `bench:`, `infra:`, `chore:`, `refactor:`.
 
 Do not push secrets or machine-local files.
 
 ## Communication style
 
-Be concise and operational.
-
-When reporting work, include:
+Be concise and operational. When reporting work, include:
 
 1. files changed,
 2. commands run,
-3. checks passed/failed,
+3. checks passed / failed,
 4. next step.
