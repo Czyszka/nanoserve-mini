@@ -1,122 +1,104 @@
-# Task 01: preflight env check
+# Task 01 — preflight env check
 
-Human-facing guide for the first coding-agent evaluation task.
+A coding-agent evaluation task. The agent gets a buggy preflight script
+that checks a GPU server's environment (docker, GPUs, free disk, TCP
+ports, tool versions), and must:
 
-The canonical prompt shown to the coding agent is `PROMPT.md`. This file explains
-how to prepare and run the task.
+1. **Stage 1** — fix 4 seeded bugs in the single-shot mode (docker
+   availability detection, numeric disk comparison, TCP timeout
+   handling, exit-code propagation).
+2. **Stage 2** — add a `--watch` mode that writes one JSON line per
+   tick to a `--output` file.
 
-## Goal
+The harness scores the agent against hidden tests and records token
+usage, wall-clock, and transport status. Use it to compare coding
+agents head-to-head on a small, well-defined repair-and-extend task.
 
-The agent receives a small preflight script for a GPU server environment. It must:
+The agent-facing prompt lives in `PROMPT.md`. Visible tests for the
+agent are in `public_tests/`; hidden scoring tests stay in
+`hidden_tests/` and never reach the agent's work-dir.
 
-1. Fix 4 seeded bugs in the single-shot checks:
-   - Docker availability detection.
-   - Numeric disk-free comparison.
-   - TCP timeout handling.
-   - Exit code propagation from `all_ok`.
-2. Add `--watch` mode, which writes one JSONL record per tick.
+## Quickstart
 
-The output is scored with hidden tests and token/wall-clock metadata from the eval
-runner.
-
-## Directory roles
-
-```text
-PROMPT.md       Agent-facing task prompt.
-init_env.ps1    Creates a Windows/PowerShell work-dir for one model run.
-init_env.sh     Creates a Linux/bash work-dir for one model run.
-run_eval.py     Runs the agent, hidden tests, and writes results.jsonl.
-scaffold/       Buggy starting scripts copied into the temporary work-dir.
-public_tests/   Visible tests copied into the temporary work-dir.
-hidden_tests/   Harness-only tests; never copied into the agent work-dir.
-```
-
-Current status: the PowerShell variant has a real scaffold, public tests, hidden
-tests, and `run_eval.py` support. The bash hidden-test runner exists and uses the
-same `hidden_tests/cases.json`, but the bash scaffold and public-test runner are
-still placeholders.
-
-## Windows quickstart
-
-From this task directory:
+### Windows (PowerShell)
 
 ```powershell
+# 1. Prepare a fresh per-run work-dir
 .\init_env.ps1 -Model claude-haiku-4-5 -RunNumber 01
-```
 
-The script creates a clean work-dir under `.\runs\...`, copies `PROMPT.md`,
-`preflight.ps1`, and public tests, initializes Git, and prints the next eval
-command.
-
-To run the visible tests manually in the generated work-dir:
-
-```powershell
-.\public_tests\run.ps1
-```
-
-To smoke-test the harness without invoking an agent:
-
-```powershell
-uv run python .\run_eval.py `
-  --work-dir .\runs\<generated-work-dir> `
-  --model claude-haiku-4-5 `
-  --skip-agent
-```
-
-To run the normal agent eval:
-
-```powershell
+# 2. Run the agent and score it
 uv run python .\run_eval.py `
   --work-dir .\runs\<generated-work-dir> `
   --model claude-haiku-4-5
 ```
 
-## Linux quickstart
-
-From this task directory:
+### Linux (bash)
 
 ```bash
 ./init_env.sh --model claude-haiku-4-5 --run-number 01
+
+uv run python ./run_eval.py \
+  --work-dir ./runs/<generated-work-dir> \
+  --model claude-haiku-4-5
 ```
 
-The script creates a clean work-dir under `./runs/...`, copies `PROMPT.md`,
-`preflight.sh`, and public tests, initializes Git, and prints the next eval
-command.
+The work-dir path is printed by `init_env.*` at the end.
 
-To run the visible tests manually in the generated work-dir:
+### Series of N runs with aggregate
+
+To compare models you usually want several runs:
 
 ```bash
-./public_tests/run.sh
+uv run python ./run_series.py --model claude-haiku-4-5 --runs 3
 ```
 
-Hidden scoring can be invoked by `run_eval.py --shell bash`, but the bash task
-variant still needs a real scaffold and public-test runner before it is useful for
-model comparison.
+Each run gets its own work-dir under `./runs/`; the aggregate summary
+is written to `./runs/_series/series_<UTC-ts>_<model>_runs<N>.json`
+(override with `--summary-dir`).
 
-## Outputs
+## Results
 
-`run_eval.py` appends one JSON line to:
+`run_eval.py` appends one JSON line to `<work-dir>/results.jsonl`
+(schema `preflight-env-check-eval.v2`). Each row carries:
 
-```text
-<work-dir>/results.jsonl
-```
-
-Each row includes:
-
-- model and run id,
-- shell variant,
+- model, run id, shell variant,
 - start/end time and wall-clock duration,
-- agent exit code and timeout flag,
+- agent exit code, transport status (`ok` / `transport_crash` /
+  `timeout`), crash signature if any, `agent_did_work` flag,
+- token counts (with `source` field indicating whether they came from
+  the final `result` event or a recovered `last_usage_event`),
 - baseline/final Git commit,
-- token counts parsed from the agent JSON output,
-- stage 1, stage 2, and total hidden-test pass rates.
+- pass rates split by `stage1`, `stage2`, and `total`.
 
-When the agent produced output, transcripts are also saved as:
+When the agent produced output, transcripts are saved to
+`<work-dir>/agent_stdout.log` and `<work-dir>/agent_stderr.log`.
 
-```text
-<work-dir>/agent_stdout.log
-<work-dir>/agent_stderr.log
+## Layout
+
+```
+PROMPT.md         Agent-facing task prompt.
+init_env.ps1      Creates a per-run work-dir on Windows.
+init_env.sh       Creates a per-run work-dir on Linux.
+run_eval.py       Runs the agent + hidden tests, writes results.jsonl.
+run_series.py     Runs N evaluations and writes an aggregate summary.
+scaffold/         Buggy starting scripts (powershell/ + bash/).
+public_tests/     Visible tests + runner copied into the work-dir.
+hidden_tests/     Harness-only tests; never copied into the work-dir.
+runs/             Per-run work-dirs (gitignored).
 ```
 
-The generated work-dir is intentionally separate from `nanoserve-mini`; the agent
-edits only the task copy.
+## Troubleshooting
+
+- **`agent_exit_code != 0` but tests pass.** This is usually the Bun
+  runtime (Claude Code's JavaScript runtime) crashing at exit, *after*
+  the agent finished its work. `run_eval.py` classifies this as
+  `transport_status=transport_crash`, `crash_signature=bun_panic`, and
+  recovers tokens from the stream-json events. Treat the row as valid.
+- **Hidden tests fail with `stdout not valid JSON`.** Make sure the
+  agent did not accidentally write text to stdout from outside the
+  JSON payload (e.g. via `Write-Host` in PowerShell or `echo` in bash).
+- **Watch mode timing out.** Hidden Stage 2 uses `--interval-s 1
+  --duration-s 3`, which assumes each preflight call returns under
+  ~1s. On slow hardware (consumer GPU laptops) this can fail to
+  produce 3 ticks; the production target is a Linux server with fast
+  `nvidia-smi`.
