@@ -51,6 +51,11 @@ def test_parse_args_defaults() -> None:
     assert args.run_id is None
 
 
+def test_parse_args_accepts_api_key() -> None:
+    args = request_once.parse_args(["--model", "m", "--api-key", "sk-test"])
+    assert args.api_key == "sk-test"
+
+
 def test_parse_args_required_model() -> None:
     with pytest.raises(SystemExit):
         request_once.parse_args([])
@@ -64,11 +69,12 @@ def test_main_prints_summary(
         body = json.loads(request.content.decode("utf-8"))
         assert body["model"] == "m"
         assert body["messages"] == [{"role": "user", "content": "hello"}]
+        assert request.headers.get("authorization") == "Bearer sk-test"
         return httpx.Response(200, json=_GOOD_PAYLOAD)
 
     _patch_client(monkeypatch, httpx.MockTransport(handler))
 
-    rc = request_once.main(["--model", "m", "--prompt", "hello"])
+    rc = request_once.main(["--model", "m", "--prompt", "hello", "--api-key", "sk-test"])
     assert rc == 0
 
     out = capsys.readouterr().out

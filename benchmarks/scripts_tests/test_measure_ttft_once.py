@@ -50,10 +50,15 @@ _SSE = (
 )
 
 
-def _mock_streaming_client(monkeypatch: pytest.MonkeyPatch) -> None:
+def _mock_streaming_client(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    expected_authorization: str | None = None,
+) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content.decode("utf-8"))
         assert body["stream"] is True
+        assert request.headers.get("authorization") == expected_authorization
         return httpx.Response(200, content=_SSE, headers={"content-type": "text/event-stream"})
 
     transport = httpx.MockTransport(handler)
@@ -79,6 +84,11 @@ def test_measure_stream_anchors_ttft_on_first_content_chunk() -> None:
     assert result.chunks_received == 3
     assert result.output_text == "hi there"
     assert result.completed is True
+
+
+def test_parse_args_accepts_api_key() -> None:
+    args = measure_ttft_once.parse_args(["--model", "m", "--api-key", "sk-test"])
+    assert args.api_key == "sk-test"
 
 
 def test_measure_stream_handles_no_content_chunks() -> None:
@@ -198,13 +208,14 @@ def test_main_writes_result_json(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _mock_streaming_client(monkeypatch)
+    _mock_streaming_client(monkeypatch, expected_authorization="Bearer sk-test")
 
     output = tmp_path / "first_ttft.json"
     rc = measure_ttft_once.main([
         "--model", "m",
         "--prompt", "hello",
         "--max-tokens", "8",
+        "--api-key", "sk-test",
         "--gpu-model", "H200 NVL",
         "--vllm-version", "0.6.0",
         "--output", str(output),
