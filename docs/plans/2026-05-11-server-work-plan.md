@@ -37,7 +37,7 @@ Priorytet kolejnej sesji:
 1. Na serwerze: `git pull --ff-only`, sprawdzić `git status`, a następnie
    odzyskać lokalne zmiany compose i wyniki benchmarków, które nie trafiły
    jeszcze do GitHub.
-2. Porównać live compose z `infra/compose/docker-compose.kimi-k2.6.yml` i
+2. Porównać live compose z `serving/compose/docker-compose.kimi-k2.6.yml` i
    rozstrzygnąć, czy plik w repo jest kanoniczny.
 3. Przypiąć obrazy Docker do konkretnej wersji albo digestu przed kolejnymi
    porównywalnymi benchmarkami. Aktualne tagi `latest...` / `main` są robocze.
@@ -224,7 +224,7 @@ results/runs/<run_id>/coding_agent_eval/agent_selection.md
   - model id,
   - wynik minimalnego testu,
   - ewentualne ograniczenia.
-- [ ] Po działającym OpenCode wskazać `--agent opencode --agent-command "opencode -p {prompt}"` w `scripts/run_coding_agent_task.py`.
+- [ ] Po działającym OpenCode wskazać `--agent opencode --agent-command "opencode -p {prompt}"` w `benchmarks/scripts/run_coding_agent_task.py`.
 
 ## A5. Test weryfikujący model w coding agent CLI
 
@@ -281,7 +281,7 @@ Każde zadanie powinno mieć:
 
 ## A6. Metryki dla coding agent eval
 
-Metryki agenta + testów są zbierane automatycznie przez `scripts/run_coding_agent_task.py`. Każde uruchomienie dopisuje jeden wiersz do `results/runs/<run_id>/coding_agent_eval/results.jsonl` zgodny ze schematem `nanoserve-mini.coding-agent-eval-row.v1` (pola: `task_id`, `agent`, `model`, `wall_clock_seconds`, `agent_exit_code`, `public_tests`, `hidden_tests`, `changed_files`, `tokens`, `server_metrics`, `transcript_path`).
+Metryki agenta + testów są zbierane automatycznie przez `benchmarks/scripts/run_coding_agent_task.py`. Każde uruchomienie dopisuje jeden wiersz do `results/runs/<run_id>/coding_agent_eval/results.jsonl` zgodny ze schematem `nanoserve-mini.coding-agent-eval-row.v1` (pola: `task_id`, `agent`, `model`, `wall_clock_seconds`, `agent_exit_code`, `public_tests`, `hidden_tests`, `changed_files`, `tokens`, `server_metrics`, `transcript_path`).
 
 Wyniki zapisać do:
 
@@ -302,9 +302,9 @@ Nie używamy nazwy „oficjalny MLPerf”. Używamy nazw roboczych:
 
 | Nazwa robocza | Skrypt | Znaczenie |
 |---|---|---|
-| `SingleStream-lite correctness` | `scripts/request_once.py` | Jeden non-streaming request; sanity/correctness gate, nie benchmark wydajnościowy. |
-| `SingleStream-lite latency` | `scripts/measure_ttft_once.py` | Jeden streaming request; TTFT + E2E. |
-| `SingleStream-lite repeated` | `scripts/run_sequential_benchmark.py` | Powtarzany streaming request z `concurrency=1`; p50/p95 TTFT/E2E. |
+| `SingleStream-lite correctness` | `benchmarks/scripts/request_once.py` | Jeden non-streaming request; sanity/correctness gate, nie benchmark wydajnościowy. |
+| `SingleStream-lite latency` | `benchmarks/scripts/measure_ttft_once.py` | Jeden streaming request; TTFT + E2E. |
+| `SingleStream-lite repeated` | `benchmarks/scripts/run_sequential_benchmark.py` | Powtarzany streaming request z `concurrency=1`; p50/p95 TTFT/E2E. |
 | `Offline-lite throughput` | future / `vllm bench serve` | Workload wysyłany możliwie szybko przy kontrolowanej concurrency. |
 | `Server-lite QPS` | future / `vllm bench serve` | Workload z finite request rate / target QPS. |
 
@@ -351,7 +351,7 @@ Zadania:
 
 Dla każdego modelu:
 
-- [ ] Uruchomić `scripts/request_once.py`.
+- [ ] Uruchomić `benchmarks/scripts/request_once.py`.
 - [ ] Zapisać wynik do:
 
 ```text
@@ -366,7 +366,7 @@ results/runs/<run_id>/singlestream_lite_correctness/minimax_m2_7.json
 
 Dla każdego modelu:
 
-- [ ] Uruchomić `scripts/measure_ttft_once.py`.
+- [ ] Uruchomić `benchmarks/scripts/measure_ttft_once.py`.
 - [ ] Zapisać wynik do:
 
 ```text
@@ -382,7 +382,7 @@ results/runs/<run_id>/singlestream_lite_latency/minimax_m2_7_ttft.json
 
 Dla każdego modelu:
 
-- [ ] Uruchomić `scripts/run_sequential_benchmark.py`.
+- [ ] Uruchomić `benchmarks/scripts/run_sequential_benchmark.py`.
 - [ ] Parametry początkowe:
   - warmup: 1,
   - measured runs: 5 albo 10,

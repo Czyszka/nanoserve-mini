@@ -33,7 +33,6 @@ Thumbs.db
 artifacts/
 tmp/
 runs/
-benchmarks/coding-agent-tasks/*/runs*/
 **/bin/
 **/obj/
 
@@ -41,5 +40,6 @@ benchmarks/coding-agent-tasks/*/runs*/
 docs/papers/
 docs/**/papers/
 
-# Local Claude worktrees
+# Local Claude / Codex worktrees + caches
 .claude/worktrees/
+.uv-cache-codex/
