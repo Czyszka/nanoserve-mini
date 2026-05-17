@@ -7,15 +7,32 @@ one Triton kernel, technical write-ups, final decision document.
 Standalone portfolio artifact that also acts as a decision gate for a
 possible full `nanoserve` follow-up.
 
-## Status
+## Current work
 
-**Phase 1** — Kimi-K2.6 is served on the 8×H200 NVL server via `vllm serve`
-with TP=8 + Eagle3 speculative decoding, OpenWebUI is connected to the
-OpenAI-compatible endpoint, and the local benchmark/metrics harness
-(`benchmarks/scripts/`) is in place. Current next steps and blockers live
-in [`docs/operations/agent-state.md`](docs/operations/agent-state.md).
+Source of truth for human work: this README.
 
-Laptop is for code, docs, analysis, benchmark preparation. The 8×H200
+Current phase: **Phase 1** - vLLM serving baseline + LiteLLM Proxy +
+observability.
+
+What works:
+
+- Kimi-K2.6 runs through vLLM on the 8xH200 server.
+- OpenWebUI is connected.
+- Benchmark scripts exist under `benchmarks/scripts/`.
+- `benchmarks/scripts/run_bench_suite.py` is ready for one-command proxy
+  benchmark runs.
+- LiteLLM Proxy config is prepared in compose; server smoke is still pending.
+
+Next 3 actions:
+
+1. Smoke LiteLLM Proxy on the server.
+2. Run `run_bench_suite.py` per model through the proxy.
+3. Start the Prometheus + Grafana dashboard.
+
+Do not use `docs/operations/agent-state.md` as the human project dashboard. It
+is an AI-agent handoff file.
+
+Laptop is for code, docs, analysis, benchmark preparation. The 8xH200
 server is the primary GPU runtime.
 
 ## Repository layout
@@ -26,7 +43,7 @@ benchmarks/
                       request_once, measure_ttft_once,
                       run_sequential_benchmark,
                       collect_metrics_snapshot, sample_gpu_metrics,
-                      check_server_env
+                      run_bench_suite, check_server_env
                     plus shared library:
                       _client, _metrics, _schemas, _server_metrics
   scripts_tests/    Pytest suite (mocked httpx / subprocess; no GPU needed).
@@ -57,11 +74,11 @@ in `results/`, everything else in `docs/`.
 See [`docs/project/roadmap.md`](docs/project/roadmap.md) for the full
 definition of done, phase plan, decision points, and the section on
 material brought into scope via the parallel company H200 project
-(TP scaling, MoE serving, FP8, multi-tenant — measured at work, written
+(TP scaling, MoE serving, FP8, multi-tenant - measured at work, written
 up here).
 
-Phase 1 deliverables still owed: LiteLLM Proxy, Prometheus + Grafana
-dashboard, write-up W1.
+Phase 1 deliverables still owed: LiteLLM Proxy server smoke, Prometheus +
+Grafana dashboard, write-up W1.
 
 ## Local development
 
@@ -98,9 +115,6 @@ for the full list and rotation procedure if a secret leaks.
 
 ## Key docs
 
-- [Documentation map](docs/README.md)
-- [Roadmap](docs/project/roadmap.md)
-- [Agent state (current work)](docs/operations/agent-state.md)
-- [Benchmark methodology](docs/operations/benchmark-methodology.md)
-- [Infrastructure and workflow](docs/operations/infrastructure.md)
-- [Reading list](docs/learning/reading-list.md)
+- [Roadmap](docs/project/roadmap.md) - scope, phases, definition of done.
+- [Benchmark methodology](docs/operations/benchmark-methodology.md) - measurement contract.
+- [Serving compose](serving/compose/) - server stack.
