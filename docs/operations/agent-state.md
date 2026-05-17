@@ -67,6 +67,7 @@ Phase 1 is not done; the blockers below are scoped to fixing that, not to expand
   - `benchmarks/scripts/run_sequential_benchmark.py`
   - `benchmarks/scripts/collect_metrics_snapshot.py`
   - `benchmarks/scripts/sample_gpu_metrics.py`
+  - `benchmarks/scripts/run_bench_suite.py`
 
 ---
 
@@ -100,6 +101,11 @@ The benchmark scripts use these MLPerf-inspired lite modes:
 | `benchmarks/scripts/collect_metrics_snapshot.py` | `server_metrics` | `nanoserve-mini.server-metrics-snapshot.v1` |
 | `benchmarks/scripts/sample_gpu_metrics.py` | `server_metrics` | `nanoserve-mini.gpu-samples-meta.v1` |
 
+`benchmarks/scripts/run_bench_suite.py` is the one-command Phase 1 launcher.
+It generates `YYYY-MM-DD_<model-slug>_run-NN`, runs pre/post snapshots plus
+request/TTFT/sequential benchmarks through LiteLLM Proxy, and writes manifest
+schema `nanoserve-mini.bench-suite.v1`.
+
 All benchmark and server-metrics scripts support `--run-id` and write under `results/runs/<run_id>/`. Expected layout:
 
 ```text
@@ -112,6 +118,7 @@ results/runs/<run_id>/
   server_metrics/snapshot_post.json
   server_metrics/gpu_samples.csv
   server_metrics/gpu_samples_meta.json
+  bench_suite/summary.json
 ```
 
 ### Immediate next steps (Phase 1 close-out)
@@ -126,8 +133,8 @@ results/runs/<run_id>/
    - `benchmarks/scripts/collect_metrics_snapshot.py --phase pre`
    - `benchmarks/scripts/sample_gpu_metrics.py` during a benchmark window
    - `benchmarks/scripts/collect_metrics_snapshot.py --phase post`
-5. Run the normalised benchmark sequence with one shared `--run-id` per model and commit raw or summarised results under `results/runs/`.
-6. **Bench-run launcher** (`benchmarks/scripts/run_bench_suite.py`, separate session): one command runs `snapshot pre → request_once → ttft → gpu_samples (bg) → sequential → snapshot post` per model through proxy:4000, with metrics-snapshot going direct to vLLM. Requires `--api-key` flag in `_client.py` and the three benchmark scripts (LiteLLM master_key needs `Authorization: Bearer …`). Mapping `target → (proxy_model, vllm_metrics_url)` in a small `bench_targets.json`.
+5. Run the normalised benchmark sequence per model with `benchmarks/scripts/run_bench_suite.py`; it auto-generates `run_id`, sends requests through proxy:4000 with `LITELLM_MASTER_KEY`, and sends metrics snapshots directly to the target vLLM `/metrics` endpoint.
+6. Optional follow-up: add GPU sampling back into the suite once the basic proxy benchmark is validated on the server.
 7. Stand up **Prometheus + Grafana dashboard** scraping vLLM `/metrics` and rendering TTFT/TPOT/throughput/KV-cache during a load test (Phase 1 DoD #4).
 8. Draft **write-up W1** in `docs/weekly/` or a new `docs/write-ups/` directory once the dashboard is live.
 9. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
@@ -227,11 +234,11 @@ uv run python -m benchmarks.scripts.collect_metrics_snapshot \
 
 ## Last validation
 
-Local laptop validation on 2026-05-17 after the repo layout consolidation (this session):
+Local laptop validation on 2026-05-17 after adding `run_bench_suite.py`:
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest -q        OK, 102 passed
+uv run pytest -q        OK, 113 passed
 ```
 
 The earlier 2026-05-08 validation (after PR #7 review follow-ups: failure-record path in `measure_ttft_once`, `completed=False` on no-content streams, stricter argument guards in `sample_gpu_metrics`) also reported `ruff` + `pytest` clean. The 2026-05-08 task-spec tightening on `main` was documentation-only.
@@ -241,6 +248,19 @@ The earlier 2026-05-08 validation (after PR #7 review follow-ups: failure-record
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-17 - Bench suite launcher for LiteLLM proxy runs
+
+- Why: server sessions need one simple command that runs the Phase 1 benchmark sequence for one model through LiteLLM Proxy.
+- Did:
+  - Added `benchmarks/scripts/run_bench_suite.py`: auto-generates `YYYY-MM-DD_<model-slug>_run-NN`, runs `snapshot_pre -> request_once -> measure_ttft_once -> run_sequential_benchmark -> snapshot_post`, and writes `results/runs/<run_id>/bench_suite/summary.json`.
+  - Added optional `api_key` support to `_client.CompletionRequest`; request scripts now accept `--api-key` defaulting to `LITELLM_MASTER_KEY`.
+  - Kept GPU sampling out of v1 by design; add it later after the basic proxy path is validated on the server.
+  - Added tests for auth headers, CLI `--api-key` propagation, run-id generation, suite step ordering, fail-fast plus post-snapshot behavior, and strict JSON manifest output.
+- Validation:
+  - `uv run ruff check .` - clean.
+  - `uv run pytest -q` - 113 passed.
+- Next: on the server, run `uv run python -m benchmarks.scripts.run_bench_suite --base-url http://127.0.0.1:4000 --metrics-base-url http://127.0.0.1:8000 --model kimi-k2.6` after setting `LITELLM_MASTER_KEY`.
 
 ### 2026-05-17 - LiteLLM Proxy + image pinning (laptop prep)
 

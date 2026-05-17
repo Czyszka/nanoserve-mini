@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from collections.abc import Iterable
@@ -165,6 +166,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument(
+        "--api-key",
+        default=os.environ.get("LITELLM_MASTER_KEY"),
+        help="Bearer token for OpenAI-compatible proxies. Defaults to LITELLM_MASTER_KEY.",
+    )
+    parser.add_argument(
         "--output",
         default=None,
         help="Where to write the result JSON. Overrides --run-id path "
@@ -273,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
         prompt=args.prompt,
         max_tokens=args.max_tokens,
         temperature=args.temperature,
+        api_key=args.api_key,
     )
     decoding = {"temperature": args.temperature, "max_tokens": args.max_tokens}
     workload_spec = build_workload_spec(

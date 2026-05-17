@@ -44,10 +44,15 @@ def _ok_row(index: int, phase: str = "measured", e2e: float = 0.5) -> RunRow:
     )
 
 
-def _mock_streaming_client(monkeypatch: pytest.MonkeyPatch) -> None:
+def _mock_streaming_client(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    expected_authorization: str | None = None,
+) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content.decode("utf-8"))
         assert body["stream"] is True
+        assert request.headers.get("authorization") == expected_authorization
         return httpx.Response(200, content=_SSE, headers={"content-type": "text/event-stream"})
 
     transport = httpx.MockTransport(handler)
@@ -160,7 +165,7 @@ def test_main_writes_jsonl_and_summary(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _mock_streaming_client(monkeypatch)
+    _mock_streaming_client(monkeypatch, expected_authorization="Bearer sk-test")
 
     jsonl = tmp_path / "bench.jsonl"
     summary_path = tmp_path / "bench_summary.json"
@@ -171,6 +176,7 @@ def test_main_writes_jsonl_and_summary(
         "--warmup", "1",
         "--runs", "3",
         "--max-tokens", "4",
+        "--api-key", "sk-test",
         "--gpu-model", "H200 NVL",
         "--vllm-version", "0.6.0",
         "--output-jsonl", str(jsonl),
@@ -203,6 +209,11 @@ def test_main_writes_jsonl_and_summary(
     assert "[W0]" in out
     assert "[M0]" in out
     assert "TTFT  p50=" in out
+
+
+def test_parse_args_accepts_api_key() -> None:
+    args = run_sequential_benchmark.parse_args(["--model", "m", "--api-key", "sk-test"])
+    assert args.api_key == "sk-test"
 
 
 def test_main_uses_run_id_paths(

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -77,6 +78,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=float,
         default=60.0,
         help="HTTP timeout in seconds (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--api-key",
+        default=os.environ.get("LITELLM_MASTER_KEY"),
+        help="Bearer token for OpenAI-compatible proxies. Defaults to LITELLM_MASTER_KEY.",
     )
     parser.add_argument(
         "--raw",
@@ -189,6 +195,7 @@ def main(argv: list[str] | None = None) -> int:
         prompt=args.prompt,
         max_tokens=args.max_tokens,
         temperature=args.temperature,
+        api_key=args.api_key,
     )
     decoding = {"temperature": args.temperature, "max_tokens": args.max_tokens}
     workload_spec = build_workload_spec(
