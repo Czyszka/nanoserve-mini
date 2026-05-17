@@ -12,8 +12,7 @@ The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to t
 
 - Last summarized commit: `46e2129`
 - Last summarized at: 2026-05-11
-
-The `sync-state` routine reads this block to find the diff window. Update only via the routine.
+- Manual edit 2026-05-17: handoff log compacted by hand outside `sync-state` because the coding-agent eval side-quest (entries 2026-05-13..2026-05-16) was archived to `archive/coding-agent-tasks`. Refresh the cursor on the next `sync-state` run.
 
 ---
 
@@ -23,66 +22,52 @@ The `sync-state` routine reads this block to find the diff window. Update only v
 - `AGENTS.md` - stable instructions for Codex.
 - `docs/operations/agent-state.md` - current project state, decisions, next step, and blockers.
 - `docs/project/roadmap.md` - project scope; do not change it without an explicit decision.
-- `docs/README.md` - documentation map after the docs tree reorganization.
+- `docs/README.md` - documentation map.
 
 ---
 
 ## Current phase
 
-**Phase 1 - first vLLM run completed; benchmark harness normalization + dashboard-ready schema completed; server-metrics scripts landed; coding-agent harness + starter scaffolds for tasks 01-04 ready; Kimi/OpenWebUI compose capture in progress.**
+**Phase 1 (weeks 1-3 of 12)** — vLLM serving baseline + observability + multi-model proxy.
 
-Server is up, environment snapshot is committed, Docker vLLM image is installed, Kimi-K2.6 is downloaded and served successfully through vLLM with TP=8.
+Live state:
 
-OpenWebUI is running on the server and connected to the vLLM OpenAI-compatible endpoint.
+- Kimi-K2.6 is served on the 8×H200 NVL server via `vllm serve` with TP=8 + Eagle3 speculative decoding.
+- DeepSeek-V4-Flash was added as a small-model experiment alongside Kimi on the server.
+- OpenWebUI is connected to the vLLM OpenAI-compatible endpoint.
+- The local benchmark/metrics harness (`benchmarks/scripts/`) is on `main` with MLPerf-inspired lite output, `--run-id` support, token-level metrics (TPOT, prompt/completion tokens, tokens/s), structured `controls.workload_spec`, unique `run_uuid`, and a populated `server_metrics` block (vLLM `/metrics` scrape + `nvidia-smi` aggregate + CSV time series).
+- Repository layout consolidated 2026-05-17: `scripts/` → `benchmarks/scripts/`, `infra/` → `serving/`, runbooks moved under `serving/runbooks/`, off-roadmap `benchmarks/coding-agent-tasks/` and `benchmarks/scripts/run_coding_agent_task.py` archived to branch `archive/coding-agent-tasks`.
 
-The repo now has:
+Phase 1 deliverables still owed (per `docs/project/roadmap.md` Definition of Done):
 
-- MLPerf-inspired lite output layout for the first benchmark scripts.
-- Token-level metrics in benchmark output: TPOT, prompt/completion tokens, output tokens/s (via `stream_options.include_usage=true`).
-- Structured `controls.workload_spec`, explicit `controls.concurrency`, unique `run_uuid` per execution, and a `server_metrics` block populated by `scripts/collect_metrics_snapshot.py` and `scripts/sample_gpu_metrics.py`.
-- Shared schema/mode/methodology constants in `scripts/_schemas.py`.
-- Tightened synthetic coding-agent task specifications for PowerShell, Python, C++, and C#.
-- MLPerf-inspired-lite compliance disclaimer in `docs/operations/benchmark-methodology.md`.
-- A server work plan for MiniMax-M2.7 / coding-agent / dual-model evaluation.
-- A first tracked Docker Compose/runbook capture for Kimi-K2.6, OpenWebUI, and an experimental smaller-model service.
-- Documentation grouped under `docs/project/`, `docs/operations/`, `docs/learning/`, `docs/plans/`, `docs/templates/`, and `docs/weekly/`, with `docs/README.md` as the map.
-- Human-reported server work that is not yet pushed: DeepSeek-V4-Flash benchmark outputs and the latest compose need to be imported at the start of the next session.
+- **LiteLLM Proxy** in front of vLLM as a single OpenAI-compatible endpoint with per-model routing — not started.
+- **Prometheus + Grafana dashboard** showing live metrics during a load test — not started.
+- **W1 write-up** ("vLLM + LiteLLM Proxy on 8×H200: from zero to first measurement") — not started.
+
+Phase 1 is not done; the blockers below are scoped to fixing that, not to expanding to Phase 2.
 
 ---
 
 ## Current known status
 
-- GitHub repo exists: `https://github.com/Czyszka/nanoserve-mini.git`
-- Local Windows laptop bootstrap is done.
-- Python workflow uses `uv`.
-- `ruff` and `pytest` are configured.
-- `.gitattributes` exists to normalize line endings.
-- Local research PDFs are kept outside Git in ignored `docs/**/papers/`.
-- Local Claude worktrees are kept outside Git in ignored `.claude/worktrees/`.
-- **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8x H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
-- **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated with `scripts/check_server_env.py` on ubuntusrv2 and records Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL, driver 595.58.03, CUDA 13.2.
-- **vLLM Docker image installed** on the server (`vllm/vllm-openai:v0.20.0-cu130`).
-- **Kimi-K2.6 model download completed** in named volume `nanoserve-hf-cache`.
-- **Kimi-K2.6 serves successfully through `vllm serve` with TP=8.**
-- **Single-node DEP attempt did not work** for this run; current working path is TP=8.
-- **Speculative decoding works correctly** with Eagle3 speculative head (`lightseekorg/kimi-k2.6-eagle3-mla`).
-- **OpenWebUI container is running on the server** and connected to `vllm serve`; Kimi-K2.6 is visible in OpenWebUI and answers requests.
-- Current Kimi-K2.6 launch parameters still need tuning, especially GPU memory reservation/utilization, so a second smaller model can fit on the same server.
-- `infra/compose/docker-compose.kimi-k2.6.yml` now tracks a Docker Compose setup for Kimi-K2.6 + OpenWebUI plus experimental `vllm-small` on port 8004 using `deepseek-ai/DeepSeek-V4-Flash`.
-- `docs/operations/runbooks/vllm-kimi_k2_6-dockercompose.yaml` records a smaller Kimi/OpenWebUI compose reference, but it may not match the latest compose command exactly.
-- Human report from 2026-05-11 server session: latest server-side changes were not pushed; DeepSeek-V4-Flash completed `request_once`, TTFT, and repeated benchmark tests; latest compose has large model + small model + OpenWebUI, with the small model capped at 20% VRAM across 8 GPUs so remaining VRAM can be reserved for the large model.
-- `.claude/` remains untracked locally.
-- **Task specs 01-04 are tightened on `main`:**
-  - Task 01 PowerShell export/environment backup.
-  - Task 02 Python OpenAI-compatible streaming probe.
-  - Task 03 C++ TokenBuffer correctness/safety/hot path.
-  - Task 04 C# allocation-aware parser refactor.
-- **Benchmark/metrics producer scripts are on `main`:**
-  - `scripts/request_once.py`
-  - `scripts/measure_ttft_once.py`
-  - `scripts/run_sequential_benchmark.py`
-  - `scripts/collect_metrics_snapshot.py`
-  - `scripts/sample_gpu_metrics.py`
+- GitHub repo exists: `https://github.com/Czyszka/nanoserve-mini.git`.
+- Local Windows laptop bootstrap is done; Python workflow uses `uv`; `ruff` + `pytest` configured; `.gitattributes` normalises line endings.
+- Local research PDFs and Claude/Codex worktrees stay outside Git (`docs/**/papers/`, `.claude/worktrees/`, `.uv-cache-codex/`).
+- **Server is available**: ubuntusrv2 (Ubuntu 24.04, 8×H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
+- **`results/raw/server_env_snapshot.json` committed** (2026-05-06); generated with `benchmarks/scripts/check_server_env.py`.
+- **vLLM Docker image installed** (`vllm/vllm-openai:v0.20.0-cu130`).
+- **Kimi-K2.6 serves with TP=8 + Eagle3 speculative decoding.** Single-node DEP was tried and did not work.
+- **OpenWebUI container runs on the server** and answers requests against the vLLM endpoint.
+- Kimi-K2.6 launch parameters still need GPU memory tuning so the small model fits next to it.
+- `serving/compose/docker-compose.kimi-k2.6.yml` tracks Kimi/OpenWebUI plus experimental `vllm-small` on port 8004 with `deepseek-ai/DeepSeek-V4-Flash`.
+- `serving/runbooks/vllm-kimi_k2_6-dockercompose.yaml` is a smaller compose reference that may not exactly match the latest server command.
+- **Human report from 2026-05-11 server session, not yet pushed**: latest compose has large + small model + OpenWebUI, small model capped at 20% VRAM across 8 GPUs; DeepSeek-V4-Flash completed `request_once`, TTFT, and repeated benchmark tests; artifacts are still on the server.
+- Benchmark/metrics producer scripts on `main`:
+  - `benchmarks/scripts/request_once.py`
+  - `benchmarks/scripts/measure_ttft_once.py`
+  - `benchmarks/scripts/run_sequential_benchmark.py`
+  - `benchmarks/scripts/collect_metrics_snapshot.py`
+  - `benchmarks/scripts/sample_gpu_metrics.py`
 
 ---
 
@@ -90,17 +75,14 @@ The repo now has:
 
 Read these before making non-trivial changes:
 
-- `docs/project/roadmap.md` - current scope, phases, and definition of done.
+- `docs/project/roadmap.md` - current scope, phases, and Definition of Done.
 - `docs/operations/infrastructure.md` - machine roles and workflow.
-- `docs/operations/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap (env snapshot + vLLM setup decision).
-- `docs/operations/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes, result schema contract, compliance disclaimer, `--run-id` layout, and server metrics.
-- `docs/plans/2026-05-11-server-work-plan.md` - Monday server work plan: MiniMax-M2.7, coding agent check, dual-model benchmarks.
-- `benchmarks/coding-agent-tasks/README.md` - synthetic coding-agent task suite overview.
+- `serving/runbooks/server-env-bootstrap.md` - reusable runbook for GPU server env bootstrap.
+- `docs/operations/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes, result schema contract, `--run-id` layout.
+- `docs/plans/2026-05-11-server-work-plan.md` - last server-session work plan and post-session notes.
 - `docs/learning/reading-list.md` - papers by phase.
-- `docs/learning/nvidia-self-paced-courses.md` - optional NVIDIA courses.
 - `docs/README.md` - documentation map.
-- `AGENTS.md` - Codex-specific repo instructions.
-- `CLAUDE.md` - Claude Code-specific repo instructions.
+- `AGENTS.md` / `CLAUDE.md` - agent entrypoints.
 
 Do not rewrite the roadmap/scope document unless explicitly asked.
 
@@ -108,26 +90,18 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 
 ## Current technical direction
 
-Server is active. vLLM Docker is installed. Kimi-K2.6 is serving successfully with TP=8. OpenWebUI is connected and can be used for interactive checks. Today's repo changes moved from loose launch notes toward a tracked Compose setup, but the repo is behind the latest server work: DeepSeek-V4-Flash benchmark results and the final compose from the server session still need to be brought back into Git.
-
 The benchmark scripts use these MLPerf-inspired lite modes:
 
 | Script | Benchmark mode | Schema |
 |---|---|---|
-| `scripts/request_once.py` | `singlestream_lite_correctness` | `nanoserve-mini.request-once.v2` |
-| `scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
-| `scripts/run_sequential_benchmark.py` summary | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
-| `scripts/run_sequential_benchmark.py` row | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
-| `scripts/collect_metrics_snapshot.py` | `server_metrics` | `nanoserve-mini.server-metrics-snapshot.v1` |
-| `scripts/sample_gpu_metrics.py` | `server_metrics` | `nanoserve-mini.gpu-samples-meta.v1` |
+| `benchmarks/scripts/request_once.py` | `singlestream_lite_correctness` | `nanoserve-mini.request-once.v2` |
+| `benchmarks/scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
+| `benchmarks/scripts/run_sequential_benchmark.py` summary | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
+| `benchmarks/scripts/run_sequential_benchmark.py` row | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
+| `benchmarks/scripts/collect_metrics_snapshot.py` | `server_metrics` | `nanoserve-mini.server-metrics-snapshot.v1` |
+| `benchmarks/scripts/sample_gpu_metrics.py` | `server_metrics` | `nanoserve-mini.gpu-samples-meta.v1` |
 
-All benchmark and server-metrics scripts support `--run-id` and write under:
-
-```text
-results/runs/<run_id>/
-```
-
-Expected live-run layout:
+All benchmark and server-metrics scripts support `--run-id` and write under `results/runs/<run_id>/`. Expected layout:
 
 ```text
 results/runs/<run_id>/
@@ -141,29 +115,23 @@ results/runs/<run_id>/
   server_metrics/gpu_samples_meta.json
 ```
 
-Immediate next steps, in order:
+### Immediate next steps (Phase 1 close-out)
 
-1. At the start of the next server session, recover and commit the unpushed server-side artifacts:
-   - latest Docker Compose with large model + `vllm-small` + OpenWebUI,
+1. **Tuesday server session** — recover unpushed 2026-05-11 artifacts and commit them:
+   - latest Docker Compose with Kimi-K2.6 + `vllm-small` + OpenWebUI,
    - DeepSeek-V4-Flash `request_once`, TTFT, and repeated benchmark outputs,
-   - short summary of launch parameters, including the 20% VRAM cap for the small model across 8 GPUs.
-2. Reconcile the latest server compose with `infra/compose/docker-compose.kimi-k2.6.yml` and decide whether TP=8 Kimi, EP/DP Kimi, and small-model services should live in one compose file or separate profiles/files.
-3. Pin Docker images to exact versions or digests before collecting comparable benchmark runs.
-4. Decide whether OpenWebUI should keep one endpoint, use semicolon-separated `OPENAI_API_BASE_URLS`, or move this routing behind LiteLLM/LLM proxy.
-5. Finish DeepSeek-V4-Flash coding-agent/programming tests using the existing synthetic task specs or a clearly documented subset.
-6. Download one additional smaller model for comparison, run the same benchmark sequence, and run the same programming tests.
-7. Compare DeepSeek-V4-Flash vs the additional small model on latency, output quality for coding tasks, stability, VRAM use, and fit alongside the large model.
-8. Validate the metrics scripts live on the server:
-   - `scripts/collect_metrics_snapshot.py --phase pre`
-   - `scripts/sample_gpu_metrics.py` during a benchmark window
-   - `scripts/collect_metrics_snapshot.py --phase post`
-9. Run or repeat the normalized benchmark sequence with one shared `--run-id` per model:
-   - `uv run python -m scripts.request_once ... --run-id <run_id>`
-   - `uv run python -m scripts.measure_ttft_once ... --run-id <run_id>`
-   - `uv run python -m scripts.run_sequential_benchmark ... --run-id <run_id>`
-10. Inspect the generated `results/runs/<run_id>/` trees and decide whether to commit raw results directly or summarize them first.
-11. Check whether already-installed Claude Code CLI can talk to local vLLM; if not, install/use OpenCode fallback.
-12. Later: implement fact-table aggregator (`scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+   - short note recording launch parameters incl. the 20% VRAM cap for the small model.
+2. Reconcile the latest server compose with `serving/compose/docker-compose.kimi-k2.6.yml`; decide whether TP=8 Kimi, EP/DP Kimi, and small-model services live in one file or separate profiles.
+3. Pin Docker images to exact versions/digests before any comparable benchmark runs.
+4. Validate the metrics scripts live on the server end-to-end:
+   - `benchmarks/scripts/collect_metrics_snapshot.py --phase pre`
+   - `benchmarks/scripts/sample_gpu_metrics.py` during a benchmark window
+   - `benchmarks/scripts/collect_metrics_snapshot.py --phase post`
+5. Run the normalised benchmark sequence with one shared `--run-id` per model and commit raw or summarised results under `results/runs/`.
+6. Stand up **LiteLLM Proxy** in front of vLLM as the single OpenAI-compatible endpoint with per-model routing (Phase 1 DoD #2).
+7. Stand up **Prometheus + Grafana dashboard** scraping vLLM `/metrics` and rendering TTFT/TPOT/throughput/KV-cache during a load test (Phase 1 DoD #4).
+8. Draft **write-up W1** in `docs/weekly/` or a new `docs/write-ups/` directory once the dashboard is live.
+9. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
 
 ---
 
@@ -182,44 +150,32 @@ Server:
 ```bash
 git pull
 uv sync --extra dev
-uv run python -m scripts.check_server_env
+uv run python -m benchmarks.scripts.check_server_env
 ```
 
-Benchmark and metrics examples:
+Benchmark and metrics example:
 
 ```bash
 RUN_ID=2026-05-11_kimi_tp8_baseline
 
-uv run python -m scripts.collect_metrics_snapshot \
-  --base-url http://127.0.0.1:8000 \
-  --run-id "$RUN_ID" \
-  --phase pre
+uv run python -m benchmarks.scripts.collect_metrics_snapshot \
+  --base-url http://127.0.0.1:8000 --run-id "$RUN_ID" --phase pre
 
-uv run python -m scripts.request_once \
-  --base-url http://127.0.0.1:8000 \
-  --model moonshotai/Kimi-K2.6 \
-  --run-id "$RUN_ID"
+uv run python -m benchmarks.scripts.request_once \
+  --base-url http://127.0.0.1:8000 --model moonshotai/Kimi-K2.6 --run-id "$RUN_ID"
 
-uv run python -m scripts.measure_ttft_once \
-  --base-url http://127.0.0.1:8000 \
-  --model moonshotai/Kimi-K2.6 \
-  --run-id "$RUN_ID"
+uv run python -m benchmarks.scripts.measure_ttft_once \
+  --base-url http://127.0.0.1:8000 --model moonshotai/Kimi-K2.6 --run-id "$RUN_ID"
 
-uv run python -m scripts.sample_gpu_metrics \
-  --run-id "$RUN_ID" \
-  --interval-ms 500 \
-  --duration-s 60
+uv run python -m benchmarks.scripts.sample_gpu_metrics \
+  --run-id "$RUN_ID" --interval-ms 500 --duration-s 60
 
-uv run python -m scripts.run_sequential_benchmark \
-  --base-url http://127.0.0.1:8000 \
-  --model moonshotai/Kimi-K2.6 \
-  --warmup 1 --runs 5 \
-  --run-id "$RUN_ID"
+uv run python -m benchmarks.scripts.run_sequential_benchmark \
+  --base-url http://127.0.0.1:8000 --model moonshotai/Kimi-K2.6 \
+  --warmup 1 --runs 5 --run-id "$RUN_ID"
 
-uv run python -m scripts.collect_metrics_snapshot \
-  --base-url http://127.0.0.1:8000 \
-  --run-id "$RUN_ID" \
-  --phase post
+uv run python -m benchmarks.scripts.collect_metrics_snapshot \
+  --base-url http://127.0.0.1:8000 --run-id "$RUN_ID" --phase post
 ```
 
 ---
@@ -234,60 +190,51 @@ uv run python -m scripts.collect_metrics_snapshot \
 | Optional cloud | backup GPU access only |
 | Python workflow | uv on laptop and server |
 | Heavy GPU deps | not in laptop base config |
-| vLLM setup | **Docker** (`vllm/vllm-openai:v0.20.0-cu130`) |
-| vLLM strategy | **Working: `vllm serve` with TP=8 + Eagle3 speculative decoding**; single-node DEP was tried and did not work |
-| Model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
-| Smaller coding model candidate | Primary: `MiniMaxAI/MiniMax-M2.7`; research: `poolside/Laguna-XS.2`; fallback: `Qwen/Qwen3.6-35B-A3B`; stretch: `deepseek-ai/DeepSeek-V4-Flash` |
+| Repo layout | code under `benchmarks/scripts/`; ops under `serving/`; outputs under `results/`; docs under `docs/` |
+| vLLM setup | Docker (`vllm/vllm-openai:v0.20.0-cu130`) |
+| vLLM strategy | Working: `vllm serve` with TP=8 + Eagle3 speculative decoding; single-node DEP did not work |
+| Primary model | `moonshotai/Kimi-K2.6` + `lightseekorg/kimi-k2.6-eagle3-mla` |
+| Small-model experiment | `deepseek-ai/DeepSeek-V4-Flash` capped at ~20% VRAM across 8 GPUs |
 | HF weights storage | named Docker volume `nanoserve-hf-cache` |
-| Compose file | `infra/compose/docker-compose.kimi-k2.6.yml` is the current tracked compose draft for Kimi/OpenWebUI plus experimental `vllm-small`; verify it against the live server before treating it as canonical |
+| Compose file | `serving/compose/docker-compose.kimi-k2.6.yml` (draft; verify against the live server before treating as canonical) |
 | Interactive UI | OpenWebUI container connected to vLLM OpenAI-compatible endpoint |
-| Compose capture | Use tracked Compose/runbook files for reproducible Kimi/OpenWebUI launch notes, but verify them against the live server command before treating them as canonical |
-| Secondary model experiment | DeepSeek-V4-Flash is the current small-model experiment; human-reported server run completed request_once, TTFT, and repeated benchmarks, but artifacts are not yet pushed |
-| VRAM split | Current target is small model capped at 20% VRAM across all 8 GPUs, leaving the rest for the large model |
-| Image pinning | Current compose still uses floating image tags; pin exact image versions/digests before comparable benchmark runs |
-| Coding agent | Check Claude Code CLI with local vLLM first; if blocked, use OpenCode fallback |
+| Image pinning | Current compose uses floating tags; pin exact versions/digests before comparable benchmark runs |
 | Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
-| Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` plus `results/runs/<run_id>/server_metrics/` |
-| Coding tasks | Synthetic, separate temp repo during evaluation; final result compared by model/agent commit |
+| Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` + `results/runs/<run_id>/server_metrics/` |
 | Agent memory | `docs/operations/agent-state.md` is repo-tracked shared handoff |
 | Claude Code entrypoint | root `CLAUDE.md` |
 | Codex entrypoint | root `AGENTS.md` |
 | State updates | Codex and Claude Code must update `docs/operations/agent-state.md` after meaningful work and before commit/push handoff |
-| Local papers | Store read scientific papers in ignored `docs/**/papers/`; commit bibliographic notes/summaries separately if useful |
-| Local Claude worktrees | `.claude/worktrees/` is ignored and stays outside Git |
+| Local papers | Stored in ignored `docs/**/papers/`; commit summaries separately if useful |
+| Coding-agent benchmarks | Archived 2026-05-17 to `archive/coding-agent-tasks` branch; not part of Phase 1 DoD |
 
 ---
 
 ## Open questions
 
-- [ ] Record exact working TP=8 server command/config in repo.
-- [ ] Does the latest Kimi compose command actually match the working server launch, or should TP=8 and EP/DP variants be split into separate files?
-- [ ] Import unpushed server-side compose and DeepSeek-V4-Flash benchmark results.
-- [ ] Did `deepseek-ai/DeepSeek-V4-Flash` coding-agent/programming tests pass, and what failure modes appeared?
-- [ ] Which second small model should be downloaded for direct comparison with DeepSeek-V4-Flash?
-- [ ] Should OpenWebUI connect only to Kimi on port 8000 or expose both Kimi and the smaller/experimental endpoint?
-- [ ] Which exact Docker image tags/digests should replace floating `latest`/`main` tags for reproducible runs?
+- [ ] Record the exact working TP=8 server command/config in repo.
+- [ ] Should TP=8 Kimi, EP/DP Kimi, and small-model services live in one compose file or separate profiles?
+- [ ] Import unpushed server-side compose and DeepSeek-V4-Flash benchmark results (Tuesday session).
+- [ ] Should OpenWebUI keep one endpoint, expose both Kimi + small model, or move routing behind LiteLLM Proxy?
+- [ ] Which exact Docker image tags/digests should replace floating `latest`/`main` tags?
 - [ ] Validate benchmark + metrics scripts end-to-end on the server.
-- [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow a second smaller model to fit on the same server?
+- [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow the small model to fit comfortably?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
-- [ ] Should raw result files be committed directly or summarized after first GPU run?
-- [ ] Does Claude Code CLI work directly with local vLLM in this setup, or do we need OpenCode?
-- [ ] When to implement `scripts/aggregate_runs.py` (Wave C)?
+- [ ] Should raw result files be committed directly or summarised after the first GPU run?
+- [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
 
 ---
 
 ## Last validation
 
-Local laptop validation on 2026-05-08 after PR #7 review follow-ups (failure-record path in `measure_ttft_once`, `completed=False` on no-content streams, stricter argument guards in `sample_gpu_metrics`) on top of the merged `origin/main`:
+Local laptop validation on 2026-05-17 after the repo layout consolidation (this session):
 
 ```text
 uv run ruff check .     OK, all checks passed
-uv run pytest           OK, 102 passed
+uv run pytest -q        OK, 102 passed
 ```
 
-Note: after PR #2 review, Claude pushed follow-up fixes for `request_once --raw`, `resolve_output_path(None)`, and measured-only sequential throughput before merge.
-
-The 2026-05-08 task-spec tightening on `main` was documentation-only and was applied through GitHub connector commits; `uv run ruff check .` / `uv run pytest` were not rerun after those documentation changes.
+The earlier 2026-05-08 validation (after PR #7 review follow-ups: failure-record path in `measure_ttft_once`, `completed=False` on no-content streams, stricter argument guards in `sample_gpu_metrics`) also reported `ruff` + `pytest` clean. The 2026-05-08 task-spec tightening on `main` was documentation-only.
 
 ---
 
@@ -295,355 +242,71 @@ The 2026-05-08 task-spec tightening on `main` was documentation-only and was app
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
-### 2026-05-16 - Task 01 run_eval.py: stream-json + transport-crash classification
+### 2026-05-17 - Repo layout consolidation + off-roadmap archive
 
-- Why: first laptop smoke test of `01_preflight_env_check` failed on two issues:
-  (1) `subprocess.run(..., text=True)` decoded Claude Code stdout with Windows
-  cp1250 codepage, hit a non-ASCII byte from CLI output and crashed the reader
-  thread (`UnicodeDecodeError`), leaving `stdout=None` and a `'NoneType'.strip()`
-  traceback in `run_eval.py`. (2) Even after fixing decoding, Claude Code's Bun
-  runtime 1.3.10 sometimes panics at exit on Windows (`panic(main thread): switch
-  on corrupt value`), producing `agent_exit_code=3` and empty stdout because the
-  final JSON blob is never flushed — making `tokens=0/0/0` and the row look like
-  a total failure even when the agent solved the task.
+- Why: directory layout had drifted — `scripts/` mixed benchmark producers with off-roadmap coding-agent harness; `benchmarks/` held only coding-agent tasks (off-roadmap) plus two empty `.gitkeep` dirs; runbooks were split between `docs/operations/runbooks/` and `infra/`. User reported the structure as opaque and Phase 1 deliverables (LiteLLM Proxy, dashboard, W1 write-up) had not started after a week.
 - Did:
-  - Forced UTF-8 + `errors="replace"` on every `subprocess.run(..., text=True)`
-    in `run_eval.py` (agent invocation, hidden test runner, all git helpers).
-    Defended against `proc.stdout is None`.
-  - Switched the agent command from `--output-format json` to
-    `--verbose --output-format stream-json`. stream-json emits one JSON event
-    per line as the agent works, so token usage from earlier `assistant`/`result`
-    events survives even if Bun crashes at exit.
-  - Added `parse_stream_events(stdout)` that walks newline-delimited events,
-    skips non-JSON warning lines, and returns `(last_result_event,
-    last_usage_event, event_count)`.
-  - Reworked `extract_tokens(agent_result)` to prefer the canonical
-    `{type:"result"}` event and fall back to the most recent usage-bearing event
-    when the result event is missing. Records `tokens.source` =
-    `"result" | "last_usage_event" | None`.
-  - Added `detect_transport_status(rc, timed_out, stderr)` returning
-    `("ok" | "transport_crash" | "timeout", "bun_panic" | "nonzero_exit" | None)`.
-    `BUN_CRASH_PATTERNS` matches `panic(main thread):`, `oh no: Bun has crashed`,
-    and `bun.report` URLs.
-  - Bumped row schema `preflight-env-check-eval.v1 → v2`. New fields:
-    `agent_transport_status`, `agent_crash_signature`, `agent_did_work`
-    (computed from `baseline_commit != final_commit`), `agent_event_count`.
-    `agent_exit_code` is still recorded for reference.
-  - Console summary now prints transport status, crash signature (if any),
-    `did_work`, event count, and token source alongside totals.
+  - Archived the entire `benchmarks/coding-agent-tasks/` tree, `benchmarks/scripts/run_coding_agent_task.py`, `tests/test_run_coding_agent_task.py`, and the unused `MODE_CODING_AGENT_EVAL` / `SCHEMA_CODING_AGENT_EVAL_ROW` constants on branch `archive/coding-agent-tasks` (pushed to `origin`); deleted them on `main`.
+  - Moved `scripts/` → `benchmarks/scripts/` (git mv) so all benchmark code lives under one parent. Updated every `from scripts.…` import in scripts and tests to `from benchmarks.scripts.…`. Rewrote `scripts.foo` references in docs/CLAUDE/AGENTS to `benchmarks.scripts.foo`.
+  - Renamed `infra/` → `serving/`. Moved `docs/operations/runbooks/` → `serving/runbooks/` so operational docs sit next to compose files. Updated references in docs and the compose README.
+  - Removed empty `benchmarks/configs/`, `benchmarks/prompts/`, `infra/docker/`, root `infra/.gitkeep`.
+  - Untracked `.uv-cache-codex/` via `.gitignore` (added next to `.claude/worktrees/`).
+  - Rewrote root `README.md` to match the new layout and the actual scope (no more stale "out of scope: multi-GPU/FP8/MoE" line — those are in scope via the company H200 project per the roadmap).
+  - Updated `docs/README.md` map and `docs/templates/sync-state-agent.md` references.
+  - Tidied this file: dropped stale "task specs 01-04" notes from `Current known status` / `Current decisions` / `Open questions`; collapsed the 2026-05-13..2026-05-16 handoff entries (all coding-agent eval side-quest) so the log refocuses on Phase 1 close-out.
 - Validation:
   - `uv run ruff check .` clean.
-  - `uv run pytest -q` = 119 passed.
-  - Inline self-tests of `parse_stream_events`, `extract_tokens`,
-    `detect_transport_status`, and `BUN_CRASH_PATTERNS` against synthetic
-    happy-path, missing-result-event, Bun-panic-stderr, and timeout inputs:
-    all green.
-  - Live laptop smoke (`claude-haiku-4-5`, stream-json, `acceptEdits`):
-    `agent_exit=0 transport=ok did_work=True events=127`,
-    `tokens: in=346 out=15264 total=15610 (source=result)`,
-    `stage1: 8/8`, `stage2: 2/2`, `total: 10/10`. Bun did not panic this run;
-    the v2 row would still have recorded usable tokens via
-    `last_usage_event` if it had.
-- Note on tool permissions: the smoke run's `permission_denials` block shows
-  Haiku tried to run `git add`/`git commit`/`pwsh public_tests/run.ps1` and was
-  blocked by `acceptEdits` (which allows Edit/Write only, not Bash). The hidden
-  test runner inside `run_eval.py` is independent, so scoring was unaffected.
-  If we later want the agent to self-verify against `public_tests/`, add
-  `--allowed-tools "Bash(pwsh:*)"` or similar to the harness invocation.
-- Next:
-  - Open PR for `fix/task01-agent-crash`, merge to `main`.
-  - Capture at least one run where Bun actually panics to confirm the
-    `last_usage_event` fallback path end-to-end (the current smoke run only
-    exercised the `source=result` happy path).
-  - Decide on tidy of `benchmarks/coding-agent-tasks/01_preflight_env_check/runs/`:
-    ignored locally, but per-run dirs accumulate; consider adding a
-    `--cleanup-on-success` flag or documenting a manual cleanup command.
-  - Implement bash scaffold + public runner for task 01 (still placeholder).
+  - `uv run pytest -q` = 102 passed (same suite, all imports rewired).
+  - `git status` clean apart from the intended renames/deletes.
+- Next: open PR `refactor/repo-layout-consolidation` → `main` for review and merge; then on Tuesday's server session, work through the Phase 1 close-out steps listed under "Immediate next steps".
 
-### 2026-05-16 - Task 01 README + bash hidden-test runner
+### 2026-05-13 .. 2026-05-16 - Coding-agent eval harness exploration (archived)
 
-- Why: make `01_preflight_env_check` understandable before redesigning task 02, and complete the hidden-test runner path for the bash variant.
+A week of work on a synthetic coding-agent evaluation harness — task 01-04 spec tightening, starter scaffolds (PowerShell/Python/C++/C#), a `run_coding_agent_task.py` wrapper, a v1 `coding-agent-eval-row` schema, and follow-up work on task 01 (preflight env check) including stream-json output handling and Bun transport-crash classification.
+
+Outcome: the work is **off-roadmap** (not in Phase 1 DoD, not mapped to any of the 7 planned write-ups) and consumed roughly a week of session budget on environmental friction (Bun runtime panics on Windows, MSYS jq CRLF injection, cp1250 subprocess decoding, slow `nvidia-smi` on a consumer GPU) rather than signal about agent capability.
+
+Archived 2026-05-17 to branch `archive/coding-agent-tasks` (full file history preserved). PR `feat/task01-tests-bash-series` (PR #27) remains open as a draft on the archive branch; close or leave dormant. If the coding-agent eval direction is resurrected later, restore from the archive branch and pull the run_eval / run_series harness back in.
+
+### 2026-05-11 - Compose capture + DeepSeek small-model experiment
+
+- Why: capture server launch work in repo-tracked infrastructure instead of leaving it in shell history.
+- Did: added Kimi-K2.6 compose/runbook reference, folded OpenWebUI into compose, added experimental `vllm-small` service for `deepseek-ai/DeepSeek-V4-Flash`. Aligned `infra/compose/README.md` (now `serving/compose/README.md`) with the actual services: Kimi on 8000, DeepSeek on 8004, OpenWebUI on 3000. Updated `docs/plans/2026-05-11-server-work-plan.md` with a top-level note about unpushed server artifacts, the 20% VRAM split, and image-pinning TODO.
+- Range: `b5f0ab7..46e2129`.
+- Human server-session note: DeepSeek-V4-Flash was benchmarked with `request_once`, TTFT, and repeated runs on the server; latest compose has large model + small model + OpenWebUI with the small model capped at 20% VRAM across 8 GPUs; artifacts not yet pushed.
+- Validation: skipped locally (docs/infra only); live server behaviour must be verified from the GPU host.
+- Next: import the unpushed compose + DeepSeek results next session, then verify documented service commands against the live server.
+
+### 2026-05-08 - PR #7 review follow-up + server-metrics scripts
+
+- Why: close PR #7 (server-metrics scripts) cleanly after a `main` conflict with the task-spec tightening, and add a compliance disclaimer so `mlperf_inspired_lite` results cannot be mistaken for official MLPerf.
 - Did:
-  - Added `benchmarks/coding-agent-tasks/01_preflight_env_check/README.md` as a concise human-facing guide: task goal, directory roles, Windows/Linux quickstarts, public-test commands, eval commands, and result files.
-  - Added `benchmarks/coding-agent-tasks/01_preflight_env_check/hidden_tests/bash/run.sh`, mirroring the PowerShell hidden runner contract: reads `hidden_tests/cases.json`, substitutes `{TMP}`/`{EMPTY_DIR}`, runs the agent's `preflight.sh`, validates exit-code/JSON/JSONL assertions, and emits `SUMMARY_JSON` for `run_eval.py`.
-  - Fixed PowerShell public/hidden runners to invoke the tested script through a captured child process, so stderr from the tested script does not abort the runner before `SUMMARY_JSON`.
-  - Fixed `run_eval.py` git helper calls for sandbox-created work-dirs by passing `-c safe.directory=<work-dir>`.
-  - Removed the global `python` requirement from task 01 `init_env.{ps1,sh}`; the project uses `uv run python`.
-  - Added `.gitignore` coverage for local task run directories under `benchmarks/coding-agent-tasks/*/runs*/`.
-  - README now records the current limitation: bash hidden scoring exists, but the bash scaffold and public runner are still placeholders.
-- Validation:
-  - `git diff --check` passed for tracked-file diffs.
-  - No trailing whitespace found in the new README or bash hidden runner.
-  - Bash runner was not executed locally because this Windows environment has no installed WSL distro and no `jq` on PATH.
-  - PowerShell pipeline-only smoke passed end-to-end with `--skip-agent`; expected baseline score from the buggy scaffold: stage1 4/8, stage2 0/2, total 4/10.
-  - Human ran `init_env.ps1` successfully from the Windows Terminal after adding Docker to PATH; `uv run python --version`, Docker, Docker Compose, `nvidia-smi`, and Claude Code were visible.
-  - Human ran `run_eval.py --skip-agent` successfully: stage1 4/8, stage2 0/2, total 4/10.
-  - Human ran a real local Haiku smoke (`claude-haiku-4-5`): the agent solved the task (stage1 8/8, stage2 2/2, total 10/10), but Claude Code/Bun crashed after doing the work (`agent_exit_code=3`, usage tokens unavailable).
-  - `run_eval.py` now passes the prompt to `claude -p` through stdin instead of as a giant argv value; this avoided the initial prompt-argument issue, but Claude Code/Bun can still crash after completing work on Windows.
-- Next: decide how to handle Claude Code transport crashes in scoring: either parse a stable output mode if available, or record `agent_transport_error` separately from task correctness when hidden tests pass. Then implement the real bash `preflight.sh` scaffold and public bash runner, and smoke-test `init_env.sh -> run_eval.py --shell bash` on Linux.
+  - Merged `origin/main` into the PR branch and resolved the only conflict (`docs/agent-state.md`).
+  - `benchmarks/scripts/measure_ttft_once.py`: HTTP/transport/stream errors now produce a v2-schema failure record (`completed=False`, all token-derived metrics `None`, non-null `error` string with type+message). `main()` returns 1 on failure. `measure_stream`: `completed = bool(output_parts)` so role-only streams that end cleanly are not counted as successful generations.
+  - `benchmarks/scripts/sample_gpu_metrics.py`: argparse guards for `--duration-s > 0` and `--samples > 0` while keeping the "at least one required" rule.
+  - Added `benchmarks/scripts/_server_metrics.py` (parsers for vLLM Prometheus text + nvidia-smi CSV, NaN/Inf → None), `benchmarks/scripts/collect_metrics_snapshot.py` (one-shot scrape, schema `nanoserve-mini.server-metrics-snapshot.v1`), `benchmarks/scripts/sample_gpu_metrics.py` (interval CSV + sidecar `gpu_samples_meta.json`, schema `nanoserve-mini.gpu-samples-meta.v1`). All schemas centralised in `benchmarks/scripts/_schemas.py`.
+  - Added MLPerf compliance-status section to `docs/operations/benchmark-methodology.md` (blockquote + side-by-side requirements table + verbatim portfolio-language paragraph).
+  - Tests: 67 → 95 → 102 passing across server-metrics parsers, snapshot main(), sampler loop with `FakeClock`, and the failure-record paths in `measure_ttft_once`.
+- Commands: `uv run ruff check .` (pass), `uv run pytest -q` (102 passed).
+- Next: live-run end-to-end on the server, or write the fact-table aggregator (Wave C), or record the working TP=8 `vllm serve` command in a runbook.
 
-### 2026-05-16 - Coding-agent task 01_preflight_env_check (step 2: scaffold + runner)
+### 2026-05-07/08 - Benchmark normalisation + coding-agent task specs
 
-- Why: pair-built with subagent the full step 2 of the eval pipeline. Goal: real buggy preflight + tests + own Python runner that invokes claude and scores hidden tests.
+- Why: bring the three benchmark scripts to consistent `methodology`, `benchmark_mode`, `--run-id`, `git_commit`, and dashboard-ready schema; then settle the four synthetic coding-agent task specs (PowerShell / Python / C++ / C#).
 - Did:
-  - Real `scaffold/powershell/preflight.ps1` with 5 checks (docker/gpus/disk/ports/versions) and 4 seeded bugs (1=docker available always true; 2=disk string-compare; 3=port timeout=free; 4=exit always 0). Bugs renumbered 1-4 (was 1/3/4/5).
-  - Refactored: `--min-free-gb` → `--min-free-mb` (smaller unit makes lex vs num pairs differ more often → bug 2 discriminating test possible).
-  - Added `--host <ip>` flag (default 127.0.0.1) on port check, so hidden test can use 198.51.100.1 (TEST-NET-2, guaranteed non-routable) to force timeout → bug 3 discriminating test possible.
-  - `PROMPT.md` rewritten in English with new flags and bug descriptions.
-  - `public_tests/cases.json` (4 cases) + `public_tests/powershell/run.ps1` (real runner: dotted-path assertions, env restore, JSONL line/field assertions, `{TMP}`/`{EMPTY_DIR}` placeholder substitution).
-  - `hidden_tests/cases.json` (10 cases incl. bug 1/2/3/4 discriminating cases) + `hidden_tests/powershell/run.ps1` (same logic, emits `SUMMARY_JSON <json>` parsed by run_eval).
-  - `run_eval.py` (stdlib only): invokes `claude -p <prompt> --output-format json --model X --permission-mode acceptEdits`, parses usage tokens, runs hidden tests against work-dir, auto-commits agent edits, writes `results.jsonl` with schema `preflight-env-check-eval.v1`. Bonus `--skip-agent` for pipeline smoke tests.
-  - `init_env.{ps1,sh}` translated to English; next-step command now points at `run_eval.py`.
-  - Old `01_powershell_environment_and_backup/` removed; `benchmarks/coding-agent-tasks/README.md` task table updated.
-  - Bash variant scaffolds + hidden tests left as placeholders — next iteration (server smoke).
-- Validation: no smoke test executed in this commit (context budget). Pipeline must be smoke-tested on laptop before pointing at real models on the server.
-- Next: smoke test `init_env.ps1 → run_eval.py` with claude-haiku-4-5 on laptop (3 runs). Then design `scripts/run_bench.{ps1,sh}` driver + `scripts/aggregate_results.py` per-task aggregator (decisions: aggregator scans `runs/*/results.jsonl` directly, median per stage, --task flag for reuse). Then bash variant + server smoke.
+  - `benchmarks/scripts/_metrics.py`: extended `RunControls` with `run_id`, `script_name`, `git_commit`, `concurrency`, `run_uuid`, structured `workload_spec`, plus `null_server_metrics()` helper and `get_git_commit()` / `resolve_output_path()` helpers.
+  - `benchmarks/scripts/_client.py`: `chat_completion_stream` now injects `stream_options.include_usage=true` by default (caller wins).
+  - All three benchmark scripts now write per-mode JSON to `results/runs/<run_id>/<mode>/` with token-level metrics (TPOT, prompt/completion tokens, output tokens/s). Schemas: `request-once.v2`, `ttft-once.v2`, `sequential-bench.v3` (+ `sequential-bench-row.v3`).
+  - Tightened all four task specs on `main` (commits `c149c79`, `69d9f6f`, `57a5e0b`, `f83ef7a`) — these were the input to the now-archived coding-agent harness work.
+  - Added "Result schema contract" section to `docs/operations/benchmark-methodology.md`.
+- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 67 passing after this wave.
+- Next: server-metrics scripts (next wave, see 2026-05-08 entry).
 
-### 2026-05-16 - New coding-agent task 01_preflight_env_check (init scripts only)
+### 2026-05-06 - Server bootstrap + Kimi-K2.6 first serve
 
-- Why: existing first task (`01_powershell_environment_and_backup`) was too bloated (335-line spec, 6 stages, no scaffold) for the planned model-vs-model bench. New task is being designed step-by-step with the user: goal is to compare LLM coding-agents on the same task, scored by % hidden tests passed + total tokens consumed.
-- Did:
-  - Added new task directory `benchmarks/coding-agent-tasks/01_preflight_env_check/` with two cross-platform init scripts: `init_env.ps1` (Windows laptop, PowerShell variant) and `init_env.sh` (Linux server, bash variant).
-  - Init script behavior: check env tools (claude, git, python, uv; jq only for bash), create work-dir `<base-dir>/<YYYY-MM-DD>_<model-sanitized>_run<NN>/`, copy scaffold (`PROMPT.md`, `preflight.<ext>`, `public_tests/{cases.json,run.<ext>}`), `git init` + baseline commit, print next-step harness command.
-  - Added placeholder scaffold files (PROMPT.md, preflight stubs, empty `cases.json`, runner stubs) so init can complete end-to-end. Actual buggy preflight + real test cases are step 2 of the pipeline.
-  - Layout in repo: shared `PROMPT.md` and `public_tests/cases.json` (deduplicated across shells); per-shell `scaffold/<shell>/preflight.<ext>` and `public_tests/<shell>/run.<ext>`.
-- Validation: smoke-tested `init_env.ps1` on Windows laptop — 3 scenarios pass: success (exit 0, work-dir with all 4 files + git baseline commit), repeated invocation (exit 1, non-empty work-dir error), missing `-Model` (exit 1, native PS MissingMandatoryParameter). `init_env.sh` not yet tested on Linux server.
-- Next: design step 2 of pipeline — real `preflight.<ext>` with bugs 1/3/4/5, real `cases.json`, real per-shell runners. Also decide fate of old `01_powershell_environment_and_backup/` (delete / archive / overwrite). Plan file: `C:\Users\Dom\.claude\plans\przygotujemy-dzis-od-nowa-glowing-crescent.md`.
-
-### 2026-05-16 - Starter scaffolds for coding-agent tasks 01-04 (PR #22)
-
-- Why: after the coding-agent harness landed, each synthetic task needed concrete `starter/`, `public/`, and `hidden/` scaffolds so the next server session can run agent evaluations instead of only reading specs.
-- Did:
-  - Added task-specific README files and scaffold directories under `benchmarks/coding-agent-tasks/<id>/{starter,public,hidden}/` for all four tasks.
-  - Task 01 PowerShell starter covers export/environment backup behavior with public and hidden Pester tests.
-  - Task 02 Python starter covers OpenAI-compatible streaming CLI behavior with pytest public/hidden tests.
-  - Task 03 C++ starter covers `TokenBuffer` correctness and hot-path behavior with CMake public/hidden tests.
-  - Task 04 C# starter covers allocation-aware query parsing with xUnit public/hidden tests.
-  - Adjusted scaffold test runners/configs to accept both repo smoke layout (`<task>/starter`) and harness layout (starter contents copied directly into `WORK_DIR`).
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed; `git diff --check` clean. Task 01 public/hidden runners execute locally via Windows PowerShell and fail on intentional starter bugs. Task 02 public/hidden pytest suites import correctly and fail on intentional starter bugs. Task 03/04 runner execution still needs `cmake`/compiler and `dotnet`.
-- Note: task 01 starter (`01_powershell_environment_and_backup/`) is being replaced by `01_preflight_env_check/` in the follow-up commits on this branch; the dir is removed in commit `ad549b7`.
-- Next: run C++/C# scaffold smoke checks (tasks 03/04) on a machine with `cmake` and `dotnet` before using the harness with MiniMax-M2.7 / DeepSeek-V4-Flash.
-
-### 2026-05-13 - Coding-agent harness and v1 row schema
-
-- Why: next server session (per `docs/plans/2026-05-11-server-work-plan.md` Part A) runs the 4 synthetic coding tasks against MiniMax-M2.7 / DeepSeek-V4-Flash through Claude Code CLI / OpenCode. Before the session, the suite needed a non-interactive harness, row schema, and docs that define the expected scaffold layout.
-- Did:
-  - Added `scripts/run_coding_agent_task.py` (wrapper harness: copies `<task>/starter/` + `<task>/public/` into a temp work-dir, renders prompt from `TASK.md` "## Agent prompt" section, runs `--agent-command` with `{prompt}` or `{prompt_file}` substitution and timeout, runs fresh public tests plus hidden test runners, appends one `coding-agent-eval-row.v1` row to `results/runs/<run_id>/coding_agent_eval/results.jsonl`).
-  - Added `tests/test_run_coding_agent_task.py` (17 tests; injected `now`/`runner`/`git_runner`/`server_metrics_collector` for unit testability).
-  - Extended `scripts/_schemas.py` with `MODE_CODING_AGENT_EVAL` and `SCHEMA_CODING_AGENT_EVAL_ROW = "nanoserve-mini.coding-agent-eval-row.v1"`.
-  - Documented the expected `<task>/{starter,public,hidden}/` scaffold layout; actual starter scaffolds are queued in the follow-up `feat/coding-agent-starter-scaffolds` PR.
-  - Updated `benchmarks/coding-agent-tasks/README.md` (layout + harness section, v1 row schema), each `TASK.md` 01-04 (appended "Harness invocation" section), `docs/operations/benchmark-methodology.md` (new `coding_agent_eval` mode + section), `docs/plans/2026-05-11-server-work-plan.md` A4.3/A6 (point at harness instead of manual metrics checklist).
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 119 passed (102 existing + 17 harness tests). Per-starter build/test smoke checks deferred until the scaffold PR lands.
-- Next: merge the harness PR, then stack the starter-scaffold PR. On the next server session, after `git pull`, run `bash benchmarks/coding-agent-tasks/<id>/public/run.sh` against each starter to confirm the expected red/green test split before pointing the harness at MiniMax-M2.7.
-
-### 2026-05-13 - Codex team workflow added to AGENTS
-
-- Why: capture the successful team-lead plus sub-agent workflow as reusable guidance for future Codex work.
-- Did: added an English `Codex team workflow` section to `AGENTS.md` covering solo-vs-team triage, team lead responsibilities, sub-agent task boundaries, central integration, draft PR self-review, and ready-for-review gates.
-- Validation: `git diff --check` passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
-- Next: open a small PR for review.
-
-### 2026-05-13 - Documentation navigation cleanup
-
-- Why: test the team-lead plus sub-agent workflow on a small docs-only task and remove stale paths after the docs tree reorganization.
-- Did: clarified `docs/README.md` as the documentation map, updated live references from old `docs/agent-state.md` / `ROADMAP.md` paths to `docs/operations/agent-state.md` / `docs/project/roadmap.md`, and fixed stale learning/template references.
-- Validation: `git diff --check` passed; local Markdown relative-link check passed. `ruff` and `pytest` intentionally skipped because the change is docs-only.
-- Next: open a small PR for review, then merge after documentation review is acceptable.
-
-### 2026-05-12 - Codex repo command approvals relaxed
-
-- Why: reduce repeated approval clicks for routine `git` and `gh` work in this repo.
-- Did: set project Codex `approval_policy` to `never` while keeping `sandbox_mode = "workspace-write"`.
-- Validation: TOML parsed successfully; `git diff --check` passed.
-- Next: open a draft PR for review.
-
-### 2026-05-12 - Roadmap and template link cleanup
-
-- Why: keep roadmap as a stable direction/scope document and align agent templates with the reorganized docs tree.
-- Did: removed obsolete reviewer smoke-test plan, updated template links to `docs/operations/agent-state.md`, and clarified that current status belongs in agent-state rather than roadmap.
-- Validation: `git diff --check` passed; code checks skipped for docs-only changes.
-- Next: open a draft PR for human review.
-
-
-### 2026-05-12 - docs README created for issue #14
-
-- Why: GitHub issue #14 requested a `docs/README.md` based on `docs/index.md`, with formatting fixed and links checked.
-- Did: added `docs/README.md` as the canonical documentation map, removed the obsolete `docs/index.md`, and fixed stale documentation links in the root `README.md`.
-- Validation: tracked Markdown link check passed; `git diff --check`, `uv run ruff check .`, and `uv run pytest` passed.
-- Next: open PR for review, then merge after documentation review.
-
-
-### 2026-05-12 - Validation rules made conditional
-
-- Why: docs-only changes should not require Python lint/test validation when they do not affect code, executable snippets, generated docs, or code-adjacent configuration.
-- Did:
-  - Updated `CLAUDE.md` so `uv sync --extra dev`, `uv run ruff check .`, and `uv run pytest` are the standard path for code changes, while docs-only changes default to documentation-appropriate checks such as `git diff --check`, link checks, or rendering checks when relevant.
-  - Updated `AGENTS.md` with the same conditional validation rule for Codex.
-- Validation: documentation-only policy change; `git diff --check` passed. `ruff` and `pytest` intentionally skipped under the new docs-only rule.
-- Next: keep PR summaries explicit about which checks were run or intentionally skipped.
-
-### 2026-05-12 - AGENTS.md collaboration workflow updated
-
-- Why: issue #12 requested that the Codex entrypoint match the reorganized docs tree and describe the intended human + ChatGPT + Codex App + PR review workflow.
-- Did:
-  - Updated `AGENTS.md` links from root `ROADMAP.md` / `docs/agent-state.md` to `docs/project/roadmap.md` and `docs/operations/agent-state.md`.
-  - Added a "Human + Codex collaboration workflow" section covering ChatGPT task shaping, small GitHub issues, Codex App branch implementation, PR summary/validation, manual human review, Codex PR review, and human final merge.
-  - Added explicit reminders not to commit secrets, model weights, Hugging Face caches, large benchmark artifacts, large logs, Nsight traces, database dumps, or unrelated files.
-- Validation: `uv sync --extra dev` passed; `uv run pytest` passed with 102 tests. `uv run ruff check .` was skipped at user request because the change is docs-only.
-- Next: human review of PR #13, then merge after validation/review are acceptable.
-
-
-
-### 2026-05-12 - Documentation tree reorganized
-
-- Why: make `docs/` readable before further repo-wide cleanup, while preserving important planning, operations, learning, runbook, template, and handoff content.
-- Did:
-  - Grouped documentation by category:
-    - `docs/project/` for project direction and scope.
-    - `docs/operations/` for agent state, infrastructure, benchmark methodology, and runbooks.
-    - `docs/learning/` for reading lists, NVIDIA courses, paper-reading guide, and paper notes.
-    - `docs/plans/`, `docs/templates/`, and `docs/weekly/` kept as dedicated categories.
-  - Added `docs/index.md` as the documentation map.
-  - Fixed stale links after renaming/moving docs.
-  - Updated `.gitignore` so local paper PDFs under `docs/**/papers/` and Claude local worktrees under `.claude/worktrees/` stay outside Git.
-- Validation:
-  - `git ls-files docs | Sort-Object` showed the new docs layout on local `main`.
-  - `git ls-tree -r --name-only origin/main docs | Sort-Object` showed the same layout on `origin/main`.
-  - `git status --short` was clean after the ignore update.
-- Next:
-  - Continue repo cleanup outside `docs/`: root files, scripts, infra, benchmarks, results, and tests.
-  - Keep future cleanup commits category-scoped and avoid deleting content before inventory/classification.
-
-### 2026-05-11 - Server plan updated after DeepSeek run
-
-- Why: keep `docs/plans/2026-05-11-server-work-plan.md` aligned with the actual post-session state.
-- Did: added a top-level update noting unpushed server artifacts, completed DeepSeek-V4-Flash request/TTFT/repeated benchmarks, compose VRAM split, image-pinning TODO, and next-session comparison work.
-- Validation: docs-only; no code tests run.
-- Next: push the plan update, then start the next server session by importing the missing compose/results artifacts.
-
-### 2026-05-11 - Compose README aligned with YAML
-
-- Why: remove stale single-node DEP/runbook text from `infra/compose/README.md`.
-- Did: rewrote the README around the actual compose services: Kimi on 8000, DeepSeek-V4-Flash `vllm-small` on 8004, and OpenWebUI on 3000.
-- Validation: `git diff --check` OK; no code tests run for docs-only change.
-- Next: import the unpushed server compose/results, then verify the documented service commands against the live server.
-
-### 2026-05-11 - Human server-session note: unpushed DeepSeek benchmark work
-
-- Why: record server work that was completed but not yet pushed back into the repo.
-- Did: DeepSeek-V4-Flash was benchmarked with request_once, TTFT, and repeated runs; latest server compose includes large model, small model, and OpenWebUI, with small model capped at 20% VRAM across 8 GPUs.
-- Validation: server-side only; artifacts and exact commands still need to be imported.
-- Next: first action next session is to recover/push server artifacts, then finish small-model coding tests and compare against one more downloaded small model.
-
-### 2026-05-11 - Compose capture for Kimi/OpenWebUI and small-model attempt
-
-- Why: capture today's server launch work in repo-tracked infrastructure instead of leaving it only in shell history.
-- Did: added a Kimi-K2.6 compose/runbook reference, folded OpenWebUI into compose, and added an experimental `vllm-small` service for `deepseek-ai/DeepSeek-V4-Flash`.
-- Range: `b5f0ab7..46e2129` (5 infra/docs commits, plus one prior state-refresh commit skipped)
-- Validation: skipped locally; live server behavior must be verified from the GPU host.
-- Next: reconcile compose against the exact working server command, then record success/failure for Kimi, OpenWebUI, and the `vllm-small` service.
-
-### 2026-05-08 - Refreshed state after PR #7 merge
-
-- Why: align `agent-state.md` with the final merged state after PR #7 and remove stale "add metrics scripts" next-step wording.
-- Did: updated summary cursor to `b5f0ab7`; marked dashboard-ready schema, server-metrics scripts, MLPerf compliance disclaimer, and tightened task specs as landed; changed next steps from "add metrics scripts" to live server validation and benchmark execution; added example command sequence using one shared `RUN_ID`.
-- Validation: documentation-only update through GitHub connector; no tests rerun.
-- Next: pull latest `main` on the server, validate metrics and benchmark scripts live against Kimi-K2.6 TP=8, then proceed to MiniMax-M2.7 / coding-agent / dual-model work.
-
-### 2026-05-08 - PR #7 review follow-up + merge with main
-
-- Why: PR #7 went `dirty` after the Task 01-04 spec tightening on main; reviewer also flagged three correctness issues in the new code.
-- Did:
-  - Merged `origin/main` into the PR branch and resolved the only conflict (`docs/agent-state.md`); kept both narratives (server-metrics work + coding-agent task tightening).
-  - `scripts/measure_ttft_once.py`: HTTP/transport/stream errors now produce a v2-schema failure record (controls + request + server_metrics stub preserved, `completed=False`, all token-derived metrics `None`, non-null `error` string with type and message). `main()` returns 1 on failure and prints the error to stderr. Helper `_failure_result()` keeps the e2e_seconds field meaningful (elapsed-until-failure).
-  - `scripts/measure_ttft_once.measure_stream`: `completed` is now `bool(output_parts)` rather than always True. A role-only stream that ends cleanly returns `completed=False` so dashboards do not count zero-token responses as successful generations.
-  - `scripts/sample_gpu_metrics.py`: argparse-side guards added for `--duration-s > 0` and `--samples > 0` when provided; the existing "at least one of them required" rule is preserved.
-  - Tests: added `test_measure_stream_handles_empty_stream`, extended the role-only test to assert `completed is False`, added `test_main_writes_failure_record_on_connect_error` and `test_main_writes_failure_record_on_http_5xx` (failure record shape, rc=1, error string contents, strict JSON, server_metrics stub kept, workload_spec kept), added 4 sampler argument-guard tests (zero/negative duration, zero/negative samples). 95 → 102 passing.
-- Commands run: `uv run ruff check .` (pass), `uv run pytest -q` (102 passed).
-- Next: unchanged — pick from live-run on server, fact-table aggregator (Wave C), or recording the working TP=8 `vllm serve` command.
-
-### 2026-05-08 - Tightened all coding-agent task specifications
-
-- Why: close the task-spec review loop before moving to metrics scripts and server execution.
-- Did: merged PR #3 for Task 01 PowerShell; applied Task 02 Python, Task 03 C++, and Task 04 C# TASK.md updates directly to `main` because their PRs conflicted only on stale `docs/agent-state.md` hunks; closed PRs #4/#5/#6 as superseded after preserving their intended TASK.md changes.
-- Commits: `c149c79` Task 01, `69d9f6f` Task 02, `57a5e0b` Task 03, `f83ef7a` Task 04.
-- Current repo state: all four synthetic coding-agent task specs are tightened and ready for starter-repo/hidden-test generation later.
-- Validation: not rerun after docs-only updates.
-- Next: implement metrics snapshot/sampling scripts, then run live `--run-id` benchmark sequence on the server.
-
-### 2026-05-08 - Compliance-status disclaimer in benchmark methodology
-
-- Why: make it impossible to mistake `mlperf_inspired_lite` results for MLPerf-compliant submissions in write-ups, slides, or CV claims, and give a ready-to-use phrasing for that distinction.
-- Did: added a "Compliance status" section near the top of `docs/benchmark-methodology.md` (right after the intro, before "Why MLPerf matters") with: a blockquote warning, a side-by-side table of what MLPerf requires vs what this lab provides, what the lab borrows from MLPerf (scenarios, warmup/measured discipline, controls), and a verbatim communication-rule paragraph for portfolio/CV use. The `methodology` label in result files remains `mlperf_inspired_lite` — the doc now reinforces why the `_lite` matters.
-- Validation: `uv run ruff check .` (pass), `uv run pytest -q` (95 passed).
-- Next: unchanged — pick from live-run on server, aggregator (Wave C), or recording the working TP=8 `vllm serve` command.
-
-### 2026-05-08 - Server metrics scripts (collect_metrics_snapshot, sample_gpu_metrics)
-
-- Why: populate the `server_metrics` null-stub block introduced this morning so benchmark JSON files can report real GPU/KV/prefix-cache numbers; provide interval GPU sampling for time-series GPU charts.
-- Did:
-  - Added `scripts/_server_metrics.py` with two pure parsers (`parse_prometheus_text`, `parse_nvidia_smi_csv`), an `nvidia-smi` query field set used by both scripts (`NVIDIA_SMI_QUERY_FIELDS`, `NVIDIA_SMI_FIELD_MAP`, `CSV_COLUMNS`), helpers `first_value`, `select_vllm_aggregate`, `total_gpu_memory_used_gb`. NaN/+Inf/-Inf are converted to `None` so strict-JSON output stays valid.
-  - Added `scripts/collect_metrics_snapshot.py`: one-shot scrape of vLLM `/metrics` + `nvidia-smi`. Output: `results/runs/<run_id>/server_metrics/snapshot_<phase>.json` with phases `pre`/`mid`/`post`/`adhoc`. Writes `aggregate` block matching the `server_metrics` stub keys (`gpu_memory_used_gb`, `kv_cache_usage`, `prefix_cache_hit_rate`). Best-effort: scrape failures are recorded inline, file is still written. Schema: `nanoserve-mini.server-metrics-snapshot.v1`.
-  - Added `scripts/sample_gpu_metrics.py`: interval CSV sampling via repeated `nvidia-smi` calls. Output: `results/runs/<run_id>/server_metrics/gpu_samples.csv` plus sidecar `gpu_samples_meta.json` (schema `nanoserve-mini.gpu-samples-meta.v1`) with `interval_ms`, `duration_s`, `samples`, run_id/run_uuid, summary (ticks, samples_written, errors). Requires `--duration-s` or `--samples`. Loop body, clocks, and runner are injectable for tests.
-  - Tests: `tests/test_server_metrics.py` (parsers, NaN/Inf handling, nvidia-smi malformed rows, total-GPU-memory aggregator), `tests/test_collect_metrics_snapshot.py` (mocked httpx for /metrics + mocked subprocess for nvidia-smi; success/5xx/missing-cmd/timeout/nonzero-exit paths; main() with `--run-id` and `--output`; strict JSON), `tests/test_sample_gpu_metrics.py` (sample loop with FakeClock, deadline stop, error-resilient loop, CSV + meta sidecar; CLI guards on interval and stop conditions). 67 → 95 passing.
-  - `_schemas.py` gained `SCHEMA_SERVER_METRICS_SNAPSHOT` and `SCHEMA_GPU_SAMPLES_META` constants.
-  - `docs/benchmark-methodology.md`: extended `--run-id` layout to include `server_metrics/` directory; new "Server-side metrics" section describing both scripts and the aggregator hook.
-- Commands run: `uv run ruff check .` (pass after autofix sorted imports in three new test files), `uv run pytest -q` (95 passed).
-- Decision: aggregator (planned `scripts/aggregate_runs.py`) deferred to a later session; this session's focus was the producer side.
-- Next: pick one of (a) live-run end-to-end on the server, (b) write the fact-table aggregator, (c) record the working TP=8 `vllm serve` command/runbook.
-
-### 2026-05-08 - Benchmark harness review + Wave A+B schema upgrade
-
-- Why: validate yesterday's benchmark scripts against the MLPerf-inspired-lite methodology and against the ROADMAP Benchmark Contract; tighten the JSON output shape so it can feed a future dashboard.
-- Did:
-  - Added `scripts/_schemas.py` with shared `METHODOLOGY`, mode identifiers, and schema-version constants imported by all three scripts.
-  - Extended `RunControls` with `concurrency`, `run_uuid` (unique per execution; `make_run_uuid()` helper), and structured `workload_spec` (built by `build_workload_spec()`); added `null_server_metrics()` stub helper.
-  - `_client.py` now injects `stream_options.include_usage=true` by default in `chat_completion_stream` (caller-supplied options win); added `extract_stream_usage`.
-  - `measure_ttft_once.py` now records `prompt_tokens`, `completion_tokens`, `total_tokens`, `tpot_seconds` (decode-only: `(e2e - ttft) / max(1, completion_tokens - 1)`), `output_tokens_per_second`, `server_metrics` stub, structured `workload_spec`, `run_uuid`, explicit `concurrency=1`. Schema bumped `ttft-once.v1 → v2`.
-  - `run_sequential_benchmark.py` per-row JSONL gains `tpot_seconds`, `prompt_tokens`, `completion_tokens`, `output_tokens_per_second`; summary gains `summary.tpot_seconds`, `summary.prompt_tokens`, `summary.completion_tokens` aggregate blocks and `summary.output_tokens_per_second` (token-level throughput); top-level `server_metrics` stub. Schema bumped `sequential-bench.v2 → v3`, `sequential-bench-row.v2 → v3`.
-  - `request_once.py` schema bumped `request-once.v1 → v2`; record now carries `controls.run_uuid`, `controls.concurrency`, `controls.workload_spec`, and `server_metrics` stub.
-  - Added `docs/benchmark-methodology.md` "Result schema contract" section documenting the dashboard-facing field/type/units table per mode.
-  - Tests updated and extended (49 → 67 passing): new tests for `make_run_uuid`, `null_server_metrics`, `build_workload_spec`, `compute_tpot_seconds`, `compute_output_tokens_per_second`, usage chunk handling in `measure_stream`, `chat_completion_stream` injecting `stream_options.include_usage`, sequential summary token aggregates, and server_metrics stub in summary.
-- Commands run: `uv sync --extra dev`, `uv run ruff check .` (pass), `uv run pytest -q` (67 passed).
-- Decision: not bumping ROADMAP scope — these are MLPerf-inspired-lite refinements consistent with the existing Benchmark Contract section. Server-side `gpu_memory_used_gb`, `kv_cache_usage`, `prefix_cache_hit_rate` remain `null` until `scripts/collect_metrics_snapshot.py` lands.
-- Next: implement `scripts/collect_metrics_snapshot.py` and `scripts/sample_gpu_metrics.py` to populate `server_metrics`; then run the live `--run-id` benchmark sequence on the server.
-
-### 2026-05-07 - End-of-day state after benchmark/task merges
-
-- Why: close the session after merging the coding task specs and benchmark script normalization work.
-- Did: merged PR #1 (`bfca83b`) with synthetic coding-agent task specs for Python, C++, and C#; merged PR #2 (`fb9f878`) with normalized MLPerf-inspired lite benchmark outputs and `--run-id` support.
-- Current repo state: task specs are complete at the specification level; benchmark scripts are ready for live server validation; metrics scripts are still pending.
-- Validation: relied on PR #2 reported `ruff`/`pytest` pass; not rerun by ChatGPT connector after merge.
-- Next: implement metrics snapshot/sampling scripts, then run live `--run-id` benchmark sequence on the server.
-
-### 2026-05-07 - Normalize mlperf-lite benchmark outputs
-
-- Why: bring all three benchmark scripts to consistent `methodology`, `benchmark_mode`, `--run-id`, and `git_commit` support per task spec.
-- Did: extended `RunControls` in `scripts/_metrics.py` with `run_id`, `script_name`, `git_commit` and added `get_git_commit()` (best-effort) and `resolve_output_path()` helpers; updated `request_once.py` to write JSON (schema `nanoserve-mini.request-once.v1`, mode `singlestream_lite_correctness`) with `--output`/`--run-id` flags; updated `measure_ttft_once.py` to add `methodology`, `benchmark_mode`, `error: null`, `--run-id` and controls fields; updated `run_sequential_benchmark.py` to schema v2 (`sequential-bench.v2` / `sequential-bench-row.v2`), mode `singlestream_lite_repeated`, `--run-id`, measured-only throughput in summary; updated tests; added `--run-id` output layout section to `docs/benchmark-methodology.md`.
-- Commands run: reported by Claude Code in PR #2: `uv run ruff check .` (pass), `uv run pytest` (pass).
-- Next: run first live benchmark against vLLM endpoint using `--run-id` to verify end-to-end write path on the server.
-
-### 2026-05-07 - Completed coding-agent synthetic task specs
-
-- Why: complete the coding-agent benchmark suite specifications for tasks 02/03/04.
-- Did: added TASK.md specs for Python streaming CLI, C++ token buffer hot path, and C# allocation-aware parser refactor under `benchmarks/coding-agent-tasks/`.
-- Validation: repo status checked by Codex; lint/tests were unavailable in the Codex environment for the docs-only PR.
-- Next: later generate starter task repositories and hidden tests from the specs.
-
-### 2026-05-06 - Current server state confirmed
-
-- Why: make the live server state explicit before planning further tests.
-- Did: recorded that Kimi-K2.6 is downloaded and running via `vllm serve` with TP=8; DEP did not work; OpenWebUI is connected and interactive; `check_server_env.py` output is saved in `results/raw/server_env_snapshot.json`.
-- Snapshot: Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8x H200 NVL 143771 MiB, driver 595.58.03, CUDA 13.2.
-- Validation: local docs check only; no server benchmark run in this update.
-- Next: capture the exact working `vllm serve` command, tune GPU memory settings for a second model, then run smoke/TTFT/benchmark scripts.
-
-### 2026-05-06 - Codex pull review and repo cleanup
-
-- Why: sync local laptop with Claude's latest work and remove obsolete/redundant repo artifacts.
-- Did: pulled `origin/main` to `1ba9cc6`, verified tidy-docs/sync-state additions, removed `CODEX_BOOTSTRAP_CONFIG_TASK.md`, removed tracked `docs/handoff-archive/2026-05.md`, and restored current server status to TP=8/OpenWebUI.
-- Note: current templates now say Git is the archive; no separate handoff archive directory should be recreated. Tracked `.claude/commands/sync-state.md` and `.claude/settings.json` remain present; tidy-docs slash command was not tracked.
-- Validation: skipped (docs-only cleanup).
+- Why: get a real vLLM run on the 8×H200 NVL server.
+- Did: ran `benchmarks/scripts/check_server_env.py` and committed `results/raw/server_env_snapshot.json` (Ubuntu 24.04.2, Python 3.12.11, uv 0.11.8, Docker 28.5.0 / Compose v2.39.4, 8× H200 NVL 143771 MiB, driver 595.58.03, CUDA 13.2). Installed vLLM Docker image `vllm/vllm-openai:v0.20.0-cu130`. Downloaded Kimi-K2.6 into named volume `nanoserve-hf-cache`. Got Kimi serving via `vllm serve` with TP=8 + Eagle3 speculative decoding (`lightseekorg/kimi-k2.6-eagle3-mla`); single-node DEP attempt did not work for this run. Stood up OpenWebUI alongside, confirmed it answers requests through the OpenAI-compatible endpoint. Pulled `origin/main` to `1ba9cc6` and removed obsolete repo artifacts (`CODEX_BOOTSTRAP_CONFIG_TASK.md`, tracked `docs/handoff-archive/2026-05.md`).
+- Validation: docs-only cleanup; server behaviour verified manually.
 - Next: commit the exact working TP=8 launch configuration, then run scripted smoke/TTFT/benchmark commands against the live vLLM endpoint.
 
 > Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.

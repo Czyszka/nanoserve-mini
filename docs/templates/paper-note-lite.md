@@ -34,7 +34,7 @@ to ignore.>
 ## What I can measure in nanoserve-mini
 
 - **Hypothesis:** <what should change if the paper's claim holds in our setup?>
-- **Script:** `scripts/measure_ttft_once.py` / `scripts/run_sequential_benchmark.py` / future harness / vLLM `/metrics` scrape
+- **Script:** `benchmarks/scripts/measure_ttft_once.py` / `benchmarks/scripts/run_sequential_benchmark.py` / future harness / vLLM `/metrics` scrape
 - **Workload:** <model, prompt shape, output length, concurrency, cache pattern>
 - **Metrics:** <TTFT, TPOT, E2E, throughput, p50/p95/p99, memory/cache>
 - **Expected signal:** <result that would support or reject the claim>

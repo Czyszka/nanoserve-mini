@@ -20,7 +20,8 @@ Current execution context, infrastructure notes, benchmark methodology, and runb
 - [Agent state](operations/agent-state.md) - current working context, repo state, next actions, and AI-agent coordination notes.
 - [Benchmark methodology](operations/benchmark-methodology.md) - benchmark rules, required measurements, workload conventions, and reproducibility expectations.
 - [Infrastructure](operations/infrastructure.md) - laptop/server/cloud workflow, GitHub process, secrets policy, and results policy.
-- [Runbooks](operations/runbooks/README.md) - practical operational instructions for server and vLLM work.
+- [Runbooks](../serving/runbooks/README.md) - practical operational instructions for server and vLLM work.
+- [Compose stack](../serving/compose/README.md) - Docker Compose definitions for vLLM + OpenWebUI on the server.
 
 ## Learning
 

@@ -100,8 +100,8 @@ Purpose:
 
 Current scripts:
 
-- `scripts/request_once.py` — smoke test, one non-streaming request,
-- `scripts/measure_ttft_once.py` — one streaming request with TTFT and E2E.
+- `benchmarks/scripts/request_once.py` — smoke test, one non-streaming request,
+- `benchmarks/scripts/measure_ttft_once.py` — one streaming request with TTFT and E2E.
 
 This is not a throughput benchmark. It is the first correctness and latency sanity
 check.
@@ -117,7 +117,7 @@ Purpose:
 
 Current script:
 
-- `scripts/run_sequential_benchmark.py`
+- `benchmarks/scripts/run_sequential_benchmark.py`
 
 This is still not a realistic serving-load benchmark. It is a controlled baseline
 for TTFT and E2E behavior.
@@ -132,7 +132,7 @@ Purpose:
 
 Future script:
 
-- `scripts/run_offline_benchmark.py`
+- `benchmarks/scripts/run_offline_benchmark.py`
 
 Expected behavior:
 
@@ -151,7 +151,7 @@ Purpose:
 
 Future script:
 
-- `scripts/run_server_like_benchmark.py`
+- `benchmarks/scripts/run_server_like_benchmark.py`
 
 Expected behavior:
 
@@ -202,7 +202,7 @@ results/runs/<run_id>/coding_agent_eval/
 
 Each row in `results.jsonl` carries schema
 `nanoserve-mini.coding-agent-eval-row.v1` (`SCHEMA_CODING_AGENT_EVAL_ROW` in
-`scripts/_schemas.py`). Key fields:
+`benchmarks/scripts/_schemas.py`). Key fields:
 
 - `task_id`, `agent`, `model`, `base_url`, `run_id`, `run_uuid`
 - `started_at`, `ended_at`, `wall_clock_seconds`, `timed_out`
@@ -213,7 +213,7 @@ Each row in `results.jsonl` carries schema
 - `server_metrics` — paths to pre/post snapshot JSONs
 - `transcript_path`
 
-Driver: `scripts/run_coding_agent_task.py`. The harness copies
+Driver: `benchmarks/scripts/run_coding_agent_task.py`. The harness copies
 `starter/` + `public/` into a temp work-dir, runs the agent CLI, then runs a
 fresh copy of `public/run.{sh,ps1}` and `hidden/run.{sh,ps1}` outside the
 agent's work-dir against the resulting solution.
@@ -225,13 +225,13 @@ All results carry `"methodology": "mlperf_inspired_lite"`.
 
 | Script | `benchmark_mode` | Schema |
 |---|---|---|
-| `scripts/request_once.py` | `singlestream_lite_correctness` | `nanoserve-mini.request-once.v2` |
-| `scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
-| `scripts/run_sequential_benchmark.py` (summary) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
-| `scripts/run_sequential_benchmark.py` (row) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
-| `scripts/run_coding_agent_task.py` (row) | `coding_agent_eval` | `nanoserve-mini.coding-agent-eval-row.v1` |
+| `benchmarks/scripts/request_once.py` | `singlestream_lite_correctness` | `nanoserve-mini.request-once.v2` |
+| `benchmarks/scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
+| `benchmarks/scripts/run_sequential_benchmark.py` (summary) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
+| `benchmarks/scripts/run_sequential_benchmark.py` (row) | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
+| `benchmarks/scripts/run_coding_agent_task.py` (row) | `coding_agent_eval` | `nanoserve-mini.coding-agent-eval-row.v1` |
 
-All identifiers are exported from `scripts/_schemas.py` so downstream consumers
+All identifiers are exported from `benchmarks/scripts/_schemas.py` so downstream consumers
 (aggregator, future dashboard) import the same source of truth.
 
 ## Output layout with --run-id
@@ -267,7 +267,7 @@ relative to a benchmark run, but the dashboard contract assumes both are
 available when GPU/KV/prefix-cache fields need real values rather than the
 per-result `null` stubs.
 
-### `scripts/collect_metrics_snapshot.py`
+### `benchmarks/scripts/collect_metrics_snapshot.py`
 
 One-shot snapshot taken before/after (or mid) a benchmark run.
 
@@ -284,13 +284,13 @@ One-shot snapshot taken before/after (or mid) a benchmark run.
 
 Phases: `pre`, `mid`, `post`, `adhoc`.
 
-### `scripts/sample_gpu_metrics.py`
+### `benchmarks/scripts/sample_gpu_metrics.py`
 
 Interval CSV sampling driven by repeated `nvidia-smi` invocations.
 
 - Writes `results/runs/<run_id>/server_metrics/gpu_samples.csv` with one row
   per (tick, GPU). CSV columns are stable and exported from
-  `scripts/_server_metrics.CSV_COLUMNS`.
+  `benchmarks/scripts/_server_metrics.CSV_COLUMNS`.
 - Sidecar `gpu_samples_meta.json` records the `nvidia-smi` command, interval,
   duration / sample budget, `run_id`, `run_uuid`, and a summary block (ticks
   attempted, samples written, errors). Schema:
@@ -310,11 +310,11 @@ stub at presentation time without renaming.
 
 | Mode | Current status | Script | Notes |
 |---|---:|---|---|
-| SingleStream-lite smoke | implemented | `scripts/request_once.py` | API correctness check. |
-| SingleStream-lite TTFT | implemented | `scripts/measure_ttft_once.py` | One streaming TTFT/E2E record. |
-| Sequential latency | implemented | `scripts/run_sequential_benchmark.py` | Warmup + measured runs, `concurrency = 1`. |
-| Offline-lite throughput | future | `scripts/run_offline_benchmark.py` | Fixed prompt set, controlled concurrency. |
-| Server-lite arrival | future | `scripts/run_server_like_benchmark.py` | Target QPS, arrival process, tail latency. |
+| SingleStream-lite smoke | implemented | `benchmarks/scripts/request_once.py` | API correctness check. |
+| SingleStream-lite TTFT | implemented | `benchmarks/scripts/measure_ttft_once.py` | One streaming TTFT/E2E record. |
+| Sequential latency | implemented | `benchmarks/scripts/run_sequential_benchmark.py` | Warmup + measured runs, `concurrency = 1`. |
+| Offline-lite throughput | future | `benchmarks/scripts/run_offline_benchmark.py` | Fixed prompt set, controlled concurrency. |
+| Server-lite arrival | future | `benchmarks/scripts/run_server_like_benchmark.py` | Target QPS, arrival process, tail latency. |
 
 ## Result schema contract
 

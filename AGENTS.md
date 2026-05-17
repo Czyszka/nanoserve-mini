@@ -23,7 +23,7 @@ Primary local development happens on a Windows 11 laptop.
 - Version control: `git`. Default branch: `main`.
 - GitHub CLI: `gh`.
 - Windows package manager for system tools: `winget`.
-- Local validation script: `scripts/check_local.ps1`.
+- Local validation script: `benchmarks/scripts/check_local.ps1`.
 - Preferred validation commands for code changes:
   - `uv sync --extra dev`
   - `uv run ruff check .`
