@@ -44,10 +44,11 @@ docs/
   templates/      Markdown + agent-routine templates.
   weekly/         Weekly progress notes.
 
-tests/            Pytest suite for benchmark + metrics scripts.
+benchmarks/scripts_tests/
+                  Pytest suite for benchmark + metrics scripts.
 ```
 
-Quick map: code → `benchmarks/scripts/` and `tests/`. Operations → `serving/`.
+Quick map: code → `benchmarks/scripts/` and `benchmarks/scripts_tests/`. Operations → `serving/`.
 Outputs → `results/`. Everything else lives in `docs/`.
 
 ## In scope

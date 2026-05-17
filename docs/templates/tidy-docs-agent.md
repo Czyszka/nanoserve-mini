@@ -36,7 +36,7 @@ Reduce documentation surface area in the repo. Specifically:
 
 3. **Forbidden** unless the user explicitly asks: `docs/project/roadmap.md`,
    `docs/operations/infrastructure.md`, `docs/templates/**`, `docs/learning/paper-notes/**`,
-   `benchmarks/scripts/**`, `serving/**`, `tests/**`, `results/**`, application code,
+   `benchmarks/scripts/**`, `serving/**`, `benchmarks/scripts_tests/**`, `results/**`, application code,
    anything under `.claude/`.
 
 4. **Clean tree gate (apply only)**: before any edit, run

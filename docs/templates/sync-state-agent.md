@@ -17,7 +17,7 @@ cursor. Append, do not compact. Compaction lives in
    - `docs/operations/agent-state.md` (always)
 2. **Forbidden files** unless the user explicitly asks: `docs/project/roadmap.md`,
    `CLAUDE.md`, `AGENTS.md`, `docs/operations/infrastructure.md`, anything in
-   `benchmarks/scripts/`, `serving/`, `results/`, `tests/`, `benchmarks/`.
+   `benchmarks/scripts/`, `serving/`, `results/`, `benchmarks/scripts_tests/`, `benchmarks/`.
 3. **No code changes**: do not run `ruff` / `pytest`; this routine is doc-only.
 4. **Branch**: stay on the current branch. Do not create or switch.
 5. **Commit message**: must start with `docs: sync project state - <topic>`.
