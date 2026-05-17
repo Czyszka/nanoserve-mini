@@ -1,0 +1,19 @@
+model_list:
+  - model_name: kimi-k2.6
+    litellm_params:
+      model: openai/kimi-k2.6
+      api_base: http://vllm:8000/v1
+      api_key: dummy
+  - model_name: DeepSeek-V4-Flash
+    litellm_params:
+      model: openai/DeepSeek-V4-Flash
+      api_base: http://vllm-small:8004/v1
+      api_key: dummy
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  request_timeout: 600
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

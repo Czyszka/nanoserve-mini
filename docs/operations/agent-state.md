@@ -40,7 +40,7 @@ Live state:
 
 Phase 1 deliverables still owed (per `docs/project/roadmap.md` Definition of Done):
 
-- **LiteLLM Proxy** in front of vLLM as a single OpenAI-compatible endpoint with per-model routing — not started.
+- **LiteLLM Proxy** in front of vLLM as a single OpenAI-compatible endpoint with per-model routing — **in progress** (laptop prep done in `serving/compose/`; server smoke pending Tuesday).
 - **Prometheus + Grafana dashboard** showing live metrics during a load test — not started.
 - **W1 write-up** ("vLLM + LiteLLM Proxy on 8×H200: from zero to first measurement") — not started.
 
@@ -121,13 +121,13 @@ results/runs/<run_id>/
    - DeepSeek-V4-Flash `request_once`, TTFT, and repeated benchmark outputs,
    - short note recording launch parameters incl. the 20% VRAM cap for the small model.
 2. Reconcile the latest server compose with `serving/compose/docker-compose.kimi-k2.6.yml`; decide whether TP=8 Kimi, EP/DP Kimi, and small-model services live in one file or separate profiles.
-3. Pin Docker images to exact versions/digests before any comparable benchmark runs.
+3. **Smoke LiteLLM Proxy on the server**: `docker compose up litellm`, then `curl -H "Authorization: Bearer $LITELLM_MASTER_KEY" http://localhost:4000/v1/models` and one `/v1/chat/completions` per upstream model. Image tags now pinned (`vllm v0.20.0-cu130-ubuntu2404`, `litellm main-v1.66.0-stable`, `open-webui v0.1.121`).
 4. Validate the metrics scripts live on the server end-to-end:
    - `benchmarks/scripts/collect_metrics_snapshot.py --phase pre`
    - `benchmarks/scripts/sample_gpu_metrics.py` during a benchmark window
    - `benchmarks/scripts/collect_metrics_snapshot.py --phase post`
 5. Run the normalised benchmark sequence with one shared `--run-id` per model and commit raw or summarised results under `results/runs/`.
-6. Stand up **LiteLLM Proxy** in front of vLLM as the single OpenAI-compatible endpoint with per-model routing (Phase 1 DoD #2).
+6. **Bench-run launcher** (`benchmarks/scripts/run_bench_suite.py`, separate session): one command runs `snapshot pre → request_once → ttft → gpu_samples (bg) → sequential → snapshot post` per model through proxy:4000, with metrics-snapshot going direct to vLLM. Requires `--api-key` flag in `_client.py` and the three benchmark scripts (LiteLLM master_key needs `Authorization: Bearer …`). Mapping `target → (proxy_model, vllm_metrics_url)` in a small `bench_targets.json`.
 7. Stand up **Prometheus + Grafana dashboard** scraping vLLM `/metrics` and rendering TTFT/TPOT/throughput/KV-cache during a load test (Phase 1 DoD #4).
 8. Draft **write-up W1** in `docs/weekly/` or a new `docs/write-ups/` directory once the dashboard is live.
 9. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
@@ -197,7 +197,8 @@ uv run python -m benchmarks.scripts.collect_metrics_snapshot \
 | HF weights storage | named Docker volume `nanoserve-hf-cache` |
 | Compose file | `serving/compose/docker-compose.kimi-k2.6.yml` (draft; verify against the live server before treating as canonical) |
 | Interactive UI | OpenWebUI container connected to vLLM OpenAI-compatible endpoint |
-| Image pinning | Current compose uses floating tags; pin exact versions/digests before comparable benchmark runs |
+| Multi-model proxy | LiteLLM Proxy as a fourth service in compose; routing by `model` field; `LITELLM_MASTER_KEY` from env |
+| Image pinning | Pinned to readable version tags 2026-05-17 (vllm `v0.20.0-cu130-ubuntu2404`, litellm `main-v1.66.0-stable`, open-webui `v0.1.121`); bump in YAML + `docker compose pull` |
 | Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
 | Benchmark output | `results/runs/<run_id>/<benchmark_mode>/` + `results/runs/<run_id>/server_metrics/` |
 | Agent memory | `docs/operations/agent-state.md` is repo-tracked shared handoff |
@@ -214,8 +215,8 @@ uv run python -m benchmarks.scripts.collect_metrics_snapshot \
 - [ ] Record the exact working TP=8 server command/config in repo.
 - [ ] Should TP=8 Kimi, EP/DP Kimi, and small-model services live in one compose file or separate profiles?
 - [ ] Import unpushed server-side compose and DeepSeek-V4-Flash benchmark results (Tuesday session).
-- [ ] Should OpenWebUI keep one endpoint, expose both Kimi + small model, or move routing behind LiteLLM Proxy?
-- [ ] Which exact Docker image tags/digests should replace floating `latest`/`main` tags?
+- [ ] Should OpenWebUI keep its direct `vllm:8000` link or move behind `litellm:4000`? (LiteLLM is now in compose; UI routing decision deferred until first server smoke.)
+- [x] Which exact Docker image tags should replace floating `latest`/`main` tags? — pinned 2026-05-17 to readable version tags (see "Current decisions").
 - [ ] Validate benchmark + metrics scripts end-to-end on the server.
 - [ ] Which Kimi-K2.6 `vllm serve` memory parameters allow the small model to fit comfortably?
 - [ ] Does `uv sync --extra dev` work on the server? (not yet tested, not blocking)
@@ -240,6 +241,22 @@ The earlier 2026-05-08 validation (after PR #7 review follow-ups: failure-record
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-17 - LiteLLM Proxy + image pinning (laptop prep)
+
+- Why: Phase 1 DoD #2 (LiteLLM Proxy) not started after week 1; user has server access only on Tuesday, so today's laptop session pre-stages everything that doesn't need a GPU.
+- Did:
+  - Added `litellm` service to `serving/compose/docker-compose.kimi-k2.6.yml` (port 4000, `depends_on` vllm + vllm-small, healthcheck against `/health/liveliness`, mounts `litellm-config.yaml` read-only).
+  - Created `serving/compose/litellm-config.yaml` with `model_list` mapping `kimi-k2.6` → `http://vllm:8000/v1` and `DeepSeek-V4-Flash` → `http://vllm-small:8004/v1`; `master_key` from env.
+  - Synced `serving/compose/.env.example`: dropped dead vars (`MODEL_NAME`, `MAX_*`, `GPU_MEMORY_UTILIZATION` — none read by the YAML), added `LITELLM_MASTER_KEY`, `LITELLM_HOST_PORT`.
+  - Pinned image tags (readable, not digests, by user request): `vllm/vllm-openai:v0.20.0-cu130-ubuntu2404`, `ghcr.io/berriai/litellm:main-v1.66.0-stable`, `ghcr.io/open-webui/open-webui:v0.1.121`. Latest tags checked via Docker Hub / GHCR Tags APIs.
+  - Updated `serving/compose/README.md` with the LiteLLM service table row, new env vars, smoke command (`curl -H "Authorization: Bearer $LITELLM_MASTER_KEY" .../v1/models`), and TODO list refreshed with bench launcher / Grafana / W1.
+  - Deferred to a separate session (too big for this PR): `benchmarks/scripts/run_bench_suite.py` launcher + `--api-key` propagation through `_client.py` and the three benchmark scripts. Guidelines captured in step 6 of "Immediate next steps".
+- Validation:
+  - `python -c "import yaml; yaml.safe_load(open('serving/compose/docker-compose.kimi-k2.6.yml')); yaml.safe_load(open('serving/compose/litellm-config.yaml'))"` — clean.
+  - `uv run ruff check .` — clean.
+  - `uv run pytest -q` — 102 passed (no Python code changes).
+- Next: open PR `feat/litellm-proxy` → `main`; on Tuesday's server session, smoke LiteLLM and start the bench launcher work.
 
 ### 2026-05-17 - Repo layout consolidation + off-roadmap archive
 
