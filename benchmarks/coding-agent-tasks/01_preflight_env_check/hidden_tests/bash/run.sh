@@ -63,6 +63,15 @@ BASH_BIN="$(command -v bash)"
 TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/preflight-hidden-XXXXXXXX")"
 EMPTY_DIR="${TMP_ROOT}/empty"
 mkdir -p "$EMPTY_DIR"
+# Populate EMPTY_DIR with the core tools the bash scaffold needs (but NOT
+# docker), so the "PATH={EMPTY_DIR}" docker-missing case still produces
+# JSON. Symlink, fall back to copy on platforms that lack symlink support.
+for tool in bash jq df tr head tail timeout; do
+    src="$(command -v "$tool" 2>/dev/null || true)"
+    if [[ -n "$src" ]]; then
+        ln -sf "$src" "${EMPTY_DIR}/${tool}" 2>/dev/null || cp -f "$src" "${EMPTY_DIR}/${tool}"
+    fi
+done
 
 cleanup() {
     rm -rf "$TMP_ROOT"
@@ -93,6 +102,7 @@ run_case() {
 
     local -a args=()
     while IFS= read -r arg; do
+        arg="${arg%$'\r'}"  # strip CR injected by jq on MSYS/MINGW
         args+=("$(substitute_placeholders "$arg")")
     done < <(jq -r '.args[]?' <<<"$case_json")
 
@@ -100,6 +110,8 @@ run_case() {
     local -a env_old_values=()
     local -a env_was_set=()
     while IFS=$'\t' read -r name value; do
+        name="${name%$'\r'}"
+        value="${value%$'\r'}"
         [[ -z "$name" ]] && continue
         env_names+=("$name")
         if [[ -v "$name" ]]; then
@@ -142,6 +154,8 @@ run_case() {
             failures+=("stdout not valid JSON")
         else
             while IFS=$'\t' read -r path expected_json; do
+                path="${path%$'\r'}"
+                expected_json="${expected_json%$'\r'}"
                 [[ -z "$path" ]] && continue
                 local expr actual_json
                 expr="$(jq_path "$path")"
@@ -155,6 +169,7 @@ run_case() {
             done < <(jq -r '.expect_json_path // {} | to_entries[] | [.key, (.value | tojson)] | @tsv' <<<"$case_json")
 
             while IFS= read -r path; do
+                path="${path%$'\r'}"
                 [[ -z "$path" ]] && continue
                 local expr
                 expr="$(jq_path "$path")"
@@ -221,6 +236,7 @@ run_case() {
 
 results_file="${TMP_ROOT}/results.jsonl"
 while IFS= read -r case_json; do
+    case_json="${case_json%$'\r'}"
     run_case "$case_json" >>"$results_file"
 done < <(jq -c '.[]' "$CASES_PATH")
 
