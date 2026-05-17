@@ -1,4 +1,4 @@
-"""Tests for ``scripts._metrics``."""
+"""Tests for ``benchmarks.scripts._metrics``."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import re
 
 import pytest
 
-from scripts._metrics import (
+from benchmarks.scripts._metrics import (
     RunControls,
     build_workload_spec,
     get_git_commit,

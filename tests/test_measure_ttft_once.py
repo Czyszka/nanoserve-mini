@@ -1,4 +1,4 @@
-"""Tests for ``scripts.measure_ttft_once``.
+"""Tests for ``benchmarks.scripts.measure_ttft_once``.
 
 We feed the ``measure_stream`` helper a synthetic chunk stream and a controlled
 clock so timing is deterministic. The full ``main()`` entry point is exercised
@@ -16,10 +16,10 @@ from typing import Any
 import httpx
 import pytest
 
-from scripts import _client, measure_ttft_once
-from scripts._client import CompletionRequest
-from scripts._metrics import RunControls
-from scripts.measure_ttft_once import (
+from benchmarks.scripts import _client, measure_ttft_once
+from benchmarks.scripts._client import CompletionRequest
+from benchmarks.scripts._metrics import RunControls
+from benchmarks.scripts.measure_ttft_once import (
     build_record,
     compute_output_tokens_per_second,
     compute_tpot_seconds,
@@ -168,7 +168,7 @@ def test_build_record_shape() -> None:
         model="m", base_url="http://x", measured_runs=1, warmup_runs=0,
         decoding={"temperature": 0.0, "max_tokens": 8},
     )
-    from scripts.measure_ttft_once import StreamRunResult
+    from benchmarks.scripts.measure_ttft_once import StreamRunResult
 
     result = StreamRunResult(
         ttft_seconds=0.1,

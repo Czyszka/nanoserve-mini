@@ -1,4 +1,4 @@
-"""Tests for ``scripts.collect_metrics_snapshot``."""
+"""Tests for ``benchmarks.scripts.collect_metrics_snapshot``."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import Any
 import httpx
 import pytest
 
-from scripts import _client, collect_metrics_snapshot
+from benchmarks.scripts import _client, collect_metrics_snapshot
 
 _VLLM_TEXT = """\
 # HELP vllm:num_requests_running Running.
@@ -112,7 +112,7 @@ def test_run_nvidia_smi_handles_timeout() -> None:
 
 
 def test_build_snapshot_aggregate_joins_vllm_and_gpu() -> None:
-    from scripts._server_metrics import parse_nvidia_smi_csv, parse_prometheus_text
+    from benchmarks.scripts._server_metrics import parse_nvidia_smi_csv, parse_prometheus_text
 
     vllm_block = {
         "endpoint": "http://x/metrics",

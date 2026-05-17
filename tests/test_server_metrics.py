@@ -1,8 +1,8 @@
-"""Tests for ``scripts._server_metrics`` parsers."""
+"""Tests for ``benchmarks.scripts._server_metrics`` parsers."""
 
 from __future__ import annotations
 
-from scripts._server_metrics import (
+from benchmarks.scripts._server_metrics import (
     NVIDIA_SMI_QUERY_FIELDS,
     first_value,
     parse_nvidia_smi_csv,
@@ -122,7 +122,7 @@ def test_total_gpu_memory_used_gb_returns_none_for_no_data() -> None:
 
 def test_nvidia_smi_query_fields_match_csv_columns() -> None:
     """Every queried field must end up in the exported CSV column list."""
-    from scripts._server_metrics import CSV_COLUMNS, NVIDIA_SMI_FIELD_MAP
+    from benchmarks.scripts._server_metrics import CSV_COLUMNS, NVIDIA_SMI_FIELD_MAP
 
     for field in NVIDIA_SMI_QUERY_FIELDS:
         assert NVIDIA_SMI_FIELD_MAP[field] in CSV_COLUMNS

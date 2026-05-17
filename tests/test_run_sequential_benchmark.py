@@ -1,4 +1,4 @@
-"""Tests for ``scripts.run_sequential_benchmark``.
+"""Tests for ``benchmarks.scripts.run_sequential_benchmark``.
 
 The end-to-end CLI test uses an httpx.MockTransport that returns a deterministic
 SSE stream for every request, so the JSONL + summary write paths are covered
@@ -14,10 +14,10 @@ from pathlib import Path
 import httpx
 import pytest
 
-from scripts import _client, run_sequential_benchmark
-from scripts._client import CompletionRequest
-from scripts._metrics import RunControls
-from scripts.run_sequential_benchmark import (
+from benchmarks.scripts import _client, run_sequential_benchmark
+from benchmarks.scripts._client import CompletionRequest
+from benchmarks.scripts._metrics import RunControls
+from benchmarks.scripts.run_sequential_benchmark import (
     RunRow,
     build_summary,
     run_sequential,
@@ -134,7 +134,7 @@ def test_run_sequential_continues_after_per_run_error(monkeypatch: pytest.Monkey
         calls["n"] += 1
         if calls["n"] == 2:
             raise RuntimeError("simulated transient")
-        from scripts.measure_ttft_once import StreamRunResult
+        from benchmarks.scripts.measure_ttft_once import StreamRunResult
         return StreamRunResult(
             ttft_seconds=0.05,
             e2e_seconds=0.2,

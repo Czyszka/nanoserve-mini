@@ -217,5 +217,5 @@ Nie dopisuj tutaj:
 - decyzji operacyjnych, które mogą zmienić się w kolejnej iteracji.
 
 Te informacje należą do `docs/operations/agent-state.md`, planów roboczych w
-`docs/plans/`, runbooków w `docs/operations/runbooks/` albo tygodniówek w
+`docs/plans/`, runbooków w `serving/runbooks/` albo tygodniówek w
 `docs/weekly/`.

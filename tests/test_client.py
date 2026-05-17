@@ -1,4 +1,4 @@
-"""Tests for ``scripts._client``.
+"""Tests for ``benchmarks.scripts._client``.
 
 We can't talk to a real vLLM on the laptop, so all tests use ``httpx.MockTransport``
 to fake the server. The point is to keep the request-shaping code honest:
@@ -14,7 +14,7 @@ import json
 import httpx
 import pytest
 
-from scripts._client import (
+from benchmarks.scripts._client import (
     CompletionRequest,
     build_payload,
     chat_completion,

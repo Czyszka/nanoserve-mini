@@ -1,4 +1,4 @@
-"""Smoke tests for ``scripts.request_once``.
+"""Smoke tests for ``benchmarks.scripts.request_once``.
 
 We don't hit a real server. We just verify the CLI parses arguments correctly
 and that ``main()`` wires the parsed args into the HTTP client and prints the
@@ -13,7 +13,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from scripts import _client, request_once
+from benchmarks.scripts import _client, request_once
 
 
 def _mock_transport(response_payload: dict) -> httpx.MockTransport:

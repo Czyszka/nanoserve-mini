@@ -1,4 +1,4 @@
-"""Tests for ``scripts.sample_gpu_metrics``."""
+"""Tests for ``benchmarks.scripts.sample_gpu_metrics``."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from scripts import sample_gpu_metrics
+from benchmarks.scripts import sample_gpu_metrics
 
 _NVIDIA_SMI_TEXT = (
     "0, NVIDIA H200 NVL, 35, 12, 18000, 125000, 143000, 62, 350.5, 1980, 2619\n"
