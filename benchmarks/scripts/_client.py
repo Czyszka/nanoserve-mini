@@ -26,6 +26,7 @@ class CompletionRequest:
     prompt: str
     max_tokens: int = 64
     temperature: float = 0.0
+    api_key: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -52,6 +53,12 @@ def _endpoint(base_url: str) -> str:
     return base_url.rstrip("/") + "/v1/chat/completions"
 
 
+def _headers(req: CompletionRequest) -> dict[str, str] | None:
+    if req.api_key is None:
+        return None
+    return {"Authorization": f"Bearer {req.api_key}"}
+
+
 def chat_completion(
     req: CompletionRequest,
     *,
@@ -65,7 +72,7 @@ def chat_completion(
     owns_client = client is None
     http = client if client is not None else httpx.Client(timeout=timeout)
     try:
-        response = http.post(url, json=payload)
+        response = http.post(url, json=payload, headers=_headers(req))
         response.raise_for_status()
         return response.json()
     finally:
@@ -99,7 +106,7 @@ def chat_completion_stream(
     owns_client = client is None
     http = client if client is not None else httpx.Client(timeout=timeout)
     try:
-        with http.stream("POST", url, json=payload) as response:
+        with http.stream("POST", url, json=payload, headers=_headers(req)) as response:
             response.raise_for_status()
             for line in response.iter_lines():
                 if not line:

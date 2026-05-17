@@ -254,11 +254,18 @@ results/runs/<run_id>/
     snapshot_post.json
     gpu_samples.csv
     gpu_samples_meta.json
+  bench_suite/
+    summary.json
 ```
 
 Explicit `--output`, `--output-jsonl`, and `--output-summary` flags override
 the `--run-id` path. If neither `--run-id` nor explicit flags are supplied,
 each script falls back to its legacy default path under `results/raw/`.
+
+`benchmarks/scripts/run_bench_suite.py` is the thin one-command launcher for the
+Phase 1 sequence. It generates a fresh `YYYY-MM-DD_<model-slug>_run-NN`, runs
+pre/post snapshots plus request/TTFT/sequential benchmarks, and records step
+status in `bench_suite/summary.json`.
 
 ## Server-side metrics
 

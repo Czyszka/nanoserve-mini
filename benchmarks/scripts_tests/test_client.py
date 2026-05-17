@@ -96,6 +96,58 @@ def test_chat_completion_hits_correct_url_and_parses_response() -> None:
     assert extract_assistant_text(response) == "hi there"
 
 
+def test_chat_completion_adds_authorization_header_with_api_key() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["authorization"] = request.headers.get("authorization")
+        return httpx.Response(
+            200,
+            json={
+                "id": "cmpl-1",
+                "model": "test-model",
+                "choices": [{"message": {"role": "assistant", "content": "hi"}}],
+            },
+        )
+
+    req = CompletionRequest(
+        base_url="http://example.test:8000",
+        model="test-model",
+        prompt="hello",
+        api_key="sk-test",
+    )
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    try:
+        chat_completion(req, client=client)
+    finally:
+        client.close()
+
+    assert captured["authorization"] == "Bearer sk-test"
+
+
+def test_chat_completion_omits_authorization_header_without_api_key() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["authorization"] = request.headers.get("authorization")
+        return httpx.Response(
+            200,
+            json={
+                "id": "cmpl-1",
+                "model": "test-model",
+                "choices": [{"message": {"role": "assistant", "content": "hi"}}],
+            },
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    try:
+        chat_completion(_request(), client=client)
+    finally:
+        client.close()
+
+    assert captured["authorization"] is None
+
+
 def test_chat_completion_raises_on_http_error() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(500, json={"error": "boom"})
@@ -134,6 +186,32 @@ def test_chat_completion_stream_yields_chunks_and_stops_on_done() -> None:
     assert len(chunks) == 3
     text = "".join(extract_stream_delta_text(c) for c in chunks)
     assert text == "hi there"
+
+
+def test_chat_completion_stream_adds_authorization_header_with_api_key() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["authorization"] = request.headers.get("authorization")
+        return httpx.Response(
+            200,
+            content=b"data: [DONE]\n\n",
+            headers={"content-type": "text/event-stream"},
+        )
+
+    req = CompletionRequest(
+        base_url="http://example.test:8000",
+        model="test-model",
+        prompt="hello",
+        api_key="sk-stream",
+    )
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    try:
+        list(chat_completion_stream(req, client=client))
+    finally:
+        client.close()
+
+    assert captured["authorization"] == "Bearer sk-stream"
 
 
 def test_extract_assistant_text_handles_missing_fields() -> None:
