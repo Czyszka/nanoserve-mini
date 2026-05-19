@@ -5,7 +5,8 @@
 services:
   vllm:
     image: vllm/vllm-openai:v0.20.0-cu130-ubuntu2404
-    container_name: vllm-kimi-k2-6
+    container_name: vllm
+    hostname: vllm
     restart: unless-stopped
 
     privileged: true
@@ -37,7 +38,7 @@ services:
               capabilities: [gpu]
 
     command:
-      --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --data-parallel-size=8 --gpu-memory-utilization 0.75 --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2 --enable-auto-tool-choice --language-model-only --speculative-config={"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3}
+      --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 8 --gpu-memory-utilization 0.7 --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2 --enable-auto-tool-choice --language-model-only --speculative-config='{"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3}'
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
@@ -87,6 +88,7 @@ services:
   litellm:
     image: ghcr.io/berriai/litellm:main-v1.66.0-stable
     container_name: litellm-proxy
+    hostname: llmproxy
     restart: unless-stopped
     depends_on:
       vllm:
@@ -115,8 +117,9 @@ services:
     networks:
       - nanoserve-net
   open-webui:
-    image: ghcr.io/open-webui/open-webui:v0.1.121
+    image: ghcr.io/open-webui/open-webui:0.9.5
     container_name: open-webui
+    hostname: openwebui
     restart: unless-stopped
 
     depends_on:
