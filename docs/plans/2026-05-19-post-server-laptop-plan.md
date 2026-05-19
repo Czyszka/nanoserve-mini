@@ -1,0 +1,213 @@
+# Post-server laptop plan — after 2026-05-19 session
+
+Plan pracy na laptopie po udanej sesji serwerowej 2026-05-19. Cel: domknąć repo hygiene, parsery, dokumentację i przygotować następne wejście na serwer bez marnowania czasu GPU.
+
+## Kontekst
+
+Sesja serwerowa dostarczyła główne artefakty Phase 1:
+
+- działający compose dla Kimi K2.6, DeepSeek-V4-Flash, OpenWebUI i LiteLLM Proxy,
+- smoke i bench suite przez LiteLLM Proxy dla obu modeli,
+- raw stream debug artifacts dla problemu Kimi TTFT/TPOT,
+- bootstrap Prometheus + Grafana.
+
+Na laptopie nie uruchamiamy dużych modeli. Laptop służy teraz do analizy, napraw skryptów, dokumentacji, testów jednostkowych i przygotowania kolejnej sesji GPU.
+
+---
+
+## Priorytet 1 — repo hygiene i odblokowanie normalnej pracy
+
+### 1. Fix `.gitignore` dla benchmark artifacts — issue #32
+
+Cel: małe, strukturalne wyniki benchmarków powinny dać się commitować normalnym `git add`, bez ciągłego `git add -f`.
+
+Zakres:
+
+- sprawdzić lokalnie `git check-ignore -v` dla przykładowych plików z `results/runs/`,
+- dopuścić małe pliki wynikowe: `.json`, `.jsonl`, `.csv`, `.md`,
+- dalej ignorować: `.env`, tokeny, cache HF, modele, duże logi, Nsight traces, SQLite runtime state,
+- opisać w komentarzu `.gitignore`, co commitujemy, a czego nie.
+
+Akceptacja:
+
+- `git add results/runs/<run_id>/.../summary.json` działa bez `-f`,
+- duże/local-only artefakty dalej są ignorowane,
+- `uv run ruff check .` i `uv run pytest -q` przechodzą, jeśli dotknięto plików okołokodowych.
+
+---
+
+## Priorytet 2 — naprawa Kimi TTFT/TPOT parsera
+
+### 2. Fix `measure_ttft_once.py` dla reasoning stream — issue #31
+
+Cel: użyć zebranych na serwerze raw SSE artifacts do poprawy parsera bez ponownego odpalania Kimi.
+
+Zakres:
+
+- przeanalizować raw stream debug artifacts z `results/runs/2026-05-19_kimi-k2.6_stream-debug/`,
+- potwierdzić, czy Kimi streamuje tekst w `delta.content`, `delta.reasoning_content`, czy innym polu,
+- nie zmieniać po cichu semantyki obecnego `ttft_seconds`, jeśli oznacza final-answer TTFT,
+- dodać osobne metryki, np.:
+  - `ttft_content_seconds` albo zachować obecne `ttft_seconds` jako first final content token,
+  - `ttft_any_token_seconds` jako pierwszy dowolny token tekstowy,
+  - `reasoning_chars` / `content_chars`, ewentualnie licznik chunków reasoning/content,
+- dodać testy jednostkowe dla streamów z `reasoning_content`, role-only chunków i usage-only chunków,
+- sprawdzić wpływ na `run_bench_suite.py` i output schemas.
+
+Akceptacja:
+
+- testy przechodzą lokalnie,
+- Kimi debug artifacts są wystarczające do potwierdzenia poprawki,
+- non-reasoning modele zachowują dotychczasową semantykę,
+- output JSON nie miesza reasoning TTFT z final-answer TTFT bez jawnej nazwy pola.
+
+---
+
+## Priorytet 3 — podsumowanie i utrwalenie sesji
+
+### 3. Spisać podsumowanie sesji — issue #33
+
+Cel: nie trzymać informacji o sesji tylko w rozmowie i commitach.
+
+Sugerowany plik:
+
+```text
+docs/plans/2026-05-19-server-session-summary.md
+```
+
+Zakres:
+
+- krótko opisać, co było celem sesji,
+- lista wykonanych rzeczy,
+- linki/nazwy najważniejszych runów i commitów,
+- known issues: Kimi TTFT/TPOT, `.gitignore`, dashboard Grafana,
+- decyzje operacyjne: OpenWebUI zostaje działające w aktualnym układzie, LiteLLM jest warstwą proxy do benchmarków,
+- next steps.
+
+Akceptacja:
+
+- summary pozwala wrócić do projektu po kilku dniach bez przeglądania historii czatu,
+- `docs/operations/agent-state.md` nie jest sprzeczny z summary.
+
+---
+
+## Priorytet 4 — observability jako prawdziwy artefakt, nie tylko kontenery
+
+### 4. Zebrać realną listę metryk vLLM / Prometheus
+
+Cel: dashboard ma być oparty o realne nazwy metryk z aktualnego vLLM, nie zgadywane query.
+
+Zakres:
+
+- zapisać małe inventory nazw metryk z:
+  - Kimi `/metrics`,
+  - DeepSeek `/metrics`,
+  - Prometheus `/api/v1/label/__name__/values`,
+- commitować raczej `*.metric-names.txt`, nie pełne surowe dumps, jeśli są duże/noisy,
+- oznaczyć, które metryki odpowiadają za:
+  - target health,
+  - requests running/waiting,
+  - token throughput,
+  - TTFT/TPOT histogramy, jeśli są,
+  - KV/GPU cache usage, jeśli są.
+
+Akceptacja:
+
+- istnieje mały plik z inventory realnych metryk,
+- wiadomo, z których metryk budować pierwszy dashboard.
+
+### 5. Zbudować pierwszy dashboard Grafana
+
+Cel: minimalny, ale użyteczny dashboard Phase 1.
+
+Minimalne panele:
+
+- Prometheus target health (`up`) per job,
+- running/waiting requests,
+- token throughput, jeśli metryka istnieje,
+- TTFT/TPOT p50/p95, jeśli histogramy istnieją,
+- KV/GPU cache usage, jeśli metryka istnieje,
+- opcjonalnie panel z model/job labels.
+
+Zakres repo:
+
+- dashboard JSON pod `serving/compose/grafana/provisioning/dashboards/`,
+- dashboard provisioning YAML,
+- aktualizacja `serving/compose/README.md` z krótką instrukcją uruchomienia i wejścia do Grafany.
+
+Akceptacja:
+
+- `docker compose -f serving/compose/docker-compose.observability.yml up -d` startuje stack,
+- Grafana ma Prometheus datasource,
+- dashboard pojawia się automatycznie albo jest jasno opisany import,
+- dashboard pokazuje sensowne dane przy bench runie.
+
+---
+
+## Priorytet 5 — przygotowanie W1
+
+### 6. Przygotować szkic W1
+
+Nie pisać pełnego artykułu, dopóki dashboard nie ma minimalnej wartości. Najpierw przygotować outline.
+
+Roboczy tytuł:
+
+```text
+vLLM + LiteLLM Proxy on 8×H200: a multi-model serving baseline from zero to first measurement
+```
+
+Outline:
+
+1. Problem i cel Phase 1.
+2. Sprzęt i stack.
+3. Kimi K2.6 + DeepSeek-V4-Flash jako dwa upstreamy vLLM.
+4. LiteLLM Proxy jako jeden OpenAI-compatible endpoint.
+5. Benchmark methodology: MLPerf-inspired lite, nie MLPerf-compliant.
+6. Wyniki pierwszych runów.
+7. Co nie zadziałało / limitation: Kimi TTFT/TPOT parser, metrics naming drift.
+8. Observability: Prometheus + Grafana.
+9. Następne kroki.
+
+Akceptacja:
+
+- powstaje outline/szkic w `docs/write-ups/` albo `docs/weekly/`,
+- bez przesadnego polerowania — najpierw techniczna kompletność.
+
+---
+
+## Proponowana kolejność na najbliższe dni
+
+### Dzień laptopowy 1
+
+1. Issue #32: `.gitignore` / tracking wyników.
+2. Issue #33: session summary.
+3. Szybki przegląd agent-state i planów, czy nic nie jest sprzeczne.
+
+### Dzień laptopowy 2
+
+1. Issue #31: analiza Kimi stream debug artifacts.
+2. Implementacja parser fix + testy.
+3. Lokalna walidacja: `uv run ruff check .`, `uv run pytest -q`.
+
+### Dzień laptopowy 3
+
+1. Inventory metryk Prometheus/vLLM.
+2. Pierwszy dashboard JSON/provisioning.
+3. Aktualizacja docs dla observability.
+
+### Następna sesja serwerowa
+
+1. Pull najnowszego repo.
+2. Uruchomić observability stack.
+3. Puścić bench suite dla obu modeli pod load.
+4. Potwierdzić dashboard live.
+5. Zebrać brakujące screenshoty/liczby do W1.
+
+---
+
+## Nie robić teraz
+
+- Nie wracać do coding-agent eval — zarchiwizowane, poza Phase 1.
+- Nie rozszerzać scope do SGLang/TensorRT-LLM/Kubernetes.
+- Nie pisać pełnego W1 przed uporządkowaniem dashboardu i parser issue.
+- Nie używać czasu serwera na `.gitignore`, docs-only cleanup ani refaktory niezależne od GPU.
