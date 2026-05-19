@@ -1,0 +1,22 @@
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}],"prompt_token_ids":null}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" The"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" user wants me to"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" answer exactly with \""},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"OK\". No"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" other text, no"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" punctuation"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":", just"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"content":" OK","tool_calls":[]},"logprobs":null,"finish_reason":"stop","stop_reason":163586,"token_ids":null}]}
+
+data: {"id":"chatcmpl-8d590c7012de32ac","object":"chat.completion.chunk","created":1779174168,"model":"kimi-k2.6","choices":[],"usage":{"prompt_tokens":14,"total_tokens":39,"completion_tokens":25}}
+
+data: [DONE]
+
