@@ -1,6 +1,10 @@
+# Quick observability stack for the server session.
+# Image tags can be overridden from .env without editing this file:
+#   PROMETHEUS_IMAGE=prom/prometheus:<tag>
+#   GRAFANA_IMAGE=grafana/grafana:<tag>
 services:
   prometheus:
-    image: prom/prometheus:v3
+    image: "${PROMETHEUS_IMAGE:-prom/prometheus:v3}"
     container_name: prometheus
     hostname: prometheus
     restart: unless-stopped
@@ -17,7 +21,7 @@ services:
       - nanoserve-net
 
   grafana:
-    image: grafana/grafana:13.1.0-25893932881-ubuntu
+    image: "${GRAFANA_IMAGE:-grafana/grafana:latest}"
     container_name: grafana
     hostname: grafana
     restart: unless-stopped
