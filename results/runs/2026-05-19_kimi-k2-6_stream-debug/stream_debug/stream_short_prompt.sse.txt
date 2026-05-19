@@ -1,0 +1,48 @@
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}],"prompt_token_ids":null}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" The"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" user wants me to"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" say \""},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"hi\" in one"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" short sentence. This"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" is a very"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" simple request. I"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" should respond"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" with a brief"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" greeting.\n\n"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"Possible responses"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":":\n- \"Hi"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" there!\"\n- \""},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"Hello!\"\n"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"- \"Hey"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":", how are"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" you?\"\n- \""},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"Hi,"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" nice to meet you"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":"!\"\n\nThe user"},"logprobs":null,"finish_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[{"index":0,"delta":{"reasoning":" asked for \""},"logprobs":null,"finish_reason":"length","stop_reason":null,"token_ids":null}]}
+
+data: {"id":"chatcmpl-92317205dd9163f3","object":"chat.completion.chunk","created":1779174089,"model":"kimi-k2.6","choices":[],"usage":{"prompt_tokens":14,"total_tokens":78,"completion_tokens":64}}
+
+data: [DONE]
+
