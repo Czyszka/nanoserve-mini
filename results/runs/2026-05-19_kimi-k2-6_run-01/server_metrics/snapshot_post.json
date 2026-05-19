@@ -1,0 +1,4032 @@
+{
+  "schema": "nanoserve-mini.server-metrics-snapshot.v1",
+  "methodology": "mlperf_inspired_lite",
+  "timestamp": "2026-05-19T07:32:22.183733+00:00",
+  "run_id": "2026-05-19_kimi-k2-6_run-01",
+  "run_uuid": "10fe459ffa62438fbd5a6bc343a2f7af",
+  "phase": "post",
+  "base_url": "http://127.0.0.1:8000",
+  "notes": null,
+  "vllm": {
+    "endpoint": "http://127.0.0.1:8000/metrics",
+    "scrape_ok": true,
+    "scrape_error": null,
+    "metrics": {
+      "python_gc_objects_collected_total": [
+        {
+          "labels": {
+            "generation": "0"
+          },
+          "value": 20120.0
+        },
+        {
+          "labels": {
+            "generation": "1"
+          },
+          "value": 3115.0
+        },
+        {
+          "labels": {
+            "generation": "2"
+          },
+          "value": 2507.0
+        }
+      ],
+      "python_gc_objects_uncollectable_total": [
+        {
+          "labels": {
+            "generation": "0"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "generation": "1"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "generation": "2"
+          },
+          "value": 0.0
+        }
+      ],
+      "python_gc_collections_total": [
+        {
+          "labels": {
+            "generation": "0"
+          },
+          "value": 1594.0
+        },
+        {
+          "labels": {
+            "generation": "1"
+          },
+          "value": 144.0
+        },
+        {
+          "labels": {
+            "generation": "2"
+          },
+          "value": 10.0
+        }
+      ],
+      "python_info": [
+        {
+          "labels": {
+            "implementation": "CPython",
+            "major": "3",
+            "minor": "12",
+            "patchlevel": "3",
+            "version": "3.12.3"
+          },
+          "value": 1.0
+        }
+      ],
+      "process_virtual_memory_bytes": [
+        {
+          "labels": {},
+          "value": 89478778880.0
+        }
+      ],
+      "process_resident_memory_bytes": [
+        {
+          "labels": {},
+          "value": 1335394304.0
+        }
+      ],
+      "process_start_time_seconds": [
+        {
+          "labels": {},
+          "value": 1779170284.3
+        }
+      ],
+      "process_cpu_seconds_total": [
+        {
+          "labels": {},
+          "value": 50.47
+        }
+      ],
+      "process_open_fds": [
+        {
+          "labels": {},
+          "value": 103.0
+        }
+      ],
+      "process_max_fds": [
+        {
+          "labels": {},
+          "value": 1048576.0
+        }
+      ],
+      "vllm:spec_decode_num_drafts_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        }
+      ],
+      "vllm:spec_decode_num_drafts_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4211457
+        }
+      ],
+      "vllm:spec_decode_num_draft_tokens_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2793.0
+        }
+      ],
+      "vllm:spec_decode_num_draft_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4211984
+        }
+      ],
+      "vllm:spec_decode_num_accepted_tokens_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1473.0
+        }
+      ],
+      "vllm:spec_decode_num_accepted_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4212263
+        }
+      ],
+      "vllm:spec_decode_num_accepted_tokens_per_pos_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "position": "0"
+          },
+          "value": 666.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "position": "1"
+          },
+          "value": 464.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "position": "2"
+          },
+          "value": 343.0
+        }
+      ],
+      "vllm:spec_decode_num_accepted_tokens_per_pos_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "position": "0"
+          },
+          "value": 1779170582.4212584
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "position": "1"
+          },
+          "value": 1779170582.4212692
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "position": "2"
+          },
+          "value": 1779170582.421278
+        }
+      ],
+      "vllm:estimated_flops_per_gpu_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:estimated_flops_per_gpu_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4213119
+        }
+      ],
+      "vllm:estimated_read_bytes_per_gpu_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:estimated_read_bytes_per_gpu_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4213343
+        }
+      ],
+      "vllm:estimated_write_bytes_per_gpu_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:estimated_write_bytes_per_gpu_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4213557
+        }
+      ],
+      "vllm:num_requests_running": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:num_requests_waiting": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:num_requests_waiting_by_reason": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "reason": "capacity"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "reason": "deferred"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:engine_sleep_state": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "sleep_state": "awake"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "sleep_state": "weights_offloaded"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "sleep_state": "discard_all"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:kv_cache_usage_perc": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:prefix_cache_queries_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 595.0
+        }
+      ],
+      "vllm:prefix_cache_queries_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4219203
+        }
+      ],
+      "vllm:prefix_cache_hits_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:prefix_cache_hits_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4219632
+        }
+      ],
+      "vllm:external_prefix_cache_queries_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:external_prefix_cache_queries_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4220052
+        }
+      ],
+      "vllm:external_prefix_cache_hits_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:external_prefix_cache_hits_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4220405
+        }
+      ],
+      "vllm:mm_cache_queries_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:mm_cache_queries_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.422078
+        }
+      ],
+      "vllm:mm_cache_hits_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:mm_cache_hits_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4221184
+        }
+      ],
+      "vllm:num_preemptions_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:num_preemptions_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.422159
+        }
+      ],
+      "vllm:prompt_tokens_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 595.0
+        }
+      ],
+      "vllm:prompt_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4222214
+        }
+      ],
+      "vllm:prompt_tokens_by_source_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "source": "local_compute"
+          },
+          "value": 595.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "source": "local_cache_hit"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "source": "external_kv_transfer"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:prompt_tokens_by_source_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "source": "local_compute"
+          },
+          "value": 1779170582.4222817
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "source": "local_cache_hit"
+          },
+          "value": 1779170582.422305
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6",
+            "source": "external_kv_transfer"
+          },
+          "value": 1779170582.422597
+        }
+      ],
+      "vllm:prompt_tokens_cached_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:prompt_tokens_cached_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.422631
+        }
+      ],
+      "vllm:generation_tokens_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2397.0
+        }
+      ],
+      "vllm:generation_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4226542
+        }
+      ],
+      "vllm:request_success_total": [
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "stop",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 3.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "length",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "abort",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "error",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "repetition",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        }
+      ],
+      "vllm:request_success_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "stop",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4226866
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "length",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4226964
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "abort",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4227047
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "error",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4227126
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "finished_reason": "repetition",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.422721
+        }
+      ],
+      "vllm:request_prompt_tokens_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "500.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_prompt_tokens_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_prompt_tokens_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 595.0
+        }
+      ],
+      "vllm:request_prompt_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4227924
+        }
+      ],
+      "vllm:request_generation_tokens_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 14.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "500.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_generation_tokens_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_generation_tokens_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2397.0
+        }
+      ],
+      "vllm:request_generation_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.422885
+        }
+      ],
+      "vllm:iteration_tokens_total_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 193.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "8.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 837.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "16.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 852.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "32.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 852.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "64.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 854.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "128.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 854.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "256.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 854.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "512.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1024.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2048.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "4096.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "8192.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "16384.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        }
+      ],
+      "vllm:iteration_tokens_total_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 855.0
+        }
+      ],
+      "vllm:iteration_tokens_total_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2992.0
+        }
+      ],
+      "vllm:iteration_tokens_total_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4229436
+        }
+      ],
+      "vllm:request_max_num_generation_tokens_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 14.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "500.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_max_num_generation_tokens_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_max_num_generation_tokens_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2397.0
+        }
+      ],
+      "vllm:request_max_num_generation_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4229994
+        }
+      ],
+      "vllm:request_params_n_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_params_n_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_params_n_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_params_n_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4230468
+        }
+      ],
+      "vllm:request_params_max_tokens_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 14.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "500.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_params_max_tokens_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_params_max_tokens_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 526263.0
+        }
+      ],
+      "vllm:request_params_max_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4230871
+        }
+      ],
+      "vllm:time_to_first_token_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.001",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.005",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.01",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.02",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.04",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.06",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.08",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.1",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 9.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.25",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.75",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "80.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "160.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "640.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2560.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:time_to_first_token_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:time_to_first_token_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 4.825528383255005
+        }
+      ],
+      "vllm:time_to_first_token_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4231334
+        }
+      ],
+      "vllm:inter_token_latency_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.01",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.025",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 446.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.05",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 925.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.075",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 925.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.1",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 925.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.15",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 925.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.2",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 925.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 925.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.4",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 926.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 927.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.75",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 929.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 929.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "80.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        }
+      ],
+      "vllm:inter_token_latency_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 931.0
+        }
+      ],
+      "vllm:inter_token_latency_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 28.701556927999263
+        }
+      ],
+      "vllm:inter_token_latency_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4232092
+        }
+      ],
+      "vllm:request_time_per_output_token_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.01",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 14.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.025",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.05",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.075",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.1",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.15",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.2",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.4",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.75",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "80.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_time_per_output_token_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_time_per_output_token_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.1821707259022315
+        }
+      ],
+      "vllm:request_time_per_output_token_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4232602
+        }
+      ],
+      "vllm:e2e_request_latency_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.8",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 13.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 13.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "15.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "30.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "60.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "120.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "240.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "480.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "960.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1920.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7680.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:e2e_request_latency_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:e2e_request_latency_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 33.52448534965515
+        }
+      ],
+      "vllm:e2e_request_latency_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.423312
+        }
+      ],
+      "vllm:request_queue_time_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.8",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "15.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "30.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "60.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "120.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "240.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "480.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "960.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1920.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7680.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_queue_time_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_queue_time_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.000757615003749379
+        }
+      ],
+      "vllm:request_queue_time_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4233673
+        }
+      ],
+      "vllm:request_inference_time_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.8",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 13.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 13.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "15.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "30.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "60.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "120.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "240.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "480.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "960.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1920.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7680.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_inference_time_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_inference_time_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 33.18557298300129
+        }
+      ],
+      "vllm:request_inference_time_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4234247
+        }
+      ],
+      "vllm:request_prefill_time_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.8",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "15.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "30.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "60.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "120.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "240.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "480.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "960.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1920.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7680.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_prefill_time_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_prefill_time_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 4.48401605500203
+        }
+      ],
+      "vllm:request_prefill_time_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.423486
+        }
+      ],
+      "vllm:request_decode_time_seconds_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.3",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 2.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "0.8",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 13.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.5",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "15.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "30.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "40.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "60.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "120.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "240.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "480.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "960.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1920.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "7680.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_decode_time_seconds_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_decode_time_seconds_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 28.701556927999263
+        }
+      ],
+      "vllm:request_decode_time_seconds_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.4235437
+        }
+      ],
+      "vllm:request_prefill_kv_computed_tokens_bucket": [
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 17.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "500.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "1000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "2000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "5000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "10000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "20000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "50000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "100000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "200000.0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "engine": "0",
+            "le": "+Inf",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_prefill_kv_computed_tokens_count": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 18.0
+        }
+      ],
+      "vllm:request_prefill_kv_computed_tokens_sum": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 595.0
+        }
+      ],
+      "vllm:request_prefill_kv_computed_tokens_created": [
+        {
+          "labels": {
+            "engine": "0",
+            "model_name": "kimi-k2.6"
+          },
+          "value": 1779170582.423674
+        }
+      ],
+      "vllm:cache_config_info": [
+        {
+          "labels": {
+            "_block_size_resolved": "True",
+            "block_size": "16",
+            "cache_dtype": "auto",
+            "calculate_kv_scales": "False",
+            "enable_prefix_caching": "True",
+            "engine": "0",
+            "gpu_memory_utilization": "0.7",
+            "hash_block_size": "None",
+            "is_attention_free": "False",
+            "kv_cache_dtype_skip_layers": "[]",
+            "kv_cache_memory_bytes": "None",
+            "kv_offloading_backend": "native",
+            "kv_offloading_size": "None",
+            "kv_sharing_fast_prefill": "False",
+            "mamba_block_size": "None",
+            "mamba_cache_dtype": "auto",
+            "mamba_cache_mode": "none",
+            "mamba_page_size_padded": "None",
+            "mamba_ssm_cache_dtype": "auto",
+            "num_cpu_blocks": "None",
+            "num_gpu_blocks": "17618",
+            "num_gpu_blocks_override": "None",
+            "prefix_caching_hash_algo": "sha256",
+            "sliding_window": "None",
+            "user_specified_block_size": "False",
+            "user_specified_mamba_block_size": "False"
+          },
+          "value": 1.0
+        }
+      ],
+      "http_requests_total": [
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "method": "GET",
+            "status": "2xx"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST",
+            "status": "2xx"
+          },
+          "value": 18.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST",
+            "status": "4xx"
+          },
+          "value": 3.0
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "method": "POST",
+            "status": "4xx"
+          },
+          "value": 2.0
+        }
+      ],
+      "http_requests_created": [
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "method": "GET",
+            "status": "2xx"
+          },
+          "value": 1779170685.4149537
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST",
+            "status": "2xx"
+          },
+          "value": 1779170760.4288292
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST",
+            "status": "4xx"
+          },
+          "value": 1779173040.5016084
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "method": "POST",
+            "status": "4xx"
+          },
+          "value": 1779173982.863717
+        }
+      ],
+      "http_request_size_bytes_count": [
+        {
+          "labels": {
+            "handler": "/v1/models"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions"
+          },
+          "value": 21.0
+        },
+        {
+          "labels": {
+            "handler": "none"
+          },
+          "value": 2.0
+        }
+      ],
+      "http_request_size_bytes_sum": [
+        {
+          "labels": {
+            "handler": "/v1/models"
+          },
+          "value": 0.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions"
+          },
+          "value": 5102.0
+        },
+        {
+          "labels": {
+            "handler": "none"
+          },
+          "value": 372.0
+        }
+      ],
+      "http_request_size_bytes_created": [
+        {
+          "labels": {
+            "handler": "/v1/models"
+          },
+          "value": 1779170685.4150426
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions"
+          },
+          "value": 1779170760.4289043
+        },
+        {
+          "labels": {
+            "handler": "none"
+          },
+          "value": 1779173982.8638072
+        }
+      ],
+      "http_response_size_bytes_count": [
+        {
+          "labels": {
+            "handler": "/v1/models"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions"
+          },
+          "value": 21.0
+        },
+        {
+          "labels": {
+            "handler": "none"
+          },
+          "value": 2.0
+        }
+      ],
+      "http_response_size_bytes_sum": [
+        {
+          "labels": {
+            "handler": "/v1/models"
+          },
+          "value": 4650.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions"
+          },
+          "value": 8464.0
+        },
+        {
+          "labels": {
+            "handler": "none"
+          },
+          "value": 44.0
+        }
+      ],
+      "http_response_size_bytes_created": [
+        {
+          "labels": {
+            "handler": "/v1/models"
+          },
+          "value": 1779170685.415121
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions"
+          },
+          "value": 1779170760.4289799
+        },
+        {
+          "labels": {
+            "handler": "none"
+          },
+          "value": 1779173982.8638752
+        }
+      ],
+      "http_request_duration_highr_seconds_bucket": [
+        {
+          "labels": {
+            "le": "0.01"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "le": "0.025"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "le": "0.05"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "le": "0.075"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "le": "0.1"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "le": "0.25"
+          },
+          "value": 15.0
+        },
+        {
+          "labels": {
+            "le": "0.5"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "le": "0.75"
+          },
+          "value": 28.0
+        },
+        {
+          "labels": {
+            "le": "1.0"
+          },
+          "value": 28.0
+        },
+        {
+          "labels": {
+            "le": "1.5"
+          },
+          "value": 30.0
+        },
+        {
+          "labels": {
+            "le": "2.0"
+          },
+          "value": 30.0
+        },
+        {
+          "labels": {
+            "le": "2.5"
+          },
+          "value": 30.0
+        },
+        {
+          "labels": {
+            "le": "3.0"
+          },
+          "value": 30.0
+        },
+        {
+          "labels": {
+            "le": "3.5"
+          },
+          "value": 30.0
+        },
+        {
+          "labels": {
+            "le": "4.0"
+          },
+          "value": 30.0
+        },
+        {
+          "labels": {
+            "le": "4.5"
+          },
+          "value": 31.0
+        },
+        {
+          "labels": {
+            "le": "5.0"
+          },
+          "value": 31.0
+        },
+        {
+          "labels": {
+            "le": "7.5"
+          },
+          "value": 32.0
+        },
+        {
+          "labels": {
+            "le": "10.0"
+          },
+          "value": 32.0
+        },
+        {
+          "labels": {
+            "le": "30.0"
+          },
+          "value": 33.0
+        },
+        {
+          "labels": {
+            "le": "60.0"
+          },
+          "value": 33.0
+        },
+        {
+          "labels": {
+            "le": "+Inf"
+          },
+          "value": 33.0
+        }
+      ],
+      "http_request_duration_highr_seconds_count": [
+        {
+          "labels": {},
+          "value": 33.0
+        }
+      ],
+      "http_request_duration_highr_seconds_sum": [
+        {
+          "labels": {},
+          "value": 33.6349374470019
+        }
+      ],
+      "http_request_duration_highr_seconds_created": [
+        {
+          "labels": {},
+          "value": 1779170583.3786557
+        }
+      ],
+      "http_request_duration_seconds_bucket": [
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "le": "0.1",
+            "method": "GET"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "le": "0.5",
+            "method": "GET"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "le": "1.0",
+            "method": "GET"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "le": "+Inf",
+            "method": "GET"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "le": "0.1",
+            "method": "POST"
+          },
+          "value": 3.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "le": "0.5",
+            "method": "POST"
+          },
+          "value": 4.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "le": "1.0",
+            "method": "POST"
+          },
+          "value": 16.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "le": "+Inf",
+            "method": "POST"
+          },
+          "value": 21.0
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "le": "0.1",
+            "method": "POST"
+          },
+          "value": 2.0
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "le": "0.5",
+            "method": "POST"
+          },
+          "value": 2.0
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "le": "1.0",
+            "method": "POST"
+          },
+          "value": 2.0
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "le": "+Inf",
+            "method": "POST"
+          },
+          "value": 2.0
+        }
+      ],
+      "http_request_duration_seconds_count": [
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "method": "GET"
+          },
+          "value": 10.0
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST"
+          },
+          "value": 21.0
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "method": "POST"
+          },
+          "value": 2.0
+        }
+      ],
+      "http_request_duration_seconds_sum": [
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "method": "GET"
+          },
+          "value": 0.016242066999438975
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST"
+          },
+          "value": 33.61566176400174
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "method": "POST"
+          },
+          "value": 0.00303361600072094
+        }
+      ],
+      "http_request_duration_seconds_created": [
+        {
+          "labels": {
+            "handler": "/v1/models",
+            "method": "GET"
+          },
+          "value": 1779170685.4152389
+        },
+        {
+          "labels": {
+            "handler": "/v1/chat/completions",
+            "method": "POST"
+          },
+          "value": 1779170760.4290698
+        },
+        {
+          "labels": {
+            "handler": "none",
+            "method": "POST"
+          },
+          "value": 1779173982.86399
+        }
+      ]
+    }
+  },
+  "gpu": {
+    "available": true,
+    "command": [
+      "nvidia-smi",
+      "--query-gpu=index,name,utilization.gpu,utilization.memory,memory.used,memory.free,memory.total,temperature.gpu,power.draw,clocks.current.sm,clocks.current.memory",
+      "--format=csv,noheader,nounits"
+    ],
+    "rows": [
+      {
+        "gpu_index": 0,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 98.0,
+        "utilization_memory_pct": 14.0,
+        "memory_used_mib": 135726.0,
+        "memory_free_mib": 7433.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 43.0,
+        "power_draw_w": 156.4,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 1,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 87.0,
+        "utilization_memory_pct": 11.0,
+        "memory_used_mib": 135398.0,
+        "memory_free_mib": 7761.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 42.0,
+        "power_draw_w": 160.11,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 2,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 98.0,
+        "utilization_memory_pct": 13.0,
+        "memory_used_mib": 135206.0,
+        "memory_free_mib": 7953.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 43.0,
+        "power_draw_w": 148.76,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 3,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 34.0,
+        "utilization_memory_pct": 4.0,
+        "memory_used_mib": 135398.0,
+        "memory_free_mib": 7761.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 44.0,
+        "power_draw_w": 147.53,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 4,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 25.0,
+        "utilization_memory_pct": 3.0,
+        "memory_used_mib": 135206.0,
+        "memory_free_mib": 7953.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 44.0,
+        "power_draw_w": 153.04,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 5,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 35.0,
+        "utilization_memory_pct": 4.0,
+        "memory_used_mib": 135398.0,
+        "memory_free_mib": 7761.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 43.0,
+        "power_draw_w": 151.14,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 6,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 57.0,
+        "utilization_memory_pct": 7.0,
+        "memory_used_mib": 135206.0,
+        "memory_free_mib": 7953.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 43.0,
+        "power_draw_w": 151.73,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      },
+      {
+        "gpu_index": 7,
+        "gpu_name": "NVIDIA H200 NVL",
+        "utilization_gpu_pct": 40.0,
+        "utilization_memory_pct": 5.0,
+        "memory_used_mib": 135398.0,
+        "memory_free_mib": 7761.0,
+        "memory_total_mib": 143771.0,
+        "temperature_c": 44.0,
+        "power_draw_w": 146.33,
+        "clocks_sm_mhz": 1785.0,
+        "clocks_memory_mhz": 3201.0
+      }
+    ],
+    "error": null
+  },
+  "aggregate": {
+    "gpu_memory_used_gb": 1057.555,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "error": null
+}
