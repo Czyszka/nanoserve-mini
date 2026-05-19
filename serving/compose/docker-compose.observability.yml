@@ -1,10 +1,6 @@
-# Quick observability stack for the server session.
-# Image tags can be overridden from .env without editing this file:
-#   PROMETHEUS_IMAGE=prom/prometheus:<tag>
-#   GRAFANA_IMAGE=grafana/grafana:<tag>
 services:
   prometheus:
-    image: "${PROMETHEUS_IMAGE:-prom/prometheus:v3}"
+    image: prom/prometheus:v3
     container_name: prometheus
     hostname: prometheus
     restart: unless-stopped
@@ -12,7 +8,7 @@ services:
       - "${PROMETHEUS_HOST_PORT:-9090}:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
+      - /home/ubuntusrv2/working/nanoserve-observability/prometheus-data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -21,7 +17,7 @@ services:
       - nanoserve-net
 
   grafana:
-    image: "${GRAFANA_IMAGE:-grafana/grafana:latest}"
+    image: grafana/grafana:latest
     container_name: grafana
     hostname: grafana
     restart: unless-stopped
@@ -32,16 +28,12 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - grafana-data:/var/lib/grafana
+      - /home/ubuntusrv2/working/nanoserve-observability/grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
     networks:
       - nanoserve-net
-
-volumes:
-  prometheus-data:
-  grafana-data:
 
 networks:
   nanoserve-net:
