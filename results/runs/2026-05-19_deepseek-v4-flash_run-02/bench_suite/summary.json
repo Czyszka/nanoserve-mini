@@ -1,0 +1,150 @@
+{
+  "schema": "nanoserve-mini.bench-suite.v1",
+  "script_name": "run_bench_suite.py",
+  "run_id": "2026-05-19_deepseek-v4-flash_run-02",
+  "model": "DeepSeek-V4-Flash",
+  "base_url": "http://127.0.0.1:4000",
+  "metrics_base_url": "http://127.0.0.1:8004",
+  "started_at": "2026-05-19T07:32:59.442455+00:00",
+  "ended_at": "2026-05-19T07:33:06.485590+00:00",
+  "generated_run_id": true,
+  "completed": true,
+  "error": null,
+  "steps": [
+    {
+      "name": "snapshot_pre",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8004",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-05-19_deepseek-v4-flash_run-02",
+        "--phase",
+        "pre"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-05-19T07:32:59.442474+00:00",
+      "ended_at": "2026-05-19T07:32:59.827062+00:00",
+      "output_paths": [
+        "results/runs/2026-05-19_deepseek-v4-flash_run-02/server_metrics/snapshot_pre.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "request_once",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:4000",
+        "--model",
+        "DeepSeek-V4-Flash",
+        "--prompt",
+        "Say hi in one short sentence.",
+        "--max-tokens",
+        "64",
+        "--temperature",
+        "0.0",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-05-19_deepseek-v4-flash_run-02",
+        "--api-key",
+        "sk-local-disabled",
+        "--workload",
+        "single-target-bench-suite"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-05-19T07:32:59.827155+00:00",
+      "ended_at": "2026-05-19T07:33:00.341274+00:00",
+      "output_paths": [
+        "results/runs/2026-05-19_deepseek-v4-flash_run-02/singlestream_lite_correctness/result.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "measure_ttft_once",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:4000",
+        "--model",
+        "DeepSeek-V4-Flash",
+        "--prompt",
+        "Say hi in one short sentence.",
+        "--max-tokens",
+        "64",
+        "--temperature",
+        "0.0",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-05-19_deepseek-v4-flash_run-02",
+        "--api-key",
+        "sk-local-disabled",
+        "--workload",
+        "single-target-bench-suite"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-05-19T07:33:00.341298+00:00",
+      "ended_at": "2026-05-19T07:33:00.901795+00:00",
+      "output_paths": [
+        "results/runs/2026-05-19_deepseek-v4-flash_run-02/singlestream_lite_latency/result.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "run_sequential_benchmark",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:4000",
+        "--model",
+        "DeepSeek-V4-Flash",
+        "--prompt",
+        "Say hi in one short sentence.",
+        "--max-tokens",
+        "64",
+        "--temperature",
+        "0.0",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-05-19_deepseek-v4-flash_run-02",
+        "--api-key",
+        "sk-local-disabled",
+        "--workload",
+        "single-target-bench-suite",
+        "--warmup",
+        "1",
+        "--runs",
+        "10"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-05-19T07:33:00.901833+00:00",
+      "ended_at": "2026-05-19T07:33:06.183292+00:00",
+      "output_paths": [
+        "results/runs/2026-05-19_deepseek-v4-flash_run-02/singlestream_lite_repeated/results.jsonl",
+        "results/runs/2026-05-19_deepseek-v4-flash_run-02/singlestream_lite_repeated/summary.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "snapshot_post",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8004",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-05-19_deepseek-v4-flash_run-02",
+        "--phase",
+        "post"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-05-19T07:33:06.183328+00:00",
+      "ended_at": "2026-05-19T07:33:06.485548+00:00",
+      "output_paths": [
+        "results/runs/2026-05-19_deepseek-v4-flash_run-02/server_metrics/snapshot_post.json"
+      ],
+      "error": null
+    }
+  ]
+}
