@@ -10,9 +10,9 @@ The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to t
 
 ## Summary cursor
 
-- Last summarized commit before this refresh: `e3eaf0c`
-- Last summarized at: 2026-05-19
-- Manual refresh 2026-05-19: updated after the server session that synced compose, ran LiteLLM smoke, ran proxy bench suites for Kimi/DeepSeek, collected Kimi stream-debug data, and started Prometheus/Grafana.
+- Last summarized commit: `592c6d4`
+- Last summarized at: 2026-05-20
+- 2026-05-20 sync: laptop follow-up — #31 Kimi parser fix merged, #35 Grafana dashboard provisioning merged, `rg` installed on the laptop and wired into env checks.
 
 ---
 
@@ -39,12 +39,12 @@ Live state:
 - OpenWebUI is running and communicates with the vLLM services.
 - LiteLLM Proxy runs on port 4000 and routes by `model` to Kimi and DeepSeek. Smoke tests through proxy passed for both upstreams.
 - `run_bench_suite.py` has been run through LiteLLM Proxy for both Kimi K2.6 and DeepSeek-V4-Flash; results are committed.
-- Prometheus + Grafana configuration exists under `serving/compose/` and containers have been started. Observability is partially validated, but the actual dashboard/panels are not yet a finished artifact.
+- Prometheus + Grafana configuration exists under `serving/compose/`, including a provisioned Phase 1 dashboard (`grafana/provisioning/dashboards/vllm-phase1.json`). Containers have been started; the dashboard panels still need validation against real metric names with live load.
 - Kimi K2.6 TTFT/TPOT parsing fixed (issue #31): `measure_ttft_once.py` now records a separate `ttft_any_token_seconds` / `tpot_any_token_seconds` covering reasoning-trace text (`delta.reasoning` / `delta.reasoning_content`) while `ttft_seconds` stays final-answer-only. Verified against the committed stream-debug artifacts.
 
 Phase 1 deliverables still owed:
 
-- **Prometheus + Grafana dashboard** showing useful live vLLM metrics during load — stack exists and containers run, but dashboard/panels still need to be built from the real metric names.
+- **Prometheus + Grafana dashboard** showing useful live vLLM metrics during load — a provisioned dashboard JSON now exists; remaining work is validating its panels against real metric names with live load.
 - **W1 write-up** — not started; should be drafted after observability/dashboard is coherent enough to describe.
 
 ---
@@ -279,6 +279,14 @@ uv run pytest -q        OK, 113 passed
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-20 - Phase 1 laptop follow-up: #31 parser fix, Grafana provisioning, tooling
+
+- Why: clear the post-server laptop backlog and align laptop/server tooling.
+- Did: merged #31 Kimi reasoning TTFT/TPOT fix (PR #36) and #35 Grafana dashboard provisioning; installed `rg` on the laptop and wired it into the env checks, with a queued task to install it on the server.
+- Range: `e3eaf0c..592c6d4` (6 commits)
+- Validation: OK (ruff clean, pytest 121 passed).
+- Next: issues #32 (`.gitignore`) and #33 (session summary), then validate the Grafana dashboard against live metrics.
 
 ### 2026-05-20 - Issue #31: Kimi K2.6 TTFT/TPOT reasoning-stream parsing
 
