@@ -32,9 +32,17 @@ Thumbs.db
 # Large local-only artifacts
 artifacts/
 tmp/
-runs/
 **/bin/
 **/obj/
+
+# Benchmark results policy:
+# Commit small structured artifacts: .json .jsonl .csv .md .txt
+# Ignore large/local-only artifacts inside run directories
+results/runs/**/*.log
+results/runs/**/*.ncu-rep
+results/runs/**/*.nsys-rep
+results/runs/**/*.sqlite
+results/runs/**/*.db
 
 # Local research papers
 docs/papers/
