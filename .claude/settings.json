@@ -27,7 +27,16 @@
       "Bash(gh api*)",
       "Bash(uv *)",
       "Bash(ruff *)",
-      "Bash(pytest *)"
+      "Bash(pytest *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(git grep*)",
+      "Bash(rg *)",
+      "PowerShell(rg *)",
+      "PowerShell(git status*)",
+      "PowerShell(git diff*)",
+      "PowerShell(git log*)",
+      "PowerShell(gh *)"
     ]
   },
   "hooks": {
