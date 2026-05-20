@@ -198,10 +198,14 @@ Akceptacja:
 ### Następna sesja serwerowa
 
 1. Pull najnowszego repo.
-2. Uruchomić observability stack.
-3. Puścić bench suite dla obu modeli pod load.
-4. Potwierdzić dashboard live.
-5. Zebrać brakujące screenshoty/liczby do W1.
+2. Zainstalować `rg` (ripgrep) na serwerze: `sudo apt-get install -y ripgrep` —
+   żeby laptop i serwer miały te same narzędzia. `rg` jest już na laptopie;
+   `check_server_env.py` sprawdza jego obecność (`rg_version`). Szybkie zadanie,
+   nie zajmuje slotu GPU.
+3. Uruchomić observability stack.
+4. Puścić bench suite dla obu modeli pod load.
+5. Potwierdzić dashboard live.
+6. Zebrać brakujące screenshoty/liczby do W1.
 
 ---
 

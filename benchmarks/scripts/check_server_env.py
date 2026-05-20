@@ -10,6 +10,7 @@ COMMANDS: dict[str, list[str]] = {
     "git_version": ["git", "--version"],
     "python_version": ["python", "--version"],
     "uv_version": ["uv", "--version"],
+    "rg_version": ["rg", "--version"],
     "uname": ["uname", "-a"],
     "os_release": ["cat", "/etc/os-release"],
     "lscpu": ["lscpu"],

@@ -24,6 +24,7 @@ Then summarise the current state in 3-5 bullets before proposing work.
 ## Machines
 
 - **Windows 11 laptop** — dev, docs, analysis, benchmark script preparation.
+  `rg` (ripgrep) is installed and on `PATH` (PowerShell and cmd).
 - **Ubuntu 24 server, 8×H200 NVL** — primary GPU execution environment.
 - **Optional GPU cloud** — support buffer for off-hours tests; not the primary path.
 
