@@ -60,18 +60,14 @@ Phase 1 deliverables still owed:
 
 ## Important project docs
 
-Read these before making non-trivial changes:
+Read these before non-trivial changes:
 
-- `docs/project/roadmap.md` - current scope, phases, and Definition of Done.
-- `docs/operations/infrastructure.md` - machine roles and workflow.
-- `docs/operations/benchmark-methodology.md` - MLPerf-inspired lite benchmark modes, result schema contract, `--run-id` layout.
-- `docs/plans/2026-05-19-server-work-plan.md` - current server-session checklist and status.
-- `docs/plans/2026-05-11-server-work-plan.md` - older server-session context, now superseded by the 2026-05-19 close-out work.
-- `serving/compose/` - vLLM/OpenWebUI/LiteLLM/observability compose files.
-- `serving/runbooks/` - operational instructions.
-- `docs/learning/reading-list.md` - papers by phase.
-- `docs/README.md` - documentation map.
-- `AGENTS.md` / `CLAUDE.md` - agent entrypoints.
+- `AGENTS.md` / `CLAUDE.md` - agent rules, validation, scope boundaries, secrets/results policy.
+- `docs/project/roadmap.md` - durable scope, phases, Definition of Done, and out-of-scope boundaries.
+- `docs/operations/infrastructure.md` - machine roles, server/laptop workflow, and environment policy.
+- `docs/operations/benchmark-methodology.md` - benchmark modes, result schema contract, and `--run-id` layout.
+- `serving/compose/` and `serving/runbooks/` - live stack configuration and operational commands.
+- `docs/README.md` - full documentation map when more context is needed.
 
 Do not rewrite the roadmap/scope document unless explicitly asked.
 
@@ -195,13 +191,6 @@ reasoning-only `stream_short_prompt` now reports `completed` with
 - `run_bench_suite.py` completed for both `kimi-k2.6` and `DeepSeek-V4-Flash` through LiteLLM Proxy.
 - Prometheus and Grafana containers were started. Target/dashboard quality still needs follow-up.
 
-Most recent laptop validation before server work:
-
-```text
-uv run ruff check .     OK, all checks passed
-uv run pytest -q        OK, 113 passed
-```
-
 ---
 
 ## Handoff log
@@ -215,25 +204,6 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
 - Range: `e3eaf0c..592c6d4` (6 commits)
 - Validation: OK (ruff clean, pytest 121 passed).
 - Next: issues #32 (`.gitignore`) and #33 (session summary), then validate the Grafana dashboard against live metrics.
-
-### 2026-05-20 - Issue #31: Kimi K2.6 TTFT/TPOT reasoning-stream parsing
-
-- Why: `measure_ttft_once.py` reported `TTFT: n/a` / `TPOT: n/a` for Kimi K2.6
-  because the parser only counted `delta.content`; Kimi streams its
-  chain-of-thought via `delta.reasoning`.
-- Did:
-  - Added `extract_stream_reasoning_text` to `_client.py` (handles
-    `delta.reasoning` and DeepSeek-style `delta.reasoning_content`).
-  - `measure_stream` now records `ttft_any_token_seconds` (first content *or*
-    reasoning token) and `reasoning_chars` alongside the unchanged final-answer
-    `ttft_seconds`; `build_record` adds `tpot_any_token_seconds`.
-  - A reasoning-only response (max_tokens spent before the final answer) now
-    counts as `completed`; non-reasoning models are unaffected.
-  - Metrics additions are additive — schema stays `nanoserve-mini.ttft-once.v2`.
-  - Added/updated tests in `test_client.py` and `test_measure_ttft_once.py`.
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 121 passed;
-  parser smoke-checked against committed stream-debug artifacts.
-- Next: issue #32 (`.gitignore` for benchmark artifacts), then issue #33.
 
 ### 2026-05-19 - Phase 1 server close-out: compose, proxy, bench, observability bootstrap
 
