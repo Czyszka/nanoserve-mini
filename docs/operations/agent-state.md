@@ -1,10 +1,8 @@
 # Agent State - nanoserve-mini
 
-This file is the repo-tracked handoff state for Claude Code, Codex, and human work.
-
-Keep it concise and current. Update it after meaningful repo changes, especially before committing, pushing, or handing work to another agent.
-
-The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to this file. The `tidy-docs` routine (see `docs/templates/tidy-docs-agent.md`) compacts it in place. Git is the archive — no separate handoff archive directory.
+Repo-tracked handoff state for Claude Code, Codex, and human work. Keep it concise
+and current. Maintained by the `sync-state` / `tidy-docs` routines (see
+`docs/templates/`); Git is the archive.
 
 ---
 
@@ -13,16 +11,6 @@ The `sync-state` routine (see `docs/templates/sync-state-agent.md`) appends to t
 - Last summarized commit: `592c6d4`
 - Last summarized at: 2026-05-20
 - 2026-05-20 sync: laptop follow-up — #31 Kimi parser fix merged, #35 Grafana dashboard provisioning merged, `rg` installed on the laptop and wired into env checks.
-
----
-
-## Canonical file roles
-
-- `CLAUDE.md` - stable instructions for Claude Code.
-- `AGENTS.md` - stable instructions for Codex.
-- `docs/operations/agent-state.md` - current project state, decisions, next step, and blockers.
-- `docs/project/roadmap.md` - project scope; do not change it without an explicit decision.
-- `docs/README.md` - documentation map.
 
 ---
 
@@ -68,16 +56,6 @@ Phase 1 deliverables still owed:
   - `benchmarks/scripts/sample_gpu_metrics.py`
   - `benchmarks/scripts/run_bench_suite.py`
 
-Recent committed work from 2026-05-19:
-
-- `bench: resalts of benchmarks of kimi k2.6 from 11.05` — recovered earlier benchmark artifacts.
-- `fix: compose fix TP instead of DP for kimi` — reconciled server compose and corrected Kimi strategy.
-- `bench: add compose smoke results for kimi and deepseek`.
-- `bench: collect kimi stream debug artifacts`.
-- `bench: run litellm proxy suite for kimi and deepseek`.
-- Prometheus/Grafana compose and provisioning commits.
-- `docs: mark 2026-05-19 server plan progress`.
-
 ---
 
 ## Important project docs
@@ -101,34 +79,10 @@ Do not rewrite the roadmap/scope document unless explicitly asked.
 
 ## Current technical direction
 
-The benchmark scripts use these MLPerf-inspired lite modes:
-
-| Script | Benchmark mode | Schema |
-|---|---|---|
-| `benchmarks/scripts/request_once.py` | `singlestream_lite_correctness` | `nanoserve-mini.request-once.v2` |
-| `benchmarks/scripts/measure_ttft_once.py` | `singlestream_lite_latency` | `nanoserve-mini.ttft-once.v2` |
-| `benchmarks/scripts/run_sequential_benchmark.py` summary | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench.v3` |
-| `benchmarks/scripts/run_sequential_benchmark.py` row | `singlestream_lite_repeated` | `nanoserve-mini.sequential-bench-row.v3` |
-| `benchmarks/scripts/collect_metrics_snapshot.py` | `server_metrics` | `nanoserve-mini.server-metrics-snapshot.v1` |
-| `benchmarks/scripts/sample_gpu_metrics.py` | `server_metrics` | `nanoserve-mini.gpu-samples-meta.v1` |
-| `benchmarks/scripts/run_bench_suite.py` | suite manifest | `nanoserve-mini.bench-suite.v1` |
-
-`benchmarks/scripts/run_bench_suite.py` is the one-command Phase 1 launcher. It generates `YYYY-MM-DD_<model-slug>_run-NN`, runs `snapshot_pre -> request_once -> measure_ttft_once -> run_sequential_benchmark -> snapshot_post`, sends requests through LiteLLM Proxy when `--base-url http://127.0.0.1:4000` is used, and writes `results/runs/<run_id>/bench_suite/summary.json`.
-
-Expected run layout:
-
-```text
-results/runs/<run_id>/
-  singlestream_lite_correctness/result.json
-  singlestream_lite_latency/result.json
-  singlestream_lite_repeated/results.jsonl
-  singlestream_lite_repeated/summary.json
-  server_metrics/snapshot_pre.json
-  server_metrics/snapshot_post.json
-  server_metrics/gpu_samples.csv
-  server_metrics/gpu_samples_meta.json
-  bench_suite/summary.json
-```
+Benchmark scripts use MLPerf-inspired lite modes. The script ↔ `benchmark_mode` ↔
+schema table, the `--run-id` output layout, and the `run_bench_suite.py`
+one-command launcher are documented in `docs/operations/benchmark-methodology.md`;
+schema identifiers are exported from `benchmarks/scripts/_schemas.py`.
 
 ---
 
@@ -136,34 +90,17 @@ results/runs/<run_id>/
 
 Prioritise laptop-side cleanup first; do not burn GPU/server time on documentation or repo hygiene.
 
-1. **Issue #32 — fix `.gitignore` rules for benchmark run artifacts on laptop.** Make small structured `results/runs/**/*.json|jsonl|csv|md` trackable while keeping logs, model caches, Nsight traces and secrets ignored.
-2. **Issue #33 — write 2026-05-19 server session summary** as `docs/plans/2026-05-19-server-session-summary.md` or fold into weekly notes.
-3. **Build the actual Grafana dashboard.** Use real vLLM metric names from `/metrics` / Prometheus instead of guessed names. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
-4. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
-5. **Draft W1** only after the proxy benchmark + observability story is coherent.
-6. **Install `rg` (ripgrep) on the server** so laptop and server share the same tooling. `rg` is already installed on the laptop; `check_server_env.py` now probes for it (`rg_version`). On Ubuntu: `sudo apt-get install -y ripgrep`. Quick task — fold into the next server session, do not open a dedicated GPU slot for it.
-7. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
-8. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+1. **Issue #33 — write 2026-05-19 server session summary** as `docs/plans/2026-05-19-server-session-summary.md` or fold into weekly notes.
+2. **Build the actual Grafana dashboard.** Use real vLLM metric names from `/metrics` / Prometheus instead of guessed names. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
+3. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
+4. **Draft W1** only after the proxy benchmark + observability story is coherent.
+5. **Install `rg` (ripgrep) on the server** so laptop and server share the same tooling. `rg` is already installed on the laptop; `check_server_env.py` now probes for it (`rg_version`). On Ubuntu: `sudo apt-get install -y ripgrep`. Quick task — fold into the next server session, do not open a dedicated GPU slot for it.
+6. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
+7. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
 
 ---
 
 ## Standard commands
-
-Local / laptop:
-
-```bash
-uv sync --extra dev
-uv run ruff check .
-uv run pytest
-```
-
-Server:
-
-```bash
-git pull
-uv sync --extra dev
-uv run python -m benchmarks.scripts.check_server_env
-```
 
 LiteLLM proxy benchmark examples:
 
@@ -229,19 +166,10 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Open questions / blockers
 
-- [ ] `.gitignore` / benchmark results policy needs cleanup so normal `git add` works for small structured artifacts. Tracked by issue #32.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
 - [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
-
-Closed since last refresh:
-
-- [x] Issue #31 — Kimi K2.6 TTFT/TPOT reasoning-stream parsing fixed on laptop.
-- [x] Import unpushed server-side compose and benchmark results.
-- [x] Smoke LiteLLM Proxy on server.
-- [x] Run `run_bench_suite.py` for both Kimi and DeepSeek through LiteLLM Proxy.
-- [x] Start Prometheus + Grafana containers.
 
 ---
 
@@ -342,38 +270,5 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
 - Added `litellm` service, `litellm-config.yaml`, `.env.example` keys, image pinning, and compose docs.
 - Outcome on 2026-05-19: LiteLLM smoke and proxy benchmark suites passed on the server.
 
-### 2026-05-17 - Repo layout consolidation + off-roadmap archive
-
-- Consolidated layout: `benchmarks/scripts/`, `serving/`, `results/`, `docs/`.
-- Archived off-roadmap coding-agent eval work to branch `archive/coding-agent-tasks`.
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 102 passed.
-
-### 2026-05-13 .. 2026-05-16 - Coding-agent eval harness exploration (archived)
-
-A week of work on a synthetic coding-agent evaluation harness. Outcome: off-roadmap for Phase 1 and archived to branch `archive/coding-agent-tasks`.
-
-### 2026-05-11 - Compose capture + DeepSeek small-model experiment
-
-- Added Kimi/OpenWebUI compose work and experimental DeepSeek `vllm-small` service.
-- Human note at the time: DeepSeek was benchmarked on the server and artifacts still needed to be pushed.
-- Outcome on 2026-05-19: artifacts and corrected compose were pushed.
-
-### 2026-05-08 - PR #7 review follow-up + server-metrics scripts
-
-- Added server metrics parsing/snapshot/sampling scripts and strict failure records for `measure_ttft_once.py`.
-- Added MLPerf compliance-status section to `docs/operations/benchmark-methodology.md`.
-- Validation: `uv run ruff check .`; `uv run pytest -q` = 102 passed.
-
-### 2026-05-07/08 - Benchmark normalisation + coding-agent task specs
-
-- Normalised benchmark result schema, run-id layout, token-level metrics, workload spec, and strict JSON output.
-- Later coding-agent task-spec work was archived with the off-roadmap branch.
-
-### 2026-05-06 - Server bootstrap + Kimi-K2.6 first serve
-
-- Captured server environment and got Kimi-K2.6 serving on 8×H200 via TP=8 + Eagle3 speculative decoding.
-- Single-node DEP did not work for this run.
-- OpenWebUI was stood up and verified.
-
-> Pre-2026-05-06 handoff entries compacted. Source: `90d3fcdf8767baa09f53f537a686b165466786fc`.
-> Full history: `git show 90d3fcdf8767baa09f53f537a686b165466786fc:docs/agent-state.md`.
+> Pre-2026-05-17 handoff entries compacted. Source: `4d6fac7800047c8c54ee32e4235ab6ce62abcc5d`.
+> Full history: `git show 4d6fac7800047c8c54ee32e4235ab6ce62abcc5d:docs/operations/agent-state.md`.
