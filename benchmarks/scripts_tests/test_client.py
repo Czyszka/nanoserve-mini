@@ -21,6 +21,7 @@ from benchmarks.scripts._client import (
     chat_completion_stream,
     extract_assistant_text,
     extract_stream_delta_text,
+    extract_stream_reasoning_text,
     extract_stream_usage,
 )
 
@@ -224,6 +225,33 @@ def test_extract_stream_delta_text_handles_missing_fields() -> None:
     assert extract_stream_delta_text({}) == ""
     assert extract_stream_delta_text({"choices": [{"delta": {}}]}) == ""
     assert extract_stream_delta_text({"choices": [{"delta": {"role": "assistant"}}]}) == ""
+
+
+def test_extract_stream_reasoning_text_handles_missing_fields() -> None:
+    assert extract_stream_reasoning_text({}) == ""
+    assert extract_stream_reasoning_text({"choices": []}) == ""
+    assert extract_stream_reasoning_text({"choices": [{"delta": {}}]}) == ""
+    # a plain content chunk carries no reasoning
+    assert extract_stream_reasoning_text({"choices": [{"delta": {"content": "hi"}}]}) == ""
+
+
+def test_extract_stream_reasoning_text_reads_kimi_reasoning_field() -> None:
+    # Kimi K2.6 streams chain-of-thought via delta.reasoning
+    chunk = {"choices": [{"delta": {"reasoning": " The user wants"}}]}
+    assert extract_stream_reasoning_text(chunk) == " The user wants"
+    # ...and content stays empty for that chunk
+    assert extract_stream_delta_text(chunk) == ""
+
+
+def test_extract_stream_reasoning_text_reads_reasoning_content_field() -> None:
+    # DeepSeek-style models use delta.reasoning_content
+    chunk = {"choices": [{"delta": {"reasoning_content": "step 1"}}]}
+    assert extract_stream_reasoning_text(chunk) == "step 1"
+
+
+def test_extract_stream_reasoning_text_ignores_non_string() -> None:
+    assert extract_stream_reasoning_text({"choices": [{"delta": {"reasoning": None}}]}) == ""
+    assert extract_stream_reasoning_text({"choices": [{"delta": {"reasoning": 123}}]}) == ""
 
 
 def test_extract_stream_usage_returns_dict_or_none() -> None:

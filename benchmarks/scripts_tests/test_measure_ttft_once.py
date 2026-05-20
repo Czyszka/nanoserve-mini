@@ -84,6 +84,65 @@ def test_measure_stream_anchors_ttft_on_first_content_chunk() -> None:
     assert result.chunks_received == 3
     assert result.output_text == "hi there"
     assert result.completed is True
+    # No reasoning trace -> any-token TTFT equals content TTFT, behaviour for
+    # non-reasoning models is unchanged.
+    assert result.ttft_any_token_seconds == pytest.approx(0.10)
+    assert result.reasoning_chars == 0
+
+
+def test_measure_stream_reasoning_then_content() -> None:
+    # Kimi K2.6: streams chain-of-thought via delta.reasoning, then the final
+    # answer via delta.content. The two TTFT anchors must stay distinct.
+    clock = _FakeClock([0.05, 0.30, 0.50])
+
+    def kimi_chunks() -> Iterator[dict[str, Any]]:
+        yield {"choices": [{"delta": {"role": "assistant", "content": ""}}]}
+        yield {"choices": [{"delta": {"reasoning": "The user "}}]}
+        yield {"choices": [{"delta": {"reasoning": "wants a greeting."}}]}
+        yield {"choices": [{"delta": {"content": "Hi"}}]}
+        yield {"choices": [{"delta": {"content": " there"}}]}
+
+    result = measure_stream(kimi_chunks(), start_time=0.0, clock=clock)
+    # any-token TTFT anchors on the first reasoning chunk...
+    assert result.ttft_any_token_seconds == pytest.approx(0.05)
+    # ...content TTFT anchors only on the first delta.content chunk.
+    assert result.ttft_seconds == pytest.approx(0.30)
+    assert result.e2e_seconds == pytest.approx(0.50)
+    assert result.output_text == "Hi there"
+    assert result.reasoning_chars == len("The user ") + len("wants a greeting.")
+    assert result.completed is True
+
+
+def test_measure_stream_reasoning_only_truncated() -> None:
+    # Short prompt truncated by max_tokens before the final answer: all tokens
+    # were spent on reasoning. content TTFT is genuinely n/a; any-token is not.
+    clock = _FakeClock([0.07, 0.40])
+
+    def reasoning_only() -> Iterator[dict[str, Any]]:
+        yield {"choices": [{"delta": {"role": "assistant", "content": ""}}]}
+        yield {"choices": [{"delta": {"reasoning": "thinking"}}]}
+        yield {"choices": [{"delta": {"reasoning": " hard..."}}]}
+
+    result = measure_stream(reasoning_only(), start_time=0.0, clock=clock)
+    assert result.ttft_seconds is None
+    assert result.ttft_any_token_seconds == pytest.approx(0.07)
+    assert result.output_text == ""
+    assert result.reasoning_chars == len("thinking") + len(" hard...")
+    # A reasoning-only response did generate tokens -> it counts as completed.
+    assert result.completed is True
+
+
+def test_measure_stream_reads_reasoning_content_field() -> None:
+    # DeepSeek-style models use delta.reasoning_content instead of delta.reasoning.
+    clock = _FakeClock([0.02, 0.10])
+
+    def chunks() -> Iterator[dict[str, Any]]:
+        yield {"choices": [{"delta": {"reasoning_content": "ponder"}}]}
+
+    result = measure_stream(chunks(), start_time=0.0, clock=clock)
+    assert result.ttft_any_token_seconds == pytest.approx(0.02)
+    assert result.ttft_seconds is None
+    assert result.reasoning_chars == len("ponder")
 
 
 def test_parse_args_accepts_api_key() -> None:
@@ -203,6 +262,39 @@ def test_build_record_shape() -> None:
     assert record["output_text"] == "hi"
 
 
+def test_build_record_reasoning_only_response() -> None:
+    # Reasoning-only run: final-answer TPOT must stay None (no content was
+    # emitted), but the any-token TPOT is computable from usage tokens.
+    request = CompletionRequest(base_url="http://x", model="m", prompt="p", max_tokens=64)
+    controls = RunControls(
+        model="m", base_url="http://x", measured_runs=1, warmup_runs=0,
+        decoding={"temperature": 0.0, "max_tokens": 64},
+    )
+    from benchmarks.scripts.measure_ttft_once import StreamRunResult
+
+    result = StreamRunResult(
+        ttft_seconds=None,
+        e2e_seconds=0.9,
+        chunks_received=10,
+        output_text="",
+        completed=True,
+        usage={"prompt_tokens": 14, "completion_tokens": 64, "total_tokens": 78},
+        ttft_any_token_seconds=0.1,
+        reasoning_chars=320,
+    )
+    record = build_record(request=request, controls=controls, result=result)
+    metrics = record["metrics"]
+
+    assert metrics["ttft_seconds"] is None
+    assert metrics["ttft_any_token_seconds"] == 0.1
+    # final-answer TPOT not computable without a content TTFT anchor
+    assert metrics["tpot_seconds"] is None
+    # any-token TPOT: (0.9 - 0.1) / (64 - 1)
+    assert metrics["tpot_any_token_seconds"] == pytest.approx(0.8 / 63)
+    assert metrics["reasoning_chars"] == 320
+    assert metrics["output_chars"] == 0
+
+
 def test_main_writes_result_json(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -251,10 +343,17 @@ def test_main_writes_result_json(
     assert record["controls"]["workload_spec"]["concurrency"] == 1
     assert record["output_text"] == "hi there"
 
+    # additive metrics for reasoning models are always present
+    assert record["metrics"]["ttft_any_token_seconds"] is not None
+    assert record["metrics"]["reasoning_chars"] == 0
+    assert record["metrics"]["tpot_any_token_seconds"] is None
+
     out = capsys.readouterr().out
-    assert "TTFT:" in out
+    assert "TTFT (content):" in out
+    assert "TTFT (any):" in out
     assert "E2E:" in out
-    assert "TPOT:" in out
+    assert "TPOT (content):" in out
+    assert "TPOT (any):" in out
 
 
 def test_main_uses_run_id_path(
