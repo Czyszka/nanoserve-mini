@@ -8,9 +8,9 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `592c6d4`
+- Last summarized commit: `a7ce83f`
 - Last summarized at: 2026-05-20
-- 2026-05-20 sync: laptop follow-up — #31 Kimi parser fix merged, #35 Grafana dashboard provisioning merged, `rg` installed on the laptop and wired into env checks.
+- 2026-05-20 sync: laptop follow-up - #31 Kimi parser fix merged, #32 benchmark artifact ignore cleanup closed, #33 server session summary added, #35 Grafana dashboard provisioning merged, `rg` installed on the laptop and wired into env checks.
 
 ---
 
@@ -86,9 +86,9 @@ schema identifiers are exported from `benchmarks/scripts/_schemas.py`.
 
 Prioritise laptop-side cleanup first; do not burn GPU/server time on documentation or repo hygiene.
 
-1. **Issue #33 — write 2026-05-19 server session summary** as `docs/plans/2026-05-19-server-session-summary.md` or fold into weekly notes.
-2. **Build the actual Grafana dashboard.** Use real vLLM metric names from `/metrics` / Prometheus instead of guessed names. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
-3. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
+1. **Validate the Grafana dashboard under live load.** Use real vLLM metric names from `/metrics` / Prometheus. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
+2. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
+3. **Issue #34 — DCGM Exporter + GPU hardware metrics.** DCGM Exporter can run under Docker Compose; add/validate it on the server and extend Grafana with temperature, power, VRAM, and SM utilization panels.
 4. **Draft W1** only after the proxy benchmark + observability story is coherent.
 5. **Install `rg` (ripgrep) on the server** so laptop and server share the same tooling. `rg` is already installed on the laptop; `check_server_env.py` now probes for it (`rg_version`). On Ubuntu: `sudo apt-get install -y ripgrep`. Quick task — fold into the next server session, do not open a dedicated GPU slot for it.
 6. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
@@ -200,10 +200,10 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
 ### 2026-05-20 - Phase 1 laptop follow-up: #31 parser fix, Grafana provisioning, tooling
 
 - Why: clear the post-server laptop backlog and align laptop/server tooling.
-- Did: merged #31 Kimi reasoning TTFT/TPOT fix (PR #36) and #35 Grafana dashboard provisioning; installed `rg` on the laptop and wired it into the env checks, with a queued task to install it on the server.
-- Range: `e3eaf0c..592c6d4` (6 commits)
+- Did: merged #31 Kimi reasoning TTFT/TPOT fix (PR #36), closed #32 benchmark artifact ignore cleanup, added #33 server session summary, and merged #35 Grafana dashboard provisioning; installed `rg` on the laptop and wired it into the env checks, with a queued task to install it on the server.
+- Range: `e3eaf0c..a7ce83f` plus the #33 summary doc update
 - Validation: OK (ruff clean, pytest 121 passed).
-- Next: issues #32 (`.gitignore`) and #33 (session summary), then validate the Grafana dashboard against live metrics.
+- Next: validate the Grafana dashboard against live metrics, add DCGM/GPU hardware metrics under issue #34, then prepare W1.
 
 ### 2026-05-19 - Phase 1 server close-out: compose, proxy, bench, observability bootstrap
 
@@ -224,9 +224,9 @@ Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-s
   - LiteLLM Proxy worked for both upstream models.
   - Bench suite completed for both upstream models through proxy.
   - Observability containers started; dashboard still pending.
-- Next:
-  - Laptop: issue #31, issue #32, issue #33.
-  - Server/laptop: finish Grafana dashboard from real metric names.
+- Next at session end:
+  - Laptop follow-ups were issue #31, issue #32, and issue #33; these are now closed/handled.
+  - Server/laptop: validate Grafana dashboard from real metric names and add GPU hardware metrics.
   - Then W1 write-up.
 
 ### 2026-05-17 - Bench suite launcher for LiteLLM proxy runs

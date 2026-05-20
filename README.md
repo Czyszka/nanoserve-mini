@@ -17,17 +17,20 @@ observability.
 What works:
 
 - Kimi-K2.6 runs through vLLM on the 8xH200 server.
+- DeepSeek-V4-Flash runs alongside Kimi as a smaller vLLM service.
 - OpenWebUI is connected.
+- LiteLLM Proxy routes by `model` to Kimi and DeepSeek.
 - Benchmark scripts exist under `benchmarks/scripts/`.
-- `benchmarks/scripts/run_bench_suite.py` is ready for one-command proxy
-  benchmark runs.
-- LiteLLM Proxy config is prepared in compose; server smoke is still pending.
+- `benchmarks/scripts/run_bench_suite.py` has completed proxy benchmark
+  runs for both models.
+- Prometheus + Grafana compose exists, including a provisioned Phase 1
+  dashboard that still needs live-load validation.
 
 Next 3 actions:
 
-1. Smoke LiteLLM Proxy on the server.
-2. Run `run_bench_suite.py` per model through the proxy.
-3. Start the Prometheus + Grafana dashboard.
+1. Validate the Grafana dashboard under live benchmark load.
+2. Add/validate DCGM Exporter GPU hardware metrics.
+3. Prepare the W1 write-up after observability is coherent.
 
 Do not use `docs/operations/agent-state.md` as the human project dashboard. It
 is an AI-agent handoff file.
@@ -77,8 +80,8 @@ material brought into scope via the parallel company H200 project
 (TP scaling, MoE serving, FP8, multi-tenant - measured at work, written
 up here).
 
-Phase 1 deliverables still owed: LiteLLM Proxy server smoke, Prometheus +
-Grafana dashboard, write-up W1.
+Phase 1 deliverables still owed: live validation of the Prometheus + Grafana
+dashboard, GPU hardware metrics, and write-up W1.
 
 ## Local development
 
@@ -117,4 +120,5 @@ for the full list and rotation procedure if a secret leaks.
 
 - [Roadmap](docs/project/roadmap.md) - scope, phases, definition of done.
 - [Benchmark methodology](docs/operations/benchmark-methodology.md) - measurement contract.
+- [2026-05-19 server session summary](docs/plans/2026-05-19-server-session-summary.md) - Phase 1 server close-out summary.
 - [Serving compose](serving/compose/) - server stack.
