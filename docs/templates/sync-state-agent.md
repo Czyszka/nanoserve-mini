@@ -122,7 +122,7 @@ h. **Handoff log** — prepend ONE entry using the compressed template below.
 
 ```bash
 git add docs/operations/agent-state.md
-git -c commit.gpgsign=false commit -m "docs: sync project state - <topic from new entry>"
+git commit -m "docs: sync project state - <topic from new entry>"
 git push origin HEAD:main
 ```
 
