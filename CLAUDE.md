@@ -36,7 +36,7 @@ Then summarise the current state in 3-5 bullets before proposing work.
 
 ## Standard validation
 
-For code changes:
+**Code changes** (`benchmarks/scripts/`, `benchmarks/scripts_tests/`, any `.py`):
 
 ```bash
 uv sync --extra dev
@@ -44,19 +44,24 @@ uv run ruff check .
 uv run pytest
 ```
 
-For documentation-only changes, `git status` + `git diff --check` are
-sufficient by default. Only run `ruff` / `pytest` when the doc change
-also touches executable examples, generated artefacts, test fixtures,
-or code-adjacent configuration.
+**Config / infra changes** (`.gitignore`, `*.yml`, `*.yaml`, `*.json` compose or
+provisioning files, `pyproject.toml`, `Dockerfile`): `git diff --check` is
+sufficient. No `ruff` / `pytest` needed unless the change also touches `.py` files.
+
+**Documentation-only changes** (`docs/`, `*.md`, `serving/runbooks/`):
+`git status` + `git diff --check` only. Add `ruff` / `pytest` only when the
+change also touches executable examples, test fixtures, or generated artefacts.
 
 ## Repository layout
 
 ```text
 benchmarks/scripts/         CLI benchmark + metrics producers and shared library.
 benchmarks/scripts_tests/   Pytest suite for the above (mocked, runs on laptop).
-serving/compose/            Docker Compose for vLLM + OpenWebUI.
+serving/compose/            Docker Compose: vLLM, OpenWebUI, LiteLLM Proxy, Prometheus, Grafana.
 serving/runbooks/           Operational instructions.
-results/{raw,runs,summaries}/   Tracked benchmark output.
+results/raw/                Raw snapshots (metric dumps, env snapshots).
+results/runs/               Per-run benchmark artifacts (JSON/JSONL/CSV/MD — commit small files).
+results/summaries/          Cross-run aggregated summaries.
 docs/{project,operations,learning,plans,templates,weekly}/
 ```
 
@@ -141,17 +146,9 @@ Before editing:
 git status
 ```
 
-Before finishing code changes:
-
-```bash
-uv run ruff check .
-uv run pytest
-git status
-```
-
-Before finishing doc-only changes: `git status` + `git diff --check` is
-the default; add `ruff` / `pytest` only when the change also touches
-code, scripts, fixtures, generated artefacts, or executable snippets.
+Before finishing any change, run validation matching the change type —
+see **Standard validation** above. For config and doc-only changes
+`git diff --check` is sufficient; `ruff` / `pytest` only for `.py` changes.
 
 Use small commits. Preferred prefixes:
 
