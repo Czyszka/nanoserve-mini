@@ -6,6 +6,9 @@ python --version
 Write-Host "==> uv"
 uv --version
 
+Write-Host "==> rg (ripgrep)"
+rg --version
+
 Write-Host "==> Sync dependencies"
 uv sync --extra dev
 

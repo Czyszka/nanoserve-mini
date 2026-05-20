@@ -141,8 +141,9 @@ Prioritise laptop-side cleanup first; do not burn GPU/server time on documentati
 3. **Build the actual Grafana dashboard.** Use real vLLM metric names from `/metrics` / Prometheus instead of guessed names. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
 4. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
 5. **Draft W1** only after the proxy benchmark + observability story is coherent.
-6. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
-7. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+6. **Install `rg` (ripgrep) on the server** so laptop and server share the same tooling. `rg` is already installed on the laptop; `check_server_env.py` now probes for it (`rg_version`). On Ubuntu: `sudo apt-get install -y ripgrep`. Quick task — fold into the next server session, do not open a dedicated GPU slot for it.
+7. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
+8. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
 
 ---
 
