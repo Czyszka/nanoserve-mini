@@ -40,7 +40,7 @@ Live state:
 - LiteLLM Proxy runs on port 4000 and routes by `model` to Kimi and DeepSeek. Smoke tests through proxy passed for both upstreams.
 - `run_bench_suite.py` has been run through LiteLLM Proxy for both Kimi K2.6 and DeepSeek-V4-Flash; results are committed.
 - Prometheus + Grafana configuration exists under `serving/compose/` and containers have been started. Observability is partially validated, but the actual dashboard/panels are not yet a finished artifact.
-- Kimi K2.6 shows `TTFT: n/a` / `TPOT: n/a` in the current script because `measure_ttft_once.py` only treats non-empty `delta.content` as generated text. Raw stream-debug artifacts were collected and committed for laptop-side parser work.
+- Kimi K2.6 TTFT/TPOT parsing fixed (issue #31): `measure_ttft_once.py` now records a separate `ttft_any_token_seconds` / `tpot_any_token_seconds` covering reasoning-trace text (`delta.reasoning` / `delta.reasoning_content`) while `ttft_seconds` stays final-answer-only. Verified against the committed stream-debug artifacts.
 
 Phase 1 deliverables still owed:
 
@@ -136,14 +136,13 @@ results/runs/<run_id>/
 
 Prioritise laptop-side cleanup first; do not burn GPU/server time on documentation or repo hygiene.
 
-1. **Issue #31 — fix Kimi K2.6 TTFT/TPOT parsing on laptop.** Use the committed stream-debug artifacts. Preserve final-answer TTFT semantics; add separate metrics such as `ttft_any_token_seconds` / reasoning text counters if needed.
-2. **Issue #32 — fix `.gitignore` rules for benchmark run artifacts on laptop.** Make small structured `results/runs/**/*.json|jsonl|csv|md` trackable while keeping logs, model caches, Nsight traces and secrets ignored.
-3. **Issue #33 — write 2026-05-19 server session summary** as `docs/plans/2026-05-19-server-session-summary.md` or fold into weekly notes.
-4. **Build the actual Grafana dashboard.** Use real vLLM metric names from `/metrics` / Prometheus instead of guessed names. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
-5. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
-6. **Draft W1** only after the proxy benchmark + observability story is coherent.
-7. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
-8. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+1. **Issue #32 — fix `.gitignore` rules for benchmark run artifacts on laptop.** Make small structured `results/runs/**/*.json|jsonl|csv|md` trackable while keeping logs, model caches, Nsight traces and secrets ignored.
+2. **Issue #33 — write 2026-05-19 server session summary** as `docs/plans/2026-05-19-server-session-summary.md` or fold into weekly notes.
+3. **Build the actual Grafana dashboard.** Use real vLLM metric names from `/metrics` / Prometheus instead of guessed names. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
+4. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
+5. **Draft W1** only after the proxy benchmark + observability story is coherent.
+6. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
+7. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
 
 ---
 
@@ -229,7 +228,6 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Open questions / blockers
 
-- [ ] Kimi TTFT/TPOT parser: how exactly should reasoning-stream chunks be represented without changing the semantics of final-answer TTFT? Tracked by issue #31.
 - [ ] `.gitignore` / benchmark results policy needs cleanup so normal `git add` works for small structured artifacts. Tracked by issue #32.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
@@ -238,6 +236,7 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 Closed since last refresh:
 
+- [x] Issue #31 — Kimi K2.6 TTFT/TPOT reasoning-stream parsing fixed on laptop.
 - [x] Import unpushed server-side compose and benchmark results.
 - [x] Smoke LiteLLM Proxy on server.
 - [x] Run `run_bench_suite.py` for both Kimi and DeepSeek through LiteLLM Proxy.
@@ -246,6 +245,18 @@ Closed since last refresh:
 ---
 
 ## Last validation
+
+2026-05-20 laptop validation (issue #31):
+
+```text
+uv run ruff check .     OK, all checks passed
+uv run pytest -q        OK, 121 passed
+```
+
+Parser also smoke-checked against the committed Kimi stream-debug artifacts:
+reasoning-only `stream_short_prompt` now reports `completed` with
+`ttft_any_token_seconds` set (was `TTFT: n/a`); `stream_exact_ok` and
+`stream_reasoning_prompt` report both content and any-token TTFT.
 
 2026-05-19 server validation:
 
@@ -267,6 +278,25 @@ uv run pytest -q        OK, 113 passed
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-20 - Issue #31: Kimi K2.6 TTFT/TPOT reasoning-stream parsing
+
+- Why: `measure_ttft_once.py` reported `TTFT: n/a` / `TPOT: n/a` for Kimi K2.6
+  because the parser only counted `delta.content`; Kimi streams its
+  chain-of-thought via `delta.reasoning`.
+- Did:
+  - Added `extract_stream_reasoning_text` to `_client.py` (handles
+    `delta.reasoning` and DeepSeek-style `delta.reasoning_content`).
+  - `measure_stream` now records `ttft_any_token_seconds` (first content *or*
+    reasoning token) and `reasoning_chars` alongside the unchanged final-answer
+    `ttft_seconds`; `build_record` adds `tpot_any_token_seconds`.
+  - A reasoning-only response (max_tokens spent before the final answer) now
+    counts as `completed`; non-reasoning models are unaffected.
+  - Metrics additions are additive — schema stays `nanoserve-mini.ttft-once.v2`.
+  - Added/updated tests in `test_client.py` and `test_measure_ttft_once.py`.
+- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 121 passed;
+  parser smoke-checked against committed stream-debug artifacts.
+- Next: issue #32 (`.gitignore` for benchmark artifacts), then issue #33.
 
 ### 2026-05-19 - Phase 1 server close-out: compose, proxy, bench, observability bootstrap
 

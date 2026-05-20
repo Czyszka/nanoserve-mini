@@ -3,13 +3,23 @@
 Defined timings:
 
 - TTFT (time to first token): from the moment we send the request to the
-  arrival of the first streaming chunk that carries non-empty content
-  (``delta.content`` is a non-empty string). Chunks that only set ``delta.role``
-  are ignored — they are protocol bookkeeping, not generated tokens.
+  arrival of the first streaming chunk that carries non-empty *final-answer*
+  content (``delta.content`` is a non-empty string). Chunks that only set
+  ``delta.role`` are ignored — they are protocol bookkeeping, not generated
+  tokens. Reported as ``ttft_seconds``.
+- TTFT (any token): same anchor, but the first chunk carrying *any* generated
+  text — final-answer content **or** reasoning-trace text (``delta.reasoning`` /
+  ``delta.reasoning_content``). Reported as ``ttft_any_token_seconds``. For a
+  non-reasoning model this equals ``ttft_seconds``; for a reasoning model that
+  thinks before answering it fires earlier. The two are kept distinct so a
+  reasoning TTFT never silently masquerades as a final-answer TTFT.
 - E2E (end-to-end): from the moment we send the request to the moment the
   stream ends (server sends ``[DONE]`` or closes the connection).
 - TPOT (time per output token, decode-only): ``(e2e - ttft) / (completion_tokens - 1)``
-  when ``completion_tokens`` is known and >= 2; otherwise ``None``.
+  when ``completion_tokens`` is known and >= 2; otherwise ``None``. Computed
+  against both TTFT anchors: ``tpot_seconds`` (final-answer) and
+  ``tpot_any_token_seconds`` (includes reasoning). ``tpot_seconds`` is ``None``
+  when the response is reasoning-only (no final answer was emitted).
 
 Output shape follows the Benchmark Contract (controls + metrics + raw run).
 Default output path: ``results/raw/first_ttft.json``.
@@ -41,6 +51,7 @@ from benchmarks.scripts._client import (
     CompletionRequest,
     chat_completion_stream,
     extract_stream_delta_text,
+    extract_stream_reasoning_text,
     extract_stream_usage,
 )
 from benchmarks.scripts._metrics import (
@@ -70,6 +81,12 @@ class StreamRunResult:
     output_text: str
     completed: bool
     usage: dict[str, Any] | None = field(default=None)
+    # First chunk carrying any generated text (final-answer content OR
+    # reasoning-trace text). Equals ``ttft_seconds`` for non-reasoning models.
+    ttft_any_token_seconds: float | None = field(default=None)
+    # Total characters of reasoning-trace text streamed before/around the
+    # final answer. 0 for non-reasoning models.
+    reasoning_chars: int = field(default=0)
 
 
 def _now() -> float:
@@ -87,11 +104,21 @@ def measure_stream(
     ``start_time`` is the wall clock (``perf_counter`` seconds) captured right
     before sending the request. ``clock`` is injectable for tests.
 
-    TTFT is anchored on the first chunk that carries non-empty ``delta.content``.
-    Usage is taken from the last chunk that carries a ``usage`` block (vLLM
-    emits this when ``stream_options.include_usage`` is set).
+    Two TTFT anchors are recorded:
+
+    - ``ttft_seconds`` — first chunk with non-empty ``delta.content`` (the final
+      answer). ``None`` if the model only ever emitted reasoning.
+    - ``ttft_any_token_seconds`` — first chunk with any generated text, content
+      or reasoning trace. For a non-reasoning model the two are equal.
+
+    The clock is consulted at most once per chunk: when a chunk is the first to
+    carry text, a single timestamp is taken and assigned to whichever anchors
+    are still unset. Usage is taken from the last chunk that carries a ``usage``
+    block (vLLM emits this when ``stream_options.include_usage`` is set).
     """
     ttft: float | None = None
+    ttft_any: float | None = None
+    reasoning_chars = 0
     chunks_received = 0
     output_parts: list[str] = []
     usage: dict[str, Any] | None = None
@@ -99,27 +126,39 @@ def measure_stream(
     for chunk in chunks:
         chunks_received += 1
         text = extract_stream_delta_text(chunk)
+        reasoning = extract_stream_reasoning_text(chunk)
+        if reasoning:
+            reasoning_chars += len(reasoning)
+        # Take one timestamp for this chunk only if it advances an anchor.
+        if (text or reasoning) and (ttft_any is None or (text and ttft is None)):
+            stamp = clock() - start_time
+            if ttft_any is None:
+                ttft_any = stamp
+            if text and ttft is None:
+                ttft = stamp
         if text:
-            if ttft is None:
-                ttft = clock() - start_time
             output_parts.append(text)
         chunk_usage = extract_stream_usage(chunk)
         if chunk_usage is not None:
             usage = chunk_usage
 
     e2e = clock() - start_time
-    # `completed` reflects whether the stream produced any actual content. A
+    # `completed` reflects whether the stream produced any generated text. A
     # role-only stream that ends cleanly is technically a successful HTTP
     # response, but it carries zero generated tokens and so is not a "completed"
-    # generation for benchmark purposes. Hard failures during iteration raise
-    # and are turned into a failure record by the caller.
+    # generation for benchmark purposes. A reasoning-only response (tokens spent
+    # entirely on the chain-of-thought, e.g. a short prompt truncated by
+    # max_tokens) *did* generate text and counts as completed. Hard failures
+    # during iteration raise and are turned into a failure record by the caller.
     return StreamRunResult(
         ttft_seconds=ttft,
         e2e_seconds=e2e,
         chunks_received=chunks_received,
         output_text="".join(output_parts),
-        completed=bool(output_parts),
+        completed=bool(output_parts) or reasoning_chars > 0,
         usage=usage,
+        ttft_any_token_seconds=ttft_any,
+        reasoning_chars=reasoning_chars,
     )
 
 
@@ -211,6 +250,13 @@ def build_record(
         e2e_seconds=result.e2e_seconds,
         completion_tokens=completion_tokens,
     )
+    # `completion_tokens` from usage counts every generated token (reasoning +
+    # final answer), so it is the right denominator for the any-token TPOT.
+    tpot_any_token_seconds = compute_tpot_seconds(
+        ttft_seconds=result.ttft_any_token_seconds,
+        e2e_seconds=result.e2e_seconds,
+        completion_tokens=completion_tokens,
+    )
     output_tokens_per_second = compute_output_tokens_per_second(
         e2e_seconds=result.e2e_seconds,
         completion_tokens=completion_tokens,
@@ -229,11 +275,14 @@ def build_record(
         },
         "metrics": {
             "ttft_seconds": result.ttft_seconds,
+            "ttft_any_token_seconds": result.ttft_any_token_seconds,
             "e2e_seconds": result.e2e_seconds,
             "tpot_seconds": tpot_seconds,
+            "tpot_any_token_seconds": tpot_any_token_seconds,
             "output_tokens_per_second": output_tokens_per_second,
             "chunks_received": result.chunks_received,
             "output_chars": len(result.output_text),
+            "reasoning_chars": result.reasoning_chars,
             "prompt_tokens": prompt_tokens,
             "completion_tokens": completion_tokens,
             "total_tokens": total_tokens,
@@ -338,15 +387,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"saved:  {output_path}")
         return 1
 
-    ttft = result.ttft_seconds
-    ttft_str = f"{ttft * 1000:.1f} ms" if ttft is not None else "n/a"
-    tpot = record["metrics"]["tpot_seconds"]
-    tpot_str = f"{tpot * 1000:.2f} ms/tok" if tpot is not None else "n/a"
-    print(f"TTFT:   {ttft_str}")
-    print(f"E2E:    {result.e2e_seconds * 1000:.1f} ms")
-    print(f"TPOT:   {tpot_str}")
-    print(f"chunks: {result.chunks_received}")
-    print(f"saved:  {output_path}")
+    def _ms(value: float | None, unit: str) -> str:
+        return f"{value * 1000:.2f} {unit}" if value is not None else "n/a"
+
+    metrics = record["metrics"]
+    print(f"TTFT (content): {_ms(result.ttft_seconds, 'ms')}")
+    print(f"TTFT (any):     {_ms(result.ttft_any_token_seconds, 'ms')}")
+    print(f"E2E:            {result.e2e_seconds * 1000:.1f} ms")
+    print(f"TPOT (content): {_ms(metrics['tpot_seconds'], 'ms/tok')}")
+    print(f"TPOT (any):     {_ms(metrics['tpot_any_token_seconds'], 'ms/tok')}")
+    print(f"reasoning:      {result.reasoning_chars} chars")
+    print(f"chunks:         {result.chunks_received}")
+    print(f"saved:          {output_path}")
     return 0
 
 

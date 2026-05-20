@@ -137,10 +137,12 @@ def extract_assistant_text(response: dict[str, Any]) -> str:
 
 
 def extract_stream_delta_text(chunk: dict[str, Any]) -> str:
-    """Pull the incremental token text out of a streaming chunk.
+    """Pull the incremental *final-answer* token text out of a streaming chunk.
 
     Returns an empty string for chunks that don't carry content (e.g. the first
-    chunk that only contains the role).
+    chunk that only contains the role, or a reasoning-trace chunk). Reasoning
+    models stream their chain-of-thought in a separate field — see
+    ``extract_stream_reasoning_text`` — so this stays content-only on purpose.
     """
     choices = chunk.get("choices") or []
     if not choices:
@@ -148,6 +150,30 @@ def extract_stream_delta_text(chunk: dict[str, Any]) -> str:
     delta = choices[0].get("delta") or {}
     content = delta.get("content")
     return content if isinstance(content, str) else ""
+
+
+# Reasoning models stream intermediate chain-of-thought separately from the
+# final answer. vLLM exposes it as ``delta.reasoning_content`` (DeepSeek-style)
+# or ``delta.reasoning`` (observed on Kimi K2.6). Checked in this order.
+_REASONING_DELTA_FIELDS = ("reasoning_content", "reasoning")
+
+
+def extract_stream_reasoning_text(chunk: dict[str, Any]) -> str:
+    """Pull the incremental *reasoning-trace* text out of a streaming chunk.
+
+    Returns an empty string for chunks that don't carry reasoning text. Non-
+    reasoning models never populate these fields, so this is always "" for them
+    and the content-only TTFT path is unaffected.
+    """
+    choices = chunk.get("choices") or []
+    if not choices:
+        return ""
+    delta = choices[0].get("delta") or {}
+    for field_name in _REASONING_DELTA_FIELDS:
+        value = delta.get(field_name)
+        if isinstance(value, str) and value:
+            return value
+    return ""
 
 
 def extract_stream_usage(chunk: dict[str, Any]) -> dict[str, Any] | None:
