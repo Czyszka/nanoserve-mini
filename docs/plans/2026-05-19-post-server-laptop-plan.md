@@ -207,6 +207,23 @@ Akceptacja:
 5. Potwierdzić dashboard live.
 6. Zebrać brakujące screenshoty/liczby do W1.
 
+#### Capture pod W1 — issue #37
+
+Zadania zbierające dowody dla wątków write-upu W1. Wszystko to capture pod
+GPU; analiza i pisanie idą na laptop. Żadne nie wymaga osobnego slotu GPU —
+fold do sesji.
+
+7. **DEP startup logs (wątek T1).** Odtworzyć jednorazowo setup DEP/DP dla
+   Kimi-K2 i przechwycić startup log vLLM: echo engine args, `Loading model
+   weights`, profiling KV cache, traceback/OOM. Awaria startowa = minuty.
+   Cel: rachunek pamięci pokazujący, dlaczego DEP nie wstał, a TP=8 tak.
+   Zapisać log jako artefakt do `results/raw/` pod analizę na laptopie.
+8. **VRAM split logs (wątek T3).** Zebrać logi ładowania wag Kimi i DeepSeek;
+   sprawdzić kilka wartości capu VRAM dla DeepSeek (nie tylko 20%), żeby
+   uzasadnić podział liczbą, nie preferencją.
+9. **SC on/off benchmark (wątek T6).** Benchmark Kimi z Eagle3 speculative
+   decoding i bez: TTFT, TPOT, throughput — żeby pokazać tradeoff.
+
 ---
 
 ## Nie robić teraz
