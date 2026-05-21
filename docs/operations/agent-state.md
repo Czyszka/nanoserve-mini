@@ -89,9 +89,10 @@ status, not a task list. Update when work moves.
 
 - **#34 — observability/dashboard:** dashboard JSON provisioned; metric-name
   inventory and panel validation under live load still pending.
-- **#37 — W1 write-up:** methodology + thread inventory (T1–T8) drafted;
-  T2 evidence captured (stream-debug artefacts); T1/T3/T6/T8 await the next
-  server session; T4/T5 laptop analysis not started.
+- **#37 — W1 write-up:** `docs/writeups/w1-multi-model-serving-baseline.md`
+  created with the T1–T8 thread map; T2 written in full from the captured
+  stream-debug artefacts; T1/T3/T6/T8 await the next server session;
+  T4/T5 laptop analysis not started; writing-guide + template deferred.
 
 ---
 
