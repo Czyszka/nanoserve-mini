@@ -223,6 +223,12 @@ fold do sesji.
    uzasadnić podział liczbą, nie preferencją.
 9. **SC on/off benchmark (wątek T6).** Benchmark Kimi z Eagle3 speculative
    decoding i bez: TTFT, TPOT, throughput — żeby pokazać tradeoff.
+10. **Proxy overhead (wątek T8).** Pomiar latencji LiteLLM Proxy vs bezpośredni
+    vLLM metodą **różnica parami + odwrotna kolejność + warmup**: ten sam
+    request A (przez proxy, port 4000) i B (bezpośrednio vLLM, port 8000) tuż
+    po sobie, kolejność w parze przeplatana, warmup obu ścieżek, serwer
+    bezczynny, wiele próbek. Zapisać też metryki latencji LiteLLM (upstream vs
+    total) do cross-checku. Analiza par i interpretacja — na laptopie.
 
 ---
 
