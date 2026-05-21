@@ -84,15 +84,20 @@ schema identifiers are exported from `benchmarks/scripts/_schemas.py`.
 
 ## Immediate next steps
 
-Prioritise laptop-side cleanup first; do not burn GPU/server time on documentation or repo hygiene.
+Detailed tasks live in issues; `docs/plans/2026-05-19-post-server-laptop-plan.md`
+sequences them. This section only points at active work — it is not a task list.
 
-1. **Validate the Grafana dashboard under live load.** Use real vLLM metric names from `/metrics` / Prometheus. First dashboard should show at least target health, running/waiting requests, token throughput if available, TTFT/TPOT histograms if exposed, and KV/GPU cache metrics if exposed.
-2. **Capture/commit observability metric-name inventory** if not already committed. Commit small `*.metric-names.txt`; avoid large raw metrics dumps if noisy.
-3. **Issue #34 — DCGM Exporter + GPU hardware metrics.** DCGM Exporter can run under Docker Compose; add/validate it on the server and extend Grafana with temperature, power, VRAM, and SM utilization panels.
-4. **Draft W1** only after the proxy benchmark + observability story is coherent.
-5. **Install `rg` (ripgrep) on the server** so laptop and server share the same tooling. `rg` is already installed on the laptop; `check_server_env.py` now probes for it (`rg_version`). On Ubuntu: `sudo apt-get install -y ripgrep`. Quick task — fold into the next server session, do not open a dedicated GPU slot for it.
-6. Optional later: add GPU sampling back into `run_bench_suite.py` after the basic proxy benchmark path and dashboard are stable.
-7. Later: implement fact-table aggregator (`benchmarks/scripts/aggregate_runs.py`, Wave C) for dashboard/dataframe consumption.
+- **#34** — observability: TTFT reconciliation, DCGM/GPU hardware metrics, Grafana
+  panel validation under live load.
+- **#37** — W1 write-up: methodology + thread inventory T1–T8; evidence capture
+  split between server and laptop.
+
+**Next concrete step:** build the first Grafana dashboard from a real metric-name
+inventory (#34), then start W1 laptop-side analysis (#37 — T2, T4, T5). Server-only
+capture (#37 — T1, T3, T6, T8; `rg` install) waits for the next GPU session.
+
+Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
+are tracked under "Open questions / blockers" below.
 
 ---
 
