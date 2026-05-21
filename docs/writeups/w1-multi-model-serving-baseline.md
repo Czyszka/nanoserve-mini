@@ -52,9 +52,9 @@ server session. -->
 
 The first streaming run of `measure_ttft_once.py` against Kimi-K2.6
 (served as `kimi-k2.6`) reported `TTFT: n/a` and `TPOT: n/a`. The same
-script against non-reasoning models returned ordinary numbers, so the
-timer itself was not obviously broken — the failure was specific to this
-model.
+script against the DeepSeek-V4-Flash baseline endpoint returned ordinary
+content TTFT/TPOT numbers, so the timer itself was not obviously broken
+— the failure was specific to how this model streamed output.
 
 ### Hypothesis
 
@@ -83,8 +83,8 @@ Every chunk that follows — for a long run — carries text in a
 `reasoning` field, never in `content`:
 
 ```
-data: {"choices":[{"index":0,"delta":{"reasoning":" The"}, ...}]}
-data: {"choices":[{"index":0,"delta":{"reasoning":" user wants me to"}, ...}]}
+data: {"choices":[{"index":0,"delta":{"reasoning":"<non-empty reasoning text>"}, ...}]}
+data: {"choices":[{"index":0,"delta":{"reasoning":"<more reasoning text>"}, ...}]}
 ```
 
 Two artifacts make the consequence concrete:
@@ -97,9 +97,11 @@ Two artifacts make the consequence concrete:
   (`" OK"`) appears last, with `finish_reason:"stop"`.
 
 `stream_reasoning_prompt.sse.txt` shows the same `delta.reasoning`
-ordering under a different prompt, confirming the pattern is a property
-of the model and not of one input. `nonstream_short_prompt.sse.json`
-and `models.json` serve as controls.
+ordering under a different prompt, showing that the parser issue was not
+limited to one input. `models.json` confirms the served model identity.
+`nonstream_short_prompt.sse.json` is intentionally not used as behavioral
+evidence: that capture returned a vLLM validation error because
+`stream_options` was sent with `stream:false`.
 
 ### Redirect
 
@@ -114,8 +116,9 @@ answer started after a long, unmeasured reasoning phase".
 ### Source
 
 The fix landed as issue #31 (commit `cca4022`). It was kept additive so
-that the result schema is unchanged and non-reasoning models behave
-exactly as before:
+that existing fields kept their semantics and the schema identifier stayed
+`nanoserve-mini.ttft-once.v2`. The new fields are additive leaf metrics,
+and content-emitting models keep the same `ttft_seconds` behavior:
 
 - `_client.py` gained `extract_stream_reasoning_text`, which reads
   `delta.reasoning` and the DeepSeek-style `delta.reasoning_content`.

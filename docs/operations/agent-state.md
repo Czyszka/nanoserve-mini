@@ -91,7 +91,8 @@ status, not a task list. Update when work moves.
   inventory and panel validation under live load still pending.
 - **#37 — W1 write-up:** `docs/writeups/w1-multi-model-serving-baseline.md`
   created with the T1–T8 thread map; T2 written in full from the captured
-  stream-debug artefacts; T1/T3/T6/T8 await the next server session;
+  stream-debug artefacts and tightened against repo evidence after senior
+  AI/ML Ops review; T1/T3/T6/T8 await the next server session;
   T4/T5 laptop analysis not started; writing-guide + template deferred.
 
 ---
@@ -201,6 +202,20 @@ Parser also smoke-checked against the committed Kimi stream-debug artifacts:
 reasoning-only `stream_short_prompt` now reports `completed` with
 `ttft_any_token_seconds` set (was `TTFT: n/a`); `stream_exact_ok` and
 `stream_reasoning_prompt` report both content and any-token TTFT.
+
+2026-05-21 documentation review:
+
+```text
+git diff --check                                      OK
+uv run pytest benchmarks\scripts_tests\test_client.py benchmarks\scripts_tests\test_measure_ttft_once.py -q
+                                                       OK, 39 passed
+```
+
+W1 T2 was tightened against repository evidence: DeepSeek is named as the
+content-TTFT control, raw reasoning excerpts were redacted to structural
+placeholders, `nonstream_short_prompt.sse.json` is no longer treated as a
+behavioral control, and the additive schema wording now distinguishes field
+semantics from schema identifier stability.
 
 2026-05-19 server validation:
 
