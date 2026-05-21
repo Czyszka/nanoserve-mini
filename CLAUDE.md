@@ -99,8 +99,17 @@ File roles:
 
 - `CLAUDE.md` — stable instructions for Claude Code (this file).
 - `AGENTS.md` — stable instructions for Codex.
-- `docs/operations/agent-state.md` — current state, decisions, next step, blockers.
+- `docs/operations/agent-state.md` — pointer + "In flight" live status; NOT a task
+  list. Update at end of every meaningful task.
 - `docs/project/roadmap.md` — project scope.
+- **GitHub issues** — *what* and *why*; acceptance criteria; durable across sessions.
+  Open = active, closed = done. Source of record for decisions and rationale.
+- **`docs/plans/<date>-<slug>.md`** — *how* and *when* for one session (commands,
+  order, time budget). Lifecycle: draft → active → closed. Freezes after a session as
+  a status record; never restates issue rationale — references by issue number instead.
+
+Division of labour: issue answers "what and why", plan answers "how and when",
+`agent-state.md` answers "where are we right now".
 
 Procedure:
 
