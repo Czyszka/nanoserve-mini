@@ -146,32 +146,17 @@ Akceptacja:
 
 ## Priorytet 5 — przygotowanie W1
 
-### 6. Przygotować szkic W1
+Plan i metodyka W1 żyją w **issue #37**. Nie pisać pełnego artykułu przed
+domknięciem dashboardu (T5) i zebraniem logów z sesji serwerowej (T1, T3, T6, T8).
 
-Nie pisać pełnego artykułu, dopóki dashboard nie ma minimalnej wartości. Najpierw przygotować outline.
+### Laptop — zadania analityczne W1 (#37)
 
-Roboczy tytuł:
+- **T2** — spisać pełną ścieżkę śledztwa `TTFT: n/a` → fix; dowód gotowy w `results/raw/`.
+- **T4** — spisać odrzucone alternatywy dla LiteLLM (dwa porty vLLM wprost, nginx).
+- **T5** — analiza "na sucho" metryk z `results/raw/observability`; inwentarz nazw.
+- **T8** — po sesji serwerowej: analiza zebranych par A/B; cross-check z metrykami LiteLLM.
 
-```text
-vLLM + LiteLLM Proxy on 8×H200: a multi-model serving baseline from zero to first measurement
-```
-
-Outline:
-
-1. Problem i cel Phase 1.
-2. Sprzęt i stack.
-3. Kimi K2.6 + DeepSeek-V4-Flash jako dwa upstreamy vLLM.
-4. LiteLLM Proxy jako jeden OpenAI-compatible endpoint.
-5. Benchmark methodology: MLPerf-inspired lite, nie MLPerf-compliant.
-6. Wyniki pierwszych runów.
-7. Co nie zadziałało / limitation: Kimi TTFT/TPOT parser, metrics naming drift.
-8. Observability: Prometheus + Grafana.
-9. Następne kroki.
-
-Akceptacja:
-
-- powstaje outline/szkic w `docs/write-ups/` albo `docs/weekly/`,
-- bez przesadnego polerowania — najpierw techniczna kompletność.
+Akceptacja: pierwsze cztery wątki (T2, T4, T5 analiza, T7) gotowe na laptopie → można zacząć pisać kręgosłup W1.
 
 ---
 
@@ -207,28 +192,18 @@ Akceptacja:
 5. Potwierdzić dashboard live.
 6. Zebrać brakujące screenshoty/liczby do W1.
 
-#### Capture pod W1 — issue #37
+#### Capture pod W1 — szczegóły w #37
 
-Zadania zbierające dowody dla wątków write-upu W1. Wszystko to capture pod
-GPU; analiza i pisanie idą na laptop. Żadne nie wymaga osobnego slotu GPU —
-fold do sesji.
+Fold do sesji; żadne nie wymaga osobnego slotu GPU. Analiza i pisanie na laptopie.
 
-7. **DEP startup logs (wątek T1).** Odtworzyć jednorazowo setup DEP/DP dla
-   Kimi-K2 i przechwycić startup log vLLM: echo engine args, `Loading model
-   weights`, profiling KV cache, traceback/OOM. Awaria startowa = minuty.
-   Cel: rachunek pamięci pokazujący, dlaczego DEP nie wstał, a TP=8 tak.
-   Zapisać log jako artefakt do `results/raw/` pod analizę na laptopie.
-8. **VRAM split logs (wątek T3).** Zebrać logi ładowania wag Kimi i DeepSeek;
-   sprawdzić kilka wartości capu VRAM dla DeepSeek (nie tylko 20%), żeby
-   uzasadnić podział liczbą, nie preferencją.
-9. **SC on/off benchmark (wątek T6).** Benchmark Kimi z Eagle3 speculative
-   decoding i bez: TTFT, TPOT, throughput — żeby pokazać tradeoff.
-10. **Proxy overhead (wątek T8).** Pomiar latencji LiteLLM Proxy vs bezpośredni
-    vLLM metodą **różnica parami + odwrotna kolejność + warmup**: ten sam
-    request A (przez proxy, port 4000) i B (bezpośrednio vLLM, port 8000) tuż
-    po sobie, kolejność w parze przeplatana, warmup obu ścieżek, serwer
-    bezczynny, wiele próbek. Zapisać też metryki latencji LiteLLM (upstream vs
-    total) do cross-checku. Analiza par i interpretacja — na laptopie.
+7. **DEP startup logs (#37 T1).** Próba DEP/DP dla Kimi-K2; przechwycić startup
+   log vLLM (engine args, `Loading model weights`, KV profiling, traceback).
+   Zapisać do `results/raw/`.
+8. **VRAM split logs (#37 T3).** Logi ładowania wag Kimi + DeepSeek; przetestować
+   kilka wartości VRAM capu DeepSeek. Zapisać do `results/raw/`.
+9. **SC on/off benchmark (#37 T6).** Kimi z Eagle3 i bez: TTFT, TPOT, throughput.
+10. **Proxy overhead (#37 T8).** Benchmark A (proxy:4000) vs B (vLLM:8000) metodą
+    parami; warmup; zapisać metryki latencji LiteLLM do cross-checku.
 
 ---
 
