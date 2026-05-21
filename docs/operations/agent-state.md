@@ -82,6 +82,19 @@ schema identifiers are exported from `benchmarks/scripts/_schemas.py`.
 
 ---
 
+## In flight
+
+Active issues and where each stands — the project's live pulse. One line each:
+status, not a task list. Update when work moves.
+
+- **#34 — observability/dashboard:** dashboard JSON provisioned; metric-name
+  inventory and panel validation under live load still pending.
+- **#37 — W1 write-up:** methodology + thread inventory (T1–T8) drafted;
+  T2 evidence captured (stream-debug artefacts); T1/T3/T6/T8 await the next
+  server session; T4/T5 laptop analysis not started.
+
+---
+
 ## Immediate next steps
 
 Detailed tasks live in issues; `docs/plans/2026-05-19-post-server-laptop-plan.md`
