@@ -361,6 +361,55 @@ Planned evidence to include:
 - issue #34 notes on metric selection and DCGM Exporter,
 - later server-session screenshot or captured dashboard window under load.
 
+### Mechanism: request lifecycle and metric boundaries
+
+A metric is only useful when its clock boundaries are clear. The most
+common observability mistake is to compare two metrics with the same name
+but different start and stop points. T5 therefore treats every metric as
+a measurement over a specific segment of the request lifecycle, not as a
+standalone truth.
+
+The Phase 1 serving path is:
+
+```text
+benchmark client starts timer
+  -> HTTP request leaves benchmark client
+  -> LiteLLM Proxy receives and routes the request
+  -> vLLM OpenAI-compatible server accepts the request
+  -> request enters the scheduler queue
+  -> prefill processes prompt tokens and builds / extends KV cache
+  -> first decode step produces the first generated token
+  -> following decode steps produce additional output tokens
+  -> vLLM serializes response or SSE stream chunks
+  -> LiteLLM Proxy forwards the response stream
+  -> client receives the first observable delta
+  -> client receives the final chunk / response end
+```
+
+This lifecycle has several different timing surfaces:
+
+| Lifecycle segment | Metric | What it measures |
+|---|---|---|
+| client start → first client-observed output | client TTFT (`ttft_seconds` / `ttft_any_token_seconds`) | User/client-observed first output latency, including proxy, network, serialization, client parser, and the chosen content-vs-reasoning definition. |
+| vLLM request accepted → first generated token | `vllm:time_to_first_token_seconds` | Server-side first-token latency inside the vLLM serving path. |
+| waiting before model execution | `vllm:request_queue_time_seconds` | Scheduler/capacity delay before the request can run. |
+| prompt/context processing | `vllm:prompt_tokens_total`, request prompt-token histograms | Prefill volume and rate. |
+| decode loop | `vllm:inter_token_latency_seconds`, `vllm:generation_tokens_total` | Next-token cadence and generation throughput. |
+| full vLLM request lifetime | `vllm:e2e_request_latency_seconds` | Server-side request lifetime as seen by vLLM. |
+| client start → response end | client E2E | User/client-observed end-to-end latency through proxy and transport. |
+| KV allocation pressure | `vllm:kv_cache_usage_perc` | Fraction of vLLM KV-cache capacity currently in use. |
+| repeated-prefix reuse | `vllm:prefix_cache_hits_total` / `vllm:prefix_cache_queries_total` | Whether prompt tokens are being served from prefix cache rather than recomputed. |
+| physical GPU state | DCGM / `nvidia-smi` GPU util, VRAM, power, temperature | Whether the hardware layer is underloaded, saturated, memory-constrained, or thermally/power constrained. |
+
+This is why client-side TTFT and vLLM TTFT are not automatically
+contradictory when they differ. They are measured at different layers.
+Client TTFT includes LiteLLM Proxy, transport, response serialization,
+SSE/client parsing, and the benchmark's definition of "first output".
+vLLM TTFT is a server-side signal. A divergence between the two is not a
+bad measurement by itself; it is a clue that the time is being spent
+outside the segment measured by one of the clocks, or that the two clocks
+are using different semantic definitions.
+
 ### Why these are P0 metrics
 
 The P0 set is selected by diagnostic coverage, not by metric availability.
