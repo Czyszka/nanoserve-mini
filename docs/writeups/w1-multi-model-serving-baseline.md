@@ -326,8 +326,115 @@ exposed directly, nginx — each named with the reason it was dropped. -->
 
 ## T5 — What vLLM `/metrics` actually exposes
 
-<!-- TODO: investigation/measurement segment. Metric-name inventory from
-results/raw/observability; useful vs misleading metrics; ties into #34. -->
+> Working thesis: the dashboard should not answer "what metrics exist?".
+> It should answer "where is the request spending time, and which layer is
+> currently limiting serving: client/proxy, scheduler, prefill, decode,
+> KV cache, or hardware?"
+
+### Question
+
+A raw `/metrics` dump is not an observability result. Which vLLM metrics
+are decision-useful for Phase 1, which ones are only diagnostics, and how
+should the useful ones be read together with client-side timing and GPU
+hardware telemetry?
+
+### Inventory: availability is not evidence
+
+Use `results/raw/observability/vllm-metrics.txt` as a metric availability
+snapshot, not as a benchmark result. The dump proves that the endpoint
+exposes counters, gauges, and histograms, but an idle or near-idle
+snapshot mostly proves instrumentation coverage. It does not prove
+throughput, saturation, queueing behavior, or hardware utilization.
+
+Planned evidence to include:
+
+- raw vLLM `/metrics` dump from `results/raw/observability/`,
+- current Grafana dashboard queries from `serving/compose/grafana/`,
+- issue #34 notes on metric selection and DCGM Exporter,
+- later server-session screenshot or captured dashboard window under load.
+
+### Metric semantics
+
+Define the P0 metrics as a small observability contract rather than a
+complete copy of the Prometheus surface:
+
+| Group | Metrics | Question answered |
+|---|---|---|
+| Latency | TTFT, ITL/TPOT, E2E latency | Where does user-visible time appear? |
+| Token pipeline | prompt tokens/s, generation tokens/s | Is work dominated by prefill or decode? |
+| Scheduler | running requests, waiting requests, queue time | Is the engine executing or queueing? |
+| KV/cache | KV usage %, prefix cache hits/queries | Is cache capacity or reuse affecting behavior? |
+| Outcomes | success by `finished_reason` | Are requests stopping, length-capping, aborting, or erroring? |
+| Hardware | GPU util, VRAM, power, temperature | Is the physical node underloaded, saturated, memory-constrained, or thermally/power constrained? |
+
+For each metric, the final text should explain what a high value usually
+means, what a low or zero value usually means, and the caveat that
+prevents over-reading it. Example direction: high queue time plus waiting
+requests points to scheduler/capacity pressure; high E2E with normal TTFT
+and normal ITL can simply mean long output; zero counters in an idle dump
+mean no observed workload, not absence of the metric.
+
+### Correlation playbook
+
+A single metric rarely explains serving behavior. T5 should read metrics
+as correlated signals across layers:
+
+| Pattern to explain | Likely interpretation |
+|---|---|
+| client TTFT high, vLLM TTFT normal | overhead or definition mismatch outside vLLM: LiteLLM, network, SSE/client timing, or reasoning-vs-content TTFT |
+| vLLM TTFT high, queue time high, waiting requests high | scheduler/capacity queueing before execution |
+| vLLM TTFT high, queue time low, prompt length high | prefill/context processing dominates first token |
+| ITL/TPOT high, generation tokens/s low, GPU util high | decode path is expensive or saturated |
+| ITL/TPOT high, GPU util low | possible scheduler, CPU/proxy, client, or batching bottleneck rather than raw GPU saturation |
+| E2E high, TTFT normal, ITL normal, output tokens high | long completion, not necessarily slow serving |
+| generation tokens/s plateaus while ITL or queue time rises | saturation knee under offered load |
+| KV usage rising with waiting requests | possible KV-capacity scheduling constraint |
+| prefix hit rate rising while prefill/TTFT falls on repeated-prefix workload | prefix cache likely helps |
+| GPU util low, waiting zero, running low | benchmark is underloading the server |
+| GPU util high, power high, temperature stable | hardware is genuinely loaded and behaving normally |
+
+The final write-up should avoid hard thresholds until a per-model,
+per-workload baseline exists. Prefer relative language: sustained rise,
+step change after load starts, divergence between client-side and
+server-side timing, plateau under increasing offered load.
+
+### What vLLM metrics do not cover
+
+vLLM `/metrics` is necessary but not sufficient. It does not replace:
+
+- client-side latency scripts, especially when traffic goes through
+  LiteLLM Proxy or when reasoning models split reasoning and content
+  channels;
+- GPU hardware telemetry such as VRAM used/free, SM utilization, power,
+  and temperature;
+- output inspection for quality or correctness;
+- workload controls such as prompt length distribution, output cap,
+  concurrency, arrival process, and shared-prefix structure.
+
+### Cleanup found during observability work
+
+The server-metrics helper should be checked against the actual metric
+names in the current dump. The useful names are:
+
+```text
+vllm:kv_cache_usage_perc
+vllm:prefix_cache_hits_total
+vllm:prefix_cache_queries_total
+```
+
+The aggregate logic should read KV usage directly from
+`vllm:kv_cache_usage_perc` and compute prefix-cache hit rate from hits /
+queries, preferably using a Prometheus `rate()` in Grafana or a pre/post
+snapshot delta in run summaries.
+
+### Decision for W1
+
+For W1, use a small P0 observability contract instead of presenting the
+entire `/metrics` surface. The write-up should focus on latency, token
+rates, scheduler pressure, KV/cache behavior, request outcomes, and GPU
+hardware telemetry. Process/Python metrics, `*_created` gauges,
+idle zero-value histograms, speculative-decoding counters before T6, and
+miscellaneous cache namespaces should stay secondary diagnostics.
 
 ---
 
