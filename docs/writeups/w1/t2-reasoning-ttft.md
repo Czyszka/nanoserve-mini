@@ -65,25 +65,46 @@ GPU kernels / model forward pass
 
 The diagram deliberately separates two parser layers.
 
-The server-side reasoning parser sits inside the serving stack, between the raw generated token stream and the OpenAI-compatible response fields. It does not make the model "reason" and it does not change the GPU computation. Its job is to interpret the model-specific output format and split the generated stream into semantic channels such as delta.reasoning and delta.content.
+The server-side reasoning parser sits inside the serving stack, between
+the raw generated token stream and the OpenAI-compatible response fields.
+It does not make the model "reason" and it does not change the GPU
+computation. Its job is to interpret the model-specific output format and
+split the generated stream into semantic channels such as
+`delta.reasoning` and `delta.content`.
 
-The benchmark/client parser sits outside the serving engine. It reads Server-Sent Events, extracts fields from each streamed delta, and decides which observed event starts a latency timer. The failure investigated in this thread was in this second layer: vLLM exposed reasoning deltas, but our benchmark parser treated delta.content as the only token channel worth timing.
+The benchmark/client parser sits outside the serving engine. It reads
+Server-Sent Events, extracts fields from each streamed delta, and decides
+which observed event starts a latency timer. The failure investigated in
+this thread was in this second layer: vLLM exposed reasoning deltas, but
+our benchmark parser treated `delta.content` as the only token channel
+worth timing.
 
-For many reasoning models, the model emits an internal scratchpad before the final answer. In some model families this is delimited by explicit markers such as:
+For many reasoning models, the model emits a reasoning block before the
+final answer. In some model families this is delimited by explicit
+markers such as:
 
+```text
 <think>
-... internal reasoning text ...
+... reasoning text ...
 </think>
 final answer text
+```
+
 A reasoning parser can then classify the generated text like this:
 
+```text
 inside reasoning markers      -> reasoning channel
 after reasoning markers       -> final content channel
-In an OpenAI-compatible streaming response, that split becomes visible as different delta fields:
+```
 
+In an OpenAI-compatible streaming response, that split becomes visible as
+different delta fields:
+
+```text
 delta.reasoning         -> reasoning trace token/text
 delta.reasoning_content -> alternative reasoning field used by some APIs/models
 delta.content           -> final assistant answer token/text
+```
 
 For a reasoning model, "first token" is ambiguous:
 
@@ -108,7 +129,8 @@ delta, not a timestamp taken inside the model executor.
 
 ## Evidence
 
-Raw Server-Sent Events were captured on the server session and committed to results/runs/2026-05-19_kimi-k2-6_stream-debug/stream_debug/.
+Raw Server-Sent Events were captured on the server session and committed
+to `results/runs/2026-05-19_kimi-k2-6_stream-debug/stream_debug/`.
 
 The captures showed three important facts:
 
@@ -116,13 +138,20 @@ The captures showed three important facts:
 2. subsequent chunks carried non-empty `delta.reasoning` values;
 3. some streams ended before any `delta.content` value appeared.
 
-The opening chunk of every stream carries a role marker with an empty content string:
+The opening chunk of every stream carries a role marker with an empty
+content string:
 
+```text
 data: {"choices":[{"index":0,"delta":{"role":"assistant","content":""}, ...}]}
-Every chunk that follows — for a long run — carries text in a reasoning field, never in content:
+```
 
+Every chunk that follows — for a long run — carries text in a `reasoning`
+field, never in `content`:
+
+```text
 data: {"choices":[{"index":0,"delta":{"reasoning":"<non-empty reasoning text>"}, ...}]}
 data: {"choices":[{"index":0,"delta":{"reasoning":"<more reasoning text>"}, ...}]}
+```
 
 Two artifacts make the consequence concrete:
 
@@ -136,7 +165,13 @@ Two artifacts make the consequence concrete:
 evidence. That capture failed before normal model execution because the
 request sent `stream_options` while also setting `stream:false`.
 
-This is a protocol-level client bug, not an inference result. stream_options describes streaming-specific behavior, for example extra metadata chunks in a Server-Sent Events stream. With stream:false, there is no SSE stream to configure, so vLLM correctly rejects the request during OpenAI-compatible request validation. The artifact is still useful, but only as evidence that the non-streaming capture path must omit stream_options.
+This is a protocol-level client bug, not an inference result.
+`stream_options` describes streaming-specific behavior, for example extra
+metadata chunks in a Server-Sent Events stream. With `stream:false`, there
+is no SSE stream to configure, so vLLM correctly rejects the request
+during OpenAI-compatible request validation. The artifact is still useful,
+but only as evidence that the non-streaming capture path must omit
+`stream_options`.
 
 ## Eliminated explanations
 
