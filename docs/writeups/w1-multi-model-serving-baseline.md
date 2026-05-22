@@ -11,6 +11,18 @@ returns a first benchmark number. The subject, however, is not the stack
 itself. It is **trust in the first measurement** — how much work is
 required before the first TTFT/E2E figure means anything at all.
 
+The measurement philosophy in this write-up is explicitly anchored in
+*Towards Efficient Generative Large Language Model Serving: A Survey from
+Algorithms to Systems* (Miao et al., ACM Computing Surveys / arXiv
+2312.15234). The local reading note is
+`docs/learning/paper-notes/efficient-llm-serving-survey.md`. I use the
+survey as a **taxonomy**, not as numeric evidence: it frames LLM serving
+performance as an interaction between request scheduling, prefill/decode
+dynamics, KV-cache memory management, batching policy, workload shape,
+network/API path, and GPU hardware behavior. W1 follows that taxonomy to
+decide which controls and metrics must be captured before a first
+TTFT/E2E number can be trusted.
+
 The narrative is assembled from eight threads. Each thread is a single
 segment in one mode:
 
@@ -81,6 +93,13 @@ request
        -> token
        -> ...
 ```
+
+This prefill/decode split follows the serving model summarized in the
+Efficient LLM Serving Survey (Miao et al.). The survey is useful here as
+a systems reference: prompt processing and incremental decode have
+different cost structures, so TTFT, TPOT, and E2E latency should be read
+as different measurement questions rather than collapsed into one generic
+"latency" number.
 
 During **prefill**, the model processes the prompt and builds the
 request state, including the KV cache. During **decode**, the model
@@ -354,6 +373,12 @@ exposes counters, gauges, and histograms, but an idle or near-idle
 snapshot mostly proves instrumentation coverage. It does not prove
 throughput, saturation, queueing behavior, or hardware utilization.
 
+The Efficient LLM Serving Survey is useful here for the same reason: it
+does not give this project a number to reproduce; it gives a taxonomy of
+which serving layers must be observable before a number is meaningful.
+In T5, the raw `/metrics` dump is therefore treated as layer-discovery,
+not as performance evidence.
+
 Planned evidence to include:
 
 - raw vLLM `/metrics` dump from `results/raw/observability/`,
@@ -421,8 +446,13 @@ are using different semantic definitions.
 ### Why these are P0 metrics
 
 The P0 set is selected by diagnostic coverage, not by metric availability.
-The point is to keep only the signals needed to localize where a request
-is spending time or where serving is currently constrained.
+This criterion comes directly from the systems decomposition used in the
+Efficient LLM Serving Survey: serving behavior is shaped by the
+interaction between scheduling, prefill/decode dynamics, KV-cache memory
+management, batching behavior, workload shape, API/network path, and GPU
+hardware utilization. The point is to keep only the signals needed to
+localize where a request is spending time or where serving is currently
+constrained.
 
 The selected groups cover the minimum useful inference-serving stack:
 
@@ -555,6 +585,14 @@ against LiteLLM's own latency metrics. -->
 ---
 
 ## Baseline table and what the numbers do NOT mean
+
+The Efficient LLM Serving Survey also motivates how this final baseline
+section should be written: serving results are hard to compare unless
+model configuration, hardware, workload shape, scheduling policy,
+network/API path, and generated output length are controlled. For that
+reason, W1 should report controls next to every number and treat the
+first single-stream runs as a sanity baseline, not as a general throughput
+claim.
 
 <!-- TODO: first run_bench_suite.py figures through LiteLLM (TTFT p50/p95,
 TPOT, E2E, throughput) with full control snapshot; explicit limits —
