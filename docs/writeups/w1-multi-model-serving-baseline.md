@@ -30,9 +30,9 @@ segment in one mode:
 | **T2** | Why does `measure_ttft_once.py` return `TTFT: n/a`? → reasoning deltas → parser fix (#31) | investigation | **captured** (stream-debug artifacts) | laptop |
 | **T3** | Why DeepSeek at 20% VRAM, not 25%/15%? | justification with numbers | to be collected | server |
 | **T4** | Why LiteLLM Proxy and not the alternatives? | justification + rejected alternatives | to be written | laptop |
-| **T5** | What does vLLM `/metrics` actually expose? Useful vs misleading? | investigation/measurement | partial (data in repo) | laptop + server |
+| **T5** | What do vLLM metrics and GPU telemetry actually tell us? Useful vs misleading signals. | investigation/measurement | partial (data in repo; DCGM planned) | laptop + server |
 | **T6** | Why Eagle3 and what does it cost? SC on vs off. | justification + measurement | to be measured | server |
-| **T7** | Why runtime data in host directories, not Docker volumes? | justification | — | laptop |
+| **T7** | Why runtime data lives in host directories, not Docker volumes? | justification | — | laptop |
 | **T8** | Does LiteLLM Proxy add measurable overhead? | measurement | to be measured | server + laptop |
 
 ---
@@ -324,7 +324,7 @@ exposed directly, nginx — each named with the reason it was dropped. -->
 
 ---
 
-## T5 — What vLLM `/metrics` actually exposes
+## T5 — Reading serving bottlenecks from vLLM metrics and GPU telemetry
 
 > Working thesis: the dashboard should not answer "what metrics exist?".
 > It should answer "where is the request spending time, and which layer is
@@ -334,9 +334,17 @@ exposed directly, nginx — each named with the reason it was dropped. -->
 ### Question
 
 A raw `/metrics` dump is not an observability result. Which vLLM metrics
-are decision-useful for Phase 1, which ones are only diagnostics, and how
-should the useful ones be read together with client-side timing and GPU
-hardware telemetry?
+and hardware telemetry signals are decision-useful for Phase 1, which
+ones are only diagnostics, and how should the useful ones be read
+together with client-side timing?
+
+The title deliberately goes beyond vLLM `/metrics`. vLLM exposes the
+serving-engine view: queueing, token rates, request latency, KV cache,
+and request outcomes. It does not expose the full hardware state of the
+8×H200 node. GPU utilization, VRAM, power, and temperature need DCGM
+Exporter or `nvidia-smi`. For now, the hardware layer is part of the T5
+observability plan; the final write-up should mark which GPU signals were
+actually collected and which remain planned.
 
 ### Inventory: availability is not evidence
 
@@ -353,45 +361,74 @@ Planned evidence to include:
 - issue #34 notes on metric selection and DCGM Exporter,
 - later server-session screenshot or captured dashboard window under load.
 
+### Why these are P0 metrics
+
+The P0 set is selected by diagnostic coverage, not by metric availability.
+The point is to keep only the signals needed to localize where a request
+is spending time or where serving is currently constrained.
+
+The selected groups cover the minimum useful inference-serving stack:
+
+```text
+client / proxy timing
+  -> vLLM request admission and scheduler
+  -> prefill token processing
+  -> decode token processing
+  -> KV cache capacity and prefix reuse
+  -> request termination reason
+  -> GPU hardware state
+```
+
+This matters because no single metric can explain a serving result. A
+large TTFT is ambiguous until queue time, prompt shape, and client-side
+measurement are checked. High generation throughput is ambiguous until
+ITL, running requests, and GPU utilization are checked. High E2E latency
+is ambiguous until output length and finish reason are checked. P0
+metrics are therefore the smallest set that lets the write-up separate
+client/proxy overhead, scheduler pressure, prefill cost, decode cost,
+cache pressure, workload shape, and hardware saturation.
+
 ### Metric semantics
 
 Define the P0 metrics as a small observability contract rather than a
 complete copy of the Prometheus surface:
 
-| Group | Metrics | Question answered |
-|---|---|---|
-| Latency | TTFT, ITL/TPOT, E2E latency | Where does user-visible time appear? |
-| Token pipeline | prompt tokens/s, generation tokens/s | Is work dominated by prefill or decode? |
-| Scheduler | running requests, waiting requests, queue time | Is the engine executing or queueing? |
-| KV/cache | KV usage %, prefix cache hits/queries | Is cache capacity or reuse affecting behavior? |
-| Outcomes | success by `finished_reason` | Are requests stopping, length-capping, aborting, or erroring? |
-| Hardware | GPU util, VRAM, power, temperature | Is the physical node underloaded, saturated, memory-constrained, or thermally/power constrained? |
+| Group | Metrics | Question answered | Why it is P0 |
+|---|---|---|---|
+| Latency | TTFT, ITL/TPOT, E2E latency | Where does user-visible time appear? | Latency is the first thing users notice, but each latency metric maps to a different part of the request lifecycle. |
+| Token pipeline | prompt tokens/s, generation tokens/s | Is work dominated by prefill or decode? | Prefill and decode stress the system differently; separating them prevents a single throughput number from hiding the bottleneck. |
+| Scheduler | running requests, waiting requests, queue time | Is the engine executing or queueing? | Queueing turns model speed into user-visible delay and shows when demand exceeds immediately schedulable capacity. |
+| KV/cache | KV usage %, prefix cache hits/queries | Is cache capacity or reuse affecting behavior? | KV pressure can limit scheduling, while prefix reuse can reduce prefill work; both are central to later cache experiments. |
+| Outcomes | success by `finished_reason` | Are requests stopping, length-capping, aborting, or erroring? | Latency and throughput are not interpretable if many requests end by `length`, `abort`, or `error`. |
+| Hardware | GPU util, VRAM, power, temperature | Is the physical node underloaded, saturated, memory-constrained, or thermally/power constrained? | vLLM metrics describe the engine, not the physical limiters of the 8×H200 node. |
 
 For each metric, the final text should explain what a high value usually
-means, what a low or zero value usually means, and the caveat that
-prevents over-reading it. Example direction: high queue time plus waiting
-requests points to scheduler/capacity pressure; high E2E with normal TTFT
-and normal ITL can simply mean long output; zero counters in an idle dump
-mean no observed workload, not absence of the metric.
+means, what a low or zero value usually means, why that behavior matters,
+and the caveat that prevents over-reading it. Example direction: high
+queue time plus waiting requests points to scheduler/capacity pressure
+because requests are spending time before execution; high E2E with normal
+TTFT and normal ITL can simply mean long output because the model kept
+generating at a normal cadence; zero counters in an idle dump mean no
+observed workload, not absence of the metric.
 
 ### Correlation playbook
 
 A single metric rarely explains serving behavior. T5 should read metrics
 as correlated signals across layers:
 
-| Pattern to explain | Likely interpretation |
-|---|---|
-| client TTFT high, vLLM TTFT normal | overhead or definition mismatch outside vLLM: LiteLLM, network, SSE/client timing, or reasoning-vs-content TTFT |
-| vLLM TTFT high, queue time high, waiting requests high | scheduler/capacity queueing before execution |
-| vLLM TTFT high, queue time low, prompt length high | prefill/context processing dominates first token |
-| ITL/TPOT high, generation tokens/s low, GPU util high | decode path is expensive or saturated |
-| ITL/TPOT high, GPU util low | possible scheduler, CPU/proxy, client, or batching bottleneck rather than raw GPU saturation |
-| E2E high, TTFT normal, ITL normal, output tokens high | long completion, not necessarily slow serving |
-| generation tokens/s plateaus while ITL or queue time rises | saturation knee under offered load |
-| KV usage rising with waiting requests | possible KV-capacity scheduling constraint |
-| prefix hit rate rising while prefill/TTFT falls on repeated-prefix workload | prefix cache likely helps |
-| GPU util low, waiting zero, running low | benchmark is underloading the server |
-| GPU util high, power high, temperature stable | hardware is genuinely loaded and behaving normally |
+| Pattern to explain | Likely interpretation | Why it matters |
+|---|---|---|
+| client TTFT high, vLLM TTFT normal | overhead or definition mismatch outside vLLM: LiteLLM, network, SSE/client timing, or reasoning-vs-content TTFT | Prevents blaming the engine when the delay is introduced after vLLM or by a different TTFT definition. |
+| vLLM TTFT high, queue time high, waiting requests high | scheduler/capacity queueing before execution | Shows that first-token delay is caused before model execution, so tuning decode alone will not fix it. |
+| vLLM TTFT high, queue time low, prompt length high | prefill/context processing dominates first token | Points investigation toward input length, prompt tokenization, and prefill throughput rather than scheduler backlog. |
+| ITL/TPOT high, generation tokens/s low, GPU util high | decode path is expensive or saturated | Indicates that each next-token step is costly and the GPU is likely doing real decode work. |
+| ITL/TPOT high, GPU util low | possible scheduler, CPU/proxy, client, or batching bottleneck rather than raw GPU saturation | Avoids misdiagnosing poor streaming cadence as GPU saturation when hardware is not busy. |
+| E2E high, TTFT normal, ITL normal, output tokens high | long completion, not necessarily slow serving | Separates a long answer from a slow server; the fix may be workload/output cap, not engine tuning. |
+| generation tokens/s plateaus while ITL or queue time rises | saturation knee under offered load | Marks the point where extra load no longer buys throughput and starts buying latency. |
+| KV usage rising with waiting requests | possible KV-capacity scheduling constraint | Connects memory pressure to scheduling behavior; useful for deciding whether context length or concurrency is the limiter. |
+| prefix hit rate rising while prefill/TTFT falls on repeated-prefix workload | prefix cache likely helps | Gives a causal check that cache hits are translating into reduced prefill cost, not just appearing as a counter. |
+| GPU util low, waiting zero, running low | benchmark is underloading the server | Prevents drawing capacity conclusions from a workload that never stressed the node. |
+| GPU util high, power high, temperature stable | hardware is genuinely loaded and behaving normally | Confirms that observed throughput/latency is measured under real hardware load without obvious thermal instability. |
 
 The final write-up should avoid hard thresholds until a per-model,
 per-workload baseline exists. Prefer relative language: sustained rise,
