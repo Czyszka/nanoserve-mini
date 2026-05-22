@@ -94,12 +94,13 @@ request
        -> ...
 ```
 
-This prefill/decode split follows the serving model summarized in the
-Efficient LLM Serving Survey (Miao et al.). The survey is useful here as
-a systems reference: prompt processing and incremental decode have
-different cost structures, so TTFT, TPOT, and E2E latency should be read
-as different measurement questions rather than collapsed into one generic
-"latency" number.
+The prefill/decode terminology is used in the sense of Miao et al.
+(2025), who survey generative LLM serving systems and distinguish prompt
+processing from incremental autoregressive decoding [1]. This citation
+anchors the measurement vocabulary; it is not evidence for the Kimi-K2.6
+streaming behavior observed below. Under that terminology, TTFT, TPOT,
+and E2E latency describe different parts of the serving path rather than
+one generic "latency" number.
 
 During **prefill**, the model processes the prompt and builds the
 request state, including the KV cache. During **decode**, the model
@@ -594,6 +595,14 @@ reason, W1 should report controls next to every number and treat the
 first single-stream runs as a sanity baseline, not as a general throughput
 claim.
 
+---
+
+## References
+
+[1] X. Miao, G. Oliaro, Z. Zhang, X. Cheng, H. Jin, T. Chen, and Z. Jia,
+"Towards Efficient Generative Large Language Model Serving: A Survey from
+Algorithms to Systems," *ACM Computing Surveys*, 2025. arXiv:2312.15234.
+Local note: `docs/learning/paper-notes/efficient-llm-serving-survey.md`.
 <!-- TODO: first run_bench_suite.py figures through LiteLLM (TTFT p50/p95,
 TPOT, E2E, throughput) with full control snapshot; explicit limits —
 single-stream, warmup=1, no concurrency sweep → sanity baseline, not a
