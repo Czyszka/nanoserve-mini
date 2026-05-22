@@ -117,6 +117,10 @@ client / proxy timing
 
 ## Correlation playbook
 
+This table is a diagnostic map, not a causal proof. Each pattern should be
+read as an operational hypothesis that needs a controlled check before it
+becomes a performance conclusion.
+
 | Pattern to explain | Likely interpretation | Why it matters |
 |---|---|---|
 | client TTFT high, vLLM TTFT normal | overhead or definition mismatch outside vLLM: LiteLLM, network, SSE/client timing, or reasoning-vs-content TTFT | Prevents blaming the engine when the delay is introduced after vLLM or by a different TTFT definition. |
@@ -135,6 +139,69 @@ Avoid hard thresholds until a per-model, per-workload baseline exists.
 Prefer relative language: sustained rise, step change after load starts,
 divergence between client-side and server-side timing, plateau under
 increasing offered load.
+
+## Inference protocol: from metric pattern to supported conclusion
+
+T5 is an observability framework. It helps form diagnostic hypotheses, but
+metrics alone do not prove causality. A causal claim requires a controlled
+change, a prediction about how the relevant metrics should move, and an
+explicit support or rejection criterion.
+
+| Level | Name | Meaning |
+|---|---|---|
+| L0 | Observation | A metric trend or value was observed, without causal interpretation. |
+| L1 | Diagnostic hypothesis | The most likely interpretation given the request lifecycle and correlated metrics. |
+| L2 | Supported causal claim | The hypothesis survived a controlled counterfactual test. |
+| L3 | Robust claim | The result repeated across at least two workloads, windows, or configurations. |
+
+For an L2 claim, the minimum evidence bundle should include:
+
+- same model and server configuration,
+- fixed endpoint path: direct vLLM or LiteLLM Proxy,
+- fixed prompt-length distribution,
+- fixed `max_tokens`, temperature, and sampling parameters,
+- fixed concurrency profile,
+- fixed Prometheus / telemetry sampling window,
+- one changed lever at a time,
+- client timings, vLLM metrics, and GPU telemetry from the same time window.
+
+The practical transition is:
+
+```text
+observed metric pattern
+  -> mechanistic hypothesis
+  -> controlled counterfactual change
+  -> predicted metric movement
+  -> support / rejection criterion
+```
+
+Examples:
+
+| Pattern | Hypothesis | Disambiguation test | Support criterion |
+|---|---|---|---|
+| TTFT high + queue time high + waiting requests high | scheduler queueing dominates first-token delay | lower concurrency while keeping prompt/output distribution fixed | waiting/queue_time fall and TTFT falls; ITL does not need to change materially |
+| TTFT high + queue time low + long prompts | prefill dominates first-token delay | reduce prompt length with the same model/output cap/concurrency | prompt tokens fall and TTFT falls while queue_time remains low |
+| ITL high + GPU util high | decode path is expensive or saturated | reduce decode pressure by lowering concurrency or output length | ITL improves and GPU util/power fall in the same window |
+| client TTFT high + vLLM TTFT normal | overhead or timing-definition mismatch outside vLLM | compare direct vLLM vs LiteLLM Proxy with the same prompt/config | proxy-path client TTFT is higher while vLLM TTFT remains similar |
+| prefix hit rate rises while prefill/TTFT falls | prefix cache likely reduces prefill work | compare repeated-prefix workload against non-shared-prefix workload | prefix hits increase and prompt-processing latency/TTFT falls only in the repeated-prefix condition |
+
+## Threats to validity
+
+The correlation playbook can overlead if workload and measurement windows
+are not controlled. The largest confounders for T5 are prompt length,
+output length, sampling parameters, endpoint path, concurrency profile,
+server warmup state, batching/scheduler state, CPU/proxy overhead,
+telemetry sampling granularity, and whether client metrics and vLLM/GPU
+metrics were captured over the same time window.
+
+Therefore, T5 should distinguish language carefully:
+
+- **evidence-backed finding** — directly observed in captured artifacts;
+- **diagnostic hypothesis** — likely interpretation of a metric pattern;
+- **supported causal claim** — hypothesis that passed a controlled
+  counterfactual test;
+- **robust claim** — supported causal claim repeated across multiple
+  workloads or windows.
 
 ## Cleanup found during observability work
 
