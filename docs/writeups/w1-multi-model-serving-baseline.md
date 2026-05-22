@@ -106,11 +106,21 @@ GPU kernels / model forward pass
   -> benchmark parser / latency metrics
 ```
 
-The **reasoning parser** is the component that sits between the raw
-generated token stream and the API fields exposed to the client. It does
-not make the model "reason" and it does not change the GPU computation.
-Its job is to interpret the model-specific output format and split the
-generated stream into semantic channels.
+The diagram deliberately separates two parser layers.
+
+The **server-side reasoning parser** sits inside the serving stack,
+between the raw generated token stream and the OpenAI-compatible response
+fields. It does not make the model "reason" and it does not change the
+GPU computation. Its job is to interpret the model-specific output
+format and split the generated stream into semantic channels such as
+`delta.reasoning` and `delta.content`.
+
+The **benchmark/client parser** sits outside the serving engine. It reads
+Server-Sent Events, extracts fields from each streamed delta, and decides
+which observed event starts a latency timer. The failure investigated in
+this thread was in this second layer: vLLM exposed reasoning deltas, but
+our benchmark parser treated `delta.content` as the only token channel
+worth timing.
 
 For many reasoning models, the model emits an internal scratchpad before
 the final answer. In some model families this is delimited by explicit
@@ -161,6 +171,12 @@ That distinction matters for metrics:
 | `ttft_seconds` / content TTFT | first non-empty `delta.content` | the final answer has started |
 | `tpot_any_token_seconds` | consecutive reasoning or content deltas | cadence of all observed generation |
 | content-only TPOT | consecutive content deltas only | cadence of the final answer channel |
+
+Strictly speaking, the benchmark does not observe raw model tokens
+directly. It observes streamed text deltas after tokenization, decoding,
+server-side parsing, and SSE serialization. In this write-up, "token
+TTFT" therefore means the first non-empty client-observable generation
+delta, not a timestamp taken inside the model executor.
 
 This means that `TTFT: n/a` can be correct under a content-only
 definition even when the model is actively generating tokens. If the
@@ -229,6 +245,19 @@ rejects the request during OpenAI-compatible request validation. The
 artifact is still useful, but only as evidence that the non-streaming
 capture path must omit `stream_options`.
 
+### Eliminated explanations
+
+The important part of the investigation was not only finding a matching
+field. It was narrowing the failure to a specific layer of the stack.
+
+| Candidate explanation | Evidence | Result |
+|---|---|---|
+| The timing code was generally broken | The same script returned ordinary TTFT/TPOT values against the DeepSeek-V4-Flash baseline endpoint | rejected |
+| Kimi produced no streamed output | The SSE capture contains many non-empty `delta.reasoning` chunks | rejected |
+| vLLM failed during the streaming inference path | The streaming captures reached normal terminal states such as `finish_reason:"length"` or `finish_reason:"stop"` | rejected for the streaming path |
+| The non-streaming capture proved model behavior | That request was invalid at validation time because it sent `stream_options` with `stream:false` | rejected as behavioral evidence |
+| The client-side metric definition was too narrow | The benchmark watched `delta.content`, while this model first emitted `delta.reasoning` | accepted |
+
 ### Redirect
 
 The parser was timing TTFT off the first `delta.content` token only.
@@ -238,6 +267,13 @@ exists, so a content-only TTFT is genuinely undefined. The defect was
 not the timer and not a missed token — it was the **definition**. A
 content-only TTFT silently conflates "no answer was produced" with "the
 answer started after a long, unmeasured reasoning phase".
+
+This is the layer boundary that mattered: the server-side reasoning
+parser exposed the model's scratchpad as `delta.reasoning`; the
+benchmark/client parser then ignored that channel and treated
+`delta.content` as the only signal of generation. The stream was healthy
+for the question "is the model producing output?" and empty only for the
+narrower question "has the final-answer channel started?".
 
 ### Source
 
