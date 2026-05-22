@@ -396,10 +396,18 @@ This lifecycle has several different timing surfaces:
 | prompt/context processing | `vllm:prompt_tokens_total`, request prompt-token histograms | Prefill volume and rate. |
 | decode loop | `vllm:inter_token_latency_seconds`, `vllm:generation_tokens_total` | Next-token cadence and generation throughput. |
 | full vLLM request lifetime | `vllm:e2e_request_latency_seconds` | Server-side request lifetime as seen by vLLM. |
-| client start → response end | client E2E | User/client-observed end-to-end latency through proxy and transport. |
+| client start → response end | `measure_ttft_once.py` `metrics.e2e_seconds` (streaming), `request_once.py` `metrics.e2e_seconds` (non-streaming), `run_sequential_benchmark.py` rows/summary | User/client-observed end-to-end latency through the configured `base_url`; includes LiteLLM Proxy and transport only when the benchmark points at the proxy. |
 | KV allocation pressure | `vllm:kv_cache_usage_perc` | Fraction of vLLM KV-cache capacity currently in use. |
 | repeated-prefix reuse | `vllm:prefix_cache_hits_total` / `vllm:prefix_cache_queries_total` | Whether prompt tokens are being served from prefix cache rather than recomputed. |
 | physical GPU state | DCGM / `nvidia-smi` GPU util, VRAM, power, temperature | Whether the hardware layer is underloaded, saturated, memory-constrained, or thermally/power constrained. |
+
+The client E2E row is already measured by project scripts, not merely
+planned. `measure_ttft_once.py` records streaming E2E for a single request,
+`request_once.py` records non-streaming E2E for a single request, and
+`run_sequential_benchmark.py` records repeated streaming E2E rows and a
+summary distribution. The important nuance is the `base_url`: a run
+against LiteLLM Proxy measures proxy-path E2E; a run pointed directly at a
+vLLM port measures direct-to-vLLM E2E.
 
 This is why client-side TTFT and vLLM TTFT are not automatically
 contradictory when they differ. They are measured at different layers.
