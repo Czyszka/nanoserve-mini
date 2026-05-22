@@ -65,6 +65,124 @@ If true, the script would see a long stream of chunks yet never observe
 the field it was timing, and would correctly — but uselessly — conclude
 that no token had arrived.
 
+### Mechanism: where reasoning sits in the inference path
+
+The key point is that a reasoning phase is not a phase *before*
+inference. It happens *inside* inference.
+
+For an autoregressive LLM, serving has two broad phases:
+
+```text
+request
+  -> prefill / context phase
+  -> decode / generation phase
+       -> token
+       -> token
+       -> token
+       -> ...
+```
+
+During **prefill**, the model processes the prompt and builds the
+request state, including the KV cache. During **decode**, the model
+generates new tokens autoregressively: each new token is predicted from
+the prompt plus all previously generated tokens. From the serving
+engine's perspective, a reasoning token and a final-answer token are both
+ordinary generated tokens in this decode loop. They both consume GPU
+work, output-token budget, scheduler time, and KV-cache growth.
+
+The difference appears one layer above the raw model execution: in the
+model-output format and in the OpenAI-compatible API response.
+
+A useful way to view the stack is:
+
+```text
+GPU kernels / model forward pass
+  -> raw generated token stream
+  -> model-specific reasoning parser
+  -> OpenAI-compatible response fields
+       -> delta.reasoning
+       -> delta.reasoning_content
+       -> delta.content
+  -> benchmark parser / latency metrics
+```
+
+The **reasoning parser** is the component that sits between the raw
+generated token stream and the API fields exposed to the client. It does
+not make the model "reason" and it does not change the GPU computation.
+Its job is to interpret the model-specific output format and split the
+generated stream into semantic channels.
+
+For many reasoning models, the model emits an internal scratchpad before
+the final answer. In some model families this is delimited by explicit
+markers such as:
+
+```text
+<think>
+... internal reasoning text ...
+</think>
+final answer text
+```
+
+A reasoning parser can then classify the generated text like this:
+
+```text
+inside reasoning markers      -> reasoning channel
+after reasoning markers       -> final content channel
+```
+
+In an OpenAI-compatible streaming response, that split becomes visible as
+different delta fields:
+
+```text
+delta.reasoning         -> reasoning trace token/text
+delta.reasoning_content -> alternative reasoning field used by some APIs/models
+delta.content           -> final assistant answer token/text
+```
+
+This is why "first token" is ambiguous for a reasoning model. There are
+at least two different client-observable events:
+
+```text
+first reasoning token      -> the model has started producing reasoning output
+first final content token  -> the user-visible final answer has started
+```
+
+For a non-reasoning or content-only model, these events often collapse
+into the same moment because the first generated token is also
+`delta.content`. For a reasoning model, they can diverge by the full
+length of the reasoning trace.
+
+That distinction matters for metrics:
+
+| Metric | Starts when | Meaning |
+|---|---|---|
+| `ttft_any_token_seconds` | first non-empty reasoning or content delta | the model has started producing observable output |
+| `ttft_reasoning_seconds` | first non-empty reasoning delta, if tracked separately | the reasoning trace has started |
+| `ttft_seconds` / content TTFT | first non-empty `delta.content` | the final answer has started |
+| `tpot_any_token_seconds` | consecutive reasoning or content deltas | cadence of all observed generation |
+| content-only TPOT | consecutive content deltas only | cadence of the final answer channel |
+
+This means that `TTFT: n/a` can be correct under a content-only
+definition even when the model is actively generating tokens. If the
+completion budget is spent entirely on reasoning and the stream ends with
+`finish_reason:"length"`, then no final-answer token exists. In that
+case, content TTFT is not slow; it is undefined.
+
+The practical lesson is that a latency script must state which semantic
+channel it is timing. A content-only TTFT answers:
+
+```text
+When did the final answer start?
+```
+
+It does not answer:
+
+```text
+When did model generation start?
+```
+
+For reasoning models, those are different measurement questions.
+
 ### Evidence
 
 The hypothesis is cheap to settle: the streaming response is
@@ -100,8 +218,16 @@ Two artifacts make the consequence concrete:
 ordering under a different prompt, showing that the parser issue was not
 limited to one input. `models.json` confirms the served model identity.
 `nonstream_short_prompt.sse.json` is intentionally not used as behavioral
-evidence: that capture returned a vLLM validation error because
-`stream_options` was sent with `stream:false`.
+evidence. That capture failed before normal model execution: the request
+sent `stream_options` while also setting `stream:false`.
+
+This is a protocol-level client bug, not an inference result.
+`stream_options` describes streaming-specific behavior, for example
+extra metadata chunks in a Server-Sent Events stream. With
+`stream:false`, there is no SSE stream to configure, so vLLM correctly
+rejects the request during OpenAI-compatible request validation. The
+artifact is still useful, but only as evidence that the non-streaming
+capture path must omit `stream_options`.
 
 ### Redirect
 
@@ -133,13 +259,17 @@ and content-emitting models keep the same `ttft_seconds` behavior:
 
 ### Conclusion
 
-For a reasoning model, TTFT is not a single number. "First token" forks
-into a **reasoning-token TTFT** and a **final-answer-token TTFT**, and
-the two can differ by the entire length of the reasoning phase — or the
-final-answer figure can be undefined while the model is still producing
-useful output. Every TTFT figure later in this write-up must therefore
-name which of the two it measures. That naming discipline is the first
-concrete down-payment on trusting the baseline.
+For a reasoning model, TTFT is not a single number. From the inference
+engine perspective, reasoning tokens and final-answer tokens are both
+generated by the same autoregressive decode loop. From the API and
+benchmark perspective, however, they are different observable channels.
+"First token" therefore forks into a **first reasoning token** and a
+**first final-answer token**. The two can differ by the entire length of
+the reasoning phase, or the final-answer figure can be undefined while
+the model is still producing useful reasoning output. Every TTFT figure
+later in this write-up must therefore name which channel it measures.
+That naming discipline is the first concrete down-payment on trusting
+the baseline.
 
 ---
 
