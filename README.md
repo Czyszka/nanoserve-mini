@@ -7,6 +7,8 @@ one Triton kernel, technical write-ups, final decision document.
 Standalone portfolio artifact that also acts as a decision gate for a
 possible full `nanoserve` follow-up.
 
+> **[→ Interactive architecture diagram](https://czyszka.github.io/nanoserve-mini/architecture.html)** — full visual map of services, scripts, modules, and data flows.
+
 ## Current work
 
 Source of truth for human work: this README.
