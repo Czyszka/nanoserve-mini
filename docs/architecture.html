@@ -3,51 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>nanoserve-mini — Interactive Architecture</title>
+<title>nanoserve-mini — Architecture</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.29.2/cytoscape.min.js"></script>
 <style>
 :root {
   --bg: #0d1117; --surface: #161b22; --surface2: #21262d; --border: #30363d;
   --text: #c9d1d9; --text-dim: #8b949e; --text-bright: #f0f6fc;
+  --accent: #58a6ff; --accent2: #3fb950; --accent3: #d29922;
+  --accent4: #f78166; --accent5: #bc8cff; --gpu: #1f6feb; --arrow: #484f58;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; line-height: 1.5;
+  padding: 20px;
+}
 
-/* ── header ── */
-#header { padding: 9px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-#header h1 { font-size: 15px; font-weight: 600; color: var(--text-bright); }
-#header .sub { font-size: 12px; color: var(--text-dim); }
+h1 { color: var(--text-bright); font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 16px; }
+.hint { color: var(--border); font-size: 11px; }
 
-/* ── toolbar ── */
-#toolbar { padding: 7px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; }
-.btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap; transition: border-color .15s, color .15s; }
-.btn:hover { border-color: #58a6ff; color: #58a6ff; }
-.btn.on { background: #1f6feb22; border-color: #1f6feb; color: #79c0ff; }
-.sep { width: 1px; height: 18px; background: var(--border); }
+/* ──────────────────────────── GRAPH SECTION ───────────────────────────────── */
+#graph-section {
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+  margin-bottom: 16px; max-width: 1400px; overflow: hidden;
+}
+#toolbar {
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; white-space: nowrap;
+  transition: border-color .15s, color .15s;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.on { background: #1f6feb22; border-color: var(--gpu); color: #79c0ff; }
+.sep-v { width: 1px; height: 18px; background: var(--border); }
 
-/* ── legend ── */
-#legend { display: flex; gap: 10px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+#legend-bar { display: flex; gap: 10px; align-items: center; margin-left: auto; flex-wrap: wrap; }
 .leg { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-dim); }
 .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-/* ── main ── */
-#main { display: flex; flex: 1; overflow: hidden; }
-#cy { flex: 1; height: 100%; background: var(--bg); }
+#graph-wrap { position: relative; height: 620px; }
+#cy { width: 100%; height: 100%; background: var(--bg); }
 
-/* ── panel ── */
-#panel { width: 290px; background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; display: none; }
-#panel.open { display: flex; flex-direction: column; }
-#ph { padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+#panel {
+  position: absolute; top: 12px; right: 12px; width: 290px; max-height: calc(100% - 24px);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  display: none; flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+#panel.open { display: flex; }
+#ph {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
 #ph-title { font-size: 14px; font-weight: 600; color: var(--text-bright); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #ph-close { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1; }
 #ph-close:hover { color: var(--text-bright); }
-#pb { padding: 12px 14px; flex: 1; }
+#pb { padding: 12px 14px; overflow-y: auto; }
 
 .badge { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 3px; margin-bottom: 8px; }
 .psub { font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
 .psh { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); margin: 10px 0 5px; }
 .prow { display: flex; gap: 6px; margin-bottom: 3px; font-size: 12px; }
-.pk { color: var(--text-dim); min-width: 74px; flex-shrink: 0; }
+.pk { color: var(--text-dim); min-width: 78px; flex-shrink: 0; }
 .pv { color: var(--text); font-family: monospace; word-break: break-all; }
 .plist { list-style: none; }
 .plist li { font-size: 11px; font-family: monospace; color: var(--text-dim); padding: 1px 0; }
@@ -59,376 +80,671 @@ body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', syste
 .cdir { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
 .clabel { color: var(--text-dim); font-family: monospace; font-size: 10px; margin-left: auto; flex-shrink: 0; }
 
-.hint { font-size: 10px; color: var(--border); margin-left: 4px; }
+/* ────────────────────────── STATIC ZONES (below) ──────────────────────────── */
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1400px; }
+.zone { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 14px 16px; }
+.zone-label { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.zone-label .dot { width: 8px; height: 8px; border-radius: 50%; }
+.zone.server { border-color: #1f6feb44; } .zone.server .dot { background: var(--gpu); }
+.zone.bench  { border-color: #3fb95044; } .zone.bench  .dot { background: var(--accent2); }
+.zone.obs    { border-color: #d2992244; } .zone.obs    .dot { background: var(--accent3); }
+.zone.infra  { border-color: #bc8cff44; } .zone.infra  .dot { background: var(--accent5); }
+.span2 { grid-column: span 2; }
+.section-h { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; margin-top: 12px; }
+.section-h:first-child { margin-top: 0; }
+.divider { width: 100%; height: 1px; background: var(--border); margin: 8px 0; }
+
+.services { display: flex; flex-wrap: wrap; gap: 8px; }
+.svc { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; min-width: 150px; flex: 1; }
+.svc-name { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
+.svc-port { font-size: 11px; font-family: monospace; color: var(--accent); margin-bottom: 4px; }
+.svc-model { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+.tag { display: inline-block; font-size: 10px; font-family: monospace; padding: 1px 5px; border-radius: 3px; margin-top: 4px; margin-right: 3px; }
+.tag-gpu  { background: #1f6feb22; color: #58a6ff; border: 1px solid #1f6feb44; }
+.tag-proxy{ background: #3fb95022; color: #3fb950; border: 1px solid #3fb95044; }
+.tag-obs  { background: #d2992222; color: #d29922; border: 1px solid #d2992244; }
+.tag-ui   { background: #f7816622; color: #f78166; border: 1px solid #f7816644; }
+
+.flow { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding-bottom: 4px; }
+.flow-step { display: flex; flex-direction: column; align-items: center; }
+.flow-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 11px; font-weight: 600; color: var(--text-bright); text-align: center; white-space: nowrap; min-width: 120px; }
+.flow-box.orchestrator { border-color: var(--accent2); color: var(--accent2); }
+.flow-box.script       { border-color: var(--accent);  color: var(--accent); }
+.flow-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; text-align: center; }
+.flow-arrow { color: var(--arrow); font-size: 18px; line-height: 32px; padding: 0 4px; align-self: center; margin-top: -10px; }
+
+.scripts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.script-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+.script-name { font-family: monospace; font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 3px; }
+.script-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+.script-metric { font-size: 10px; color: var(--text); }
+.script-metric span { color: var(--accent2); font-family: monospace; }
+
+.modules { display: flex; gap: 8px; flex-wrap: wrap; }
+.module { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; flex: 1; min-width: 140px; }
+.module-name { font-family: monospace; font-size: 12px; color: var(--accent5); font-weight: 600; margin-bottom: 3px; }
+.module-desc { font-size: 11px; color: var(--text-dim); }
+
+.machines { display: flex; gap: 8px; flex-wrap: wrap; }
+.machine { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; flex: 1; min-width: 160px; }
+.machine-name { font-size: 13px; font-weight: 600; color: var(--text-bright); margin-bottom: 4px; }
+.machine-detail { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+
+.results-tree { font-family: monospace; font-size: 11px; color: var(--text-dim); line-height: 1.8; }
+.results-tree .hl  { color: var(--accent3); }
+.results-tree .hl2 { color: var(--accent); }
+
+.phases { display: flex; gap: 8px; }
+.phase { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+.phase-num { font-size: 11px; font-weight: 700; color: var(--accent5); }
+.phase-weeks { font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+.phase-focus { font-size: 11px; color: var(--text); }
+.phase.active { border-color: var(--accent2); } .phase.active .phase-num { color: var(--accent2); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.status-active  { background: var(--accent2); }
+.status-planned { background: var(--arrow); }
+
+.vflow-line { font-family: monospace; font-size: 11px; color: var(--text-dim); padding: 2px 0; }
+.vflow-line .cmd    { color: var(--accent2); }
+.vflow-line .target { color: var(--accent); }
+.vflow-line .file   { color: var(--accent3); }
 </style>
 </head>
 <body>
 
-<div id="header">
-  <h1>nanoserve-mini</h1>
-  <span class="sub">Interactive architecture · Phase 1 · 8×H200 NVL</span>
-  <span class="hint" style="color:var(--text-dim);">click a node for details · drag to rearrange · scroll to zoom</span>
+<h1>nanoserve-mini</h1>
+<div class="subtitle">
+  12-week LLM inference performance lab &nbsp;·&nbsp;
+  Phase 1: vLLM baseline + observability + LiteLLM proxy &nbsp;·&nbsp;
+  8 × H200 NVL
+  &nbsp;<span class="hint">— click any node in the graph to inspect details · drag nodes · scroll to zoom</span>
 </div>
 
-<div id="toolbar">
-  <button class="btn on"  id="f-all"       onclick="filt('all')">All</button>
-  <button class="btn"     id="f-inference"  onclick="filt('inference')">Inference stack</button>
-  <button class="btn"     id="f-obs"        onclick="filt('obs')">Observability</button>
-  <button class="btn"     id="f-bench"      onclick="filt('bench')">Benchmark</button>
-  <button class="btn"     id="f-modules"    onclick="filt('modules')">Modules</button>
-  <div class="sep"></div>
-  <button class="btn on"  id="t-uses"       onclick="toggleUses()">Module edges on</button>
-  <button class="btn"                       onclick="cy.fit(cy.elements(':visible'), 40)">Fit</button>
-  <div id="legend">
-    <div class="leg"><span class="leg-dot" style="background:#1f6feb"></span>GPU service</div>
-    <div class="leg"><span class="leg-dot" style="background:#2ea043"></span>Proxy</div>
-    <div class="leg"><span class="leg-dot" style="background:#da3633"></span>UI</div>
-    <div class="leg"><span class="leg-dot" style="background:#9e6a03"></span>Observability</div>
-    <div class="leg"><span class="leg-dot" style="background:#6e40c9"></span>Orchestrator</div>
-    <div class="leg"><span class="leg-dot" style="background:#1158c7"></span>Script</div>
-    <div class="leg"><span class="leg-dot" style="background:#484f58"></span>Module / Ext</div>
-  </div>
-</div>
-
-<div id="main">
-  <div id="cy"></div>
-  <div id="panel">
-    <div id="ph">
-      <span id="ph-title">Details</span>
-      <button id="ph-close" onclick="closePanel()">✕</button>
+<!-- ════════════════════════════ INTERACTIVE GRAPH ═════════════════════════════ -->
+<div id="graph-section">
+  <div id="toolbar">
+    <button class="btn on" id="f-all"        onclick="filt('all')">All</button>
+    <button class="btn"    id="f-inference"  onclick="filt('inference')">Inference stack</button>
+    <button class="btn"    id="f-obs"        onclick="filt('obs')">Observability</button>
+    <button class="btn"    id="f-bench"      onclick="filt('bench')">Benchmark</button>
+    <button class="btn"    id="f-modules"    onclick="filt('modules')">Modules</button>
+    <div class="sep-v"></div>
+    <button class="btn on" id="t-uses"       onclick="toggleUses()">Module edges on</button>
+    <button class="btn"                      onclick="cy.fit(cy.elements(':visible'), 40)">Fit</button>
+    <div id="legend-bar">
+      <div class="leg"><span class="leg-dot" style="background:#1f6feb"></span>GPU service</div>
+      <div class="leg"><span class="leg-dot" style="background:#2ea043"></span>Proxy</div>
+      <div class="leg"><span class="leg-dot" style="background:#da3633"></span>UI</div>
+      <div class="leg"><span class="leg-dot" style="background:#9e6a03"></span>Observability</div>
+      <div class="leg"><span class="leg-dot" style="background:#6e40c9"></span>Orchestrator</div>
+      <div class="leg"><span class="leg-dot" style="background:#1158c7"></span>Script</div>
+      <div class="leg"><span class="leg-dot" style="background:#484f58"></span>Module / Ext</div>
     </div>
-    <div id="pb"></div>
+  </div>
+  <div id="graph-wrap">
+    <div id="cy"></div>
+    <div id="panel">
+      <div id="ph">
+        <span id="ph-title">Details</span>
+        <button id="ph-close" onclick="closePanel()">✕</button>
+      </div>
+      <div id="pb"></div>
+    </div>
   </div>
 </div>
+
+<!-- ════════════════════════ STATIC REFERENCE ZONES ════════════════════════════ -->
+<div class="layout">
+
+  <!-- INFERENCE STACK -->
+  <div class="zone server span2">
+    <div class="zone-label"><span class="dot"></span>Docker Compose — Inference Stack (serving/compose/docker-compose.kimi-k2.6.yml)</div>
+    <div class="services">
+
+      <div class="svc">
+        <div class="svc-name">vllm</div>
+        <div class="svc-port">:8000 &nbsp;/v1/chat/completions &nbsp; /metrics</div>
+        <div class="svc-model">moonshotai/Kimi-K2.6</div>
+        <div class="svc-model">TP=8 · gpu_util=0.70</div>
+        <div><span class="tag tag-gpu">Eagle3 speculative</span><span class="tag tag-gpu">8×H200 NVL</span></div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-name">vllm-small</div>
+        <div class="svc-port">:8004 &nbsp;/v1/chat/completions &nbsp; /metrics</div>
+        <div class="svc-model">deepseek-ai/DeepSeek-V4-Flash</div>
+        <div class="svc-model">TP=8 · gpu_util=0.20 · kv_cache fp8</div>
+        <div><span class="tag tag-gpu">MTP speculative</span><span class="tag tag-gpu">max_seq=2</span></div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-name">litellm-proxy</div>
+        <div class="svc-port">:4000 &nbsp;/v1/* (OpenAI-compatible)</div>
+        <div class="svc-model">Routes by <code>model</code> field:</div>
+        <div class="svc-model">kimi-k2.6 → vllm:8000</div>
+        <div class="svc-model">DeepSeek-V4-Flash → vllm-small:8004</div>
+        <div><span class="tag tag-proxy">API key auth</span><span class="tag tag-proxy">LITELLM_MASTER_KEY</span></div>
+      </div>
+
+      <div class="svc">
+        <div class="svc-name">open-webui</div>
+        <div class="svc-port">:3000</div>
+        <div class="svc-model">Chat UI → upstream: vllm:8000</div>
+        <div><span class="tag tag-ui">Interactive</span></div>
+      </div>
+
+    </div>
+    <div class="section-h" style="margin-top:14px;">Network: nanoserve-net &nbsp;·&nbsp; HF model cache: /home/ubuntusrv2/.vllm/models → containers</div>
+  </div>
+
+  <!-- OBSERVABILITY -->
+  <div class="zone obs">
+    <div class="zone-label"><span class="dot"></span>Docker Compose — Observability (docker-compose.observability.yml)</div>
+    <div class="services">
+      <div class="svc">
+        <div class="svc-name">prometheus</div>
+        <div class="svc-port">:9090</div>
+        <div class="svc-model">Scrape interval: 5 s</div>
+        <div class="svc-model">Targets:</div>
+        <div class="vflow-line">→ <span class="target">vllm:8000/metrics</span></div>
+        <div class="vflow-line">→ <span class="target">vllm-small:8004/metrics</span></div>
+        <div class="vflow-line">→ <span class="target">litellm-proxy:4000/metrics</span></div>
+        <span class="tag tag-obs">TSDB</span>
+      </div>
+      <div class="svc">
+        <div class="svc-name">grafana</div>
+        <div class="svc-port">:3001</div>
+        <div class="svc-model">Datasource: Prometheus</div>
+        <div class="svc-model">Dashboard: vllm-phase1.json</div>
+        <div class="svc-model" style="color:#f78166;">⚠ Panel names need live-metric validation</div>
+        <span class="tag tag-obs">Provisioned</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BENCHMARK -->
+  <div class="zone bench">
+    <div class="zone-label"><span class="dot"></span>Benchmark Harness (benchmarks/scripts/)</div>
+
+    <div class="section-h">Orchestrator pipeline</div>
+    <div class="flow" style="margin-bottom:10px;">
+      <div class="flow-step"><div class="flow-box orchestrator">run_bench_suite</div><div class="flow-sub">auto run-id · summary</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box script">collect_metrics</div><div class="flow-sub">phase=pre</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box script">request_once</div><div class="flow-sub">correctness</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box script">measure_ttft_once</div><div class="flow-sub">TTFT/E2E/TPOT</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box script">run_sequential</div><div class="flow-sub">p50/p95, N runs</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box script">collect_metrics</div><div class="flow-sub">phase=post</div></div>
+    </div>
+    <div class="flow-sub" style="margin-bottom:10px;">↑ sample_gpu_metrics runs in background throughout</div>
+
+    <div class="section-h">Standalone scripts</div>
+    <div class="scripts-grid">
+      <div class="script-card">
+        <div class="script-name">request_once.py</div>
+        <div class="script-desc">Single non-streaming request — smoke / correctness</div>
+        <div class="script-metric">mode: <span>singlestream_lite_correctness</span></div>
+        <div class="script-metric">out: <span>e2e_s · output_chars · tokens</span></div>
+      </div>
+      <div class="script-card">
+        <div class="script-name">measure_ttft_once.py</div>
+        <div class="script-desc">Single streaming request — TTFT / E2E / TPOT</div>
+        <div class="script-metric">mode: <span>singlestream_lite_latency</span></div>
+        <div class="script-metric">out: <span>ttft_s · ttft_any_token_s · tpot_s</span></div>
+      </div>
+      <div class="script-card">
+        <div class="script-name">run_sequential_benchmark.py</div>
+        <div class="script-desc">N sequential streaming requests, p50/p95 summary</div>
+        <div class="script-metric">mode: <span>singlestream_lite_repeated</span></div>
+        <div class="script-metric">out: <span>summary.json + results.jsonl</span></div>
+      </div>
+      <div class="script-card">
+        <div class="script-name">collect_metrics_snapshot.py</div>
+        <div class="script-desc">One-shot vLLM /metrics + nvidia-smi snapshot</div>
+        <div class="script-metric">out: <span>gpu_mem_gb · kv_cache · prefix_hit</span></div>
+      </div>
+      <div class="script-card">
+        <div class="script-name">sample_gpu_metrics.py</div>
+        <div class="script-desc">Interval CSV sampling: util, mem, power, clocks</div>
+        <div class="script-metric">out: <span>gpu_samples.csv + _meta.json</span></div>
+      </div>
+      <div class="script-card">
+        <div class="script-name">check_server_env.py</div>
+        <div class="script-desc">System inventory: git, uv, nvidia-smi, docker…</div>
+        <div class="script-metric">out: <span>server_env_snapshot.json</span></div>
+      </div>
+    </div>
+
+    <div class="section-h" style="margin-top:12px;">Shared modules (benchmarks/scripts/_*.py)</div>
+    <div class="modules">
+      <div class="module"><div class="module-name">_client.py</div><div class="module-desc">httpx OpenAI client · streaming · reasoning chunk parse</div></div>
+      <div class="module"><div class="module-name">_metrics.py</div><div class="module-desc">RunControls · summarize p50/p95 · resolve_output_path</div></div>
+      <div class="module"><div class="module-name">_schemas.py</div><div class="module-desc">Schema version constants · benchmark mode IDs</div></div>
+      <div class="module"><div class="module-name">_server_metrics.py</div><div class="module-desc">Prometheus parser · nvidia-smi CSV parser</div></div>
+    </div>
+  </div>
+
+  <!-- RESULTS LAYOUT -->
+  <div class="zone obs">
+    <div class="zone-label"><span class="dot"></span>Result Output Layout</div>
+    <div class="results-tree">
+      <span class="hl">results/runs/</span><br>
+      &nbsp;&nbsp;<span class="hl2">&lt;run_id&gt;/</span> &nbsp;<span style="color:var(--text-dim);font-size:10px;">e.g. 2026-05-19_kimi-k2-6_run-01</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">singlestream_lite_correctness/</span>result.json<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">singlestream_lite_latency/</span>result.json<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">singlestream_lite_repeated/</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;summary.json &nbsp; results.jsonl<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">server_metrics/</span><br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;snapshot_pre.json &nbsp; snapshot_post.json<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gpu_samples.csv &nbsp; gpu_samples_meta.json<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">bench_suite/</span>summary.json<br>
+      <br>
+      <span style="color:var(--text-dim);">Common JSON shape:</span><br>
+      &nbsp;&nbsp;schema · methodology · benchmark_mode<br>
+      &nbsp;&nbsp;timestamp · controls · metrics<br>
+      &nbsp;&nbsp;server_metrics · error<br>
+      <br>
+      <span style="color:var(--text-dim);">Methodology label:</span>&nbsp;<span class="hl2">mlperf_inspired_lite</span>
+    </div>
+  </div>
+
+  <!-- INFRASTRUCTURE -->
+  <div class="zone infra">
+    <div class="zone-label"><span class="dot"></span>Infrastructure & Toolchain</div>
+    <div class="machines">
+      <div class="machine">
+        <div class="machine-name">💻 Laptop (Windows 11)</div>
+        <div class="machine-detail">Role: dev · docs · analysis · script prep</div>
+        <div class="machine-detail">Python 3.12 + uv · ruff · pytest · rg</div>
+        <div class="machine-detail">No GPU; no heavy deps</div>
+      </div>
+      <div class="machine">
+        <div class="machine-name">🖥 Server (Ubuntu 24.04)</div>
+        <div class="machine-detail">ubuntusrv2 · 8×H200 NVL 143 GB</div>
+        <div class="machine-detail">CUDA 13.2 · driver 595.58.03</div>
+        <div class="machine-detail">Primary GPU runtime · 2 days/week</div>
+      </div>
+      <div class="machine">
+        <div class="machine-name">☁ GPU Cloud (optional)</div>
+        <div class="machine-detail">Budget: $200/month max</div>
+        <div class="machine-detail">Buffer for off-hours sanity checks</div>
+        <div class="machine-detail">Not the primary path</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-h">Python toolchain</div>
+    <div style="font-size:11px; color:var(--text-dim); display:flex; gap:12px; flex-wrap:wrap;">
+      <span><b style="color:var(--text);">runtime</b> uv · Python 3.12+</span>
+      <span><b style="color:var(--text);">lint/fmt</b> ruff</span>
+      <span><b style="color:var(--text);">types</b> mypy</span>
+      <span><b style="color:var(--text);">tests</b> pytest (121 passed · mocked · laptop-ok)</span>
+      <span><b style="color:var(--text);">http</b> httpx ≥0.27</span>
+      <span><b style="color:var(--text);">ui</b> rich</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-h">Roadmap phases</div>
+    <div class="phases">
+      <div class="phase active">
+        <div class="phase-num"><span class="status-dot status-active"></span>Phase 1</div>
+        <div class="phase-weeks">Weeks 1–3</div>
+        <div class="phase-focus">vLLM baseline · LiteLLM proxy · observability · methodology</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num"><span class="status-dot status-planned"></span>Phase 2</div>
+        <div class="phase-weeks">Weeks 4–7</div>
+        <div class="phase-focus">Workload analysis · prefix cache experiment</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num"><span class="status-dot status-planned"></span>Phase 3</div>
+        <div class="phase-weeks">Weeks 8–10</div>
+        <div class="phase-focus">Triton kernel · profiling · semantic routing</div>
+      </div>
+      <div class="phase">
+        <div class="phase-num"><span class="status-dot status-planned"></span>Phase 4</div>
+        <div class="phase-weeks">Weeks 11–12</div>
+        <div class="phase-focus">Polish · write-ups · decision doc</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA FLOWS -->
+  <div class="zone bench span2">
+    <div class="zone-label"><span class="dot"></span>Key Data Flows &amp; Phase 1 status</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; font-size:11px;">
+
+      <div>
+        <div style="color:var(--text-bright);font-weight:600;margin-bottom:6px;">Benchmark execution</div>
+        <div class="vflow-line"><span class="cmd">CLI</span> → run_bench_suite.py</div>
+        <div class="vflow-line">&nbsp; ├ collect_metrics_snapshot (pre)</div>
+        <div class="vflow-line">&nbsp; │ &nbsp;└ httpx GET <span class="target">vllm:8000/metrics</span></div>
+        <div class="vflow-line">&nbsp; │ &nbsp;└ subprocess nvidia-smi</div>
+        <div class="vflow-line">&nbsp; ├ request_once</div>
+        <div class="vflow-line">&nbsp; │ &nbsp;└ httpx POST <span class="target">/v1/chat/completions</span></div>
+        <div class="vflow-line">&nbsp; ├ measure_ttft_once</div>
+        <div class="vflow-line">&nbsp; │ &nbsp;└ httpx stream POST → chunk timing</div>
+        <div class="vflow-line">&nbsp; ├ sample_gpu_metrics <span style="color:var(--accent4);">[bg]</span></div>
+        <div class="vflow-line">&nbsp; │ &nbsp;└ subprocess nvidia-smi @ 500 ms</div>
+        <div class="vflow-line">&nbsp; ├ run_sequential_benchmark</div>
+        <div class="vflow-line">&nbsp; │ &nbsp;└ loop N × stream POST → p50/p95</div>
+        <div class="vflow-line">&nbsp; └ collect_metrics_snapshot (post)</div>
+        <div class="vflow-line">&nbsp;&nbsp;&nbsp;&nbsp;└ → <span class="file">results/runs/&lt;run_id&gt;/</span></div>
+      </div>
+
+      <div>
+        <div style="color:var(--text-bright);font-weight:600;margin-bottom:6px;">LiteLLM routing</div>
+        <div class="vflow-line"><span class="cmd">Client</span></div>
+        <div class="vflow-line">&nbsp; ↓ POST :4000/v1/chat/completions</div>
+        <div class="vflow-line"><span class="target">litellm-proxy</span></div>
+        <div class="vflow-line">&nbsp; ├ model=kimi-k2.6</div>
+        <div class="vflow-line">&nbsp; │ &nbsp;→ <span class="target">vllm:8000/v1</span></div>
+        <div class="vflow-line">&nbsp; └ model=DeepSeek-V4-Flash</div>
+        <div class="vflow-line">&nbsp;&nbsp;&nbsp;&nbsp;→ <span class="target">vllm-small:8004/v1</span></div>
+        <br>
+        <div style="color:var(--text-bright);font-weight:600;margin-bottom:6px;">Observability</div>
+        <div class="vflow-line"><span class="target">prometheus:9090</span> scrapes every 5 s:</div>
+        <div class="vflow-line">&nbsp; ← vllm:8000/metrics</div>
+        <div class="vflow-line">&nbsp; ← vllm-small:8004/metrics</div>
+        <div class="vflow-line">&nbsp; ← litellm-proxy:4000/metrics</div>
+        <div class="vflow-line"><span class="target">grafana:3001</span></div>
+        <div class="vflow-line">&nbsp; ← PromQL → prometheus:9090</div>
+        <div class="vflow-line">&nbsp; dashboard: <span class="file">vllm-phase1.json</span></div>
+      </div>
+
+      <div>
+        <div style="color:var(--text-bright);font-weight:600;margin-bottom:6px;">Open blockers (Phase 1)</div>
+        <div style="color:var(--accent4); margin-bottom: 6px; font-size:11px;">
+          ⚠ Grafana dashboard (#34) — panel metric names need live-load validation
+        </div>
+        <div style="color:var(--accent4); margin-bottom: 12px; font-size:11px;">
+          ⚠ W1 write-up (#37) — threads T1/T3/T4/T5/T6/T8 not yet written
+        </div>
+        <div style="color:var(--text-bright);font-weight:600;margin-bottom:6px;">Phase 1 DoD status</div>
+        <div class="vflow-line"><span class="cmd">✓</span> vLLM serving (Kimi + DeepSeek)</div>
+        <div class="vflow-line"><span class="cmd">✓</span> LiteLLM proxy (both upstream models)</div>
+        <div class="vflow-line"><span class="cmd">✓</span> Benchmark harness (all modes)</div>
+        <div class="vflow-line"><span class="cmd">✓</span> Prometheus/Grafana deployed</div>
+        <div class="vflow-line"><span style="color:var(--accent4);">○</span> Grafana panels validated</div>
+        <div class="vflow-line"><span style="color:var(--accent4);">○</span> W1 write-up</div>
+        <br>
+        <div style="color:var(--text-bright);font-weight:600;margin-bottom:6px;">Files</div>
+        <div class="vflow-line">JSON: <span class="file">docs/architecture.json</span></div>
+        <div class="vflow-line">HTML: <span class="file">docs/architecture.html</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
 
 <script>
-// ── colours ──────────────────────────────────────────────────────────────────
-const NC = { // node background
-  'gpu-service':   '#1a2a40',
-  'proxy':         '#162312',
-  'ui':            '#2d1614',
-  'observability': '#2b1f06',
-  'orchestrator':  '#1e1535',
-  'script':        '#0f1d35',
-  'module':        '#161b22',
-  'external':      '#161b22',
-  'storage':       '#161b22',
+// ─── COLOURS ──────────────────────────────────────────────────────────────────
+const NC = {
+  'gpu-service':'#1a2a40','proxy':'#162312','ui':'#2d1614','observability':'#2b1f06',
+  'orchestrator':'#1e1535','script':'#0f1d35','module':'#161b22','external':'#161b22','storage':'#161b22',
 };
-const NTC = { // node text / border accent
-  'gpu-service':   '#79c0ff',
-  'proxy':         '#56d364',
-  'ui':            '#ff7b72',
-  'observability': '#e3b341',
-  'orchestrator':  '#d2a8ff',
-  'script':        '#79c0ff',
-  'module':        '#6e7681',
-  'external':      '#6e7681',
-  'storage':       '#6e7681',
+const NTC = {
+  'gpu-service':'#79c0ff','proxy':'#56d364','ui':'#ff7b72','observability':'#e3b341',
+  'orchestrator':'#d2a8ff','script':'#79c0ff','module':'#6e7681','external':'#6e7681','storage':'#6e7681',
 };
-const EC = { // edge colours
-  orchestrate: '#6e40c9', http: '#1f6feb', proxy: '#2ea043',
-  scrape: '#9e6a03', query: '#e3b341', subprocess: '#484f58',
-  writes: '#da3633', mount: '#30363d', uses: '#21262d',
+const EC = {
+  orchestrate:'#6e40c9', http:'#1f6feb', proxy:'#2ea043', scrape:'#9e6a03',
+  query:'#e3b341', subprocess:'#484f58', writes:'#da3633', mount:'#30363d', uses:'#21262d',
 };
 
-// ── nodes ────────────────────────────────────────────────────────────────────
+// ─── NODES ────────────────────────────────────────────────────────────────────
 const nodes = [
-  // Inference
-  { data: { id:'vllm',        label:'vllm\n:8000',          type:'gpu-service',  group:'inference',
-      d:{ title:'vllm', sub:'GPU inference service',
-          rows:[['Port','8000'],['Image','vllm/vllm-openai:v0.20.0'],['Model','moonshotai/Kimi-K2.6'],['Served as','kimi-k2.6'],['TP','8 GPUs'],['GPU util','70%'],['Speculative','Eagle3 (3 tokens)']],
-          lists:{'Endpoints':['/v1/chat/completions','/metrics','/v1/models']} } },
+  { data:{ id:'vllm', label:'vllm\n:8000', type:'gpu-service', group:'inference',
+    d:{ title:'vllm', sub:'GPU inference service',
+        rows:[['Port','8000'],['Image','vllm/vllm-openai:v0.20.0'],['Model','moonshotai/Kimi-K2.6'],['Served as','kimi-k2.6'],['TP','8 GPUs'],['GPU util','70%'],['Speculative','Eagle3 (3 tokens)']],
+        lists:{'Endpoints':['/v1/chat/completions','/metrics','/v1/models']} } },
     position:{x:100,y:140} },
-  { data: { id:'vllm-small',  label:'vllm-small\n:8004',    type:'gpu-service',  group:'inference',
-      d:{ title:'vllm-small', sub:'GPU inference service',
-          rows:[['Port','8004'],['Image','vllm/vllm-openai:v0.20.0'],['Model','deepseek-ai/DeepSeek-V4-Flash'],['Served as','DeepSeek-V4-Flash'],['TP','8 GPUs'],['GPU util','20%'],['KV cache dtype','fp8'],['Max len','65536 tokens'],['Speculative','MTP (1 token)']],
-          lists:{'Endpoints':['/v1/chat/completions','/metrics']} } },
+  { data:{ id:'vllm-small', label:'vllm-small\n:8004', type:'gpu-service', group:'inference',
+    d:{ title:'vllm-small', sub:'GPU inference service',
+        rows:[['Port','8004'],['Image','vllm/vllm-openai:v0.20.0'],['Model','deepseek-ai/DeepSeek-V4-Flash'],['Served as','DeepSeek-V4-Flash'],['TP','8 GPUs'],['GPU util','20%'],['KV cache','fp8'],['Max len','65536'],['Speculative','MTP (1 token)']],
+        lists:{'Endpoints':['/v1/chat/completions','/metrics']} } },
     position:{x:100,y:290} },
-  { data: { id:'litellm',     label:'litellm-proxy\n:4000', type:'proxy',        group:'inference',
-      d:{ title:'LiteLLM Proxy', sub:'OpenAI-compatible multi-model router',
-          rows:[['Port','4000'],['Image','ghcr.io/berriai/litellm:main-v1.66.0'],['Auth','LITELLM_MASTER_KEY'],['Timeout','600 s']],
-          lists:{'Routes':['kimi-k2.6 → vllm:8000/v1','DeepSeek-V4-Flash → vllm-small:8004/v1']} } },
+  { data:{ id:'litellm', label:'litellm-proxy\n:4000', type:'proxy', group:'inference',
+    d:{ title:'LiteLLM Proxy', sub:'OpenAI-compatible multi-model router',
+        rows:[['Port','4000'],['Image','ghcr.io/berriai/litellm:main-v1.66.0'],['Auth','LITELLM_MASTER_KEY'],['Timeout','600 s']],
+        lists:{'Routes':['kimi-k2.6 → vllm:8000/v1','DeepSeek-V4-Flash → vllm-small:8004/v1']} } },
     position:{x:100,y:430} },
-  { data: { id:'open-webui',  label:'open-webui\n:3000',    type:'ui',           group:'inference',
-      d:{ title:'Open WebUI', sub:'Chat interface',
-          rows:[['Port','3000'],['Image','open-webui:0.9.5'],['Upstream','http://vllm:8000']] } },
+  { data:{ id:'open-webui', label:'open-webui\n:3000', type:'ui', group:'inference',
+    d:{ title:'Open WebUI', sub:'Chat interface',
+        rows:[['Port','3000'],['Image','open-webui:0.9.5'],['Upstream','http://vllm:8000']] } },
     position:{x:100,y:560} },
-  { data: { id:'hf-cache',    label:'HF model\ncache',      type:'storage',      group:'storage',
-      d:{ title:'HuggingFace Model Cache', sub:'Persistent volume mount',
-          rows:[['Host path','/home/ubuntusrv2/.vllm/models'],['Container','/root/.cache/huggingface'],['Used by','vllm + vllm-small']] } },
+  { data:{ id:'hf-cache', label:'HF model\ncache', type:'storage', group:'storage',
+    d:{ title:'HuggingFace Model Cache', sub:'Persistent volume mount',
+        rows:[['Host','/home/ubuntusrv2/.vllm/models'],['Container','/root/.cache/huggingface'],['Used by','vllm + vllm-small']] } },
     position:{x:100,y:695} },
 
-  // Observability
-  { data: { id:'prometheus',  label:'Prometheus\n:9090',    type:'observability', group:'obs',
-      d:{ title:'Prometheus', sub:'TSDB + metrics scraper',
-          rows:[['Port','9090'],['Image','prom/prometheus:v3'],['Scrape interval','5 s'],['Data path','~/working/nanoserve-observability/prometheus-data']],
-          lists:{'Scrape targets':['vllm:8000/metrics  (job: vllm-kimi)','vllm-small:8004/metrics  (job: vllm-small-deepseek)','litellm-proxy:4000/metrics  (job: litellm)']} } },
+  { data:{ id:'prometheus', label:'Prometheus\n:9090', type:'observability', group:'obs',
+    d:{ title:'Prometheus', sub:'TSDB + metrics scraper',
+        rows:[['Port','9090'],['Image','prom/prometheus:v3'],['Scrape interval','5 s'],['Data path','~/working/nanoserve-observability/prometheus-data']],
+        lists:{'Scrape targets':['vllm:8000/metrics (job: vllm-kimi)','vllm-small:8004/metrics (job: vllm-small-deepseek)','litellm-proxy:4000/metrics (job: litellm)']} } },
     position:{x:1080,y:175} },
-  { data: { id:'grafana',     label:'Grafana\n:3001',       type:'observability', group:'obs',
-      d:{ title:'Grafana', sub:'Dashboard & visualization',
-          rows:[['Port','3001'],['Image','grafana/grafana:latest'],['Datasource','Prometheus'],['Dashboard','vllm-phase1.json (provisioned)'],['Status','⚠ panel names need live-metric validation']] } },
+  { data:{ id:'grafana', label:'Grafana\n:3001', type:'observability', group:'obs',
+    d:{ title:'Grafana', sub:'Dashboard & visualization',
+        rows:[['Port','3001'],['Image','grafana/grafana:latest'],['Datasource','Prometheus'],['Dashboard','vllm-phase1.json'],['Status','⚠ panel names need validation']] } },
     position:{x:1080,y:380} },
 
-  // Benchmark orchestrator
-  { data: { id:'run-bench-suite', label:'run_bench_suite', type:'orchestrator', group:'bench',
-      d:{ title:'run_bench_suite.py', sub:'Full Phase 1 benchmark orchestrator',
-          rows:[['Run-id','YYYY-MM-DD_<model>_run-NN'],['Output','bench_suite/summary.json']],
-          lists:{'Sequence':['collect_metrics_snapshot (pre)','request_once','measure_ttft_once','sample_gpu_metrics [background]','run_sequential_benchmark','collect_metrics_snapshot (post)']} } },
+  { data:{ id:'run-bench-suite', label:'run_bench_suite', type:'orchestrator', group:'bench',
+    d:{ title:'run_bench_suite.py', sub:'Full Phase 1 benchmark orchestrator',
+        rows:[['Run-id','YYYY-MM-DD_<model>_run-NN'],['Output','bench_suite/summary.json']],
+        lists:{'Sequence':['collect_metrics_snapshot (pre)','request_once','measure_ttft_once','sample_gpu_metrics [bg]','run_sequential_benchmark','collect_metrics_snapshot (post)']} } },
     position:{x:380,y:250} },
 
-  // Benchmark scripts
-  { data: { id:'request-once',    label:'request_once',          type:'script', group:'bench',
-      d:{ title:'request_once.py', sub:'Correctness smoke test',
-          rows:[['Mode','singlestream_lite_correctness'],['Schema','nanoserve-mini.request-once.v2'],['Stream','no'],['Output','singlestream_lite_correctness/result.json']],
-          lists:{'Metrics':['e2e_seconds','output_chars','prompt_tokens','completion_tokens']} } },
+  { data:{ id:'request-once', label:'request_once', type:'script', group:'bench',
+    d:{ title:'request_once.py', sub:'Correctness smoke test',
+        rows:[['Mode','singlestream_lite_correctness'],['Schema','nanoserve-mini.request-once.v2'],['Stream','no']],
+        lists:{'Metrics':['e2e_seconds','output_chars','prompt_tokens','completion_tokens']} } },
     position:{x:640,y:90} },
-  { data: { id:'measure-ttft',    label:'measure_ttft_once',     type:'script', group:'bench',
-      d:{ title:'measure_ttft_once.py', sub:'Single-request latency measurement',
-          rows:[['Mode','singlestream_lite_latency'],['Schema','nanoserve-mini.ttft-once.v2'],['Stream','yes'],['Output','singlestream_lite_latency/result.json']],
-          lists:{'Metrics':['ttft_seconds (final-answer only)','ttft_any_token_seconds (incl. reasoning)','e2e_seconds','tpot_seconds','completion_tokens']} } },
+  { data:{ id:'measure-ttft', label:'measure_ttft_once', type:'script', group:'bench',
+    d:{ title:'measure_ttft_once.py', sub:'Single-request latency measurement',
+        rows:[['Mode','singlestream_lite_latency'],['Schema','nanoserve-mini.ttft-once.v2'],['Stream','yes']],
+        lists:{'Metrics':['ttft_seconds (final-answer)','ttft_any_token_seconds','e2e_seconds','tpot_seconds','completion_tokens']} } },
     position:{x:640,y:210} },
-  { data: { id:'run-seq',         label:'run_sequential\nbenchmark', type:'script', group:'bench',
-      d:{ title:'run_sequential_benchmark.py', sub:'Repeated sequential requests',
-          rows:[['Mode','singlestream_lite_repeated'],['Schema (sum.)','nanoserve-mini.sequential-bench.v3'],['Schema (row)','nanoserve-mini.sequential-bench-row.v3'],['Concurrency','1 (sequential)'],['Output','summary.json + results.jsonl']],
-          lists:{'Metrics':['TTFT p50/p95','TPOT p50/p95','E2E p50/p95','request_throughput','output_throughput_tokens_s']} } },
+  { data:{ id:'run-seq', label:'run_sequential\nbenchmark', type:'script', group:'bench',
+    d:{ title:'run_sequential_benchmark.py', sub:'Repeated sequential requests',
+        rows:[['Mode','singlestream_lite_repeated'],['Schema (sum.)','nanoserve-mini.sequential-bench.v3'],['Schema (row)','nanoserve-mini.sequential-bench-row.v3'],['Concurrency','1 (sequential)']],
+        lists:{'Metrics':['TTFT p50/p95','TPOT p50/p95','E2E p50/p95','request_throughput','output_throughput_tokens_s']} } },
     position:{x:640,y:335} },
-  { data: { id:'collect-metrics', label:'collect_metrics\nsnapshot',  type:'script', group:'bench',
-      d:{ title:'collect_metrics_snapshot.py', sub:'Server metrics snapshot',
-          rows:[['Schema','nanoserve-mini.server-metrics-snapshot.v1'],['Phases','pre / mid / post / adhoc'],['Output','server_metrics/snapshot_<phase>.json']],
-          lists:{'Metrics':['gpu_memory_used_gb (total)','kv_cache_usage (vLLM gauge)','prefix_cache_hit_rate','per-GPU: util, memory, temperature, power']} } },
+  { data:{ id:'collect-metrics', label:'collect_metrics\nsnapshot', type:'script', group:'bench',
+    d:{ title:'collect_metrics_snapshot.py', sub:'Server metrics snapshot',
+        rows:[['Schema','nanoserve-mini.server-metrics-snapshot.v1'],['Phases','pre / mid / post / adhoc']],
+        lists:{'Metrics':['gpu_memory_used_gb','kv_cache_usage','prefix_cache_hit_rate','per-GPU: util, mem, temp, power']} } },
     position:{x:640,y:455} },
-  { data: { id:'sample-gpu',      label:'sample_gpu\nmetrics',        type:'script', group:'bench',
-      d:{ title:'sample_gpu_metrics.py', sub:'Continuous GPU metric sampling',
-          rows:[['Schema','nanoserve-mini.gpu-samples-meta.v1'],['Default interval','500 ms'],['Output','server_metrics/gpu_samples.csv']],
-          lists:{'CSV columns':['tick, timestamp','gpu_index, gpu_name','utilization_gpu','memory_used_mib, memory_total_mib','temperature_gpu, power_draw_w','clock_sm_mhz, clock_mem_mhz']} } },
+  { data:{ id:'sample-gpu', label:'sample_gpu\nmetrics', type:'script', group:'bench',
+    d:{ title:'sample_gpu_metrics.py', sub:'Continuous GPU sampling',
+        rows:[['Schema','nanoserve-mini.gpu-samples-meta.v1'],['Default interval','500 ms']],
+        lists:{'CSV columns':['tick, timestamp','gpu_index, gpu_name','utilization_gpu','memory_used_mib','temperature_gpu','power_draw_w','clock_sm_mhz','clock_mem_mhz']} } },
     position:{x:640,y:575} },
-  { data: { id:'check-env',       label:'check_server_env',           type:'script', group:'bench',
-      d:{ title:'check_server_env.py', sub:'Environment inventory snapshot',
-          rows:[['Output','results/raw/server_env_snapshot.json']],
-          lists:{'Checks':['git, python, uv, rg','uname, os-release, lscpu','memory, disk','nvidia-smi, nvcc','docker']} } },
+  { data:{ id:'check-env', label:'check_server_env', type:'script', group:'bench',
+    d:{ title:'check_server_env.py', sub:'Environment inventory snapshot',
+        lists:{'Checks':['git, python, uv, rg','uname, os-release, lscpu','memory, disk','nvidia-smi, nvcc','docker']} } },
     position:{x:640,y:690} },
 
-  // Shared modules
-  { data: { id:'_client',         label:'_client',         type:'module', group:'modules',
-      d:{ title:'_client.py', sub:'httpx OpenAI-compatible HTTP client',
-          lists:{'Exports':['CompletionRequest (dataclass)','build_payload(req, stream)','chat_completion(req)','chat_completion_stream(req) → Iterator','extract_assistant_text(response)','extract_stream_delta_text(chunk)','extract_stream_reasoning_text(chunk)','extract_stream_usage(chunk)']} } },
+  { data:{ id:'_client', label:'_client', type:'module', group:'modules',
+    d:{ title:'_client.py', sub:'httpx OpenAI-compatible HTTP client',
+        lists:{'Exports':['CompletionRequest','build_payload(req, stream)','chat_completion(req)','chat_completion_stream(req)','extract_assistant_text','extract_stream_delta_text','extract_stream_reasoning_text','extract_stream_usage']} } },
     position:{x:370,y:570} },
-  { data: { id:'_metrics',        label:'_metrics',        type:'module', group:'modules',
-      d:{ title:'_metrics.py', sub:'Benchmark Contract helpers',
-          lists:{'Exports':['RunControls (dataclass, 17+ fields)','get_git_commit()','make_run_uuid()','now_iso()','null_server_metrics()','build_workload_spec(...)','resolve_output_path(run_id, mode, flag)','summarize(rows, percentiles=[50, 95])']} } },
+  { data:{ id:'_metrics', label:'_metrics', type:'module', group:'modules',
+    d:{ title:'_metrics.py', sub:'Benchmark Contract helpers',
+        lists:{'Exports':['RunControls (dataclass)','get_git_commit()','make_run_uuid()','now_iso()','null_server_metrics()','build_workload_spec(...)','resolve_output_path(...)','summarize(rows, [50,95])']} } },
     position:{x:370,y:680} },
-  { data: { id:'_schemas',        label:'_schemas',        type:'module', group:'modules',
-      d:{ title:'_schemas.py', sub:'Schema version constants',
-          rows:[['METHODOLOGY','mlperf_inspired_lite']],
-          lists:{
-            'Benchmark modes':['singlestream_lite_correctness','singlestream_lite_latency','singlestream_lite_repeated'],
-            'Schema IDs':['nanoserve-mini.request-once.v2','nanoserve-mini.ttft-once.v2','nanoserve-mini.sequential-bench.v3','nanoserve-mini.sequential-bench-row.v3','nanoserve-mini.server-metrics-snapshot.v1','nanoserve-mini.gpu-samples-meta.v1']
-          } } },
+  { data:{ id:'_schemas', label:'_schemas', type:'module', group:'modules',
+    d:{ title:'_schemas.py', sub:'Schema version constants',
+        rows:[['METHODOLOGY','mlperf_inspired_lite']],
+        lists:{'Modes':['singlestream_lite_correctness','singlestream_lite_latency','singlestream_lite_repeated'],
+               'Schemas':['nanoserve-mini.request-once.v2','nanoserve-mini.ttft-once.v2','nanoserve-mini.sequential-bench.v3','nanoserve-mini.server-metrics-snapshot.v1','nanoserve-mini.gpu-samples-meta.v1']} } },
     position:{x:490,y:570} },
-  { data: { id:'_server_metrics', label:'_server_metrics', type:'module', group:'modules',
-      d:{ title:'_server_metrics.py', sub:'Prometheus & nvidia-smi parsers',
-          lists:{'Exports':['parse_prometheus_text(text) → dict','parse_nvidia_smi_csv(csv_lines) → list[dict]','select_vllm_aggregate(metric_map) → dict','total_gpu_memory_used_gb(smi_dicts) → float','NVIDIA_SMI_QUERY_FIELDS (tuple)','CSV_COLUMNS (tuple)']} } },
+  { data:{ id:'_server_metrics', label:'_server_metrics', type:'module', group:'modules',
+    d:{ title:'_server_metrics.py', sub:'Prometheus & nvidia-smi parsers',
+        lists:{'Exports':['parse_prometheus_text(text) → dict','parse_nvidia_smi_csv(lines) → list[dict]','select_vllm_aggregate(map) → dict','total_gpu_memory_used_gb(smi) → float','NVIDIA_SMI_QUERY_FIELDS','CSV_COLUMNS']} } },
     position:{x:490,y:680} },
 
-  // External + storage
-  { data: { id:'nvidia-smi', label:'nvidia-smi', type:'external', group:'external',
-      d:{ title:'nvidia-smi', sub:'NVIDIA System Management Interface (subprocess)',
-          lists:{'Queried fields':['index, name','utilization.gpu, utilization.memory','memory.used, memory.free, memory.total','temperature.gpu, power.draw','clocks.current.sm, clocks.current.memory']} } },
+  { data:{ id:'nvidia-smi', label:'nvidia-smi', type:'external', group:'external',
+    d:{ title:'nvidia-smi', sub:'NVIDIA System Management Interface (subprocess)',
+        lists:{'Queried fields':['index, name','utilization.gpu, utilization.memory','memory.used, memory.free, memory.total','temperature.gpu, power.draw','clocks.current.sm, clocks.current.memory']} } },
     position:{x:880,y:550} },
-  { data: { id:'results', label:'results/runs/', type:'storage', group:'storage',
-      d:{ title:'Benchmark Results', sub:'Git-committed output artifacts',
-          rows:[['Base path','results/runs/<run_id>/'],['Formats','JSON, JSONL, CSV'],['Policy','small files only; large → .gitignore']],
-          lists:{'Subdirectories':['singlestream_lite_correctness/','singlestream_lite_latency/','singlestream_lite_repeated/','server_metrics/','bench_suite/']} } },
+  { data:{ id:'results', label:'results/runs/', type:'storage', group:'storage',
+    d:{ title:'Benchmark Results', sub:'Git-committed output artifacts',
+        rows:[['Base','results/runs/<run_id>/'],['Formats','JSON, JSONL, CSV'],['Policy','small files only']],
+        lists:{'Subdirs':['singlestream_lite_correctness/','singlestream_lite_latency/','singlestream_lite_repeated/','server_metrics/','bench_suite/']} } },
     position:{x:880,y:690} },
 ];
 
-// ── edges ────────────────────────────────────────────────────────────────────
+// ─── EDGES ────────────────────────────────────────────────────────────────────
 const edges = [
-  // orchestrate
-  {data:{id:'eo1', source:'run-bench-suite', target:'collect-metrics', label:'pre+post',   type:'orchestrate'}},
-  {data:{id:'eo2', source:'run-bench-suite', target:'request-once',    label:'subprocess', type:'orchestrate'}},
-  {data:{id:'eo3', source:'run-bench-suite', target:'measure-ttft',    label:'subprocess', type:'orchestrate'}},
-  {data:{id:'eo4', source:'run-bench-suite', target:'run-seq',         label:'subprocess', type:'orchestrate'}},
-  {data:{id:'eo5', source:'run-bench-suite', target:'sample-gpu',      label:'background', type:'orchestrate'}},
-  // http: scripts → vllm
-  {data:{id:'eh1', source:'request-once',    target:'vllm', label:'POST /v1/chat',   type:'http'}},
-  {data:{id:'eh2', source:'measure-ttft',    target:'vllm', label:'stream POST',     type:'http'}},
-  {data:{id:'eh3', source:'run-seq',         target:'vllm', label:'stream POST ×N',  type:'http'}},
-  {data:{id:'eh4', source:'collect-metrics', target:'vllm', label:'GET /metrics',    type:'http'}},
-  // proxy routing
-  {data:{id:'ep1', source:'litellm', target:'vllm',       label:'kimi-k2.6',         type:'proxy'}},
-  {data:{id:'ep2', source:'litellm', target:'vllm-small', label:'DeepSeek-V4-Flash', type:'proxy'}},
-  // ui
-  {data:{id:'eu1', source:'open-webui', target:'vllm', label:'upstream', type:'http'}},
-  // prometheus scrape
-  {data:{id:'es1', source:'prometheus', target:'vllm',       label:'scrape 5s', type:'scrape'}},
-  {data:{id:'es2', source:'prometheus', target:'vllm-small', label:'scrape 5s', type:'scrape'}},
-  {data:{id:'es3', source:'prometheus', target:'litellm',    label:'scrape 5s', type:'scrape'}},
-  // grafana
-  {data:{id:'eq1', source:'grafana', target:'prometheus', label:'PromQL', type:'query'}},
-  // subprocess → nvidia-smi
-  {data:{id:'esp1', source:'collect-metrics', target:'nvidia-smi', label:'subprocess',  type:'subprocess'}},
-  {data:{id:'esp2', source:'sample-gpu',      target:'nvidia-smi', label:'@ 500 ms',    type:'subprocess'}},
-  {data:{id:'esp3', source:'check-env',       target:'nvidia-smi', label:'subprocess',  type:'subprocess'}},
-  // volume mounts
-  {data:{id:'em1', source:'hf-cache', target:'vllm',       label:'volume', type:'mount'}},
-  {data:{id:'em2', source:'hf-cache', target:'vllm-small', label:'volume', type:'mount'}},
-  // results
-  {data:{id:'ew1', source:'run-bench-suite', target:'results', label:'writes', type:'writes'}},
-  // module uses
-  {data:{id:'uc1',  source:'_client',         target:'request-once',    label:'', type:'uses'}},
-  {data:{id:'uc2',  source:'_client',         target:'measure-ttft',    label:'', type:'uses'}},
-  {data:{id:'uc3',  source:'_client',         target:'run-seq',         label:'', type:'uses'}},
-  {data:{id:'um1',  source:'_metrics',        target:'request-once',    label:'', type:'uses'}},
-  {data:{id:'um2',  source:'_metrics',        target:'measure-ttft',    label:'', type:'uses'}},
-  {data:{id:'um3',  source:'_metrics',        target:'run-seq',         label:'', type:'uses'}},
-  {data:{id:'um4',  source:'_metrics',        target:'collect-metrics', label:'', type:'uses'}},
-  {data:{id:'us1',  source:'_schemas',        target:'request-once',    label:'', type:'uses'}},
-  {data:{id:'us2',  source:'_schemas',        target:'measure-ttft',    label:'', type:'uses'}},
-  {data:{id:'us3',  source:'_schemas',        target:'run-seq',         label:'', type:'uses'}},
-  {data:{id:'us4',  source:'_schemas',        target:'collect-metrics', label:'', type:'uses'}},
-  {data:{id:'usm1', source:'_server_metrics', target:'collect-metrics', label:'', type:'uses'}},
-  {data:{id:'usm2', source:'_server_metrics', target:'sample-gpu',      label:'', type:'uses'}},
+  {data:{id:'eo1',source:'run-bench-suite',target:'collect-metrics',label:'pre+post',type:'orchestrate'}},
+  {data:{id:'eo2',source:'run-bench-suite',target:'request-once',   label:'subprocess',type:'orchestrate'}},
+  {data:{id:'eo3',source:'run-bench-suite',target:'measure-ttft',   label:'subprocess',type:'orchestrate'}},
+  {data:{id:'eo4',source:'run-bench-suite',target:'run-seq',        label:'subprocess',type:'orchestrate'}},
+  {data:{id:'eo5',source:'run-bench-suite',target:'sample-gpu',     label:'background',type:'orchestrate'}},
+  {data:{id:'eh1',source:'request-once',   target:'vllm',label:'POST /v1/chat',  type:'http'}},
+  {data:{id:'eh2',source:'measure-ttft',   target:'vllm',label:'stream POST',    type:'http'}},
+  {data:{id:'eh3',source:'run-seq',        target:'vllm',label:'stream POST ×N', type:'http'}},
+  {data:{id:'eh4',source:'collect-metrics',target:'vllm',label:'GET /metrics',   type:'http'}},
+  {data:{id:'ep1',source:'litellm',target:'vllm',      label:'kimi-k2.6',       type:'proxy'}},
+  {data:{id:'ep2',source:'litellm',target:'vllm-small',label:'DeepSeek-V4-Flash',type:'proxy'}},
+  {data:{id:'eu1',source:'open-webui',target:'vllm',label:'upstream',type:'http'}},
+  {data:{id:'es1',source:'prometheus',target:'vllm',      label:'scrape 5s',type:'scrape'}},
+  {data:{id:'es2',source:'prometheus',target:'vllm-small',label:'scrape 5s',type:'scrape'}},
+  {data:{id:'es3',source:'prometheus',target:'litellm',   label:'scrape 5s',type:'scrape'}},
+  {data:{id:'eq1',source:'grafana',target:'prometheus',label:'PromQL',type:'query'}},
+  {data:{id:'esp1',source:'collect-metrics',target:'nvidia-smi',label:'subprocess',type:'subprocess'}},
+  {data:{id:'esp2',source:'sample-gpu',     target:'nvidia-smi',label:'@ 500 ms',  type:'subprocess'}},
+  {data:{id:'esp3',source:'check-env',      target:'nvidia-smi',label:'subprocess',type:'subprocess'}},
+  {data:{id:'em1',source:'hf-cache',target:'vllm',      label:'volume',type:'mount'}},
+  {data:{id:'em2',source:'hf-cache',target:'vllm-small',label:'volume',type:'mount'}},
+  {data:{id:'ew1',source:'run-bench-suite',target:'results',label:'writes',type:'writes'}},
+  {data:{id:'uc1',source:'_client',target:'request-once', label:'',type:'uses'}},
+  {data:{id:'uc2',source:'_client',target:'measure-ttft', label:'',type:'uses'}},
+  {data:{id:'uc3',source:'_client',target:'run-seq',      label:'',type:'uses'}},
+  {data:{id:'um1',source:'_metrics',target:'request-once',label:'',type:'uses'}},
+  {data:{id:'um2',source:'_metrics',target:'measure-ttft',label:'',type:'uses'}},
+  {data:{id:'um3',source:'_metrics',target:'run-seq',     label:'',type:'uses'}},
+  {data:{id:'um4',source:'_metrics',target:'collect-metrics',label:'',type:'uses'}},
+  {data:{id:'us1',source:'_schemas',target:'request-once',label:'',type:'uses'}},
+  {data:{id:'us2',source:'_schemas',target:'measure-ttft',label:'',type:'uses'}},
+  {data:{id:'us3',source:'_schemas',target:'run-seq',     label:'',type:'uses'}},
+  {data:{id:'us4',source:'_schemas',target:'collect-metrics',label:'',type:'uses'}},
+  {data:{id:'usm1',source:'_server_metrics',target:'collect-metrics',label:'',type:'uses'}},
+  {data:{id:'usm2',source:'_server_metrics',target:'sample-gpu',     label:'',type:'uses'}},
 ];
 
-// ── cytoscape ────────────────────────────────────────────────────────────────
+// ─── CYTOSCAPE ────────────────────────────────────────────────────────────────
 const cy = cytoscape({
   container: document.getElementById('cy'),
   elements: { nodes, edges },
   layout: { name: 'preset' },
   style: [
-    {
-      selector: 'node',
-      style: {
-        label: 'data(label)',
-        'text-valign': 'center', 'text-halign': 'center',
-        'font-size': '11px',
-        'font-family': 'ui-monospace, "Cascadia Code", Consolas, monospace',
-        'text-wrap': 'wrap', 'text-max-width': '118px',
-        width: '122px', height: '46px',
-        shape: 'roundrectangle',
-        'background-color': ele => NC[ele.data('type')] || '#161b22',
-        color: ele => NTC[ele.data('type')] || '#6e7681',
-        'border-width': '1.5px',
-        'border-color': ele => (NTC[ele.data('type')] || '#6e7681') + '55',
-        'transition-property': 'opacity, border-color, border-width',
-        'transition-duration': '150ms',
-      }
-    },
-    { selector: 'node[type="orchestrator"]',
-      style: { width:'134px', height:'52px', 'font-size':'12px', 'font-weight':'bold', 'border-width':'2px' } },
-    { selector: 'node[type="module"]',
-      style: { width:'114px', height:'36px', 'font-style':'italic' } },
-    { selector: 'node[type="storage"]',
-      style: { shape:'barrel', width:'114px', height:'46px' } },
-    { selector: 'node[type="external"]',
-      style: { shape:'diamond', width:'104px', height:'52px' } },
-    { selector: 'node.highlighted',
-      style: { 'border-color':'#f0f6fc', 'border-width':'2.5px', opacity:1 } },
-    { selector: 'node.dimmed',
-      style: { opacity: 0.12 } },
-
-    // edges
-    {
-      selector: 'edge',
-      style: {
-        width: 1.5, 'curve-style': 'bezier',
-        'line-color':         ele => EC[ele.data('type')] || '#30363d',
-        'target-arrow-color': ele => EC[ele.data('type')] || '#30363d',
-        'target-arrow-shape': 'triangle',
-        label: '', 'font-size': '9px', color: '#8b949e',
-        'text-background-color': '#0d1117', 'text-background-opacity': 1, 'text-background-padding': '2px',
-        opacity: 0.55,
-      }
-    },
-    { selector: 'edge[type="uses"]',
-      style: { 'line-style':'dashed', 'line-dash-pattern':[4,4], opacity:0.3, width:1, 'target-arrow-shape':'none' } },
-    { selector: 'edge[type="orchestrate"]',
-      style: { width:2, opacity:0.7 } },
-    { selector: 'edge.highlighted',
-      style: { opacity:1, width:2.5, label:'data(label)', 'z-index':999 } },
-    { selector: 'edge.dimmed',
-      style: { opacity:0.04 } },
+    { selector:'node', style:{
+        label:'data(label)', 'text-valign':'center', 'text-halign':'center',
+        'font-size':'11px','font-family':'ui-monospace, "Cascadia Code", Consolas, monospace',
+        'text-wrap':'wrap','text-max-width':'118px',
+        width:'122px',height:'46px',shape:'roundrectangle',
+        'background-color':ele=>NC[ele.data('type')]||'#161b22',
+        color:ele=>NTC[ele.data('type')]||'#6e7681',
+        'border-width':'1.5px',
+        'border-color':ele=>(NTC[ele.data('type')]||'#6e7681')+'55',
+        'transition-property':'opacity, border-color, border-width','transition-duration':'150ms',
+      } },
+    { selector:'node[type="orchestrator"]', style:{ width:'134px',height:'52px','font-size':'12px','font-weight':'bold','border-width':'2px' } },
+    { selector:'node[type="module"]',       style:{ width:'114px',height:'36px','font-style':'italic' } },
+    { selector:'node[type="storage"]',      style:{ shape:'barrel',width:'114px',height:'46px' } },
+    { selector:'node[type="external"]',     style:{ shape:'diamond',width:'104px',height:'52px' } },
+    { selector:'node.highlighted', style:{ 'border-color':'#f0f6fc','border-width':'2.5px',opacity:1 } },
+    { selector:'node.dimmed',      style:{ opacity:0.12 } },
+    { selector:'edge', style:{
+        width:1.5,'curve-style':'bezier',
+        'line-color':ele=>EC[ele.data('type')]||'#30363d',
+        'target-arrow-color':ele=>EC[ele.data('type')]||'#30363d',
+        'target-arrow-shape':'triangle',
+        label:'','font-size':'9px',color:'#8b949e',
+        'text-background-color':'#0d1117','text-background-opacity':1,'text-background-padding':'2px',
+        opacity:0.55,
+      } },
+    { selector:'edge[type="uses"]',        style:{ 'line-style':'dashed','line-dash-pattern':[4,4],opacity:0.3,width:1,'target-arrow-shape':'none' } },
+    { selector:'edge[type="orchestrate"]', style:{ width:2,opacity:0.7 } },
+    { selector:'edge.highlighted',         style:{ opacity:1,width:2.5,label:'data(label)','z-index':999 } },
+    { selector:'edge.dimmed',              style:{ opacity:0.04 } },
   ],
-  minZoom: 0.15, maxZoom: 3, wheelSensitivity: 0.3,
+  minZoom:0.15, maxZoom:3, wheelSensitivity:0.3,
 });
 
-// ── interactions ─────────────────────────────────────────────────────────────
+// ─── INTERACTIONS ─────────────────────────────────────────────────────────────
 let selected = null;
-
-cy.on('tap', 'node', evt => {
-  const n = evt.target;
-  if (selected && selected.id() === n.id()) { closePanel(); return; }
-  selected = n;
+cy.on('tap','node',evt=>{
+  const n=evt.target;
+  if (selected && selected.id()===n.id()) { closePanel(); return; }
+  selected=n;
   cy.elements().addClass('dimmed').removeClass('highlighted');
   n.removeClass('dimmed').addClass('highlighted');
   n.connectedEdges().removeClass('dimmed').addClass('highlighted');
   n.neighborhood('node').removeClass('dimmed').addClass('highlighted');
   showPanel(n);
 });
-
-cy.on('tap', evt => { if (evt.target === cy) closePanel(); });
-
-cy.on('mouseover', 'edge', evt => evt.target.addClass('highlighted'));
-cy.on('mouseout',  'edge', evt => { if (!evt.target.source().hasClass('highlighted')) evt.target.removeClass('highlighted'); });
+cy.on('tap',evt=>{ if (evt.target===cy) closePanel(); });
+cy.on('mouseover','edge',evt=>evt.target.addClass('highlighted'));
+cy.on('mouseout','edge',evt=>{ if (!evt.target.source().hasClass('highlighted')) evt.target.removeClass('highlighted'); });
 
 function closePanel() {
-  selected = null;
+  selected=null;
   document.getElementById('panel').classList.remove('open');
   cy.elements().removeClass('dimmed highlighted');
 }
 
-// ── panel ─────────────────────────────────────────────────────────────────────
 function showPanel(n) {
-  const d    = n.data('d') || {};
-  const type = n.data('type');
-  const tc   = NTC[type] || '#6e7681';
+  const d=n.data('d')||{}, type=n.data('type'), tc=NTC[type]||'#6e7681';
   document.getElementById('ph-title').textContent = d.title || n.id();
   document.getElementById('panel').classList.add('open');
-
   const typeLabel = type.replace(/-/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
   let h = `<span class="badge" style="background:${tc}22;color:${tc};border:1px solid ${tc}44">${typeLabel}</span>`;
   if (d.sub) h += `<div class="psub">${d.sub}</div>`;
-
   if (d.rows?.length) {
     h += '<div class="psh">Config</div>';
     for (const [k,v] of d.rows) h += `<div class="prow"><span class="pk">${k}</span><span class="pv">${v}</span></div>`;
   }
   if (d.lists) {
-    for (const [title, items] of Object.entries(d.lists)) {
+    for (const [title,items] of Object.entries(d.lists)) {
       h += `<div class="psh">${title}</div><ul class="plist">`;
       for (const item of items) h += `<li>${item}</li>`;
       h += '</ul>';
     }
   }
-
-  const outs = n.outgoers('edge');
-  const ins  = n.incomers('edge');
-  if (outs.length + ins.length) {
+  const outs=n.outgoers('edge'), ins=n.incomers('edge');
+  if (outs.length+ins.length) {
     h += '<div class="psh">Connections</div>';
-    outs.forEach(e => {
-      const t = e.target(); const c = NTC[t.data('type')] || '#6e7681';
+    outs.forEach(e=>{
+      const t=e.target(), c=NTC[t.data('type')]||'#6e7681';
       h += `<div class="conn"><span class="cdot" style="background:${c}"></span><span class="cdir">→</span><span class="cname">${t.id()}</span><span class="clabel">${e.data('label')||e.data('type')}</span></div>`;
     });
-    ins.forEach(e => {
-      const s = e.source(); const c = NTC[s.data('type')] || '#6e7681';
+    ins.forEach(e=>{
+      const s=e.source(), c=NTC[s.data('type')]||'#6e7681';
       h += `<div class="conn"><span class="cdot" style="background:${c}"></span><span class="cdir">←</span><span class="cname">${s.id()}</span><span class="clabel">${e.data('label')||e.data('type')}</span></div>`;
     });
   }
   document.getElementById('pb').innerHTML = h;
 }
 
-// ── filters ───────────────────────────────────────────────────────────────────
+// ─── FILTERS ──────────────────────────────────────────────────────────────────
 function filt(group) {
-  document.querySelectorAll('[id^="f-"]').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('[id^="f-"]').forEach(b=>b.classList.remove('on'));
   document.getElementById(`f-${group}`).classList.add('on');
   closePanel();
-  if (group === 'all') {
+  if (group==='all') {
     cy.elements().show();
   } else {
-    cy.nodes().forEach(n => n.data('group') === group ? n.show() : n.hide());
+    cy.nodes().forEach(n => n.data('group')===group ? n.show() : n.hide());
     cy.edges().forEach(e => (e.source().visible() && e.target().visible()) ? e.show() : e.hide());
-    setTimeout(() => cy.fit(cy.elements(':visible'), 50), 50);
+    setTimeout(()=>cy.fit(cy.elements(':visible'),50),50);
   }
 }
 
@@ -436,12 +752,11 @@ let usesOn = true;
 function toggleUses() {
   usesOn = !usesOn;
   const btn = document.getElementById('t-uses');
-  if (usesOn) { cy.edges('[type="uses"]').show(); btn.textContent='Module edges on';  btn.classList.add('on'); }
-  else         { cy.edges('[type="uses"]').hide(); btn.textContent='Module edges off'; btn.classList.remove('on'); }
+  if (usesOn) { cy.edges('[type="uses"]').show(); btn.textContent='Module edges on'; btn.classList.add('on'); }
+  else        { cy.edges('[type="uses"]').hide(); btn.textContent='Module edges off'; btn.classList.remove('on'); }
 }
 
-// ── init ─────────────────────────────────────────────────────────────────────
-cy.ready(() => setTimeout(() => cy.fit(cy.elements(), 40), 80));
+cy.ready(()=> setTimeout(()=>cy.fit(cy.elements(),40), 80));
 </script>
 </body>
 </html>
