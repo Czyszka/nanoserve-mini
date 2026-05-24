@@ -122,3 +122,4 @@ for the full list and rotation procedure if a secret leaks.
 - [Benchmark methodology](docs/operations/benchmark-methodology.md) - measurement contract.
 - [2026-05-19 server session summary](docs/plans/2026-05-19-server-session-summary.md) - Phase 1 server close-out summary.
 - [Serving compose](serving/compose/) - server stack.
+- [Architecture diagram](https://czyszka.github.io/nanoserve-mini/architecture.html) - visual map of all services, scripts, and data flows.
