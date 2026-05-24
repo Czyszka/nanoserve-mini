@@ -1,0 +1,275 @@
+{
+  "project": "nanoserve-mini",
+  "description": "12-week LLM inference performance lab: vLLM serving, observability, benchmark harness, workload/cache analysis, Triton kernel.",
+  "phase": "Phase 1 — vLLM baseline + LiteLLM Proxy + observability",
+  "generated": "2026-05-22",
+
+  "infrastructure": {
+    "laptop": {
+      "role": "dev",
+      "os": "Windows 11",
+      "tools": ["uv", "Python 3.12", "ruff", "pytest", "git", "rg"],
+      "responsibilities": ["code", "docs", "analysis", "benchmark script prep"]
+    },
+    "server": {
+      "role": "primary GPU runtime",
+      "os": "Ubuntu 24.04",
+      "hostname": "ubuntusrv2",
+      "gpus": "8× H200 NVL 143 GB",
+      "cuda": "13.2",
+      "driver": "595.58.03",
+      "availability": "2 days/week, 08:00–15:00",
+      "hf_cache": "/home/ubuntusrv2/.vllm/models"
+    },
+    "cloud": {
+      "role": "optional buffer",
+      "budget_usd_month": 200,
+      "purpose": "sanity checks, after-hours small-model testing"
+    }
+  },
+
+  "docker_stacks": {
+    "inference": {
+      "file": "serving/compose/docker-compose.kimi-k2.6.yml",
+      "network": "nanoserve-net",
+      "services": {
+        "vllm": {
+          "image": "vllm/vllm-openai:v0.20.0-cu130-ubuntu2404",
+          "container_name": "vllm",
+          "port": 8000,
+          "model": "moonshotai/Kimi-K2.6",
+          "served_name": "kimi-k2.6",
+          "tensor_parallel": 8,
+          "gpu_utilization": 0.70,
+          "speculative": "Eagle3 (kimi-k2.6-eagle3-mla, 3 tokens)",
+          "endpoint": "/v1/chat/completions",
+          "metrics_endpoint": "/metrics"
+        },
+        "vllm-small": {
+          "image": "vllm/vllm-openai:v0.20.0-cu130-ubuntu2404",
+          "container_name": "vllm-small",
+          "port": 8004,
+          "model": "deepseek-ai/DeepSeek-V4-Flash",
+          "served_name": "DeepSeek-V4-Flash",
+          "tensor_parallel": 8,
+          "gpu_utilization": 0.20,
+          "kv_cache_dtype": "fp8",
+          "max_model_len": 65536,
+          "max_num_seqs": 2,
+          "speculative": "MTP (1 token)",
+          "endpoint": "/v1/chat/completions",
+          "metrics_endpoint": "/metrics"
+        },
+        "litellm": {
+          "image": "ghcr.io/berriai/litellm:main-v1.66.0-stable",
+          "container_name": "litellm-proxy",
+          "port": 4000,
+          "config": "serving/compose/litellm-config.yaml",
+          "routes": {
+            "kimi-k2.6": "http://vllm:8000/v1",
+            "DeepSeek-V4-Flash": "http://vllm-small:8004/v1"
+          },
+          "auth": "LITELLM_MASTER_KEY",
+          "depends_on": ["vllm", "vllm-small"]
+        },
+        "open-webui": {
+          "image": "ghcr.io/open-webui/open-webui:0.9.5",
+          "container_name": "open-webui",
+          "port": 3000,
+          "upstream": "http://vllm:8000",
+          "depends_on": ["vllm"]
+        }
+      }
+    },
+    "observability": {
+      "file": "serving/compose/docker-compose.observability.yml",
+      "network": "nanoserve-net",
+      "services": {
+        "prometheus": {
+          "image": "prom/prometheus:v3",
+          "container_name": "prometheus",
+          "port": 9090,
+          "config": "serving/compose/prometheus/prometheus.yml",
+          "data_path": "/home/ubuntusrv2/working/nanoserve-observability/prometheus-data",
+          "scrape_targets": [
+            {"job": "vllm-kimi",           "url": "http://vllm:8000/metrics"},
+            {"job": "vllm-small-deepseek", "url": "http://vllm-small:8004/metrics"},
+            {"job": "litellm",             "url": "http://litellm-proxy:4000/metrics"}
+          ]
+        },
+        "grafana": {
+          "image": "grafana/grafana:latest",
+          "container_name": "grafana",
+          "port": 3001,
+          "provisioning": "serving/compose/grafana/provisioning/",
+          "dashboards": ["vllm-phase1.json"],
+          "depends_on": ["prometheus"]
+        }
+      }
+    }
+  },
+
+  "benchmark_scripts": {
+    "run_bench_suite": {
+      "file": "benchmarks/scripts/run_bench_suite.py",
+      "role": "orchestrator",
+      "description": "Runs the full Phase 1 benchmark sequence end-to-end.",
+      "sequence": [
+        "collect_metrics_snapshot (pre)",
+        "request_once",
+        "measure_ttft_once",
+        "sample_gpu_metrics (background)",
+        "run_sequential_benchmark",
+        "collect_metrics_snapshot (post)"
+      ],
+      "output": "results/runs/<run_id>/bench_suite/summary.json",
+      "key_args": ["--base-url", "--model", "--warmup", "--runs", "--run-id"]
+    },
+    "request_once": {
+      "file": "benchmarks/scripts/request_once.py",
+      "benchmark_mode": "singlestream_lite_correctness",
+      "schema": "nanoserve-mini.request-once.v2",
+      "description": "Single non-streaming request; smoke test and correctness check.",
+      "output": "results/runs/<run_id>/singlestream_lite_correctness/result.json",
+      "metrics": ["e2e_seconds", "output_chars", "prompt_tokens", "completion_tokens"]
+    },
+    "measure_ttft_once": {
+      "file": "benchmarks/scripts/measure_ttft_once.py",
+      "benchmark_mode": "singlestream_lite_latency",
+      "schema": "nanoserve-mini.ttft-once.v2",
+      "description": "Single streaming request; measures TTFT, E2E, and TPOT.",
+      "output": "results/runs/<run_id>/singlestream_lite_latency/result.json",
+      "metrics": ["ttft_seconds", "ttft_any_token_seconds", "e2e_seconds", "tpot_seconds", "completion_tokens"]
+    },
+    "run_sequential_benchmark": {
+      "file": "benchmarks/scripts/run_sequential_benchmark.py",
+      "benchmark_mode": "singlestream_lite_repeated",
+      "schema_summary": "nanoserve-mini.sequential-bench.v3",
+      "schema_row": "nanoserve-mini.sequential-bench-row.v3",
+      "description": "N sequential streaming requests; computes p50/p95 latency and throughput.",
+      "outputs": [
+        "results/runs/<run_id>/singlestream_lite_repeated/summary.json",
+        "results/runs/<run_id>/singlestream_lite_repeated/results.jsonl"
+      ],
+      "metrics": ["ttft p50/p95", "e2e p50/p95", "tpot p50/p95", "request_throughput", "output_throughput_tokens_s"]
+    },
+    "collect_metrics_snapshot": {
+      "file": "benchmarks/scripts/collect_metrics_snapshot.py",
+      "schema": "nanoserve-mini.server-metrics-snapshot.v1",
+      "description": "One-shot snapshot of vLLM /metrics (Prometheus) + nvidia-smi GPU state.",
+      "phases": ["pre", "mid", "post", "adhoc"],
+      "output": "results/runs/<run_id>/server_metrics/snapshot_<phase>.json",
+      "metrics": ["gpu_memory_used_gb", "kv_cache_usage", "prefix_cache_hit_rate", "per_gpu_utilization"]
+    },
+    "sample_gpu_metrics": {
+      "file": "benchmarks/scripts/sample_gpu_metrics.py",
+      "schema_meta": "nanoserve-mini.gpu-samples-meta.v1",
+      "description": "Interval CSV sampling of GPU state (utilization, memory, power, clocks).",
+      "outputs": [
+        "results/runs/<run_id>/server_metrics/gpu_samples.csv",
+        "results/runs/<run_id>/server_metrics/gpu_samples_meta.json"
+      ],
+      "key_args": ["--interval-ms", "--duration-s", "--samples"]
+    },
+    "check_server_env": {
+      "file": "benchmarks/scripts/check_server_env.py",
+      "description": "Inventory snapshot: git, python, uv, rg, uname, lscpu, memory, disk, nvidia-smi, docker.",
+      "output": "results/raw/server_env_snapshot.json"
+    }
+  },
+
+  "shared_modules": {
+    "_client": {
+      "file": "benchmarks/scripts/_client.py",
+      "description": "Thin httpx wrapper for OpenAI-compatible API.",
+      "key_exports": ["CompletionRequest", "build_payload", "chat_completion", "chat_completion_stream",
+                      "extract_assistant_text", "extract_stream_delta_text", "extract_stream_reasoning_text",
+                      "extract_stream_usage"]
+    },
+    "_metrics": {
+      "file": "benchmarks/scripts/_metrics.py",
+      "description": "Benchmark Contract helpers: RunControls, summarize, resolve_output_path.",
+      "key_exports": ["RunControls", "get_git_commit", "make_run_uuid", "now_iso",
+                      "null_server_metrics", "build_workload_spec", "resolve_output_path", "summarize"]
+    },
+    "_schemas": {
+      "file": "benchmarks/scripts/_schemas.py",
+      "description": "Schema version constants and benchmark mode IDs.",
+      "constants": {
+        "METHODOLOGY": "mlperf_inspired_lite",
+        "modes": ["singlestream_lite_correctness", "singlestream_lite_latency", "singlestream_lite_repeated"],
+        "schemas": ["nanoserve-mini.request-once.v2", "nanoserve-mini.ttft-once.v2",
+                    "nanoserve-mini.sequential-bench.v3", "nanoserve-mini.sequential-bench-row.v3",
+                    "nanoserve-mini.server-metrics-snapshot.v1", "nanoserve-mini.gpu-samples-meta.v1"]
+      }
+    },
+    "_server_metrics": {
+      "file": "benchmarks/scripts/_server_metrics.py",
+      "description": "Prometheus exposition parser and nvidia-smi CSV parser.",
+      "key_exports": ["parse_prometheus_text", "parse_nvidia_smi_csv",
+                      "select_vllm_aggregate", "total_gpu_memory_used_gb",
+                      "NVIDIA_SMI_QUERY_FIELDS", "CSV_COLUMNS"]
+    }
+  },
+
+  "result_schema": {
+    "layout": "results/runs/<run_id>/<benchmark_mode>/",
+    "common_fields": ["schema", "methodology", "benchmark_mode", "timestamp", "controls", "metrics", "server_metrics", "error"],
+    "controls_fields": ["model", "base_url", "gpu_model", "vllm_version", "dtype", "decoding",
+                        "warmup_runs", "measured_runs", "concurrency", "workload_spec",
+                        "run_id", "run_uuid", "script_name", "git_commit"],
+    "benchmark_contract_metrics": ["TTFT p50/p95", "TPOT p50/p95", "E2E latency p50/p95",
+                                   "request throughput", "output throughput tokens/s",
+                                   "input/output tokens per request", "concurrency",
+                                   "GPU memory usage", "KV cache usage", "prefix cache hit rate"]
+  },
+
+  "data_flows": [
+    {"from": "user CLI",          "to": "run_bench_suite",          "type": "invocation"},
+    {"from": "run_bench_suite",   "to": "collect_metrics_snapshot", "type": "subprocess", "phases": ["pre", "post"]},
+    {"from": "run_bench_suite",   "to": "request_once",             "type": "subprocess"},
+    {"from": "run_bench_suite",   "to": "measure_ttft_once",        "type": "subprocess"},
+    {"from": "run_bench_suite",   "to": "sample_gpu_metrics",       "type": "subprocess (background)"},
+    {"from": "run_bench_suite",   "to": "run_sequential_benchmark", "type": "subprocess"},
+    {"from": "request_once",      "to": "vllm:8000",                "type": "httpx POST /v1/chat/completions", "mode": "non-streaming"},
+    {"from": "measure_ttft_once", "to": "vllm:8000",                "type": "httpx POST /v1/chat/completions", "mode": "streaming"},
+    {"from": "run_sequential_benchmark", "to": "vllm:8000",         "type": "httpx POST /v1/chat/completions", "mode": "streaming"},
+    {"from": "collect_metrics_snapshot", "to": "vllm:8000",         "type": "httpx GET /metrics"},
+    {"from": "collect_metrics_snapshot", "to": "nvidia-smi",        "type": "subprocess"},
+    {"from": "sample_gpu_metrics",       "to": "nvidia-smi",        "type": "subprocess interval"},
+    {"from": "litellm-proxy:4000", "to": "vllm:8000",               "type": "HTTP proxy route", "model": "kimi-k2.6"},
+    {"from": "litellm-proxy:4000", "to": "vllm-small:8004",         "type": "HTTP proxy route", "model": "DeepSeek-V4-Flash"},
+    {"from": "open-webui:3000",    "to": "vllm:8000",               "type": "HTTP upstream"},
+    {"from": "prometheus:9090",    "to": "vllm:8000/metrics",       "type": "scrape", "interval": "5s"},
+    {"from": "prometheus:9090",    "to": "vllm-small:8004/metrics", "type": "scrape", "interval": "5s"},
+    {"from": "prometheus:9090",    "to": "litellm-proxy:4000/metrics", "type": "scrape", "interval": "5s"},
+    {"from": "grafana:3001",       "to": "prometheus:9090",         "type": "PromQL query"},
+    {"from": "benchmark scripts",  "to": "results/runs/",           "type": "file write (JSON/JSONL/CSV)"}
+  ],
+
+  "test_suite": {
+    "framework": "pytest",
+    "location": "benchmarks/scripts_tests/",
+    "count": 10,
+    "strategy": "mocked, no GPU required, runs on laptop",
+    "last_run": "2026-05-20",
+    "result": "121 passed"
+  },
+
+  "toolchain": {
+    "python": "3.12+",
+    "package_manager": "uv",
+    "linter": "ruff",
+    "type_checker": "mypy",
+    "test_runner": "pytest",
+    "http_client": "httpx>=0.27.0",
+    "terminal_formatting": "rich>=13.7.0"
+  },
+
+  "roadmap_phases": [
+    {"phase": 1, "weeks": "1-3",  "focus": "vLLM baseline + observability + LiteLLM proxy",    "status": "in progress"},
+    {"phase": 2, "weeks": "4-7",  "focus": "Workload analysis + prefix cache experiment",       "status": "planned"},
+    {"phase": 3, "weeks": "8-10", "focus": "Triton kernel + profiling + semantic routing",      "status": "planned"},
+    {"phase": 4, "weeks": "11-12","focus": "Polish + decision doc",                             "status": "planned"}
+  ]
+}
