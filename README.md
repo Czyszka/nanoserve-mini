@@ -7,6 +7,8 @@ one Triton kernel, technical write-ups, final decision document.
 Standalone portfolio artifact that also acts as a decision gate for a
 possible full `nanoserve` follow-up.
 
+> **[→ Interactive architecture diagram](https://czyszka.github.io/nanoserve-mini/architecture.html)** — full visual map of services, scripts, modules, and data flows.
+
 ## Current work
 
 Source of truth for human work: this README.
@@ -122,3 +124,4 @@ for the full list and rotation procedure if a secret leaks.
 - [Benchmark methodology](docs/operations/benchmark-methodology.md) - measurement contract.
 - [2026-05-19 server session summary](docs/plans/2026-05-19-server-session-summary.md) - Phase 1 server close-out summary.
 - [Serving compose](serving/compose/) - server stack.
+- [Architecture diagram](https://czyszka.github.io/nanoserve-mini/architecture.html) - visual map of all services, scripts, and data flows.
