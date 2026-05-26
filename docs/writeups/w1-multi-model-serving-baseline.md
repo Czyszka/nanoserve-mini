@@ -41,8 +41,13 @@ segment in one mode:
 
 <!-- TODO: investigation segment. DEP/DP startup attempt, captured vLLM
 startup logs (engine args, "Loading model weights", KV profiling,
-traceback), redirect to TP=8. Evidence to be reproduced on the next
-server session. -->
+traceback), redirect to TP=8.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. E):
+- results/runs/2026-05-27_w1_evidence/t1_dep/dep_full.log
+- results/runs/2026-05-27_w1_evidence/t1_dep/dep_engine_cmd.json
+- results/runs/2026-05-27_w1_evidence/t1_dep/dep_state.txt
+-->
 
 ---
 
@@ -146,8 +151,15 @@ concrete down-payment on trusting the baseline.
 ## T3 — Why DeepSeek runs at 20% VRAM
 
 <!-- TODO: justification segment. Numbers from Kimi + DeepSeek weight-load
-logs across a few DeepSeek VRAM-cap values. Evidence to be collected on
-the next server session. -->
+logs across a few DeepSeek VRAM-cap values.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. B):
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/log_cap020_baseline.txt
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/log_cap015.txt
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/log_cap025.txt
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/ttft_cap{015,020,025}.json
+- (rejected alternatives = 0.15 too low / 0.25 too high or OOM)
+-->
 
 ---
 
@@ -168,7 +180,15 @@ results/raw/observability; useful vs misleading metrics; ties into #34. -->
 ## T6 — Why Eagle3, and what it costs
 
 <!-- TODO: justification + measurement segment. Kimi with Eagle3
-speculative decoding on vs off: TTFT, TPOT, throughput. -->
+speculative decoding on vs off: TTFT, TPOT, throughput.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. C+F):
+- results/runs/2026-05-27_w1_evidence/t6_eagle3/bench_on.log
+- results/runs/2026-05-27_w1_evidence/t6_eagle3/bench_off.log
+- results/runs/2026-05-27_w1_evidence/t6_eagle3/kimi_log_eagle3_{on,off}.txt
+- results/runs/2026-05-27_kimi-k2.6_eagle3-on/ (auto-id, run_bench_suite)
+- results/runs/2026-05-27_kimi-k2.6_eagle3-off/ (auto-id, run_bench_suite)
+-->
 
 ---
 
@@ -183,7 +203,13 @@ volumes for observability runtime data; local-control rationale. -->
 
 <!-- TODO: measurement segment. Paired A/B difference (client → proxy:4000
 → vLLM vs client → vLLM:8000), reversed pair order, warmup; cross-check
-against LiteLLM's own latency metrics. -->
+against LiteLLM's own latency metrics.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. A):
+- results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/kimi_{1..10}_{A_direct,B_proxy}.json
+- results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/ds_{1..10}_{A_direct,B_proxy}.json
+- results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt
+-->
 
 ---
 

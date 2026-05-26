@@ -92,8 +92,16 @@ status, not a task list. Update when work moves.
 - **#37 — W1 write-up:** `docs/writeups/w1-multi-model-serving-baseline.md`
   created with the T1–T8 thread map; T2 written in full from the captured
   stream-debug artefacts and tightened against repo evidence after senior
-  AI/ML Ops review; T1/T3/T6/T8 await the next server session;
-  T4/T5 laptop analysis not started; writing-guide + template deferred.
+  AI/ML Ops review; T1/T3/T6/T8 server evidence capture planned for the
+  2026-05-27 session (`docs/plans/2026-05-27-server-session.md`); T4/T5
+  laptop analysis not started; writing-guide + template deferred.
+- **2026-05-27 server session prep:** plan at
+  `docs/plans/2026-05-27-server-session.md` covers T8 proxy overhead
+  (paired A/B), T3 DeepSeek VRAM sweep at 0.15/0.25, T6 Eagle3 on/off,
+  T1 DEP startup capture; ~4h budget with checkpoints; T5 dashboard
+  validation is stretch-only. Pre-flight: compose env var for
+  DeepSeek VRAM cap is in place; evidence-path stubs landed under TODOs
+  in the W1 write-up.
 
 ---
 
@@ -107,9 +115,11 @@ sequences them. This section only points at active work — it is not a task lis
 - **#37** — W1 write-up: methodology + thread inventory T1–T8; evidence capture
   split between server and laptop.
 
-**Next concrete step:** build the first Grafana dashboard from a real metric-name
-inventory (#34), then start W1 laptop-side analysis (#37 — T2, T4, T5). Server-only
-capture (#37 — T1, T3, T6, T8; `rg` install) waits for the next GPU session.
+**Next concrete step:** execute `docs/plans/2026-05-27-server-session.md`
+on the GPU server — server-only capture for #37 T1/T3/T6/T8 (Kimi DEP
+startup logs, DeepSeek VRAM justification, Eagle3 on/off, paired proxy
+overhead) plus the queued `rg` install. Dashboard inventory (#34) and
+W1 laptop-side analysis (T4, T5 write-up) come after the session.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
