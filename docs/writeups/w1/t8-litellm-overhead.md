@@ -2,7 +2,13 @@
 
 <!-- TODO: measurement segment. Paired A/B difference (client → proxy:4000
 → vLLM vs client → vLLM:8000), reversed pair order, warmup; cross-check
-against LiteLLM's own latency metrics. -->
+against LiteLLM's own latency metrics.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. A):
+- results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/kimi_{1..10}_{A_direct,B_proxy}.json
+- results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/ds_{1..10}_{A_direct,B_proxy}.json
+- results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt
+-->
 
 ## Planned shape
 

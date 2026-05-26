@@ -1,8 +1,14 @@
 # T3 — Why DeepSeek runs at 20% VRAM
 
 <!-- TODO: justification segment. Numbers from Kimi + DeepSeek weight-load
-logs across a few DeepSeek VRAM-cap values. Evidence to be collected on
-the next server session. -->
+logs across a few DeepSeek VRAM-cap values.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. B; sweep limited to 0.15/0.25 around the chosen 0.20):
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/log_cap020_baseline.txt
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/log_cap015.txt
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/log_cap025.txt
+- results/runs/2026-05-27_w1_evidence/t3_deepseek_vram/ttft_cap{015,020,025}.json
+-->
 
 ## Planned shape
 
