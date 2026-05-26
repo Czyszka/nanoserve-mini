@@ -100,8 +100,11 @@ status, not a task list. Update when work moves.
   (paired A/B), T3 DeepSeek VRAM sweep at 0.15/0.25, T6 Eagle3 on/off,
   T1 DEP startup capture; ~4h budget with checkpoints; T5 dashboard
   validation is stretch-only. Pre-flight: compose env var for
-  DeepSeek VRAM cap is in place; evidence-path stubs landed under TODOs
-  in the W1 write-up.
+  DeepSeek VRAM cap is in place and documented in `.env.example`;
+  evidence-path stubs landed under TODOs in the W1 write-up. Plan
+  hardened on 2026-05-26 with explicit `RUN_DIR` initialization,
+  corrected Prometheus KV metric name, `curl --data-urlencode` queries,
+  and an artifact manifest step.
 
 ---
 
@@ -120,6 +123,8 @@ on the GPU server — server-only capture for #37 T1/T3/T6/T8 (Kimi DEP
 startup logs, DeepSeek VRAM justification, Eagle3 on/off, paired proxy
 overhead) plus the queued `rg` install. Dashboard inventory (#34) and
 W1 laptop-side analysis (T4, T5 write-up) come after the session.
+Server plan has been hardened; use the checked-in plan after `git pull`,
+not an older copied command block.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -201,6 +206,15 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-05-26 documentation/config plan hardening:
+
+```text
+git diff --check    OK
+```
+
+Updated the 2026-05-27 server-session plan only, plus `.env.example`
+documentation for `DEEPSEEK_GPU_MEM_UTIL`; no executable code changed.
+
 2026-05-20 laptop validation (issue #31):
 
 ```text
@@ -240,6 +254,13 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-26 - W1 server-session plan hardening
+
+- Why: reduce avoidable server-slot risk before the 2026-05-27 W1 evidence session.
+- Did: made `RUN_DIR` initialization explicit in Cz. 0, made LiteLLM key extraction fail fast, corrected T5 Prometheus snapshots to use `vllm:kv_cache_usage_perc`, replaced ad hoc Python URL quoting with `curl --data-urlencode`, added an artifact manifest step, and documented `DEEPSEEK_GPU_MEM_UTIL` in `.env.example`.
+- Validation: `git diff --check` OK.
+- Next: run `docs/plans/2026-05-27-server-session.md` on the GPU server and commit the resulting W1 evidence artifacts.
 
 ### 2026-05-20 - Phase 1 laptop follow-up: #31 parser fix, Grafana provisioning, tooling
 
