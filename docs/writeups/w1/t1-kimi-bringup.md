@@ -2,8 +2,13 @@
 
 <!-- TODO: investigation segment. DEP/DP startup attempt, captured vLLM
 startup logs (engine args, "Loading model weights", KV profiling,
-traceback), redirect to TP=8. Evidence to be reproduced on the next
-server session. -->
+traceback), redirect to TP=8.
+
+Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-session.md Cz. E):
+- results/runs/2026-05-27_w1_evidence/t1_dep/dep_full.log
+- results/runs/2026-05-27_w1_evidence/t1_dep/dep_engine_cmd.json
+- results/runs/2026-05-27_w1_evidence/t1_dep/dep_state.txt
+-->
 
 ## Planned shape
 
