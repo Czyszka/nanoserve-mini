@@ -59,6 +59,9 @@ RUN_DIR=results/runs/2026-05-27_w1_evidence
 mkdir -p "$RUN_DIR"/{t8_proxy_overhead,t3_deepseek_vram,t6_eagle3,t1_dep,t5_metrics,session}
 ```
 
+Ustaw `RUN_DIR` od razu po `cd ~/nanoserve-mini` i trzymaj go w tej samej
+sesji shellowej do końca planu. Cz. 0 zapisuje snapshoty do tego katalogu.
+
 `run_bench_suite.py` tworzy własne katalogi `results/runs/<auto-id>/...`
 — ścieżki notujemy w `session/session_notes.md`.
 
@@ -68,6 +71,9 @@ mkdir -p "$RUN_DIR"/{t8_proxy_overhead,t3_deepseek_vram,t6_eagle3,t1_dep,t5_metr
 
 ```bash
 cd ~/nanoserve-mini
+RUN_DIR=results/runs/2026-05-27_w1_evidence
+mkdir -p "$RUN_DIR"/{t8_proxy_overhead,t3_deepseek_vram,t6_eagle3,t1_dep,t5_metrics,session}
+
 git status
 git pull --ff-only origin main
 uv sync --extra dev
@@ -78,7 +84,8 @@ nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
 
 command -v rg || sudo apt-get install -y ripgrep
 
-export LITELLM_MASTER_KEY="$(grep '^LITELLM_MASTER_KEY' serving/compose/.env | cut -d= -f2)"
+export LITELLM_MASTER_KEY="$(sed -n 's/^LITELLM_MASTER_KEY=//p' serving/compose/.env | tail -n 1 | tr -d '\r')"
+test -n "$LITELLM_MASTER_KEY" || { echo "missing LITELLM_MASTER_KEY in serving/compose/.env"; exit 1; }
 curl -fsS -H "Authorization: Bearer $LITELLM_MASTER_KEY" http://127.0.0.1:4000/v1/models | jq '.data[].id'
 curl -fsS http://127.0.0.1:8000/health && echo " kimi OK"
 curl -fsS http://127.0.0.1:8004/health && echo " deepseek OK"
@@ -256,9 +263,9 @@ mkdir -p "$OUT" "$T5OUT/eagle3-on"
     ts=$(date +%s)
     curl -s http://127.0.0.1:8000/metrics > "$T5OUT/eagle3-on/vllm_metrics_${ts}.txt"
     for q in 'vllm:num_requests_running' 'vllm:num_requests_waiting' \
-             'rate(vllm:generation_tokens_total[1m])' 'vllm:gpu_cache_usage_perc'; do
+             'rate(vllm:generation_tokens_total[1m])' 'vllm:kv_cache_usage_perc'; do
       safe=$(echo "$q" | tr -c 'A-Za-z0-9' '_' | cut -c1-40)
-      curl -s "http://127.0.0.1:9090/api/v1/query?query=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$q")" \
+      curl -sG --data-urlencode "query=$q" http://127.0.0.1:9090/api/v1/query \
         > "$T5OUT/eagle3-on/snap_${ts}_${safe}.json"
     done
     sleep 10
@@ -360,9 +367,9 @@ mkdir -p "$T5OUT/eagle3-off"
     ts=$(date +%s)
     curl -s http://127.0.0.1:8000/metrics > "$T5OUT/eagle3-off/vllm_metrics_${ts}.txt"
     for q in 'vllm:num_requests_running' 'vllm:num_requests_waiting' \
-             'rate(vllm:generation_tokens_total[1m])' 'vllm:gpu_cache_usage_perc'; do
+             'rate(vllm:generation_tokens_total[1m])' 'vllm:kv_cache_usage_perc'; do
       safe=$(echo "$q" | tr -c 'A-Za-z0-9' '_' | cut -c1-40)
-      curl -s "http://127.0.0.1:9090/api/v1/query?query=$(python3 -c 'import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))' "$q")" \
+      curl -sG --data-urlencode "query=$q" http://127.0.0.1:9090/api/v1/query \
         > "$T5OUT/eagle3-off/snap_${ts}_${safe}.json"
     done
     sleep 10
@@ -445,6 +452,8 @@ wait $KIMI_PID $DS_PID
 ```bash
 docker compose -f serving/compose/docker-compose.kimi-k2.6.yml ps > "$RUN_DIR/session/docker_ps_end.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_end.txt"
+find "$RUN_DIR" -type f | sort > "$RUN_DIR/session/artifact_manifest.txt"
+wc -l "$RUN_DIR/session/artifact_manifest.txt" > "$RUN_DIR/session/artifact_count.txt"
 
 $EDITOR "$RUN_DIR/session/session_notes.md"
 
@@ -469,11 +478,16 @@ Update [docs/operations/agent-state.md](docs/operations/agent-state.md):
 
 ---
 
-## Pre-flight LAPTOPOWY (do zrobienia DZIŚ)
+## Pre-flight LAPTOPOWY
+
+Status po przygotowaniu planu: punkty 1-3 są w repo. Przed sesją wystarczy
+zrobić `git pull --ff-only origin main` na serwerze i sprawdzić, że compose
+zawiera env var z punktu 1.
 
 1. **Param VRAM cap przez env** dla `vllm-small` w
    [serving/compose/docker-compose.kimi-k2.6.yml](serving/compose/docker-compose.kimi-k2.6.yml):
-   `--gpu-memory-utilization ${DEEPSEEK_GPU_MEM_UTIL:-0.20}` (potrzebne w Cz. B).
+   `--gpu-memory-utilization ${DEEPSEEK_GPU_MEM_UTIL:-0.20}` (potrzebne w Cz. B);
+   `.env.example` dokumentuje `DEEPSEEK_GPU_MEM_UTIL=0.20`.
 2. **Skopiować ten plan** do
    [docs/plans/2026-05-27-server-session.md](docs/plans/2026-05-27-server-session.md)
    jako repo-tracked artefakt sesji.
