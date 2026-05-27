@@ -135,14 +135,6 @@ Additional useful log details:
 
 These are useful as supporting evidence, but not enough to justify the final DeepSeek cap choice. A clean T3 rerun is still needed.
 
-### 4. T5 — minor artifact only
-
-One small T5-adjacent artifact was captured:
-
-- `t8_proxy_overhead/litellm_metrics_post.txt` — Prometheus-format snapshot of LiteLLM Proxy metrics taken after the T8 measurement loop.
-
-This does not replace Grafana panel validation under load, but it is useful as a cross-check: LiteLLM exposes its own per-route latency histograms (`litellm_request_*`) that can be compared against the client-side TTFT/E2E medians from T8. Treat it as a one-shot anchor, not as evidence that the dashboard work for T5 is done.
-
 ## What was not completed
 
 ### T3 — full VRAM sweep
@@ -179,13 +171,14 @@ No `t1_dep/` artifact set was produced in this session.
 
 ### T5 — dashboard / Prometheus validation
 
-Not completed, except for a LiteLLM metrics snapshot:
+Not completed:
 
 - No full dashboard screenshot.
 - No Prometheus query snapshots under load.
 - No raw Kimi/DeepSeek `/metrics` capture for T5.
+- The single attempted proxy-side capture (`t8_proxy_overhead/litellm_metrics_post.txt`) returned a 22-byte HTTP 404 (`{"detail":"Not Found"}`), not a metric snapshot. The LiteLLM Prometheus exporter likely needs `prometheus_callback` enabled in `serving/compose/litellm-config.yaml`, or the scrape used the wrong endpoint. T8 therefore has no proxy-side cross-check from this dataset either.
 
-This is acceptable for this session because T5 was stretch-only, but issue #34 remains open.
+This is acceptable for this session because T5 was stretch-only, but issue #34 remains open and the LiteLLM exporter configuration needs to be fixed before the next capture attempt.
 
 ### End-of-session close-out
 
@@ -255,7 +248,7 @@ This should be reflected carefully in W1. Avoid claiming the session validated a
 | `t8_proxy_overhead/kimi_*_B_proxy.json` | Kimi measurements through LiteLLM Proxy `:4000`. |
 | `t8_proxy_overhead/ds_*_A_direct.json` | Direct DeepSeek measurements against vLLM-small `:8004`. |
 | `t8_proxy_overhead/ds_*_B_proxy.json` | DeepSeek measurements through LiteLLM Proxy `:4000`. |
-| `t8_proxy_overhead/litellm_metrics_post.txt` | LiteLLM metrics snapshot after the proxy-overhead measurements. |
+| `t8_proxy_overhead/litellm_metrics_post.txt` | HTTP 404 captured after the T8 measurement loop (22 B, `{"detail":"Not Found"}`). LiteLLM Prometheus exporter not reachable from the scrape command used in this session; T8 has no proxy-side cross-check. |
 
 ### T3 files
 

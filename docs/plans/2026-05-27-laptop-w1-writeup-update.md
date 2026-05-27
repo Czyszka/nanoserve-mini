@@ -12,7 +12,7 @@ Primary threads:
 - T3 — DeepSeek VRAM baseline: partial evidence only, with an important filename/runtime-cap caveat.
 - T1 — DEP startup failure: missing evidence.
 - T6 — Eagle3 ON/OFF: missing evidence.
-- T5 — dashboard/Prometheus: not completed beyond a LiteLLM metrics snapshot.
+- T5 — dashboard/Prometheus: not completed. The only attempted proxy-side capture (`litellm_metrics_post.txt`) is a 22-byte HTTP 404; T8 has no proxy-side cross-check from this dataset either.
 
 The W1 write-up should become more complete after this session, but it should not claim that W1 is fully closed.
 
@@ -143,16 +143,21 @@ Expected pattern from the 2026-05-27 dataset:
 
 Do not compare only one TTFT field without mentioning why.
 
-LiteLLM-side cross-check:
+LiteLLM-side cross-check — UNAVAILABLE for this dataset:
 
-After computing client-side medians, parse
-`t8_proxy_overhead/litellm_metrics_post.txt` (Prometheus exposition
-format) and pull the relevant per-route series, e.g.
-`litellm_request_total_latency_metric_*` and
-`litellm_request_total_latency_metric_count{model="kimi-k2.6"}` and
-the equivalent for `DeepSeek-V4-Flash`. Compare proxy-side recorded
-latency to the client-side proxy median. If the two disagree
-materially, that is itself a finding for T8 (and possibly T5).
+The captured `litellm_metrics_post.txt` is a 22-byte HTTP 404
+(`{"detail":"Not Found"}`), not a Prometheus snapshot. The LiteLLM
+Prometheus exporter was either not enabled (`prometheus_callback`
+missing in `serving/compose/litellm-config.yaml`) or scraped at the
+wrong endpoint. Do not attempt the cross-check in this laptop
+session — it requires the live proxy.
+
+For T8 this means there is no independent proxy-side confirmation
+of where the ~16 ms Kimi TTFT delta or the ~5.6 % throughput
+regression originates (client→proxy hop vs proxy→vLLM hop). Record
+this as a missing capture and a follow-up for the next server
+session: fix the LiteLLM exporter config, then re-capture against
+the running proxy under the same T8 prompts.
 
 ---
 
@@ -190,11 +195,6 @@ for everything except `base_url`.)
 | Model | Metric | median proxy-direct delta | min | max |
 |---|---:|---:|---:|---:|
 
-## LiteLLM cross-check
-
-| Model | client-side proxy median | LiteLLM-side proxy median | delta |
-|---|---:|---:|---:|
-
 ## Interpretation
 
 (split into two sub-headers:)
@@ -211,7 +211,8 @@ Required limitations:
 - single-stream,
 - short output (DeepSeek `completion_tokens` ≈ 2 — throughput metrics for DeepSeek are not meaningful),
 - no concurrency,
-- no production traffic.
+- no production traffic,
+- no proxy-side metric confirmation (`litellm_metrics_post.txt` captured during the session is a 404 — LiteLLM Prometheus exporter not enabled / wrong endpoint; flagged as a follow-up for the next server session).
 
 The "Streaming-semantics caveat (Kimi)" subsection is **separate**
 from Limitations on purpose: it is a qualitative behavioral change,
@@ -374,7 +375,7 @@ Not completed in the 2026-05-27 session. Kimi remained configured with Eagle3, b
 ### T5 — Dashboard / Prometheus validation
 
 ```md
-Not completed beyond a single LiteLLM metrics snapshot (`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt`). Prometheus and Grafana were running, but dashboard panels were not validated under live load during this session.
+Not completed. Prometheus and Grafana were running, but dashboard panels were not validated under live load. The single attempted proxy-side capture (`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt`) returned a 22-byte HTTP 404 (`{"detail":"Not Found"}`); the LiteLLM Prometheus exporter is not currently scraping cleanly. T8 has no proxy-side cross-check from this dataset either. Fix `prometheus_callback` in `serving/compose/litellm-config.yaml` before re-capture.
 ```
 
 ---
