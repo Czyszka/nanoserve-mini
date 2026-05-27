@@ -21,14 +21,29 @@ The W1 write-up should become more complete after this session, but it should no
 ## 0. Start and repo hygiene
 
 ```bash
-git pull --ff-only origin main
 git status
+git fetch origin
 git log --oneline -8
 ```
 
-Expected recent commits should include:
+If you intend to work directly on `main`:
+
+```bash
+git checkout main
+git pull --ff-only origin main
+```
+
+If W1 should go through review, work on a feature branch instead and
+open a PR at the end:
+
+```bash
+git checkout -b docs/w1-2026-05-27-evidence
+```
+
+Expected recent commits on the base should include:
 
 ```text
+docs: add W1 laptop write-up update plan
 docs: expand 2026-05-27 server session notes
 docs: update agent state after 2026-05-27 server session
 docs: add 2026-05-27 artifact manifest
@@ -56,7 +71,17 @@ results/runs/2026-05-27_w1_ewidence/session/session_notes.md
 results/runs/2026-05-27_w1_ewidence/session/artifact_manifest.txt
 docs/operations/agent-state.md
 docs/writeups/w1-multi-model-serving-baseline.md
+docs/writeups/w1/t8-litellm-overhead.md
+docs/writeups/w1/t3-deepseek-vram-budget.md
+docs/writeups/w1/t1-kimi-bringup.md
+docs/writeups/w1/t6-eagle3-speculative-decoding.md
+docs/writeups/w1/t5-observability.md
 ```
+
+Note: since commit `eb21323`, `w1-multi-model-serving-baseline.md` is
+the top-level **index** for W1. Per-thread content lives in
+`docs/writeups/w1/t*-*.md`. Read the relevant per-thread file before
+editing — that is where T8/T3/T1/T6/T5 content actually goes.
 
 Purpose:
 
@@ -94,7 +119,7 @@ For Kimi and DeepSeek separately, compute:
 - proxy median `e2e_seconds`,
 - paired median E2E delta,
 - min/max paired deltas,
-- median `output_tokens_per_second` for direct and proxy.
+- median `output_tokens_per_second` for direct and proxy **for Kimi only** — for DeepSeek this metric is not meaningful in this dataset because `completion_tokens` median is ~2 (the "OK" output). Either skip it for DeepSeek, or report it with the `completion_tokens` column right next to it so readers see why the value is noisy.
 
 Fields to parse:
 
@@ -103,18 +128,44 @@ metrics.ttft_seconds
 metrics.ttft_any_token_seconds
 metrics.e2e_seconds
 metrics.output_tokens_per_second
+metrics.completion_tokens
+metrics.output_chars
+metrics.reasoning_chars
 metrics.completed
 error
 ```
 
+`completion_tokens` is required to detect short-output workloads
+(DeepSeek `OK` returns 2 tokens); `output_chars`/`reasoning_chars`
+are needed for Kimi to show that the proxy delivers
+`reasoning_chars=0` while direct delivers a real reasoning stream
+(typical example: ~189 chars), even though the *final-answer*
+character count is identical.
+
 Important Kimi caveat:
 
-Kimi direct and Kimi proxy may expose reasoning chunks differently. For Kimi, analyze both:
+Kimi direct and Kimi proxy expose reasoning chunks very differently. For Kimi, analyze both:
 
 - final-answer TTFT: `ttft_seconds`,
 - any-token TTFT: `ttft_any_token_seconds`.
 
+Expected pattern from the 2026-05-27 dataset:
+
+- `ttft_seconds` delta is on the order of tens of milliseconds → routing overhead.
+- `ttft_any_token_seconds` delta is ~+0.40 s (~3×) → proxy collapses `delta.reasoning` chunks. This is a behavioral change in the stream, not a latency overhead, and must be reported as such.
+
 Do not compare only one TTFT field without mentioning why.
+
+LiteLLM-side cross-check:
+
+After computing client-side medians, parse
+`t8_proxy_overhead/litellm_metrics_post.txt` (Prometheus exposition
+format) and pull the relevant per-route series, e.g.
+`litellm_request_total_latency_metric_*` and
+`litellm_request_total_latency_metric_count{model="kimi-k2.6"}` and
+the equivalent for `DeepSeek-V4-Flash`. Compare proxy-side recorded
+latency to the client-side proxy median. If the two disagree
+materially, that is itself a finding for T8 (and possibly T5).
 
 ---
 
@@ -135,17 +186,34 @@ Suggested structure:
 
 ## Method
 
+## Controls
+
+(list every field from `metrics.request` / `metrics.controls`:
+`model`, `base_url`, `temperature`, `top_p`, `seed`, `max_tokens`,
+`stream`, prompt identifier. Both A and B paths should be identical
+for everything except `base_url`.)
+
 ## Results
 
-| Model | Path | n | median TTFT | median any-token TTFT | median E2E | median output tok/s |
-|---|---:|---:|---:|---:|---:|---:|
+| Model | Path | n | median TTFT | median any-token TTFT | median E2E | median completion_tokens | median output tok/s |
+|---|---:|---:|---:|---:|---:|---:|---:|
 
 ## Paired deltas
 
 | Model | Metric | median proxy-direct delta | min | max |
 |---|---:|---:|---:|---:|
 
+## LiteLLM cross-check
+
+| Model | client-side proxy median | LiteLLM-side proxy median | delta |
+|---|---:|---:|---:|
+
 ## Interpretation
+
+(split into two sub-headers:)
+
+### Network/routing overhead
+### Streaming-semantics caveat (Kimi)
 
 ## Limitations
 ```
@@ -154,28 +222,36 @@ Required limitations:
 
 - single prompt,
 - single-stream,
-- short output,
+- short output (DeepSeek `completion_tokens` ≈ 2 — throughput metrics for DeepSeek are not meaningful),
 - no concurrency,
-- no production traffic,
-- Kimi reasoning stream handling differs between direct and proxy.
+- no production traffic.
+
+The "Streaming-semantics caveat (Kimi)" subsection is **separate**
+from Limitations on purpose: it is a qualitative behavioral change,
+not a generalization caveat. It should describe that the proxy
+collapses `delta.reasoning` / `delta.reasoning_content` into the
+final-answer stream and link to T2.
 
 This file should be a stable artifact that W1 can reference.
 
 ---
 
-## 4. Update W1 — T8 section
+## 4. Update W1 — T8 thread file
 
-Edit:
+Edit target (per-thread, **not** the top-level index):
 
 ```text
-docs/writeups/w1-multi-model-serving-baseline.md
+docs/writeups/w1/t8-litellm-overhead.md
 ```
 
-Add or update the T8 section:
+This file already has a placeholder structure
+(Question / Measurement design / Controls / Expected output). Fill
+the existing sections in; do **not** add a new "### T8 — LiteLLM
+Proxy overhead" wrapper section.
+
+Body text to integrate (rewrite to fit existing sections):
 
 ```md
-### T8 — LiteLLM Proxy overhead
-
 The 2026-05-27 server session captured paired direct-vs-proxy measurements for both served models.
 
 For Kimi-K2.6, requests were sent directly to vLLM on `:8000` and through LiteLLM Proxy on `:4000`.
@@ -186,11 +262,43 @@ This was a single-stream, short-prompt smoke-style overhead check, not a product
 
 Then insert the result table from `t8_proxy_overhead/summary.md`.
 
-Safe interpretation language:
+Safe interpretation language — **two findings, reported separately**:
 
 ```md
-The evidence suggests that LiteLLM Proxy overhead is measurable but small for this narrow workload. This is sufficient to keep LiteLLM in W1 as the multi-model routing layer, but it is not sufficient to claim production-grade overhead under concurrency.
+### Network/routing overhead
+
+Final-answer TTFT delta is small in this single-stream smoke workload
+(median ~+16 ms for Kimi, ~+27 ms for DeepSeek). E2E delta is on the
+same order (~+7 ms Kimi, ~+35 ms DeepSeek). This is consistent with
+keeping LiteLLM as the multi-model routing layer for W1, but it does
+not say anything about behavior under concurrency.
+
+### Streaming-semantics change (Kimi)
+
+Independently of the pure latency overhead, the proxy materially
+changes Kimi's streaming behavior. Median `ttft_any_token_seconds`
+rises from ~0.21 s on the direct path to ~0.61 s on the proxy path
+(~3× regression, paired delta ~+0.40 s). The proxy delivers
+`reasoning_chars=0` while the direct stream carries the reasoning
+trace (`reasoning_chars` ≈ 189 in the sample). This is not extra
+latency — it is the proxy collapsing `delta.reasoning` /
+`delta.reasoning_content` into the final-answer stream. It ties
+directly to T2 (reasoning-trace TTFT parser, issue #31).
+
+Median Kimi `output_tokens_per_second` also drops ~5.6 % under the
+proxy path in this single-stream workload.
 ```
+
+Top-level index update (do this too, but **only this**):
+
+In `docs/writeups/w1-multi-model-serving-baseline.md`, edit only
+the **Thread map** table — update the "Evidence status" column:
+
+- T8: `to be measured` → `single-stream paired baseline (2026-05-27)`
+- T3: `to be collected` → `partial baseline (2026-05-27, cap020 vs 0.25 caveat)`
+
+Do not duplicate the T8 body in the index file. The index stays as
+an index.
 
 Avoid overclaiming:
 
@@ -198,39 +306,47 @@ Avoid overclaiming:
 LiteLLM overhead is negligible
 LiteLLM is production validated
 proxy has no performance impact
+proxy is invisible to the client
 ```
 
 Prefer:
 
 ```text
-small in this single-stream smoke workload
-acceptable for W1 routing experiments
+small final-answer TTFT/E2E delta in this single-stream smoke workload
+streaming semantics for Kimi reasoning are changed by the proxy
 requires concurrency validation later
+acceptable for W1 routing experiments
 ```
 
 ---
 
-## 5. Update W1 — T3 DeepSeek VRAM section
+## 5. Update W1 — T3 DeepSeek VRAM thread file
+
+Edit target: `docs/writeups/w1/t3-deepseek-vram-budget.md`
+(per-thread, not the top-level index).
 
 T3 must be written as partial evidence, not as a completed sweep.
 
 Suggested text:
 
 ```md
-### T3 — DeepSeek VRAM cap baseline
-
 The 2026-05-27 session captured a DeepSeek-V4-Flash startup/runtime log and one direct TTFT smoke result. This is useful as a runtime baseline, but it does not complete the planned VRAM sweep.
 
 Important caveat: the artifact filename says `cap020`, but the vLLM runtime log records `gpu_memory_utilization: 0.25`. Therefore this evidence is treated as a 0.25 runtime baseline until proven otherwise.
 ```
 
-Facts worth including:
+Facts worth including (all from `log_cap020_baseline.txt` line 8):
 
 - vLLM `0.20.0`,
 - model `deepseek-ai/DeepSeek-V4-Flash`,
 - TP=8,
 - FP8 KV cache,
 - MTP speculative config with `num_speculative_tokens=1`,
+- `max_model_len=65536`,
+- `max_num_seqs=2`,
+- `max_num_batched_tokens=2048` (vLLM warned this may be suboptimal with the speculative settings),
+- `block_size=256`,
+- `enforce_eager=True` (numbers are eager-mode, no CUDA graph capture),
 - available KV cache memory: about 13.5 GiB,
 - GPU KV cache size: 10,996 tokens,
 - short direct TTFT request completed.
@@ -238,14 +354,23 @@ Facts worth including:
 Safe conclusion:
 
 ```md
-This evidence supports that DeepSeek could start and serve a short request under the recorded configuration, but it does not yet justify the final VRAM cap choice.
+This evidence supports that DeepSeek could start and serve a short request under the recorded configuration, but it does not yet justify the final VRAM cap choice — and it does not validate the previously committed 0.20 default that the same compose file simultaneously moved to 0.25.
 ```
 
 ---
 
 ## 6. Update W1 — T1, T6, and T5 status
 
-Add short, explicit status notes.
+Edit targets (per-thread, not the top-level index):
+
+```text
+docs/writeups/w1/t1-kimi-bringup.md
+docs/writeups/w1/t6-eagle3-speculative-decoding.md
+docs/writeups/w1/t5-observability.md
+```
+
+Add short, explicit status notes in the relevant section of each
+file.
 
 ### T1 — DEP startup failure capture
 
@@ -262,14 +387,17 @@ Not completed in the 2026-05-27 session. Kimi remained configured with Eagle3, b
 ### T5 — Dashboard / Prometheus validation
 
 ```md
-Not completed beyond a LiteLLM metrics snapshot. Prometheus and Grafana were running, but the dashboard was not validated under live load during this session.
+Not completed beyond a single LiteLLM metrics snapshot (`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt`). Prometheus and Grafana were running, but dashboard panels were not validated under live load during this session.
 ```
 
 ---
 
 ## 7. Add an evidence quality section
 
-Add a section like this to W1:
+Add this section to the **top-level index**
+(`docs/writeups/w1-multi-model-serving-baseline.md`) — it is a
+cross-thread roll-up and belongs in the index, not in any single
+thread file:
 
 ```md
 ## Evidence quality after 2026-05-27
@@ -309,40 +437,54 @@ Add or update follow-up list:
 
 ## 9. Local validation
 
-After editing:
+Per `CLAUDE.md` "Standard validation", this is a **docs-only** change.
+Required:
 
 ```bash
+git status
 git diff --check
 ```
 
-Optional, if no Python code changed:
+`ruff` and `pytest` are **not** required here because no `.py` files
+are touched. Only run them if you also add a committed Python helper
+under `benchmarks/scripts/` (in which case the full suite applies):
 
 ```bash
 uv run ruff check .
-```
-
-Do not run the full test suite unless you commit analysis code.
-
-If you add a reusable Python analysis helper under `benchmarks/scripts/`, then run:
-
-```bash
 uv run pytest -q
 ```
 
-For this session, prefer **no new production script** unless the analysis is likely to be reused. A one-off local snippet plus committed `summary.md` is enough.
+For this session, prefer **no new production script** unless the
+analysis is likely to be reused. A one-off local snippet plus
+committed `summary.md` is enough.
 
 ---
 
 ## 10. Commit
 
-Recommended commit:
+Recommended commits (per-thread files, index, and summary artifact):
 
 ```bash
-git add docs/writeups/w1-multi-model-serving-baseline.md \
+git add docs/writeups/w1/t8-litellm-overhead.md \
+        docs/writeups/w1/t3-deepseek-vram-budget.md \
+        docs/writeups/w1/t1-kimi-bringup.md \
+        docs/writeups/w1/t6-eagle3-speculative-decoding.md \
+        docs/writeups/w1/t5-observability.md \
+        docs/writeups/w1-multi-model-serving-baseline.md \
         results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/summary.md
 
-git commit -m "docs: update W1 write-up with 2026-05-27 evidence"
-git push
+git commit -m "docs: update W1 thread files with 2026-05-27 evidence"
+```
+
+Then refresh `agent-state.md` (required by `CLAUDE.md` "Agent state
+protocol" — "At the end of a meaningful task: update
+`agent-state.md`"). Either fold it into the same commit, or use a
+follow-up:
+
+```bash
+git add docs/operations/agent-state.md
+git commit -m "docs: refresh agent-state after W1 evidence write-up"
+git push -u origin HEAD
 ```
 
 If you also rename the directory, do it separately:
@@ -361,16 +503,16 @@ Do not combine the rename with the W1 write-up update.
 
 The session is complete when:
 
-- `t8_proxy_overhead/summary.md` exists and contains computed direct-vs-proxy deltas.
-- W1 write-up includes T8 results and interpretation.
-- W1 write-up describes T3 as partial evidence with the `cap020` vs `0.25` caveat.
-- W1 write-up explicitly marks T1, T6, and T5 as incomplete/deferred.
-- W1 write-up includes an evidence quality table.
-- The commit is pushed to GitHub.
+- `t8_proxy_overhead/summary.md` exists and contains computed direct-vs-proxy deltas, with separate sections for routing overhead and Kimi streaming-semantics change, plus a LiteLLM-side cross-check.
+- Per-thread W1 files (`docs/writeups/w1/t8-…`, `t3-…`, `t1-…`, `t6-…`, `t5-…`) carry the new evidence/status text.
+- Top-level `docs/writeups/w1-multi-model-serving-baseline.md` Thread map "Evidence status" column is updated for T8 and T3, and the cross-thread "Evidence quality after 2026-05-27" section is added there.
+- `docs/operations/agent-state.md` handoff log gets a new entry.
+- The commit is pushed.
 
 Non-goals for this session:
 
 - no new server work,
 - no model restarts,
 - no new benchmarks,
-- no claim that W1 is fully complete.
+- no claim that W1 is fully complete,
+- no edits to per-thread W1 bodies in the top-level index file (the index stays an index).
