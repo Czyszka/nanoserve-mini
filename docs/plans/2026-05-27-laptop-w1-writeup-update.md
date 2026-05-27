@@ -313,8 +313,18 @@ rises from ~0.21 s on the direct path to ~0.61 s on the proxy path
 `reasoning_chars=0` while the direct stream carries the reasoning
 trace (`reasoning_chars` ≈ 189 in the sample). This is not extra
 latency — it is the proxy collapsing `delta.reasoning` /
-`delta.reasoning_content` into the final-answer stream. It ties
-directly to T2 (reasoning-trace TTFT parser, issue #31).
+`delta.reasoning_content` into the final-answer stream.
+
+> **Cross-reference to T2.** This finding directly limits the
+> operational usefulness of T2 ([t2-reasoning-ttft.md](t2-reasoning-ttft.md)).
+> The reasoning-trace TTFT parser fixed in issue #31 distinguishes
+> `ttft_any_token_seconds` from final-answer `ttft_seconds` against
+> the direct vLLM stream, but not against the proxy-mediated stream
+> — proxy consumers see `reasoning_chars=0` and an any-token TTFT
+> that collapses onto the final-answer TTFT. T2 measurement
+> capability and T8 proxy behavior must be read together to avoid
+> overclaiming what reasoning-aware TTFT means at the LiteLLM
+> boundary.
 
 Median Kimi `output_tokens_per_second` also drops ~5.6 % under the
 proxy path in this single-stream workload.
