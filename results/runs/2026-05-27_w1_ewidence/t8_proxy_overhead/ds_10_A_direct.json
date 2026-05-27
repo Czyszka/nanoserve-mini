@@ -1,0 +1,70 @@
+{
+  "schema": "nanoserve-mini.ttft-once.v2",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_latency",
+  "timestamp": "2026-05-27T12:43:29.553571+00:00",
+  "controls": {
+    "model": "DeepSeek-V4-Flash",
+    "base_url": "http://127.0.0.1:8004",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 64
+    },
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "workload": "single-prompt-smoke",
+    "workload_spec": {
+      "name": "single-prompt-smoke",
+      "prompt_source": "literal",
+      "prompt_chars": 6,
+      "max_tokens": 64,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 64
+      },
+      "concurrency": 1,
+      "arrival_process": "single",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": null,
+    "run_uuid": "0eba2e7580604a2db55ad6ff7b5ccadd",
+    "script_name": "measure_ttft_once.py",
+    "git_commit": "5ce0881ba5c634af68dd02b2f8a57fe8ca9b8dc0"
+  },
+  "request": {
+    "prompt": "say OK",
+    "max_tokens": 64,
+    "temperature": 0.0
+  },
+  "metrics": {
+    "ttft_seconds": 0.25221599100041203,
+    "ttft_any_token_seconds": 0.25221599100041203,
+    "e2e_seconds": 0.40207314800136373,
+    "tpot_seconds": 0.1498571570009517,
+    "tpot_any_token_seconds": 0.1498571570009517,
+    "output_tokens_per_second": 4.974219268164648,
+    "chunks_received": 4,
+    "output_chars": 2,
+    "reasoning_chars": 0,
+    "prompt_tokens": 6,
+    "completion_tokens": 2,
+    "total_tokens": 8,
+    "completed": true
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "output_text": "OK",
+  "error": null
+}

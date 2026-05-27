@@ -1,0 +1,67 @@
+{
+  "schema": "nanoserve-mini.ttft-once.v2",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_latency",
+  "timestamp": "2026-05-19T10:55:34.302257+00:00",
+  "controls": {
+    "model": "DeepSeek-V4-Flash",
+    "base_url": "http://127.0.0.1:4000",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 64
+    },
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "workload": "single-target-bench-suite",
+    "workload_spec": {
+      "name": "single-target-bench-suite",
+      "prompt_source": "literal",
+      "prompt_chars": 29,
+      "max_tokens": 64,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 64
+      },
+      "concurrency": 1,
+      "arrival_process": "single",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": "2026-05-19_deepseek-v4-flash_run-05",
+    "run_uuid": "78038def5c7b442cb10abdc9728c98b2",
+    "script_name": "measure_ttft_once.py",
+    "git_commit": "bd028eed3fa1667291c0ddcfa86026d14e6f4084"
+  },
+  "request": {
+    "prompt": "Say hi in one short sentence.",
+    "max_tokens": 64,
+    "temperature": 0.0
+  },
+  "metrics": {
+    "ttft_seconds": 0.3539294150000387,
+    "e2e_seconds": 0.5435172640000019,
+    "tpot_seconds": 0.09479392449998159,
+    "output_tokens_per_second": 5.519603881432531,
+    "chunks_received": 5,
+    "output_chars": 3,
+    "prompt_tokens": 11,
+    "completion_tokens": 3,
+    "total_tokens": 14,
+    "completed": true
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "output_text": "Hi!",
+  "error": null
+}

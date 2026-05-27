@@ -1,0 +1,102 @@
+{
+  "schema": "nanoserve-mini.sequential-bench.v3",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_repeated",
+  "timestamp": "2026-05-19T11:08:59.033143+00:00",
+  "controls": {
+    "model": "DeepSeek-V4-Flash",
+    "base_url": "http://127.0.0.1:4000",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 64
+    },
+    "warmup_runs": 1,
+    "measured_runs": 3,
+    "concurrency": 1,
+    "workload": "single-target-bench-suite",
+    "workload_spec": {
+      "name": "single-target-bench-suite",
+      "prompt_source": "literal",
+      "prompt_chars": 29,
+      "max_tokens": 64,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 64
+      },
+      "concurrency": 1,
+      "arrival_process": "sequential",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": "2026-05-19_deepseek-v4-flash_run-06",
+    "run_uuid": "1ee576b53fc444b18dcda55dacb46c10",
+    "script_name": "run_sequential_benchmark.py",
+    "git_commit": "bd028eed3fa1667291c0ddcfa86026d14e6f4084"
+  },
+  "request": {
+    "prompt": "Say hi in one short sentence.",
+    "max_tokens": 64,
+    "temperature": 0.0
+  },
+  "summary": {
+    "measured_runs": 3,
+    "errors": 0,
+    "ttft_seconds": {
+      "count": 3,
+      "min": 0.359294327000498,
+      "p50": 0.3614375899996958,
+      "p95": 0.3712908619998416,
+      "max": 0.3723856699998578,
+      "mean": 0.3643725290000172
+    },
+    "e2e_seconds": {
+      "count": 3,
+      "min": 0.5496638320000784,
+      "p50": 0.550970905000213,
+      "p95": 0.5712212982997699,
+      "max": 0.5734713419997206,
+      "mean": 0.5580353596666706
+    },
+    "tpot_seconds": {
+      "count": 3,
+      "min": 0.09476665750025859,
+      "p50": 0.09518475249979019,
+      "p95": 0.10000702764991728,
+      "max": 0.10054283599993141,
+      "mean": 0.09683141533332673
+    },
+    "prompt_tokens": {
+      "count": 3,
+      "min": 11.0,
+      "p50": 11.0,
+      "p95": 11.0,
+      "max": 11.0,
+      "mean": 11.0
+    },
+    "completion_tokens": {
+      "count": 3,
+      "min": 3.0,
+      "p50": 3.0,
+      "p95": 3.0,
+      "max": 3.0,
+      "mean": 3.0
+    },
+    "measured_wall_clock_seconds": 1.674480198999845,
+    "request_throughput": 1.7916007617121292,
+    "output_chars_per_second": 5.374802285136387,
+    "output_tokens_per_second": 5.374802285136387
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "error": null
+}

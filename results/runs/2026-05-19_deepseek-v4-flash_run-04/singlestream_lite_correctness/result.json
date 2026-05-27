@@ -1,0 +1,67 @@
+{
+  "schema": "nanoserve-mini.request-once.v2",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_correctness",
+  "timestamp": "2026-05-19T10:38:02.700456+00:00",
+  "controls": {
+    "model": "DeepSeek-V4-Flash",
+    "base_url": "http://127.0.0.1:4000",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 64
+    },
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "workload": "single-target-bench-suite",
+    "workload_spec": {
+      "name": "single-target-bench-suite",
+      "prompt_source": "literal",
+      "prompt_chars": 29,
+      "max_tokens": 64,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 64
+      },
+      "concurrency": 1,
+      "arrival_process": "single",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": "2026-05-19_deepseek-v4-flash_run-04",
+    "run_uuid": "5e72a41d1a404d129962a6377a1ce1e7",
+    "script_name": "request_once.py",
+    "git_commit": "bd028eed3fa1667291c0ddcfa86026d14e6f4084"
+  },
+  "request": {
+    "prompt": "Say hi in one short sentence.",
+    "max_tokens": 64,
+    "temperature": 0.0
+  },
+  "metrics": {
+    "e2e_seconds": 15.51208723100035,
+    "output_chars": 3,
+    "prompt_tokens": 11,
+    "completion_tokens": 3,
+    "total_tokens": 14,
+    "completed": true
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "response": {
+    "id": "chatcmpl-b914fca87fe9be2f",
+    "model": "DeepSeek-V4-Flash"
+  },
+  "output_text": "Hi!",
+  "error": null
+}
