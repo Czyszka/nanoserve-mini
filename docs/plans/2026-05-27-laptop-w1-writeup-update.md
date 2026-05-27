@@ -232,12 +232,54 @@ Edit target (per-thread, **not** the top-level index):
 docs/writeups/w1/t8-litellm-overhead.md
 ```
 
-This file already has a placeholder structure
-(Question / Measurement design / Controls / Expected output). Fill
-the existing sections in; do **not** add a new "### T8 — LiteLLM
-Proxy overhead" wrapper section.
+### Migrate the pre-evidence skeleton to a post-evidence document
 
-Body text to integrate (rewrite to fit existing sections):
+The current file is a pre-evidence placeholder:
+
+```text
+# T8 — Does LiteLLM Proxy add measurable overhead
+<!-- TODO: measurement segment. ... evidence (planned ...) ... -->
+## Planned shape
+## Question
+## Measurement design
+## Controls
+## Expected output
+```
+
+Migrate to the post-evidence shape below. Do **not** keep the
+planning placeholders alongside the new sections — they become
+archeology once the file describes real results.
+
+| Existing section | Action |
+|---|---|
+| HTML `<!-- TODO ... -->` block at the top | Remove. The artifact paths it lists now live in the file body. |
+| `## Planned shape` | Remove. Was a planning marker, not content. |
+| `## Question` | Keep. Light refresh if needed to match the actual measurement. |
+| `## Measurement design` | Keep. Add concrete ports (Kimi `:8000`/`:4000`, DeepSeek `:8004`/`:4000`) and pair count (10 per model). |
+| `## Controls` | Keep. Replace the prose list with the actual `metrics.controls` / `metrics.request` values from one representative JSON (`temperature`, `top_p`, `seed`, `max_tokens`, `stream=true`, model, base_url). |
+| `## Expected output` | Remove. Was a placeholder for a future result; replaced by the new `## 2026-05-27 results` and `## Findings` sections below. |
+
+Add (in this order):
+
+```text
+## 2026-05-27 results
+(table from t8_proxy_overhead/summary.md — Model × Path × n ×
+median TTFT × median any-token TTFT × median E2E ×
+median completion_tokens × median output tok/s)
+
+## Findings
+### Network/routing overhead
+### Streaming-semantics change (Kimi)
+
+## Limitations and follow-up
+(1:1 from summary.md "Required limitations", including the
+proxy-side cross-check 404 caveat)
+```
+
+### Body text for the new sections
+
+Opening paragraph (goes above the `## 2026-05-27 results` table, as
+a short intro):
 
 ```md
 The 2026-05-27 server session captured paired direct-vs-proxy measurements for both served models.
@@ -245,12 +287,11 @@ The 2026-05-27 server session captured paired direct-vs-proxy measurements for b
 For Kimi-K2.6, requests were sent directly to vLLM on `:8000` and through LiteLLM Proxy on `:4000`.
 For DeepSeek-V4-Flash, requests were sent directly to vLLM-small on `:8004` and through LiteLLM Proxy on `:4000`.
 
-This was a single-stream, short-prompt smoke-style overhead check, not a production concurrency benchmark.
+10 paired requests per model. Single-stream, short-prompt smoke-style overhead check, not a production concurrency benchmark.
 ```
 
-Then insert the result table from `t8_proxy_overhead/summary.md`.
-
-Safe interpretation language — **two findings, reported separately**:
+Safe interpretation language for the `## Findings` subsections —
+**two findings, reported separately**:
 
 ```md
 ### Network/routing overhead
@@ -259,7 +300,9 @@ Final-answer TTFT delta is small in this single-stream smoke workload
 (median ~+16 ms for Kimi, ~+27 ms for DeepSeek). E2E delta is on the
 same order (~+7 ms Kimi, ~+35 ms DeepSeek). This is consistent with
 keeping LiteLLM as the multi-model routing layer for W1, but it does
-not say anything about behavior under concurrency.
+not say anything about (a) behavior under concurrency, or (b) which
+hop (client→proxy or proxy→vLLM) carries the ~16 ms — proxy-side
+metrics were not captured in this session.
 
 ### Streaming-semantics change (Kimi)
 
