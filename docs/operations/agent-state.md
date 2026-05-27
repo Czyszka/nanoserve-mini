@@ -23,8 +23,8 @@ Phase 1 is now past the minimum proxy/benchmark milestone, but not fully complet
 Live state:
 
 - Kimi-K2.6 runs on the 8×H200 NVL server through Docker Compose as service `vllm`, exposed on port 8000, using TP=8 + Eagle3 speculative decoding.
-- DeepSeek-V4-Flash runs alongside Kimi as service `vllm-small`, exposed on port 8004, capped around 20% VRAM in the compose configuration.
-- OpenWebUI is running and communicates with the vLLM services.
+- DeepSeek-V4-Flash runs alongside Kimi as service `vllm-small`, exposed on port 8004; current compose default is `DEEPSEEK_GPU_MEM_UTIL:-0.25` after the 2026-05-27 session, but W1 notes still need to reconcile this with the earlier 0.20 plan.
+- OpenWebUI is running in compose, but the 2026-05-27 start snapshot showed it as unhealthy.
 - LiteLLM Proxy runs on port 4000 and routes by `model` to Kimi and DeepSeek. Smoke tests through proxy passed for both upstreams.
 - `run_bench_suite.py` has been run through LiteLLM Proxy for both Kimi K2.6 and DeepSeek-V4-Flash; results are committed.
 - Prometheus + Grafana configuration exists under `serving/compose/`, including a provisioned Phase 1 dashboard (`grafana/provisioning/dashboards/vllm-phase1.json`). Containers have been started; the dashboard panels still need validation against real metric names with live load.
@@ -33,7 +33,7 @@ Live state:
 Phase 1 deliverables still owed:
 
 - **Prometheus + Grafana dashboard** showing useful live vLLM metrics during load — a provisioned dashboard JSON now exists; remaining work is validating its panels against real metric names with live load.
-- **W1 write-up** — not started; should be drafted after observability/dashboard is coherent enough to describe.
+- **W1 write-up** — started, but still blocked on clean interpretation of 2026-05-27 evidence and missing T1/T6/T3 sweep artifacts.
 
 ---
 
@@ -88,23 +88,16 @@ Active issues and where each stands — the project's live pulse. One line each:
 status, not a task list. Update when work moves.
 
 - **#34 — observability/dashboard:** dashboard JSON provisioned; metric-name
-  inventory and panel validation under live load still pending.
-- **#37 — W1 write-up:** `docs/writeups/w1-multi-model-serving-baseline.md`
-  created with the T1–T8 thread map; T2 written in full from the captured
-  stream-debug artefacts and tightened against repo evidence after senior
-  AI/ML Ops review; T1/T3/T6/T8 server evidence capture planned for the
-  2026-05-27 session (`docs/plans/2026-05-27-server-session.md`); T4/T5
-  laptop analysis not started; writing-guide + template deferred.
-- **2026-05-27 server session prep:** plan at
-  `docs/plans/2026-05-27-server-session.md` covers T8 proxy overhead
-  (paired A/B), T3 DeepSeek VRAM sweep at 0.15/0.25, T6 Eagle3 on/off,
-  T1 DEP startup capture; ~4h budget with checkpoints; T5 dashboard
-  validation is stretch-only. Pre-flight: compose env var for
-  DeepSeek VRAM cap is in place and documented in `.env.example`;
-  evidence-path stubs landed under TODOs in the W1 write-up. Plan
-  hardened on 2026-05-26 with explicit `RUN_DIR` initialization,
-  corrected Prometheus KV metric name, `curl --data-urlencode` queries,
-  and an artifact manifest step.
+  inventory and panel validation under live load still pending; 2026-05-27 only
+  captured a LiteLLM metrics snapshot, not full dashboard evidence.
+- **#37 — W1 write-up:** T8 proxy-overhead evidence captured for Kimi and
+  DeepSeek; T3 has only a baseline artifact with a `cap020` filename but runtime
+  evidence showing `gpu_memory_utilization: 0.25`; T1 DEP capture and T6 Eagle3
+  ON/OFF evidence are still missing. Session notes and an artifact manifest live
+  under `results/runs/2026-05-27_w1_ewidence/session/`.
+- **2026-05-27 server session cleanup:** run directory contains a typo
+  (`w1_ewidence`). Prefer a dedicated local-git cleanup commit for the path move
+  to `w1_evidence`, because this is a many-file rename.
 
 ---
 
@@ -113,18 +106,18 @@ status, not a task list. Update when work moves.
 Detailed tasks live in issues; `docs/plans/2026-05-19-post-server-laptop-plan.md`
 sequences them. This section only points at active work — it is not a task list.
 
-- **#34** — observability: TTFT reconciliation, DCGM/GPU hardware metrics, Grafana
-  panel validation under live load.
-- **#37** — W1 write-up: methodology + thread inventory T1–T8; evidence capture
-  split between server and laptop.
+- **#37** — analyze the T8 paired direct/proxy deltas on the laptop and write
+  the W1 T8 segment with clear controls and limitations.
+- **#37** — schedule a follow-up server slot for missing T1/T6/T3 evidence:
+  DEP startup failure capture, Kimi Eagle3 ON/OFF comparison, and explicit
+  DeepSeek VRAM cap sweep with filenames matching actual runtime caps.
+- **#34** — after W1 evidence is coherent, validate Grafana panels against live
+  metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** execute `docs/plans/2026-05-27-server-session.md`
-on the GPU server — server-only capture for #37 T1/T3/T6/T8 (Kimi DEP
-startup logs, DeepSeek VRAM justification, Eagle3 on/off, paired proxy
-overhead) plus the queued `rg` install. Dashboard inventory (#34) and
-W1 laptop-side analysis (T4, T5 write-up) come after the session.
-Server plan has been hardened; use the checked-in plan after `git pull`,
-not an older copied command block.
+**Next concrete step:** from a local checkout, rename
+`results/runs/2026-05-27_w1_ewidence` to
+`results/runs/2026-05-27_w1_evidence`, then analyze T8 deltas and document which
+W1 threads have usable evidence versus missing evidence.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -179,9 +172,9 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 | vLLM setup | Docker Compose using `vllm/vllm-openai:v0.20.0-cu130-ubuntu2404` |
 | vLLM strategy | Kimi uses TP=8 + Eagle3 speculative decoding; single-node DEP did not work |
 | Primary model | `moonshotai/Kimi-K2.6` served as `kimi-k2.6` |
-| Small-model experiment | `deepseek-ai/DeepSeek-V4-Flash` served as `DeepSeek-V4-Flash`, capped at ~20% VRAM across 8 GPUs |
+| Small-model experiment | `deepseek-ai/DeepSeek-V4-Flash` served as `DeepSeek-V4-Flash`, currently tested around 0.25 VRAM cap in the 2026-05-27 artifacts; reconcile before W1 claims |
 | Compose file | `serving/compose/docker-compose.kimi-k2.6.yml` is the canonical Kimi/DeepSeek/OpenWebUI/LiteLLM compose |
-| Interactive UI | OpenWebUI remains working with current stack; no urgent need to force it behind LiteLLM |
+| Interactive UI | OpenWebUI exists in compose but was unhealthy in the 2026-05-27 start snapshot |
 | Multi-model proxy | LiteLLM Proxy is in compose and smoke-tested; benchmark suite ran through it for both models |
 | Observability | Prometheus/Grafana compose exists; runtime data should use explicit host paths when local control matters |
 | Benchmark methodology | MLPerf-inspired lite, not official MLPerf; first modes are SingleStream-lite correctness/latency/repeated |
@@ -201,10 +194,19 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
 - [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
+- [ ] Should the 2026-05-27 run directory be renamed in Git from `w1_ewidence` to `w1_evidence` before W1 links are finalized?
 
 ---
 
 ## Last validation
+
+2026-05-27 session documentation cleanup:
+
+```text
+GitHub contents API writes only; no local validation run in this environment.
+```
+
+Added `session/session_notes.md`, `session/artifact_manifest.txt`, and this agent-state update. No executable code changed. The many-file run-directory rename remains deferred to a local git checkout.
 
 2026-05-26 documentation/config plan hardening:
 
@@ -254,6 +256,13 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+
+### 2026-05-27 - Server-session evidence triage and notes
+
+- Why: make the 2026-05-27 server commit usable for W1 by documenting what evidence exists, what is partial, and what is missing.
+- Did: added `session/session_notes.md`, added `session/artifact_manifest.txt`, and updated this handoff state. T8 evidence is usable for paired proxy-overhead analysis. T3 is partial and has a filename/runtime-cap mismatch (`cap020` file, runtime log shows `gpu_memory_utilization: 0.25`). T1 DEP and T6 Eagle3 ON/OFF are still missing.
+- Validation: GitHub contents API writes only; no local `git diff --check` available here.
+- Next: do the many-file run-directory rename from a local checkout, then analyze T8 deltas and schedule a follow-up server slot for T1/T3/T6.
 
 ### 2026-05-26 - W1 server-session plan hardening
 
