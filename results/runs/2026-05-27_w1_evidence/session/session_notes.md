@@ -200,30 +200,13 @@ This file and `artifact_manifest.txt` were added later as cleanup documentation.
 
 ## Repository hygiene observations
 
-### Run directory typo
+### Run directory typo (resolved)
 
-The run directory was committed as:
-
-```text
-results/runs/2026-05-27_w1_ewidence
-```
-
-It should probably be:
-
-```text
-results/runs/2026-05-27_w1_evidence
-```
-
-This should be fixed with a local `git mv` commit, not through the GitHub Contents API, because this is a many-file path move.
-
-Recommended local cleanup:
-
-```bash
-git pull
-git mv results/runs/2026-05-27_w1_ewidence results/runs/2026-05-27_w1_evidence
-git commit -m "chore: fix 2026-05-27 evidence run path typo"
-git push
-```
+The run directory was originally committed as
+`results/runs/2026-05-27_w1_ewidence` (typo). Resolved by a later
+`git mv` commit moving the tree to `results/runs/2026-05-27_w1_evidence`.
+All current paths in this document and in `artifact_manifest.txt` reflect
+the corrected name.
 
 ### Historical 2026-05-19 artifacts included
 

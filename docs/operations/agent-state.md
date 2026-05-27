@@ -94,10 +94,7 @@ status, not a task list. Update when work moves.
   DeepSeek; T3 has only a baseline artifact with a `cap020` filename but runtime
   evidence showing `gpu_memory_utilization: 0.25`; T1 DEP capture and T6 Eagle3
   ON/OFF evidence are still missing. Session notes and an artifact manifest live
-  under `results/runs/2026-05-27_w1_ewidence/session/`.
-- **2026-05-27 server session cleanup:** run directory contains a typo
-  (`w1_ewidence`). Prefer a dedicated local-git cleanup commit for the path move
-  to `w1_evidence`, because this is a many-file rename.
+  under `results/runs/2026-05-27_w1_evidence/session/`.
 
 ---
 
@@ -114,9 +111,8 @@ sequences them. This section only points at active work — it is not a task lis
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** from a local checkout, rename
-`results/runs/2026-05-27_w1_ewidence` to
-`results/runs/2026-05-27_w1_evidence`, then analyze T8 deltas and document which
+**Next concrete step:** analyze T8 deltas in
+`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/` and document which
 W1 threads have usable evidence versus missing evidence.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
@@ -194,7 +190,6 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
 - [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
-- [ ] Should the 2026-05-27 run directory be renamed in Git from `w1_ewidence` to `w1_evidence` before W1 links are finalized?
 
 ---
 

@@ -40,23 +40,10 @@ open a PR at the end:
 git checkout -b docs/w1-2026-05-27-evidence
 ```
 
-Expected recent commits on the base should include:
-
-```text
-docs: add W1 laptop write-up update plan
-docs: expand 2026-05-27 server session notes
-docs: update agent state after 2026-05-27 server session
-docs: add 2026-05-27 artifact manifest
-docs: add 2026-05-27 server session notes
-2026-05-27 server session
-```
-
-Do not mix the write-up update with the run-directory rename. The typo cleanup can be a separate commit:
-
-```bash
-git mv results/runs/2026-05-27_w1_ewidence results/runs/2026-05-27_w1_evidence
-git commit -m "chore: fix 2026-05-27 evidence run path typo"
-```
+The 2026-05-27 run directory is already at the correct path
+(`results/runs/2026-05-27_w1_evidence`) — the earlier `w1_evidence`
+typo was fixed by a prior `git mv` commit. No rename step is needed
+in this session.
 
 For this session, keep the focus on W1 analysis and documentation.
 
@@ -67,8 +54,8 @@ For this session, keep the focus on W1 analysis and documentation.
 Read these files before editing W1:
 
 ```text
-results/runs/2026-05-27_w1_ewidence/session/session_notes.md
-results/runs/2026-05-27_w1_ewidence/session/artifact_manifest.txt
+results/runs/2026-05-27_w1_evidence/session/session_notes.md
+results/runs/2026-05-27_w1_evidence/session/artifact_manifest.txt
 docs/operations/agent-state.md
 docs/writeups/w1-multi-model-serving-baseline.md
 docs/writeups/w1/t8-litellm-overhead.md
@@ -99,10 +86,10 @@ This is the most important technical task in the session.
 Input files:
 
 ```text
-results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/kimi_*_A_direct.json
-results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/kimi_*_B_proxy.json
-results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/ds_*_A_direct.json
-results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/ds_*_B_proxy.json
+results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/kimi_*_A_direct.json
+results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/kimi_*_B_proxy.json
+results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/ds_*_A_direct.json
+results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/ds_*_B_proxy.json
 ```
 
 For Kimi and DeepSeek separately, compute:
@@ -174,7 +161,7 @@ materially, that is itself a finding for T8 (and possibly T5).
 Create:
 
 ```text
-results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/summary.md
+results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md
 ```
 
 Suggested structure:
@@ -471,7 +458,7 @@ git add docs/writeups/w1/t8-litellm-overhead.md \
         docs/writeups/w1/t6-eagle3-speculative-decoding.md \
         docs/writeups/w1/t5-observability.md \
         docs/writeups/w1-multi-model-serving-baseline.md \
-        results/runs/2026-05-27_w1_ewidence/t8_proxy_overhead/summary.md
+        results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md
 
 git commit -m "docs: update W1 thread files with 2026-05-27 evidence"
 ```
@@ -486,16 +473,6 @@ git add docs/operations/agent-state.md
 git commit -m "docs: refresh agent-state after W1 evidence write-up"
 git push -u origin HEAD
 ```
-
-If you also rename the directory, do it separately:
-
-```bash
-git mv results/runs/2026-05-27_w1_ewidence results/runs/2026-05-27_w1_evidence
-git commit -m "chore: fix 2026-05-27 evidence run path typo"
-git push
-```
-
-Do not combine the rename with the W1 write-up update.
 
 ---
 
