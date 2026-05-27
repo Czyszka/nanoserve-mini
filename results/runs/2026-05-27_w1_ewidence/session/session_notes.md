@@ -11,6 +11,10 @@ The strongest output is the paired direct-vs-proxy measurement set for both serv
 
 These artifacts are suitable for a laptop-side paired-delta analysis and for a W1 segment about proxy overhead, with clear limitations: single prompt, single-stream, short output, no concurrency sweep.
 
+An important caveat for Kimi: the proxy materially changes streaming semantics, not just adds network overhead. Median `ttft_any_token_seconds` rises from ~0.21 s on the direct path to ~0.61 s on the proxy path (~3× regression, paired delta ~+0.40 s), because LiteLLM does not forward `delta.reasoning` / `delta.reasoning_content` chunks separately — proxy clients see the first emitted token only when the final-answer text starts. The pure network/routing overhead, visible in `ttft_seconds` (final-answer) and `e2e_seconds`, is on the order of tens of milliseconds. The two effects should be reported separately in W1 and tied to T2 (reasoning parser).
+
+Median Kimi `output_tokens_per_second` also drops by ~5.6 % under the proxy path (79.1 → 74.7) in this single-stream workload. For DeepSeek, `output_tokens_per_second` is not meaningful here because median `completion_tokens` is ~2 (the "OK" sample); throughput numbers for DeepSeek should be excluded or annotated with their completion length.
+
 The DeepSeek VRAM evidence is only a baseline, not a sweep. A key caveat is that files were named as if they represented `cap020`, but the runtime log records `gpu_memory_utilization: 0.25`. For W1, these artifacts should be treated as a `0.25` baseline unless independently proven otherwise.
 
 The planned Kimi Eagle3 ON/OFF comparison and Kimi DEP startup failure capture were not completed. Dashboard/Prometheus work remained mostly untouched, which is acceptable because it was stretch-only for this session.
@@ -72,12 +76,12 @@ Artifacts:
 
 Representative sample values:
 
-| Model | Path | Example file | TTFT | Any-token TTFT | E2E | Notes |
-|---|---|---|---:|---:|---:|---|
-| Kimi-K2.6 | direct | `kimi_1_A_direct.json` | ~0.625 s | ~0.242 s | ~0.625 s | Direct vLLM stream includes reasoning text before final answer. |
-| Kimi-K2.6 | proxy | `kimi_1_B_proxy.json` | ~0.652 s | ~0.652 s | ~0.666 s | Proxy output has no separate reasoning chunks in this sample. |
-| DeepSeek-V4-Flash | direct | `ds_1_A_direct.json` | ~0.278 s | ~0.278 s | ~0.442 s | Short `OK` output. |
-| DeepSeek-V4-Flash | proxy | `ds_1_B_proxy.json` | ~0.304 s | ~0.304 s | ~0.465 s | Short `OK` output. |
+| Model | Path | Example file | TTFT | Any-token TTFT | E2E | completion_tokens | Notes |
+|---|---|---|---:|---:|---:|---:|---|
+| Kimi-K2.6 | direct | `kimi_1_A_direct.json` | ~0.625 s | ~0.242 s | ~0.625 s | 46 | Direct vLLM stream includes reasoning text before final answer (`reasoning_chars`=189, `output_chars`=3). |
+| Kimi-K2.6 | proxy | `kimi_1_B_proxy.json` | ~0.652 s | ~0.652 s | ~0.666 s | 46 | Proxy collapses reasoning chunks into the final stream (`reasoning_chars`=0, `output_chars`=3). |
+| DeepSeek-V4-Flash | direct | `ds_1_A_direct.json` | ~0.278 s | ~0.278 s | ~0.442 s | 2 | Short `OK` output; throughput metrics are not meaningful at this length. |
+| DeepSeek-V4-Flash | proxy | `ds_1_B_proxy.json` | ~0.304 s | ~0.304 s | ~0.465 s | 2 | Short `OK` output; throughput metrics are not meaningful at this length. |
 
 Interpretation should be done as paired deltas, not from single examples. The sample values suggest small proxy overhead for short single-stream requests, but the W1 write-up should avoid generalizing beyond this workload.
 
@@ -120,11 +124,24 @@ Additional useful log details:
 - Tensor parallelism: `8`.
 - KV cache dtype: `fp8`.
 - Speculative config: MTP with `num_speculative_tokens=1`.
+- `max_model_len`: `65536`.
+- `max_num_seqs`: `2`.
+- `max_num_batched_tokens`: `2048` (vLLM warned this may be suboptimal given the speculative settings).
+- `block_size`: `256`.
+- `enforce_eager`: `True` (no CUDA graph capture; runtime numbers are eager-mode).
 - Model loading took ~22 s and ~20.32 GiB memory according to the log.
 - Available KV cache memory was reported as ~13.5 GiB.
 - GPU KV cache size was reported as 10,996 tokens.
 
 These are useful as supporting evidence, but not enough to justify the final DeepSeek cap choice. A clean T3 rerun is still needed.
+
+### 4. T5 — minor artifact only
+
+One small T5-adjacent artifact was captured:
+
+- `t8_proxy_overhead/litellm_metrics_post.txt` — Prometheus-format snapshot of LiteLLM Proxy metrics taken after the T8 measurement loop.
+
+This does not replace Grafana panel validation under load, but it is useful as a cross-check: LiteLLM exposes its own per-route latency histograms (`litellm_request_*`) that can be compared against the client-side TTFT/E2E medians from T8. Treat it as a one-shot anchor, not as evidence that the dashboard work for T5 is done.
 
 ## What was not completed
 
