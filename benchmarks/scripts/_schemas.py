@@ -28,3 +28,4 @@ SCHEMA_SEQUENTIAL_BENCH_ROW: Final[str] = "nanoserve-mini.sequential-bench-row.v
 # Server-side observability artifacts.
 SCHEMA_SERVER_METRICS_SNAPSHOT: Final[str] = "nanoserve-mini.server-metrics-snapshot.v1"
 SCHEMA_GPU_SAMPLES_META: Final[str] = "nanoserve-mini.gpu-samples-meta.v1"
+SCHEMA_METRICS_DELTA: Final[str] = "nanoserve-mini.metrics-delta.v1"
