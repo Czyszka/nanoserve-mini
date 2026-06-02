@@ -91,13 +91,13 @@ status, not a task list. Update when work moves.
   inventory and panel validation under live load still pending; 2026-05-27 only
   captured a LiteLLM metrics snapshot, not full dashboard evidence.
 - **#37 — W1 write-up:** 2026-05-27 evidence analyzed and written up on the
-  laptop. T7 host-directories justification drafted; T8 thread file migrated to
-  a post-evidence document (paired direct-vs-proxy deltas, `summary.md` artifact
-  added); T3 thread file rewritten as a partial 0.25 runtime baseline with the
-  `cap020` filename caveat; T1/T6/T5 carry explicit "not completed 2026-05-27"
-  status notes; index Thread map + evidence-quality tracker + path A close-out
-  list updated. T1 DEP, T6 Eagle3 ON/OFF, T3 clean sweep, and T5 dashboard
-  validation still missing.
+  laptop. T4 LiteLLM Proxy and T7 host-directories justifications drafted; T8
+  thread file migrated to a post-evidence document (paired direct-vs-proxy
+  deltas, `summary.md` artifact added); T3 thread file rewritten as a partial
+  0.25 runtime baseline with the `cap020` filename caveat; T1/T6/T5 carry
+  explicit "not completed 2026-05-27" status notes; index Thread map +
+  evidence-quality tracker + path A close-out list updated. T1 DEP, T6 Eagle3
+  ON/OFF, T3 clean sweep, and T5 dashboard validation still missing.
 
 ---
 
@@ -198,6 +198,24 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-02 W1 T4 wording pass:
+
+```text
+git diff --check    OK
+```
+
+Docs-only change: rewrote T4 in a more formal technical-note style. No `ruff`
+or `pytest` run.
+
+2026-06-02 W1 T4 LiteLLM Proxy write-up:
+
+```text
+git diff --check    OK
+```
+
+Docs-only change: updated the T4 W1 justification, W1 tracker, and this handoff
+state. No `ruff` or `pytest` run.
+
 2026-06-02 W1 close-out tracker:
 
 ```text
@@ -272,6 +290,28 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-02 - W1 T4 wording pass
+
+- Why: make T4 read less like tool advocacy and more like a scoped technical
+  justification.
+- Did: rewrote `docs/writeups/w1/t4-litellm-proxy.md` around the question,
+  configuration evidence, narrow claim, implementation limits, proxy-hop
+  trade-off, and rejected alternatives.
+- Validation: `git diff --check` OK.
+- Next: review T4 against the final W1 narrative, then continue the T1/T3/T6
+  evidence path.
+
+### 2026-06-02 - W1 T4 LiteLLM Proxy justification
+
+- Why: turn the T4 placeholder into a concrete justification for LiteLLM Proxy
+  as the Phase 1 multi-model access layer.
+- Did: updated `docs/writeups/w1/t4-litellm-proxy.md` with repo config
+  evidence, current-scope limits, the T8 overhead trade-off, rejected
+  alternatives, and future link #39. Updated the W1 tracker to mark T4 done.
+- Validation: `git diff --check` OK.
+- Next: continue the path A close-out with the 2026-06-03 server slot for T1,
+  T3, and T6, then fill the baseline table after evidence lands.
 
 ### 2026-06-02 - W1 close-out tracker
 
