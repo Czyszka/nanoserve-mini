@@ -95,9 +95,9 @@ status, not a task list. Update when work moves.
   a post-evidence document (paired direct-vs-proxy deltas, `summary.md` artifact
   added); T3 thread file rewritten as a partial 0.25 runtime baseline with the
   `cap020` filename caveat; T1/T6/T5 carry explicit "not completed 2026-05-27"
-  status notes; index Thread map + "Evidence quality after 2026-05-27" +
-  follow-up list updated. T1 DEP, T6 Eagle3 ON/OFF, T3 clean sweep, and T5
-  dashboard validation still missing.
+  status notes; index Thread map + evidence-quality tracker + path A close-out
+  list updated. T1 DEP, T6 Eagle3 ON/OFF, T3 clean sweep, and T5 dashboard
+  validation still missing.
 
 ---
 
@@ -198,6 +198,15 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-02 W1 close-out tracker:
+
+```text
+git diff --check    OK
+```
+
+Docs-only change: updated the W1 top-level draft tracker and this handoff state.
+No `ruff` or `pytest` run.
+
 2026-06-02 W1 T7 host-directories write-up:
 
 ```text
@@ -263,6 +272,16 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-02 - W1 close-out tracker
+
+- Why: keep the remaining W1 work visible and grouped by what unblocks it.
+- Did: updated `docs/writeups/w1-multi-model-serving-baseline.md` Thread map,
+  evidence-quality tracker, path A close-out grouping, and follow-up list. T7 is
+  marked done; T8 full R1-R8 remains intentionally deferred under #44.
+- Validation: `git diff --check` OK.
+- Next: run the 2026-06-03 server slot for T1 DEP, T3 clean VRAM sweep, and T6
+  Eagle3 ON/OFF, then do the laptop write-up pass.
 
 ### 2026-06-02 - W1 write-up update from 2026-05-27 evidence (laptop)
 
