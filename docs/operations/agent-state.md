@@ -90,11 +90,13 @@ status, not a task list. Update when work moves.
 - **#34 — observability/dashboard:** dashboard JSON provisioned; metric-name
   inventory and panel validation under live load still pending; 2026-05-27 only
   captured a LiteLLM metrics snapshot, not full dashboard evidence.
-- **#37 — W1 write-up:** T8 proxy-overhead evidence captured for Kimi and
-  DeepSeek; T3 has only a baseline artifact with a `cap020` filename but runtime
-  evidence showing `gpu_memory_utilization: 0.25`; T1 DEP capture and T6 Eagle3
-  ON/OFF evidence are still missing. Session notes and an artifact manifest live
-  under `results/runs/2026-05-27_w1_evidence/session/`.
+- **#37 — W1 write-up:** 2026-05-27 evidence analyzed and written up on the
+  laptop. T8 thread file migrated to a post-evidence document (paired
+  direct-vs-proxy deltas, `summary.md` artifact added); T3 thread file rewritten
+  as a partial 0.25 runtime baseline with the `cap020` filename caveat; T1/T6/T5
+  carry explicit "not completed 2026-05-27" status notes; index Thread map +
+  "Evidence quality after 2026-05-27" + follow-up list updated. T1 DEP, T6
+  Eagle3 ON/OFF, T3 clean sweep, and T5 dashboard validation still missing.
 
 ---
 
@@ -111,9 +113,11 @@ sequences them. This section only points at active work — it is not a task lis
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** analyze T8 deltas in
-`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/` and document which
-W1 threads have usable evidence versus missing evidence.
+**Next concrete step:** schedule a follow-up server slot to collect the missing
+W1 evidence — T3 clean VRAM sweep (0.15/0.20/0.25 with matching filenames), T1
+DEP startup failure capture, T6 Kimi Eagle3 ON/OFF — and fix the LiteLLM
+`prometheus_callback` so T5 dashboard panels and a T8 proxy-side cross-check can
+be validated under live load.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -250,7 +254,15 @@ semantics from schema identifier stability.
 
 ## Handoff log
 
-Newest entry first. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
+Newest entry first.
+
+### 2026-06-02 - W1 write-up update from 2026-05-27 evidence (laptop)
+
+- Why: turn the committed 2026-05-27 server artifacts into W1 write-up material per `docs/plans/2026-05-27-laptop-w1-writeup-update.md`.
+- Did: analyzed all 40 T8 paired JSON files (10/model, 0 errors); added `results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md`; migrated `w1/t8-litellm-overhead.md` from placeholder to post-evidence (routing overhead vs Kimi streaming-semantics change, T2 cross-ref); rewrote `w1/t3-deepseek-vram-budget.md` as a partial 0.25 baseline with the cap020 caveat; added status notes to `w1/t1-kimi-bringup.md`, `w1/t6-eagle3-speculative-decoding.md`, `w1/t5-observability.md`; updated index Thread map (T3/T8) and added "Evidence quality after 2026-05-27" + "Follow-up work".
+- Key numbers: Kimi final-answer TTFT delta median +17 ms, any-token TTFT +0.40 s (~3×, streaming-semantics, not latency), output tok/s −5.6 %; DeepSeek TTFT +26 ms, E2E +34 ms (throughput not meaningful, completion_tokens≈2).
+- Validation: `git diff --check` OK (docs-only; no `.py` touched).
+- Next: schedule a server slot for T3 clean sweep (0.15/0.20/0.25), T1 DEP capture, T6 Eagle3 ON/OFF, T5 dashboard validation + fix LiteLLM `prometheus_callback`. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
 
 ### 2026-05-27 - Server-session evidence triage and notes
 

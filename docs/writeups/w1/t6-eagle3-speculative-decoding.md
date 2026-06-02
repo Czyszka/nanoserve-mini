@@ -11,6 +11,12 @@ Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-se
 - results/runs/2026-05-27_kimi-k2.6_eagle3-off/ (auto-id, run_bench_suite)
 -->
 
+## 2026-05-27 status
+
+Not completed in the 2026-05-27 session. Kimi remained configured with Eagle3,
+but no controlled ON/OFF comparison was captured (`t6_eagle3/` was not
+produced). This remains follow-up evidence for W1.
+
 ## Planned shape
 
 Mode: justification + measurement.

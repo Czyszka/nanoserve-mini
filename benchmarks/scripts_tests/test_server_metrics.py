@@ -7,18 +7,23 @@ from benchmarks.scripts._server_metrics import (
     first_value,
     parse_nvidia_smi_csv,
     parse_prometheus_text,
+    prefix_cache_hit_rate,
     select_vllm_aggregate,
     total_gpu_memory_used_gb,
 )
 
+# Metric names verified against a real v0.20.0 dump
+# (results/raw/observability/vllm-metrics.txt): `vllm:kv_cache_usage_perc`
+# gauge + `vllm:prefix_cache_{hits,queries}_total` counters (no hit-rate gauge).
 _VLLM_SAMPLE = """\
 # HELP vllm:num_requests_running Running.
 # TYPE vllm:num_requests_running gauge
 vllm:num_requests_running{model_name="kimi"} 2.0
-# HELP vllm:gpu_cache_usage_perc KV cache usage.
-# TYPE vllm:gpu_cache_usage_perc gauge
-vllm:gpu_cache_usage_perc{model_name="kimi"} 0.45
-vllm:gpu_prefix_cache_hit_rate{model_name="kimi"} 0.78
+# HELP vllm:kv_cache_usage_perc KV cache usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{model_name="kimi"} 0.45
+vllm:prefix_cache_queries_total{model_name="kimi"} 1000
+vllm:prefix_cache_hits_total{model_name="kimi"} 780
 vllm:prompt_tokens_total{model_name="kimi"} 12345
 vllm:e2e_request_latency_seconds_bucket{le="0.5",model_name="kimi"} 100
 vllm:e2e_request_latency_seconds_bucket{le="+Inf",model_name="kimi"} 200
@@ -31,8 +36,8 @@ def test_parse_prometheus_text_basic_gauges() -> None:
     metrics = parse_prometheus_text(_VLLM_SAMPLE)
     assert metrics["vllm:num_requests_running"][0]["value"] == 2.0
     assert metrics["vllm:num_requests_running"][0]["labels"] == {"model_name": "kimi"}
-    assert metrics["vllm:gpu_cache_usage_perc"][0]["value"] == 0.45
-    assert metrics["vllm:gpu_prefix_cache_hit_rate"][0]["value"] == 0.78
+    assert metrics["vllm:kv_cache_usage_perc"][0]["value"] == 0.45
+    assert metrics["vllm:prefix_cache_hits_total"][0]["value"] == 780
     assert metrics["vllm:prompt_tokens_total"][0]["value"] == 12345
 
 
@@ -56,7 +61,7 @@ def test_parse_prometheus_text_skips_malformed_lines() -> None:
 
 def test_first_value_returns_first_numeric_or_none() -> None:
     metrics = parse_prometheus_text(_VLLM_SAMPLE)
-    assert first_value(metrics, "vllm:gpu_cache_usage_perc") == 0.45
+    assert first_value(metrics, "vllm:kv_cache_usage_perc") == 0.45
     assert first_value(metrics, "does_not_exist") is None
     # NaN value falls through to None
     assert first_value(metrics, "vllm:weird_value") is None
@@ -67,6 +72,7 @@ def test_select_vllm_aggregate_uses_caller_supplied_gpu_memory() -> None:
     agg = select_vllm_aggregate(metrics, gpu_memory_used_gb=137.5)
     assert agg["gpu_memory_used_gb"] == 137.5
     assert agg["kv_cache_usage"] == 0.45
+    # 780 / 1000 computed from the counters (no hit-rate gauge in current vLLM)
     assert agg["prefix_cache_hit_rate"] == 0.78
 
 
@@ -77,6 +83,27 @@ def test_select_vllm_aggregate_handles_missing_keys() -> None:
         "kv_cache_usage": None,
         "prefix_cache_hit_rate": None,
     }
+
+
+def test_prefix_cache_hit_rate_zero_queries_is_none() -> None:
+    # Rate is undefined with zero queries — must not divide by zero.
+    metrics = parse_prometheus_text(
+        'vllm:prefix_cache_queries_total{model_name="k"} 0\n'
+        'vllm:prefix_cache_hits_total{model_name="k"} 0\n'
+    )
+    assert prefix_cache_hit_rate(metrics) is None
+
+
+def test_select_vllm_aggregate_falls_back_to_legacy_names() -> None:
+    # Older vLLM exposed a kv usage gauge under a different name and a direct
+    # hit-rate gauge; both must still be picked up as version fallbacks.
+    metrics = parse_prometheus_text(
+        'vllm:gpu_cache_usage_perc{model_name="k"} 0.31\n'
+        'vllm:gpu_prefix_cache_hit_rate{model_name="k"} 0.5\n'
+    )
+    agg = select_vllm_aggregate(metrics, gpu_memory_used_gb=None)
+    assert agg["kv_cache_usage"] == 0.31
+    assert agg["prefix_cache_hit_rate"] == 0.5
 
 
 _NVIDIA_SMI_SAMPLE = (

@@ -38,12 +38,12 @@ Each thread is written in one mode:
 |---|---|---|---|---|
 | **T1** | How to bring up Kimi-K2 (~1T MoE) on a single 8×H200 node? DEP failed to start → TP=8 | investigation | DEP logs to be reproduced | [`w1/t1-kimi-bringup.md`](w1/t1-kimi-bringup.md) |
 | **T2** | Why does `measure_ttft_once.py` return `TTFT: n/a`? → reasoning deltas → parser fix (#31) | investigation | captured stream-debug artifacts | [`w1/t2-reasoning-ttft.md`](w1/t2-reasoning-ttft.md) |
-| **T3** | Why DeepSeek at 20% VRAM, not 25%/15%? | justification with numbers | to be collected | [`w1/t3-deepseek-vram-budget.md`](w1/t3-deepseek-vram-budget.md) |
+| **T3** | Why DeepSeek at 20% VRAM, not 25%/15%? | justification with numbers | partial baseline (2026-05-27, cap020 vs 0.25 caveat) | [`w1/t3-deepseek-vram-budget.md`](w1/t3-deepseek-vram-budget.md) |
 | **T4** | Why LiteLLM Proxy and not the alternatives? | justification + rejected alternatives | to be written | [`w1/t4-litellm-proxy.md`](w1/t4-litellm-proxy.md) |
 | **T5** | What do vLLM metrics and GPU telemetry actually tell us? Useful vs misleading signals. | investigation/measurement | partial; data in repo, DCGM planned | [`w1/t5-observability.md`](w1/t5-observability.md) |
 | **T6** | Why Eagle3 and what does it cost? SC on vs off. | justification + measurement | to be measured | [`w1/t6-eagle3-speculative-decoding.md`](w1/t6-eagle3-speculative-decoding.md) |
 | **T7** | Why runtime data lives in host directories, not Docker volumes? | justification | draft placeholder | [`w1/t7-host-directories.md`](w1/t7-host-directories.md) |
-| **T8** | Does LiteLLM Proxy add measurable overhead? | measurement | to be measured | [`w1/t8-litellm-overhead.md`](w1/t8-litellm-overhead.md) |
+| **T8** | Does LiteLLM Proxy add measurable overhead? | measurement | thesis + measurement program; pilot done (2026-05-27) | [`w1/t8-litellm-overhead.md`](w1/t8-litellm-overhead.md) |
 
 ---
 
@@ -78,6 +78,30 @@ not as a general throughput claim.
 TPOT, E2E, throughput) with full control snapshot; explicit limits —
 single-stream, warmup=1, no concurrency sweep → sanity baseline, not a
 performance claim. -->
+
+---
+
+## Evidence quality after 2026-05-27
+
+| Thread | Evidence quality | Status |
+|---|---|---|
+| T8 Proxy overhead | Pilot validated rig + a real streaming-semantics finding; full program (R1–R8) designed | Designed; pilot done |
+| T3 DeepSeek VRAM | Partial; filename/runtime cap mismatch | Needs rerun |
+| T1 DEP | Missing | Needs capture |
+| T6 Eagle3 | Missing | Needs controlled experiment |
+| T5 Dashboard | Partial infra only | Needs validation |
+
+The write-up intentionally distinguishes completed evidence from partial or
+missing evidence. This avoids overclaiming and keeps W1 useful as an engineering
+record, not just a success narrative.
+
+## Follow-up work
+
+1. Re-run DeepSeek VRAM sweep with explicit `0.15`, `0.20`, and `0.25` caps and filenames matching runtime configuration.
+2. Capture Kimi DEP startup failure evidence.
+3. Run controlled Kimi Eagle3 ON/OFF benchmark.
+4. Validate Grafana dashboard panels under live load.
+5. Run proxy overhead under concurrency after the single-stream baseline.
 
 ---
 

@@ -10,6 +10,12 @@ Evidence (planned 2026-05-27 server session, see docs/plans/2026-05-27-server-se
 - results/runs/2026-05-27_w1_evidence/t1_dep/dep_state.txt
 -->
 
+## 2026-05-27 status
+
+Not completed in the 2026-05-27 session. No DEP startup-failure artifact was
+captured (`t1_dep/` was not produced). This remains follow-up evidence for W1 or
+a later appendix.
+
 ## Planned shape
 
 Mode: investigation.
