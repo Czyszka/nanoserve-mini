@@ -11,7 +11,21 @@ Project entrypoint for Claude Code.
 - Surgical edits: touch only what the task needs; clean up only the mess your
   own change introduced — never silently rewrite unrelated or shared work.
 
-## Project
+## Token economy
+
+Conversation budget is scarce (sometimes a few messages, then a multi-hour
+wait). Actively spend tokens like they run out — because they do.
+
+- Be concise: report results, not narration. Don't restate plans, diffs, or
+  files the user can already see — link to them.
+- Don't re-read files already in context, and don't read a file back after
+  Edit/Write to "verify" — the harness tracks state and errors on failure.
+- Prefer targeted reads (Grep, `offset`/`limit`) over whole-file or broad
+  scans; batch independent tool calls into one turn.
+- For heavy fan-out reading (auditing many files), use subagents and have them
+  return a compact summary, not raw dumps — keep the main thread lean.
+- Don't do speculative work that may be discarded; confirm direction first when
+  a task is ambiguous and expensive.
 
 `nanoserve-mini` — 12-week LLM inference performance lab. vLLM serving
 baseline, observability, benchmark harness, workload + KV/prefix cache
