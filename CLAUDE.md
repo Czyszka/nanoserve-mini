@@ -2,6 +2,15 @@
 
 Project entrypoint for Claude Code.
 
+## Working principles
+
+- State assumptions explicitly; if a choice is unclear or a GPU slot is at
+  stake, ask before acting rather than guessing silently.
+- Simplicity first: minimum change that solves the task; nothing speculative.
+  Treat scope creep as the default failure mode, not the exception.
+- Surgical edits: touch only what the task needs; clean up only the mess your
+  own change introduced — never silently rewrite unrelated or shared work.
+
 ## Project
 
 `nanoserve-mini` — 12-week LLM inference performance lab. vLLM serving
