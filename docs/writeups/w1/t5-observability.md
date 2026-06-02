@@ -20,6 +20,16 @@ Exporter or `nvidia-smi`. For now, the hardware layer is part of the T5
 observability plan; the final write-up should mark which GPU signals were
 actually collected and which remain planned.
 
+## 2026-05-27 status
+
+Not completed. Prometheus and Grafana were running, but dashboard panels were
+not validated under live load. The single attempted proxy-side capture
+(`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt`)
+returned a 22-byte HTTP 404 (`{"detail":"Not Found"}`); the LiteLLM Prometheus
+exporter is not currently scraping cleanly, so T8 has no proxy-side cross-check
+from this dataset either. Fix `prometheus_callback` in
+`serving/compose/litellm-config.yaml` before re-capture.
+
 ## Inventory: availability is not evidence
 
 Use `results/raw/observability/vllm-metrics.txt` as a metric availability

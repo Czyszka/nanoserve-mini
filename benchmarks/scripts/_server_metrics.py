@@ -61,8 +61,26 @@ CSV_COLUMNS: tuple[str, ...] = (
 # vLLM gauges/counters we want to surface in the `aggregate` block. Each
 # benchmark result file has a `server_metrics` stub with these same three keys
 # so the aggregator/dashboard can join them by run_id without renaming.
-_VLLM_GAUGES_KV_USAGE: Final = "vllm:gpu_cache_usage_perc"
-_VLLM_GAUGES_PREFIX_HIT: Final = "vllm:gpu_prefix_cache_hit_rate"
+#
+# Names verified against a real v0.20.0 dump (results/raw/observability/
+# vllm-metrics.txt): current vLLM exposes `vllm:kv_cache_usage_perc` (gauge)
+# and the counters `vllm:prefix_cache_hits_total` / `vllm:prefix_cache_queries_total`
+# — there is NO ready-made hit-rate gauge, so it is computed from the counters.
+# Older `vllm:gpu_cache_usage_perc` / `vllm:gpu_prefix_cache_hit_rate` are kept
+# only as version fallbacks. Each tuple is tried in order.
+_VLLM_KV_USAGE_NAMES: Final = (
+    "vllm:kv_cache_usage_perc",
+    "vllm:gpu_cache_usage_perc",
+)
+_VLLM_PREFIX_HITS_NAMES: Final = (
+    "vllm:prefix_cache_hits_total",
+    "vllm:prefix_cache_hits",
+)
+_VLLM_PREFIX_QUERIES_NAMES: Final = (
+    "vllm:prefix_cache_queries_total",
+    "vllm:prefix_cache_queries",
+)
+_VLLM_PREFIX_HIT_RATE_FALLBACK: Final = "vllm:gpu_prefix_cache_hit_rate"
 
 
 _LINE_RE = re.compile(
@@ -151,6 +169,35 @@ def first_value(
     return None
 
 
+def _first_value_any(
+    metrics: dict[str, list[dict[str, Any]]],
+    names: tuple[str, ...],
+) -> float | None:
+    """First non-None value across `names`, tried in order (version fallbacks)."""
+    for name in names:
+        v = first_value(metrics, name)
+        if v is not None:
+            return v
+    return None
+
+
+def prefix_cache_hit_rate(
+    metrics: dict[str, list[dict[str, Any]]],
+) -> float | None:
+    """Prefix-cache hit rate as hits / queries.
+
+    Current vLLM exposes only the `vllm:prefix_cache_{hits,queries}_total`
+    counters, not a hit-rate gauge, so the rate is computed here. Returns
+    ``None`` when queries are missing or zero (rate undefined). Falls back to
+    the older `vllm:gpu_prefix_cache_hit_rate` gauge if the counters are absent.
+    """
+    hits = _first_value_any(metrics, _VLLM_PREFIX_HITS_NAMES)
+    queries = _first_value_any(metrics, _VLLM_PREFIX_QUERIES_NAMES)
+    if hits is not None and queries is not None and queries > 0:
+        return hits / queries
+    return first_value(metrics, _VLLM_PREFIX_HIT_RATE_FALLBACK)
+
+
 def select_vllm_aggregate(
     metrics: dict[str, list[dict[str, Any]]],
     *,
@@ -163,8 +210,8 @@ def select_vllm_aggregate(
     """
     return {
         "gpu_memory_used_gb": gpu_memory_used_gb,
-        "kv_cache_usage": first_value(metrics, _VLLM_GAUGES_KV_USAGE),
-        "prefix_cache_hit_rate": first_value(metrics, _VLLM_GAUGES_PREFIX_HIT),
+        "kv_cache_usage": _first_value_any(metrics, _VLLM_KV_USAGE_NAMES),
+        "prefix_cache_hit_rate": prefix_cache_hit_rate(metrics),
     }
 
 
