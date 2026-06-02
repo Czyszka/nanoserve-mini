@@ -39,7 +39,7 @@ Each thread is written in one mode:
 | **T1** | How to bring up Kimi-K2 (~1T MoE) on a single 8×H200 node? DEP failed to start → TP=8 | investigation | placeholder; DEP failure evidence missing | [`w1/t1-kimi-bringup.md`](w1/t1-kimi-bringup.md) |
 | **T2** | Why does `measure_ttft_once.py` return `TTFT: n/a`? → reasoning deltas → parser fix (#31) | investigation | done | [`w1/t2-reasoning-ttft.md`](w1/t2-reasoning-ttft.md) |
 | **T3** | Why DeepSeek at 20% VRAM, not 25%/15%? | justification with numbers | partial; needs clean 0.15/0.20/0.25 sweep | [`w1/t3-deepseek-vram-budget.md`](w1/t3-deepseek-vram-budget.md) |
-| **T4** | Why LiteLLM Proxy and not the alternatives? | justification + rejected alternatives | partial; rejected alternatives need deeper rationale | [`w1/t4-litellm-proxy.md`](w1/t4-litellm-proxy.md) |
+| **T4** | Why LiteLLM Proxy and not the alternatives? | justification + rejected alternatives | done | [`w1/t4-litellm-proxy.md`](w1/t4-litellm-proxy.md) |
 | **T5** | What do vLLM metrics and GPU telemetry actually tell us? Useful vs misleading signals. | investigation/measurement | partial; dashboard validation under load still missing (#34) | [`w1/t5-observability.md`](w1/t5-observability.md) |
 | **T6** | Why Eagle3 and what does it cost? SC on vs off. | justification + measurement | placeholder; ON/OFF benchmark missing | [`w1/t6-eagle3-speculative-decoding.md`](w1/t6-eagle3-speculative-decoding.md) |
 | **T7** | Why runtime data lives in host directories, not Docker volumes? | justification | done | [`w1/t7-host-directories.md`](w1/t7-host-directories.md) |
@@ -88,7 +88,7 @@ performance claim. -->
 | T1 bring-up | placeholder | DEP failure evidence |
 | T2 reasoning TTFT | done | - |
 | T3 DeepSeek VRAM | partial | clean 0.15/0.20/0.25 sweep |
-| T4 LiteLLM Proxy | partial | deeper rejected-alternatives rationale |
+| T4 LiteLLM Proxy | done | - |
 | T5 observability | partial | dashboard validation under load (#34) |
 | T6 Eagle3 | placeholder | ON/OFF benchmark |
 | T7 host directories | done | - |
@@ -106,6 +106,7 @@ This is the shortest path to close W1 without expanding scope.
 **Done now**
 
 - T2 is fully written.
+- T4 is written as the LiteLLM Proxy justification.
 - T7 is written as the host-directory justification.
 - T8 is designed and counts as closed for now; the full R1-R8 program is tracked
   separately in #44.
@@ -122,7 +123,6 @@ thread files.
 
 **Laptop-only**
 
-- Deepen the T4 LiteLLM Proxy justification and rejected alternatives.
 - Fill the INDEX baseline table after evidence lands.
 - Keep T5 to minimal dashboard validation for path A; the fuller dashboard work
   remains under #34.
@@ -141,9 +141,8 @@ updates.
 1. Re-run DeepSeek VRAM sweep with explicit `0.15`, `0.20`, and `0.25` caps and filenames matching runtime configuration.
 2. Capture Kimi DEP startup failure evidence.
 3. Run controlled Kimi Eagle3 ON/OFF benchmark.
-4. Deepen the LiteLLM Proxy rejected-alternatives rationale.
-5. Fill the baseline table once the missing evidence lands.
-6. Validate Grafana dashboard panels under live load, minimally for W1 and more fully under #34.
+4. Fill the baseline table once the missing evidence lands.
+5. Validate Grafana dashboard panels under live load, minimally for W1 and more fully under #34.
 
 ---
 
