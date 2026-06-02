@@ -18,8 +18,9 @@ _VLLM_TEXT = """\
 # HELP vllm:num_requests_running Running.
 # TYPE vllm:num_requests_running gauge
 vllm:num_requests_running{model_name="kimi"} 1.0
-vllm:gpu_cache_usage_perc{model_name="kimi"} 0.42
-vllm:gpu_prefix_cache_hit_rate{model_name="kimi"} 0.55
+vllm:kv_cache_usage_perc{model_name="kimi"} 0.42
+vllm:prefix_cache_queries_total{model_name="kimi"} 200
+vllm:prefix_cache_hits_total{model_name="kimi"} 110
 """
 
 _NVIDIA_SMI_TEXT = (
@@ -62,7 +63,7 @@ def test_scrape_vllm_metrics_parses_when_endpoint_responds(
     block = collect_metrics_snapshot.scrape_vllm_metrics("http://x")
     assert block["scrape_ok"] is True
     assert block["scrape_error"] is None
-    assert block["metrics"]["vllm:gpu_cache_usage_perc"][0]["value"] == 0.42
+    assert block["metrics"]["vllm:kv_cache_usage_perc"][0]["value"] == 0.42
 
 
 def test_scrape_vllm_metrics_records_failure_on_5xx(
