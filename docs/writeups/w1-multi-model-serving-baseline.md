@@ -36,14 +36,14 @@ Each thread is written in one mode:
 
 | Thread | Initial problem | Mode | Evidence status | Working file |
 |---|---|---|---|---|
-| **T1** | How to bring up Kimi-K2 (~1T MoE) on a single 8×H200 node? DEP failed to start → TP=8 | investigation | DEP logs to be reproduced | [`w1/t1-kimi-bringup.md`](w1/t1-kimi-bringup.md) |
-| **T2** | Why does `measure_ttft_once.py` return `TTFT: n/a`? → reasoning deltas → parser fix (#31) | investigation | captured stream-debug artifacts | [`w1/t2-reasoning-ttft.md`](w1/t2-reasoning-ttft.md) |
-| **T3** | Why DeepSeek at 20% VRAM, not 25%/15%? | justification with numbers | partial baseline (2026-05-27, cap020 vs 0.25 caveat) | [`w1/t3-deepseek-vram-budget.md`](w1/t3-deepseek-vram-budget.md) |
-| **T4** | Why LiteLLM Proxy and not the alternatives? | justification + rejected alternatives | to be written | [`w1/t4-litellm-proxy.md`](w1/t4-litellm-proxy.md) |
-| **T5** | What do vLLM metrics and GPU telemetry actually tell us? Useful vs misleading signals. | investigation/measurement | partial; data in repo, DCGM planned | [`w1/t5-observability.md`](w1/t5-observability.md) |
-| **T6** | Why Eagle3 and what does it cost? SC on vs off. | justification + measurement | to be measured | [`w1/t6-eagle3-speculative-decoding.md`](w1/t6-eagle3-speculative-decoding.md) |
-| **T7** | Why runtime data lives in host directories, not Docker volumes? | justification | draft placeholder | [`w1/t7-host-directories.md`](w1/t7-host-directories.md) |
-| **T8** | Does LiteLLM Proxy add measurable overhead? | measurement | thesis + measurement program; pilot done (2026-05-27) | [`w1/t8-litellm-overhead.md`](w1/t8-litellm-overhead.md) |
+| **T1** | How to bring up Kimi-K2 (~1T MoE) on a single 8×H200 node? DEP failed to start → TP=8 | investigation | placeholder; DEP failure evidence missing | [`w1/t1-kimi-bringup.md`](w1/t1-kimi-bringup.md) |
+| **T2** | Why does `measure_ttft_once.py` return `TTFT: n/a`? → reasoning deltas → parser fix (#31) | investigation | done | [`w1/t2-reasoning-ttft.md`](w1/t2-reasoning-ttft.md) |
+| **T3** | Why DeepSeek at 20% VRAM, not 25%/15%? | justification with numbers | partial; needs clean 0.15/0.20/0.25 sweep | [`w1/t3-deepseek-vram-budget.md`](w1/t3-deepseek-vram-budget.md) |
+| **T4** | Why LiteLLM Proxy and not the alternatives? | justification + rejected alternatives | partial; rejected alternatives need deeper rationale | [`w1/t4-litellm-proxy.md`](w1/t4-litellm-proxy.md) |
+| **T5** | What do vLLM metrics and GPU telemetry actually tell us? Useful vs misleading signals. | investigation/measurement | partial; dashboard validation under load still missing (#34) | [`w1/t5-observability.md`](w1/t5-observability.md) |
+| **T6** | Why Eagle3 and what does it cost? SC on vs off. | justification + measurement | placeholder; ON/OFF benchmark missing | [`w1/t6-eagle3-speculative-decoding.md`](w1/t6-eagle3-speculative-decoding.md) |
+| **T7** | Why runtime data lives in host directories, not Docker volumes? | justification | done | [`w1/t7-host-directories.md`](w1/t7-host-directories.md) |
+| **T8** | Does LiteLLM Proxy add measurable overhead? | measurement | designed; full R1-R8 program intentionally deferred (#44) | [`w1/t8-litellm-overhead.md`](w1/t8-litellm-overhead.md) |
 
 ---
 
@@ -83,25 +83,67 @@ performance claim. -->
 
 ## Evidence quality after 2026-05-27
 
-| Thread | Evidence quality | Status |
+| Thread | Status | Missing |
 |---|---|---|
-| T8 Proxy overhead | Pilot validated rig + a real streaming-semantics finding; full program (R1–R8) designed | Designed; pilot done |
-| T3 DeepSeek VRAM | Partial; filename/runtime cap mismatch | Needs rerun |
-| T1 DEP | Missing | Needs capture |
-| T6 Eagle3 | Missing | Needs controlled experiment |
-| T5 Dashboard | Partial infra only | Needs validation |
+| T1 bring-up | placeholder | DEP failure evidence |
+| T2 reasoning TTFT | done | - |
+| T3 DeepSeek VRAM | partial | clean 0.15/0.20/0.25 sweep |
+| T4 LiteLLM Proxy | partial | deeper rejected-alternatives rationale |
+| T5 observability | partial | dashboard validation under load (#34) |
+| T6 Eagle3 | placeholder | ON/OFF benchmark |
+| T7 host directories | done | - |
+| T8 proxy overhead | designed | full R1-R8 program (#44), intentionally deferred |
+| INDEX | partial | baseline table TODO still empty |
 
 The write-up intentionally distinguishes completed evidence from partial or
 missing evidence. This avoids overclaiming and keeps W1 useful as an engineering
 record, not just a success narrative.
+
+## W1 close-out path A
+
+This is the shortest path to close W1 without expanding scope.
+
+**Done now**
+
+- T2 is fully written.
+- T7 is written as the host-directory justification.
+- T8 is designed and counts as closed for now; the full R1-R8 program is tracked
+  separately in #44.
+
+**Next GPU slot**
+
+- T1 DEP failure capture.
+- T3 clean DeepSeek VRAM sweep at 0.15, 0.20, and 0.25.
+- T6 Kimi Eagle3 ON/OFF benchmark.
+
+The 2026-06-03 server-session plan is intended to cover this exact GPU block.
+After the slot, the laptop work is to turn the new evidence into the T1/T3/T6
+thread files.
+
+**Laptop-only**
+
+- Deepen the T4 LiteLLM Proxy justification and rejected alternatives.
+- Fill the INDEX baseline table after evidence lands.
+- Keep T5 to minimal dashboard validation for path A; the fuller dashboard work
+  remains under #34.
+
+**Intentionally deferred**
+
+- Full T8 proxy-overhead program (#44).
+- Full T5 dashboard validation (#34), beyond the minimal W1 check.
+
+Conclusion: W1 still needs one server slot for T1/T3/T6 evidence and roughly a
+half-day laptop pass for T4, the baseline table, and the post-evidence write-up
+updates.
 
 ## Follow-up work
 
 1. Re-run DeepSeek VRAM sweep with explicit `0.15`, `0.20`, and `0.25` caps and filenames matching runtime configuration.
 2. Capture Kimi DEP startup failure evidence.
 3. Run controlled Kimi Eagle3 ON/OFF benchmark.
-4. Validate Grafana dashboard panels under live load.
-5. Run proxy overhead under concurrency after the single-stream baseline.
+4. Deepen the LiteLLM Proxy rejected-alternatives rationale.
+5. Fill the baseline table once the missing evidence lands.
+6. Validate Grafana dashboard panels under live load, minimally for W1 and more fully under #34.
 
 ---
 
