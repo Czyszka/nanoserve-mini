@@ -96,8 +96,14 @@ status, not a task list. Update when work moves.
   deltas, `summary.md` artifact added); T3 thread file rewritten as a partial
   0.25 runtime baseline with the `cap020` filename caveat; T1/T6/T5 carry
   explicit "not completed 2026-05-27" status notes; index Thread map +
-  evidence-quality tracker + path A close-out list updated. T1 DEP, T6 Eagle3
-  ON/OFF, T3 clean sweep, and T5 dashboard validation still missing.
+  evidence-quality tracker + path A close-out list updated. **2026-06-03
+  server slot ran only Cz. 0 + Cz. B + Cz. I (short slot): T3 attempted but
+  caps 0.25 and 0.20 did NOT come healthy within the 300s healthcheck window
+  (logs cut off mid weight-load, not a confirmed OOM — likely too-short
+  startup wait); cap 0.15 not attempted; DeepSeek restored to compose default
+  via `unset` (`log_restored_default.txt`).** T1 DEP, T6 Eagle3 ON/OFF, clean
+  T3 sweep, and T5 dashboard validation still missing — next server slot must
+  redo T3 with a longer healthcheck wait before C/H.
 
 ---
 
@@ -112,11 +118,11 @@ sequences them. This section only points at active work — it is not a task lis
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** schedule a follow-up server slot to collect the missing
-W1 evidence — T3 clean VRAM sweep (0.15/0.20/0.25 with matching filenames), T1
-DEP startup failure capture, T6 Kimi Eagle3 ON/OFF — and fix the LiteLLM
-`prometheus_callback` so T5 dashboard panels and a T8 proxy-side cross-check can
-be validated under live load.
+**Next concrete step:** redo T3 sweep on the next server slot with a longer
+`vllm-small` healthcheck wait (300s was too short — both 0.25 and 0.20
+timed out mid weight-load on 2026-06-03), then run C (T6 Eagle3 ON/OFF + T1
+DEP) and fix the LiteLLM `prometheus_callback` so T5 dashboard panels and a
+T8 proxy-side cross-check can be validated under live load.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -197,6 +203,23 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-03 W1 server slot (Cz. 0 + B + CHECKPOINT 1 + I, short slot ~1h):
+
+```text
+git diff --check                                       OK
+docker compose -f serving/compose/docker-compose.kimi-k2.6.yml ps
+  vllm        healthy (Eagle3-ON, 32 min uptime, not restarted)
+  vllm-small  healthy (restored to compose default after sweep)
+  litellm     healthy; prometheus/grafana up; open-webui unhealthy (known)
+```
+
+Artefakty w `results/runs/2026-06-03_w1_evidence/`:
+`t3_deepseek_vram/{log_cap025_FAILED.txt, log_cap020_FAILED.txt,
+nvidia_smi_cap{025,020}_FAILED.txt, cap{025,020}_status.txt,
+log_restored_default.txt}` + `session/{start_commit,docker_ps_{start,end},
+nvidia_smi_{start,end},artifact_manifest,artifact_count}.txt`. Cap 0.15 nie
+zebrany. Commity: `ce7bd85` (T3) + `4622f5b` (session close-out).
 
 2026-06-02 W1 T4 wording pass:
 
@@ -290,6 +313,35 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-03 - W1 server slot (partial: Cz. 0 + B + I only)
+
+- Why: krótki slot (~1h) zamiast planowanych ~3h; cel ograniczony do
+  bezpiecznego startu stacku + T3 sweep + close-out, bez bloku Kimi.
+- Did: podniesiono stack (`vllm` + `vllm-small` + `litellm` + observability),
+  zebrano snapshoty start/end, próba T3 sweep przez shell `export
+  DEEPSEEK_GPU_MEM_UTIL`, recreate `vllm-small` per cap; restore DeepSeeka
+  do compose default po sweepie; dwa commity (`ce7bd85`, `4622f5b`).
+- Wynik T3: cap **0.25** i **0.20** nie weszły w `healthy` w 300s window
+  (logi `log_cap*_FAILED.txt` urywają się na ładowaniu wag —
+  `gpu_model_runner.py:4777 Starting to load model`, brak traceback OOM).
+  **To prawdopodobnie za krótki timeout startowy, a nie realny OOM** —
+  laptop-side trzeba przejrzeć logi pełne, zanim wyciągniemy wnioski.
+  **Cap 0.15 nie próbowany.** Plik `log_restored_default.txt` potwierdza,
+  że po `unset` DeepSeek wstał na compose default (0.25).
+- Skipped: Cz. C (T6 ON/OFF + T1 DEP) i Cz. H (T5 dashboard) — brak czasu;
+  zgodnie z planem regułą odcięcia priorytet to czysty stan stacku.
+- Stan końcowy: Kimi `vllm` healthy 32 min (Eagle3-ON nietknięty), brak
+  shell override capa, `git status` clean.
+- Validation: `git diff --check` OK (artefakty + docs); brak `.py`,
+  `ruff`/`pytest` niepotrzebne.
+- Caveat na commit: message `4622f5b` "T6 Eagle3 ON/OFF, T1 DEP, session
+  close-out" jest mylący — commit zawiera **tylko** session close-out
+  (docker_ps_end, nvidia_smi_end, artifact_manifest). T6/T1 nie zostały
+  wykonane.
+- Next: laptop-side rozbiór `log_cap*_FAILED.txt` (czy to timeout startowy
+  czy realny problem z capem); kolejny server slot — redo T3 z dłuższym
+  healthcheck wait (np. 600s), potem Cz. C (T6 + T1).
 
 ### 2026-06-02 - W1 T4 wording pass
 
