@@ -1,0 +1,7 @@
+NAME            IMAGE                                         COMMAND                  SERVICE      CREATED         STATUS                   PORTS
+grafana         grafana/grafana:latest                        "/run.sh"                grafana      2 weeks ago     Up 7 days                0.0.0.0:3001->3000/tcp, [::]:3001->3000/tcp
+litellm-proxy   ghcr.io/berriai/litellm:main-v1.66.0-stable   "docker/prod_entrypo…"   litellm      7 days ago      Up 7 days (healthy)      0.0.0.0:4000->4000/tcp, [::]:4000->4000/tcp
+open-webui      ghcr.io/open-webui/open-webui:0.9.5           "bash start.sh"          open-webui   7 days ago      Up 7 days (unhealthy)    0.0.0.0:3000->8080/tcp, [::]:3000->8080/tcp
+prometheus      prom/prometheus:v3                            "/bin/prometheus --c…"   prometheus   2 weeks ago     Up 7 days                0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp
+vllm            vllm/vllm-openai:v0.20.0-cu130-ubuntu2404     "vllm serve --model …"   vllm         9 minutes ago   Up 9 minutes (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+vllm-small      vllm/vllm-openai:v0.20.0-cu130-ubuntu2404     "vllm serve --model …"   vllm-small   9 minutes ago   Up 6 minutes (healthy)   0.0.0.0:8004->8004/tcp, [::]:8004->8004/tcp
