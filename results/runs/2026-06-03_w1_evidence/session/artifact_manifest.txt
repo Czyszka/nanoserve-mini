@@ -1,0 +1,13 @@
+results/runs/2026-06-03_w1_evidence/session/artifact_manifest.txt
+results/runs/2026-06-03_w1_evidence/session/docker_ps_end.txt
+results/runs/2026-06-03_w1_evidence/session/docker_ps_start.txt
+results/runs/2026-06-03_w1_evidence/session/nvidia_smi_end.txt
+results/runs/2026-06-03_w1_evidence/session/nvidia_smi_start.txt
+results/runs/2026-06-03_w1_evidence/session/start_commit.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/cap020_status.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/cap025_status.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/log_cap020_FAILED.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/log_cap025_FAILED.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/log_restored_default.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/nvidia_smi_cap020_FAILED.txt
+results/runs/2026-06-03_w1_evidence/t3_deepseek_vram/nvidia_smi_cap025_FAILED.txt
