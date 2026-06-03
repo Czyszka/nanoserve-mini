@@ -1,0 +1,1 @@
+cap=0.15 crashed during engine init (Engine core initialization failed; see log_cap015_FAILED.txt traceback). Filename originally cap025 — corrected post-session: runtime log shows gpu_memory_utilization=0.15.

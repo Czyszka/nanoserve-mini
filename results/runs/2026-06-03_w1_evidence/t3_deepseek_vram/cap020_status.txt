@@ -1,1 +1,1 @@
-cap=0.20 did NOT come up healthy (possible OOM / too low headroom)
+cap=0.20 did not pass the 300s healthcheck window but actually came up after — runtime log confirms gpu_memory_utilization=0.2, no crash traceback. Re-capture needed with longer wait.
