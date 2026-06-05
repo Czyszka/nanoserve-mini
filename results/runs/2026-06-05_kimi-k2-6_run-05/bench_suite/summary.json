@@ -5,8 +5,8 @@
   "model": "kimi-k2.6",
   "base_url": "http://127.0.0.1:8000",
   "metrics_base_url": "http://127.0.0.1:8000",
-  "started_at": "2026-06-05T09:17:45.933773+00:00",
-  "ended_at": "2026-06-05T09:18:10.736011+00:00",
+  "started_at": "2026-06-05T10:01:45.397826+00:00",
+  "ended_at": "2026-06-05T10:02:36.173017+00:00",
   "generated_run_id": true,
   "completed": true,
   "error": null,
@@ -24,8 +24,8 @@
         "pre"
       ],
       "exit_code": 0,
-      "started_at": "2026-06-05T09:17:45.933789+00:00",
-      "ended_at": "2026-06-05T09:17:46.265593+00:00",
+      "started_at": "2026-06-05T10:01:45.397841+00:00",
+      "ended_at": "2026-06-05T10:01:45.809754+00:00",
       "output_paths": [
         "results/runs/2026-06-05_kimi-k2-6_run-05/server_metrics/snapshot_pre.json"
       ],
@@ -54,8 +54,8 @@
         "single-target-bench-suite"
       ],
       "exit_code": 0,
-      "started_at": "2026-06-05T09:17:46.265676+00:00",
-      "ended_at": "2026-06-05T09:17:51.323472+00:00",
+      "started_at": "2026-06-05T10:01:45.809835+00:00",
+      "ended_at": "2026-06-05T10:02:17.155111+00:00",
       "output_paths": [
         "results/runs/2026-06-05_kimi-k2-6_run-05/singlestream_lite_correctness/result.json"
       ],
@@ -84,8 +84,8 @@
         "single-target-bench-suite"
       ],
       "exit_code": 0,
-      "started_at": "2026-06-05T09:17:51.323499+00:00",
-      "ended_at": "2026-06-05T09:17:53.865176+00:00",
+      "started_at": "2026-06-05T10:02:17.155128+00:00",
+      "ended_at": "2026-06-05T10:02:18.548292+00:00",
       "output_paths": [
         "results/runs/2026-06-05_kimi-k2-6_run-05/singlestream_lite_latency/result.json"
       ],
@@ -115,11 +115,11 @@
         "--warmup",
         "1",
         "--runs",
-        "5"
+        "10"
       ],
       "exit_code": 0,
-      "started_at": "2026-06-05T09:17:53.865206+00:00",
-      "ended_at": "2026-06-05T09:18:10.490449+00:00",
+      "started_at": "2026-06-05T10:02:18.548323+00:00",
+      "ended_at": "2026-06-05T10:02:35.934909+00:00",
       "output_paths": [
         "results/runs/2026-06-05_kimi-k2-6_run-05/singlestream_lite_repeated/results.jsonl",
         "results/runs/2026-06-05_kimi-k2-6_run-05/singlestream_lite_repeated/summary.json"
@@ -139,8 +139,8 @@
         "post"
       ],
       "exit_code": 0,
-      "started_at": "2026-06-05T09:18:10.490628+00:00",
-      "ended_at": "2026-06-05T09:18:10.735958+00:00",
+      "started_at": "2026-06-05T10:02:35.934995+00:00",
+      "ended_at": "2026-06-05T10:02:36.172972+00:00",
       "output_paths": [
         "results/runs/2026-06-05_kimi-k2-6_run-05/server_metrics/snapshot_post.json"
       ],

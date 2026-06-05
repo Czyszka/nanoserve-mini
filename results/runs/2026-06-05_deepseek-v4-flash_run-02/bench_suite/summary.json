@@ -1,12 +1,12 @@
 {
   "schema": "nanoserve-mini.bench-suite.v1",
   "script_name": "run_bench_suite.py",
-  "run_id": "2026-05-19_deepseek-v4-flash_run-05",
+  "run_id": "2026-06-05_deepseek-v4-flash_run-02",
   "model": "DeepSeek-V4-Flash",
-  "base_url": "http://127.0.0.1:4000",
+  "base_url": "http://127.0.0.1:8004",
   "metrics_base_url": "http://127.0.0.1:8004",
-  "started_at": "2026-05-19T10:55:32.831622+00:00",
-  "ended_at": "2026-05-19T10:55:36.884519+00:00",
+  "started_at": "2026-06-05T10:01:45.414564+00:00",
+  "ended_at": "2026-06-05T10:02:14.630967+00:00",
   "generated_run_id": true,
   "completed": true,
   "error": null,
@@ -19,15 +19,15 @@
         "--timeout",
         "120.0",
         "--run-id",
-        "2026-05-19_deepseek-v4-flash_run-05",
+        "2026-06-05_deepseek-v4-flash_run-02",
         "--phase",
         "pre"
       ],
       "exit_code": 0,
-      "started_at": "2026-05-19T10:55:32.831638+00:00",
-      "ended_at": "2026-05-19T10:55:33.217215+00:00",
+      "started_at": "2026-06-05T10:01:45.414578+00:00",
+      "ended_at": "2026-06-05T10:01:45.905643+00:00",
       "output_paths": [
-        "results/runs/2026-05-19_deepseek-v4-flash_run-05/server_metrics/snapshot_pre.json"
+        "results/runs/2026-06-05_deepseek-v4-flash_run-02/server_metrics/snapshot_pre.json"
       ],
       "error": null
     },
@@ -35,29 +35,29 @@
       "name": "request_once",
       "argv": [
         "--base-url",
-        "http://127.0.0.1:4000",
+        "http://127.0.0.1:8004",
         "--model",
         "DeepSeek-V4-Flash",
         "--prompt",
         "Say hi in one short sentence.",
         "--max-tokens",
-        "64",
+        "1024",
         "--temperature",
         "0.0",
         "--timeout",
         "120.0",
         "--run-id",
-        "2026-05-19_deepseek-v4-flash_run-05",
+        "2026-06-05_deepseek-v4-flash_run-02",
         "--api-key",
         "sk-local-disabled",
         "--workload",
         "single-target-bench-suite"
       ],
       "exit_code": 0,
-      "started_at": "2026-05-19T10:55:33.217315+00:00",
-      "ended_at": "2026-05-19T10:55:33.753533+00:00",
+      "started_at": "2026-06-05T10:01:45.905744+00:00",
+      "ended_at": "2026-06-05T10:01:47.392959+00:00",
       "output_paths": [
-        "results/runs/2026-05-19_deepseek-v4-flash_run-05/singlestream_lite_correctness/result.json"
+        "results/runs/2026-06-05_deepseek-v4-flash_run-02/singlestream_lite_correctness/result.json"
       ],
       "error": null
     },
@@ -65,29 +65,29 @@
       "name": "measure_ttft_once",
       "argv": [
         "--base-url",
-        "http://127.0.0.1:4000",
+        "http://127.0.0.1:8004",
         "--model",
         "DeepSeek-V4-Flash",
         "--prompt",
         "Say hi in one short sentence.",
         "--max-tokens",
-        "64",
+        "1024",
         "--temperature",
         "0.0",
         "--timeout",
         "120.0",
         "--run-id",
-        "2026-05-19_deepseek-v4-flash_run-05",
+        "2026-06-05_deepseek-v4-flash_run-02",
         "--api-key",
         "sk-local-disabled",
         "--workload",
         "single-target-bench-suite"
       ],
       "exit_code": 0,
-      "started_at": "2026-05-19T10:55:33.753557+00:00",
-      "ended_at": "2026-05-19T10:55:34.303138+00:00",
+      "started_at": "2026-06-05T10:01:47.392988+00:00",
+      "ended_at": "2026-06-05T10:01:49.869878+00:00",
       "output_paths": [
-        "results/runs/2026-05-19_deepseek-v4-flash_run-05/singlestream_lite_latency/result.json"
+        "results/runs/2026-06-05_deepseek-v4-flash_run-02/singlestream_lite_latency/result.json"
       ],
       "error": null
     },
@@ -95,19 +95,19 @@
       "name": "run_sequential_benchmark",
       "argv": [
         "--base-url",
-        "http://127.0.0.1:4000",
+        "http://127.0.0.1:8004",
         "--model",
         "DeepSeek-V4-Flash",
         "--prompt",
         "Say hi in one short sentence.",
         "--max-tokens",
-        "64",
+        "1024",
         "--temperature",
         "0.0",
         "--timeout",
         "120.0",
         "--run-id",
-        "2026-05-19_deepseek-v4-flash_run-05",
+        "2026-06-05_deepseek-v4-flash_run-02",
         "--api-key",
         "sk-local-disabled",
         "--workload",
@@ -115,14 +115,14 @@
         "--warmup",
         "1",
         "--runs",
-        "3"
+        "10"
       ],
       "exit_code": 0,
-      "started_at": "2026-05-19T10:55:34.303173+00:00",
-      "ended_at": "2026-05-19T10:55:36.525787+00:00",
+      "started_at": "2026-06-05T10:01:49.869901+00:00",
+      "ended_at": "2026-06-05T10:02:14.396150+00:00",
       "output_paths": [
-        "results/runs/2026-05-19_deepseek-v4-flash_run-05/singlestream_lite_repeated/results.jsonl",
-        "results/runs/2026-05-19_deepseek-v4-flash_run-05/singlestream_lite_repeated/summary.json"
+        "results/runs/2026-06-05_deepseek-v4-flash_run-02/singlestream_lite_repeated/results.jsonl",
+        "results/runs/2026-06-05_deepseek-v4-flash_run-02/singlestream_lite_repeated/summary.json"
       ],
       "error": null
     },
@@ -134,15 +134,15 @@
         "--timeout",
         "120.0",
         "--run-id",
-        "2026-05-19_deepseek-v4-flash_run-05",
+        "2026-06-05_deepseek-v4-flash_run-02",
         "--phase",
         "post"
       ],
       "exit_code": 0,
-      "started_at": "2026-05-19T10:55:36.525827+00:00",
-      "ended_at": "2026-05-19T10:55:36.884466+00:00",
+      "started_at": "2026-06-05T10:02:14.396184+00:00",
+      "ended_at": "2026-06-05T10:02:14.630924+00:00",
       "output_paths": [
-        "results/runs/2026-05-19_deepseek-v4-flash_run-05/server_metrics/snapshot_post.json"
+        "results/runs/2026-06-05_deepseek-v4-flash_run-02/server_metrics/snapshot_post.json"
       ],
       "error": null
     }

@@ -2,10 +2,10 @@
   "schema": "nanoserve-mini.sequential-bench.v3",
   "methodology": "mlperf_inspired_lite",
   "benchmark_mode": "singlestream_lite_repeated",
-  "timestamp": "2026-05-19T11:08:59.033143+00:00",
+  "timestamp": "2026-06-05T09:44:54.243931+00:00",
   "controls": {
     "model": "DeepSeek-V4-Flash",
-    "base_url": "http://127.0.0.1:4000",
+    "base_url": "http://127.0.0.1:8004",
     "dtype": null,
     "quantization": null,
     "gpu_model": null,
@@ -18,7 +18,7 @@
       "max_tokens": 64
     },
     "warmup_runs": 1,
-    "measured_runs": 3,
+    "measured_runs": 10,
     "concurrency": 1,
     "workload": "single-target-bench-suite",
     "workload_spec": {
@@ -35,10 +35,10 @@
       "shared_prefixes": false
     },
     "notes": null,
-    "run_id": "2026-05-19_deepseek-v4-flash_run-06",
-    "run_uuid": "1ee576b53fc444b18dcda55dacb46c10",
+    "run_id": "2026-06-05_deepseek-v4-flash_run-01",
+    "run_uuid": "1d6272701f804cbfab4d4e8a60161a64",
     "script_name": "run_sequential_benchmark.py",
-    "git_commit": "bd028eed3fa1667291c0ddcfa86026d14e6f4084"
+    "git_commit": "ec3df59fc5f8d9ac288faf0b33adf922502ccb99"
   },
   "request": {
     "prompt": "Say hi in one short sentence.",
@@ -46,34 +46,34 @@
     "temperature": 0.0
   },
   "summary": {
-    "measured_runs": 3,
+    "measured_runs": 10,
     "errors": 0,
     "ttft_seconds": {
-      "count": 3,
-      "min": 0.359294327000498,
-      "p50": 0.3614375899996958,
-      "p95": 0.3712908619998416,
-      "max": 0.3723856699998578,
-      "mean": 0.3643725290000172
+      "count": 10,
+      "min": 0.9644187989179045,
+      "p50": 1.2566932605113834,
+      "p95": 1.57843796700472,
+      "max": 1.6761987210484222,
+      "mean": 1.2491510378778912
     },
     "e2e_seconds": {
-      "count": 3,
-      "min": 0.5496638320000784,
-      "p50": 0.550970905000213,
-      "p95": 0.5712212982997699,
-      "max": 0.5734713419997206,
-      "mean": 0.5580353596666706
+      "count": 10,
+      "min": 1.4560912640299648,
+      "p50": 1.9279939164989628,
+      "p95": 2.2989358727005307,
+      "max": 2.3944464080268517,
+      "mean": 1.8910195275908337
     },
     "tpot_seconds": {
-      "count": 3,
-      "min": 0.09476665750025859,
-      "p50": 0.09518475249979019,
-      "p95": 0.10000702764991728,
-      "max": 0.10054283599993141,
-      "mean": 0.09683141533332673
+      "count": 10,
+      "min": 0.21625863551162183,
+      "p50": 0.3601724175096024,
+      "p95": 0.3663351703551598,
+      "max": 0.3681946590077132,
+      "mean": 0.3209342448564712
     },
     "prompt_tokens": {
-      "count": 3,
+      "count": 10,
       "min": 11.0,
       "p50": 11.0,
       "p95": 11.0,
@@ -81,17 +81,17 @@
       "mean": 11.0
     },
     "completion_tokens": {
-      "count": 3,
+      "count": 10,
       "min": 3.0,
       "p50": 3.0,
       "p95": 3.0,
       "max": 3.0,
       "mean": 3.0
     },
-    "measured_wall_clock_seconds": 1.674480198999845,
-    "request_throughput": 1.7916007617121292,
-    "output_chars_per_second": 5.374802285136387,
-    "output_tokens_per_second": 5.374802285136387
+    "measured_wall_clock_seconds": 18.911469461978413,
+    "request_throughput": 0.5287796392609808,
+    "output_chars_per_second": 1.5863389177829423,
+    "output_tokens_per_second": 1.5863389177829423
   },
   "server_metrics": {
     "gpu_memory_used_gb": null,

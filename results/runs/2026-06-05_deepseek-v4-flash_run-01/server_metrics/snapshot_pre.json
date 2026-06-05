@@ -1,9 +1,9 @@
 {
   "schema": "nanoserve-mini.server-metrics-snapshot.v1",
   "methodology": "mlperf_inspired_lite",
-  "timestamp": "2026-05-19T10:55:33.205361+00:00",
-  "run_id": "2026-05-19_deepseek-v4-flash_run-05",
-  "run_uuid": "d5dc9fc2f0474422860608928620f8fa",
+  "timestamp": "2026-06-05T09:44:29.295022+00:00",
+  "run_id": "2026-06-05_deepseek-v4-flash_run-01",
+  "run_uuid": "cb568245203b4fe9a0d14ab5345c3a3c",
   "phase": "pre",
   "base_url": "http://127.0.0.1:8004",
   "notes": null,
@@ -17,19 +17,19 @@
           "labels": {
             "generation": "0"
           },
-          "value": 16297.0
+          "value": 16437.0
         },
         {
           "labels": {
             "generation": "1"
           },
-          "value": 2041.0
+          "value": 2539.0
         },
         {
           "labels": {
             "generation": "2"
           },
-          "value": 981.0
+          "value": 391.0
         }
       ],
       "python_gc_objects_uncollectable_total": [
@@ -57,13 +57,13 @@
           "labels": {
             "generation": "0"
           },
-          "value": 1633.0
+          "value": 1580.0
         },
         {
           "labels": {
             "generation": "1"
           },
-          "value": 149.0
+          "value": 144.0
         },
         {
           "labels": {
@@ -87,25 +87,25 @@
       "process_virtual_memory_bytes": [
         {
           "labels": {},
-          "value": 89767313408.0
+          "value": 89784328192.0
         }
       ],
       "process_resident_memory_bytes": [
         {
           "labels": {},
-          "value": 1231540224.0
+          "value": 1258520576.0
         }
       ],
       "process_start_time_seconds": [
         {
           "labels": {},
-          "value": 1779184498.72
+          "value": 1780645433.52
         }
       ],
       "process_cpu_seconds_total": [
         {
           "labels": {},
-          "value": 44.59
+          "value": 75.19
         }
       ],
       "process_open_fds": [
@@ -126,7 +126,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         }
       ],
       "vllm:spec_decode_num_drafts_created": [
@@ -135,7 +135,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9581141
+          "value": 1780645844.2462585
         }
       ],
       "vllm:spec_decode_num_draft_tokens_total": [
@@ -144,7 +144,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         }
       ],
       "vllm:spec_decode_num_draft_tokens_created": [
@@ -153,7 +153,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.958232
+          "value": 1780645844.2463648
         }
       ],
       "vllm:spec_decode_num_accepted_tokens_total": [
@@ -162,7 +162,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 167.0
         }
       ],
       "vllm:spec_decode_num_accepted_tokens_created": [
@@ -171,7 +171,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9582996
+          "value": 1780645844.24643
         }
       ],
       "vllm:spec_decode_num_accepted_tokens_per_pos_total": [
@@ -181,7 +181,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "position": "0"
           },
-          "value": 6.0
+          "value": 167.0
         }
       ],
       "vllm:spec_decode_num_accepted_tokens_per_pos_created": [
@@ -191,7 +191,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "position": "0"
           },
-          "value": 1779184556.958363
+          "value": 1780645844.2464943
         }
       ],
       "vllm:estimated_flops_per_gpu_total": [
@@ -209,7 +209,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9584444
+          "value": 1780645844.246561
         }
       ],
       "vllm:estimated_read_bytes_per_gpu_total": [
@@ -227,7 +227,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9584963
+          "value": 1780645844.2466102
         }
       ],
       "vllm:estimated_write_bytes_per_gpu_total": [
@@ -245,7 +245,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9585347
+          "value": 1780645844.2472084
         }
       ],
       "vllm:num_requests_running": [
@@ -325,7 +325,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 66.0
+          "value": 18003.0
         }
       ],
       "vllm:prefix_cache_queries_created": [
@@ -334,7 +334,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9597645
+          "value": 1780645844.2478285
         }
       ],
       "vllm:prefix_cache_hits_total": [
@@ -343,7 +343,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 0.0
+          "value": 256.0
         }
       ],
       "vllm:prefix_cache_hits_created": [
@@ -352,7 +352,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9598107
+          "value": 1780645844.247873
         }
       ],
       "vllm:external_prefix_cache_queries_total": [
@@ -370,7 +370,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.959852
+          "value": 1780645844.2479134
         }
       ],
       "vllm:external_prefix_cache_hits_total": [
@@ -388,7 +388,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9598927
+          "value": 1780645844.247952
         }
       ],
       "vllm:mm_cache_queries_total": [
@@ -406,7 +406,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.959934
+          "value": 1780645844.247989
         }
       ],
       "vllm:mm_cache_hits_total": [
@@ -424,7 +424,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9599714
+          "value": 1780645844.248026
         }
       ],
       "vllm:num_preemptions_total": [
@@ -442,7 +442,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.960012
+          "value": 1780645844.248067
         }
       ],
       "vllm:prompt_tokens_total": [
@@ -451,7 +451,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 66.0
+          "value": 18003.0
         }
       ],
       "vllm:prompt_tokens_created": [
@@ -460,7 +460,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9600596
+          "value": 1780645844.2481244
         }
       ],
       "vllm:prompt_tokens_by_source_total": [
@@ -470,7 +470,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "source": "local_compute"
           },
-          "value": 66.0
+          "value": 17747.0
         },
         {
           "labels": {
@@ -478,7 +478,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "source": "local_cache_hit"
           },
-          "value": 0.0
+          "value": 256.0
         },
         {
           "labels": {
@@ -496,7 +496,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "source": "local_compute"
           },
-          "value": 1779184556.9601152
+          "value": 1780645844.2481787
         },
         {
           "labels": {
@@ -504,7 +504,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "source": "local_cache_hit"
           },
-          "value": 1779184556.9601347
+          "value": 1780645844.2481992
         },
         {
           "labels": {
@@ -512,7 +512,7 @@
             "model_name": "DeepSeek-V4-Flash",
             "source": "external_kv_transfer"
           },
-          "value": 1779184556.9601524
+          "value": 1780645844.2482169
         }
       ],
       "vllm:prompt_tokens_cached_total": [
@@ -521,7 +521,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 0.0
+          "value": 256.0
         }
       ],
       "vllm:prompt_tokens_cached_created": [
@@ -530,7 +530,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9601922
+          "value": 1780645844.2482574
         }
       ],
       "vllm:generation_tokens_total": [
@@ -539,7 +539,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 18.0
+          "value": 2148.0
         }
       ],
       "vllm:generation_tokens_created": [
@@ -548,7 +548,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9602327
+          "value": 1780645844.2482984
         }
       ],
       "vllm:request_success_total": [
@@ -558,7 +558,7 @@
             "finished_reason": "stop",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -600,7 +600,7 @@
             "finished_reason": "stop",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9603
+          "value": 1780645844.2483666
         },
         {
           "labels": {
@@ -608,7 +608,7 @@
             "finished_reason": "length",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9603236
+          "value": 1780645844.2483904
         },
         {
           "labels": {
@@ -616,7 +616,7 @@
             "finished_reason": "abort",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9603443
+          "value": 1780645844.2484105
         },
         {
           "labels": {
@@ -624,7 +624,7 @@
             "finished_reason": "error",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9603655
+          "value": 1780645844.248428
         },
         {
           "labels": {
@@ -632,7 +632,7 @@
             "finished_reason": "repetition",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9603834
+          "value": 1780645844.2484446
         }
       ],
       "vllm:request_prompt_tokens_bucket": [
@@ -674,7 +674,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -682,7 +682,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -690,7 +690,7 @@
             "le": "100.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -698,7 +698,7 @@
             "le": "200.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -706,7 +706,7 @@
             "le": "500.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -714,7 +714,7 @@
             "le": "1000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -722,7 +722,7 @@
             "le": "2000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -730,7 +730,7 @@
             "le": "5000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -738,7 +738,7 @@
             "le": "10000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -746,7 +746,7 @@
             "le": "20000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -754,7 +754,7 @@
             "le": "50000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -762,7 +762,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_prompt_tokens_count": [
@@ -771,7 +771,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_prompt_tokens_sum": [
@@ -780,7 +780,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 66.0
+          "value": 18003.0
         }
       ],
       "vllm:request_prompt_tokens_created": [
@@ -789,7 +789,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9605274
+          "value": 1780645844.2485826
         }
       ],
       "vllm:request_generation_tokens_bucket": [
@@ -815,7 +815,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -823,7 +823,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -831,7 +831,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -839,7 +839,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -847,7 +847,7 @@
             "le": "100.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -855,7 +855,7 @@
             "le": "200.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -863,7 +863,7 @@
             "le": "500.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -871,7 +871,7 @@
             "le": "1000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -879,7 +879,7 @@
             "le": "2000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -887,7 +887,7 @@
             "le": "5000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -895,7 +895,7 @@
             "le": "10000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -903,7 +903,7 @@
             "le": "20000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -911,7 +911,7 @@
             "le": "50000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -919,7 +919,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_generation_tokens_count": [
@@ -928,7 +928,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_generation_tokens_sum": [
@@ -937,7 +937,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 18.0
+          "value": 2148.0
         }
       ],
       "vllm:request_generation_tokens_created": [
@@ -946,7 +946,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9607499
+          "value": 1780645844.2487721
         }
       ],
       "vllm:iteration_tokens_total_bucket": [
@@ -956,7 +956,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 0.0
+          "value": 1813.0
         },
         {
           "labels": {
@@ -964,7 +964,7 @@
             "le": "8.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -972,7 +972,7 @@
             "le": "16.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -980,7 +980,7 @@
             "le": "32.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -988,7 +988,7 @@
             "le": "64.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1980.0
         },
         {
           "labels": {
@@ -996,7 +996,7 @@
             "le": "128.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1004,7 +1004,7 @@
             "le": "256.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1012,7 +1012,7 @@
             "le": "512.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1020,7 +1020,7 @@
             "le": "1024.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1028,7 +1028,7 @@
             "le": "2048.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1036,7 +1036,7 @@
             "le": "4096.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1044,7 +1044,7 @@
             "le": "8192.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1052,7 +1052,7 @@
             "le": "16384.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1981.0
         },
         {
           "labels": {
@@ -1060,7 +1060,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1982.0
         }
       ],
       "vllm:iteration_tokens_total_count": [
@@ -1069,7 +1069,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 12.0
+          "value": 1982.0
         }
       ],
       "vllm:iteration_tokens_total_sum": [
@@ -1078,7 +1078,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 84.0
+          "value": 20151.0
         }
       ],
       "vllm:iteration_tokens_total_created": [
@@ -1087,7 +1087,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9608903
+          "value": 1780645844.2488906
         }
       ],
       "vllm:request_max_num_generation_tokens_bucket": [
@@ -1113,7 +1113,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1121,7 +1121,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1129,7 +1129,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1137,7 +1137,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1145,7 +1145,7 @@
             "le": "100.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1153,7 +1153,7 @@
             "le": "200.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1161,7 +1161,7 @@
             "le": "500.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -1169,7 +1169,7 @@
             "le": "1000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -1177,7 +1177,7 @@
             "le": "2000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1185,7 +1185,7 @@
             "le": "5000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1193,7 +1193,7 @@
             "le": "10000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1201,7 +1201,7 @@
             "le": "20000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1209,7 +1209,7 @@
             "le": "50000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1217,7 +1217,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_max_num_generation_tokens_count": [
@@ -1226,7 +1226,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_max_num_generation_tokens_sum": [
@@ -1235,7 +1235,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 18.0
+          "value": 2148.0
         }
       ],
       "vllm:request_max_num_generation_tokens_created": [
@@ -1244,7 +1244,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9610324
+          "value": 1780645844.2490125
         }
       ],
       "vllm:request_params_n_bucket": [
@@ -1254,7 +1254,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1262,7 +1262,7 @@
             "le": "2.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1270,7 +1270,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1278,7 +1278,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1286,7 +1286,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1294,7 +1294,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_params_n_count": [
@@ -1303,7 +1303,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_params_n_sum": [
@@ -1312,7 +1312,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_params_n_created": [
@@ -1321,7 +1321,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.961145
+          "value": 1780645844.2491353
         }
       ],
       "vllm:request_params_max_tokens_bucket": [
@@ -1379,7 +1379,7 @@
             "le": "100.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1387,7 +1387,7 @@
             "le": "200.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1395,7 +1395,7 @@
             "le": "500.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1403,7 +1403,7 @@
             "le": "1000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1411,7 +1411,7 @@
             "le": "2000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1419,7 +1419,7 @@
             "le": "5000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1427,7 +1427,7 @@
             "le": "10000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1435,7 +1435,7 @@
             "le": "20000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1443,7 +1443,7 @@
             "le": "50000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1451,7 +1451,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_params_max_tokens_count": [
@@ -1460,7 +1460,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_params_max_tokens_sum": [
@@ -1469,7 +1469,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 384.0
+          "value": 178605.0
         }
       ],
       "vllm:request_params_max_tokens_created": [
@@ -1478,7 +1478,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9612448
+          "value": 1780645844.249235
         }
       ],
       "vllm:time_to_first_token_seconds_bucket": [
@@ -1552,7 +1552,7 @@
             "le": "0.25",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1560,7 +1560,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1568,7 +1568,7 @@
             "le": "0.75",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1576,7 +1576,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1584,7 +1584,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1592,7 +1592,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -1600,7 +1600,7 @@
             "le": "7.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1608,7 +1608,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1616,7 +1616,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -1624,7 +1624,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1632,7 +1632,7 @@
             "le": "80.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1640,7 +1640,7 @@
             "le": "160.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1648,7 +1648,7 @@
             "le": "640.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1656,7 +1656,7 @@
             "le": "2560.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1664,7 +1664,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:time_to_first_token_seconds_count": [
@@ -1673,7 +1673,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:time_to_first_token_seconds_sum": [
@@ -1682,7 +1682,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 13.376654624938965
+          "value": 51.184529066085815
         }
       ],
       "vllm:time_to_first_token_seconds_created": [
@@ -1691,7 +1691,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9613626
+          "value": 1780645844.2493494
         }
       ],
       "vllm:inter_token_latency_seconds_bucket": [
@@ -1733,7 +1733,7 @@
             "le": "0.1",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 0.0
+          "value": 796.0
         },
         {
           "labels": {
@@ -1741,7 +1741,7 @@
             "le": "0.15",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 4.0
+          "value": 1913.0
         },
         {
           "labels": {
@@ -1749,7 +1749,7 @@
             "le": "0.2",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1757,7 +1757,7 @@
             "le": "0.3",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1765,7 +1765,7 @@
             "le": "0.4",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1773,7 +1773,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1781,7 +1781,7 @@
             "le": "0.75",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1789,7 +1789,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1797,7 +1797,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1805,7 +1805,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1978.0
         },
         {
           "labels": {
@@ -1813,7 +1813,7 @@
             "le": "7.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -1821,7 +1821,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -1829,7 +1829,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -1837,7 +1837,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -1845,7 +1845,7 @@
             "le": "80.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         },
         {
           "labels": {
@@ -1853,7 +1853,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         }
       ],
       "vllm:inter_token_latency_seconds_count": [
@@ -1862,7 +1862,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1979.0
         }
       ],
       "vllm:inter_token_latency_seconds_sum": [
@@ -1871,7 +1871,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 2.5891356079996513
+          "value": 244.35177189891692
         }
       ],
       "vllm:inter_token_latency_seconds_created": [
@@ -1880,7 +1880,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9615066
+          "value": 1780645844.249494
         }
       ],
       "vllm:request_time_per_output_token_seconds_bucket": [
@@ -1914,7 +1914,7 @@
             "le": "0.075",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 4.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1922,7 +1922,7 @@
             "le": "0.1",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -1930,7 +1930,7 @@
             "le": "0.15",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -1938,7 +1938,7 @@
             "le": "0.2",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1946,7 +1946,7 @@
             "le": "0.3",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1954,7 +1954,7 @@
             "le": "0.4",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1962,7 +1962,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1970,7 +1970,7 @@
             "le": "0.75",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1978,7 +1978,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1986,7 +1986,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -1994,7 +1994,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2002,7 +2002,7 @@
             "le": "7.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2010,7 +2010,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2018,7 +2018,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2026,7 +2026,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2034,7 +2034,7 @@
             "le": "80.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2042,7 +2042,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_time_per_output_token_seconds_count": [
@@ -2051,7 +2051,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_time_per_output_token_seconds_sum": [
@@ -2060,7 +2060,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1.2945678039998256
+          "value": 0.37067382651483716
         }
       ],
       "vllm:request_time_per_output_token_seconds_created": [
@@ -2069,7 +2069,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9616435
+          "value": 1780645844.2496202
         }
       ],
       "vllm:e2e_request_latency_seconds_bucket": [
@@ -2087,7 +2087,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2095,7 +2095,7 @@
             "le": "0.8",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2103,7 +2103,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2111,7 +2111,7 @@
             "le": "1.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2119,7 +2119,7 @@
             "le": "2.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2127,7 +2127,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2135,7 +2135,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2143,7 +2143,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2151,7 +2151,7 @@
             "le": "15.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2159,7 +2159,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2167,7 +2167,7 @@
             "le": "30.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -2175,7 +2175,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2183,7 +2183,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2191,7 +2191,7 @@
             "le": "60.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2199,7 +2199,7 @@
             "le": "120.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2207,7 +2207,7 @@
             "le": "240.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2215,7 +2215,7 @@
             "le": "480.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2223,7 +2223,7 @@
             "le": "960.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2231,7 +2231,7 @@
             "le": "1920.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2239,7 +2239,7 @@
             "le": "7680.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2247,7 +2247,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:e2e_request_latency_seconds_count": [
@@ -2256,7 +2256,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:e2e_request_latency_seconds_sum": [
@@ -2265,7 +2265,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 15.964142799377441
+          "value": 295.5331573486328
         }
       ],
       "vllm:e2e_request_latency_seconds_created": [
@@ -2274,7 +2274,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9617858
+          "value": 1780645844.2497437
         }
       ],
       "vllm:request_queue_time_seconds_bucket": [
@@ -2284,7 +2284,7 @@
             "le": "0.3",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2292,7 +2292,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2300,7 +2300,7 @@
             "le": "0.8",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2308,7 +2308,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2316,7 +2316,7 @@
             "le": "1.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2324,7 +2324,7 @@
             "le": "2.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2332,7 +2332,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2340,7 +2340,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2348,7 +2348,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2356,7 +2356,7 @@
             "le": "15.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2364,7 +2364,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2372,7 +2372,7 @@
             "le": "30.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2380,7 +2380,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2388,7 +2388,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2396,7 +2396,7 @@
             "le": "60.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2404,7 +2404,7 @@
             "le": "120.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2412,7 +2412,7 @@
             "le": "240.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2420,7 +2420,7 @@
             "le": "480.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2428,7 +2428,7 @@
             "le": "960.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2436,7 +2436,7 @@
             "le": "1920.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2444,7 +2444,7 @@
             "le": "7680.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2452,7 +2452,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_queue_time_seconds_count": [
@@ -2461,7 +2461,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_queue_time_seconds_sum": [
@@ -2470,7 +2470,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 9.943099939846434e-05
+          "value": 0.00044012803118675947
         }
       ],
       "vllm:request_queue_time_seconds_created": [
@@ -2479,7 +2479,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9619436
+          "value": 1780645844.2498837
         }
       ],
       "vllm:request_inference_time_seconds_bucket": [
@@ -2497,7 +2497,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2505,7 +2505,7 @@
             "le": "0.8",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2513,7 +2513,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2521,7 +2521,7 @@
             "le": "1.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2529,7 +2529,7 @@
             "le": "2.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2537,7 +2537,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2545,7 +2545,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2553,7 +2553,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2561,7 +2561,7 @@
             "le": "15.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2569,7 +2569,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2577,7 +2577,7 @@
             "le": "30.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -2585,7 +2585,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2593,7 +2593,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2601,7 +2601,7 @@
             "le": "60.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2609,7 +2609,7 @@
             "le": "120.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2617,7 +2617,7 @@
             "le": "240.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2625,7 +2625,7 @@
             "le": "480.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2633,7 +2633,7 @@
             "le": "960.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2641,7 +2641,7 @@
             "le": "1920.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2649,7 +2649,7 @@
             "le": "7680.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2657,7 +2657,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_inference_time_seconds_count": [
@@ -2666,7 +2666,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_inference_time_seconds_sum": [
@@ -2675,7 +2675,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 15.636907719999726
+          "value": 295.36295707384124
         }
       ],
       "vllm:request_inference_time_seconds_created": [
@@ -2684,7 +2684,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9622602
+          "value": 1780645844.2502062
         }
       ],
       "vllm:request_prefill_time_seconds_bucket": [
@@ -2694,7 +2694,7 @@
             "le": "0.3",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2702,7 +2702,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2710,7 +2710,7 @@
             "le": "0.8",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2718,7 +2718,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2726,7 +2726,7 @@
             "le": "1.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2734,7 +2734,7 @@
             "le": "2.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2742,7 +2742,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2750,7 +2750,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2758,7 +2758,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -2766,7 +2766,7 @@
             "le": "15.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -2774,7 +2774,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2782,7 +2782,7 @@
             "le": "30.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2790,7 +2790,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2798,7 +2798,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2806,7 +2806,7 @@
             "le": "60.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2814,7 +2814,7 @@
             "le": "120.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2822,7 +2822,7 @@
             "le": "240.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2830,7 +2830,7 @@
             "le": "480.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2838,7 +2838,7 @@
             "le": "960.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2846,7 +2846,7 @@
             "le": "1920.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2854,7 +2854,7 @@
             "le": "7680.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -2862,7 +2862,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_prefill_time_seconds_count": [
@@ -2871,7 +2871,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_prefill_time_seconds_sum": [
@@ -2880,7 +2880,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 13.047772112000075
+          "value": 51.01118517492432
         }
       ],
       "vllm:request_prefill_time_seconds_created": [
@@ -2889,7 +2889,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9623973
+          "value": 1780645844.2503648
         }
       ],
       "vllm:request_decode_time_seconds_bucket": [
@@ -2899,7 +2899,7 @@
             "le": "0.3",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2907,7 +2907,7 @@
             "le": "0.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2915,7 +2915,7 @@
             "le": "0.8",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2923,7 +2923,7 @@
             "le": "1.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2931,7 +2931,7 @@
             "le": "1.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2939,7 +2939,7 @@
             "le": "2.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2947,7 +2947,7 @@
             "le": "2.5",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2955,7 +2955,7 @@
             "le": "5.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2963,7 +2963,7 @@
             "le": "10.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -2971,7 +2971,7 @@
             "le": "15.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -2979,7 +2979,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -2987,7 +2987,7 @@
             "le": "30.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -2995,7 +2995,7 @@
             "le": "40.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3003,7 +3003,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3011,7 +3011,7 @@
             "le": "60.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3019,7 +3019,7 @@
             "le": "120.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3027,7 +3027,7 @@
             "le": "240.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3035,7 +3035,7 @@
             "le": "480.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3043,7 +3043,7 @@
             "le": "960.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3051,7 +3051,7 @@
             "le": "1920.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3059,7 +3059,7 @@
             "le": "7680.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3067,7 +3067,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_decode_time_seconds_count": [
@@ -3076,7 +3076,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_decode_time_seconds_sum": [
@@ -3085,7 +3085,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 2.5891356079996513
+          "value": 244.35177189891692
         }
       ],
       "vllm:request_decode_time_seconds_created": [
@@ -3094,7 +3094,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.962528
+          "value": 1780645844.2504978
         }
       ],
       "vllm:request_prefill_kv_computed_tokens_bucket": [
@@ -3136,7 +3136,7 @@
             "le": "20.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -3144,7 +3144,7 @@
             "le": "50.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -3152,7 +3152,7 @@
             "le": "100.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 1.0
         },
         {
           "labels": {
@@ -3160,7 +3160,7 @@
             "le": "200.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3168,7 +3168,7 @@
             "le": "500.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3176,7 +3176,7 @@
             "le": "1000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3184,7 +3184,7 @@
             "le": "2000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3192,7 +3192,7 @@
             "le": "5000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3200,7 +3200,7 @@
             "le": "10000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 2.0
         },
         {
           "labels": {
@@ -3208,7 +3208,7 @@
             "le": "20000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3216,7 +3216,7 @@
             "le": "50000.0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         },
         {
           "labels": {
@@ -3224,7 +3224,7 @@
             "le": "+Inf",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_prefill_kv_computed_tokens_count": [
@@ -3233,7 +3233,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "vllm:request_prefill_kv_computed_tokens_sum": [
@@ -3242,7 +3242,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 66.0
+          "value": 17747.0
         }
       ],
       "vllm:request_prefill_kv_computed_tokens_created": [
@@ -3251,7 +3251,7 @@
             "engine": "0",
             "model_name": "DeepSeek-V4-Flash"
           },
-          "value": 1779184556.9626656
+          "value": 1780645844.2506413
         }
       ],
       "vllm:cache_config_info": [
@@ -3277,7 +3277,7 @@
             "mamba_page_size_padded": "None",
             "mamba_ssm_cache_dtype": "auto",
             "num_cpu_blocks": "None",
-            "num_gpu_blocks": "6062",
+            "num_gpu_blocks": "6607",
             "num_gpu_blocks_override": "None",
             "prefix_caching_hash_algo": "sha256",
             "sliding_window": "128",
@@ -3290,121 +3290,69 @@
       "http_requests_total": [
         {
           "labels": {
-            "handler": "none",
-            "method": "GET",
-            "status": "4xx"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions",
             "method": "POST",
             "status": "2xx"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "http_requests_created": [
         {
           "labels": {
-            "handler": "none",
-            "method": "GET",
-            "status": "4xx"
-          },
-          "value": 1779186753.5667713
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions",
             "method": "POST",
             "status": "2xx"
           },
-          "value": 1779187082.6526113
+          "value": 1780646125.3459191
         }
       ],
       "http_request_size_bytes_count": [
         {
           "labels": {
-            "handler": "none"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "http_request_size_bytes_sum": [
         {
           "labels": {
-            "handler": "none"
-          },
-          "value": 0.0
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions"
           },
-          "value": 1159.0
+          "value": 52785.0
         }
       ],
       "http_request_size_bytes_created": [
         {
           "labels": {
-            "handler": "none"
-          },
-          "value": 1779186753.5668902
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions"
           },
-          "value": 1779187082.6526656
+          "value": 1780646125.345991
         }
       ],
       "http_response_size_bytes_count": [
         {
           "labels": {
-            "handler": "none"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "http_response_size_bytes_sum": [
         {
           "labels": {
-            "handler": "none"
-          },
-          "value": 110.0
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions"
           },
-          "value": 574.0
+          "value": 0.0
         }
       ],
       "http_response_size_bytes_created": [
         {
           "labels": {
-            "handler": "none"
-          },
-          "value": 1779186753.566999
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions"
           },
-          "value": 1779187082.652726
+          "value": 1780646125.3460763
         }
       ],
       "http_request_duration_highr_seconds_bucket": [
@@ -3412,186 +3360,154 @@
           "labels": {
             "le": "0.01"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.025"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.05"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.075"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.1"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.25"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.5"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "0.75"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "1.0"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "1.5"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "2.0"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "2.5"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "3.0"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "3.5"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "4.0"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "4.5"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "5.0"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "7.5"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "10.0"
           },
-          "value": 10.0
+          "value": 0.0
         },
         {
           "labels": {
             "le": "30.0"
           },
-          "value": 11.0
+          "value": 1.0
         },
         {
           "labels": {
             "le": "60.0"
           },
-          "value": 11.0
+          "value": 2.0
         },
         {
           "labels": {
             "le": "+Inf"
           },
-          "value": 11.0
+          "value": 3.0
         }
       ],
       "http_request_duration_highr_seconds_count": [
         {
           "labels": {},
-          "value": 11.0
+          "value": 3.0
         }
       ],
       "http_request_duration_highr_seconds_sum": [
         {
           "labels": {},
-          "value": 15.998521678000088
+          "value": 295.5452690459788
         }
       ],
       "http_request_duration_highr_seconds_created": [
         {
           "labels": {},
-          "value": 1779184557.6618598
+          "value": 1780645845.1388302
         }
       ],
       "http_request_duration_seconds_bucket": [
-        {
-          "labels": {
-            "handler": "none",
-            "le": "0.1",
-            "method": "GET"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
-            "handler": "none",
-            "le": "0.5",
-            "method": "GET"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
-            "handler": "none",
-            "le": "1.0",
-            "method": "GET"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
-            "handler": "none",
-            "le": "+Inf",
-            "method": "GET"
-          },
-          "value": 5.0
-        },
         {
           "labels": {
             "handler": "/v1/chat/completions",
@@ -3606,7 +3522,7 @@
             "le": "0.5",
             "method": "POST"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -3614,7 +3530,7 @@
             "le": "1.0",
             "method": "POST"
           },
-          "value": 5.0
+          "value": 0.0
         },
         {
           "labels": {
@@ -3622,55 +3538,34 @@
             "le": "+Inf",
             "method": "POST"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "http_request_duration_seconds_count": [
         {
           "labels": {
-            "handler": "none",
-            "method": "GET"
-          },
-          "value": 5.0
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions",
             "method": "POST"
           },
-          "value": 6.0
+          "value": 3.0
         }
       ],
       "http_request_duration_seconds_sum": [
         {
           "labels": {
-            "handler": "none",
-            "method": "GET"
-          },
-          "value": 0.00716604199988069
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions",
             "method": "POST"
           },
-          "value": 15.991355636000208
+          "value": 295.5452690459788
         }
       ],
       "http_request_duration_seconds_created": [
         {
           "labels": {
-            "handler": "none",
-            "method": "GET"
-          },
-          "value": 1779186753.567115
-        },
-        {
-          "labels": {
             "handler": "/v1/chat/completions",
             "method": "POST"
           },
-          "value": 1779187082.6527896
+          "value": 1780646125.3461893
         }
       ]
     }
@@ -3688,11 +3583,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135667.0,
-        "memory_free_mib": 7492.0,
+        "memory_used_mib": 119218.0,
+        "memory_free_mib": 23941.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 45.0,
-        "power_draw_w": 99.04,
+        "temperature_c": 40.0,
+        "power_draw_w": 96.74,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3701,11 +3596,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135379.0,
-        "memory_free_mib": 7780.0,
+        "memory_used_mib": 119008.0,
+        "memory_free_mib": 24151.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 44.0,
-        "power_draw_w": 100.21,
+        "temperature_c": 39.0,
+        "power_draw_w": 97.9,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3714,11 +3609,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135187.0,
-        "memory_free_mib": 7972.0,
+        "memory_used_mib": 118816.0,
+        "memory_free_mib": 24343.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 45.0,
-        "power_draw_w": 100.59,
+        "temperature_c": 40.0,
+        "power_draw_w": 98.26,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3727,11 +3622,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135379.0,
-        "memory_free_mib": 7780.0,
+        "memory_used_mib": 119008.0,
+        "memory_free_mib": 24151.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 46.0,
-        "power_draw_w": 99.53,
+        "temperature_c": 41.0,
+        "power_draw_w": 96.63,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3740,11 +3635,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135187.0,
-        "memory_free_mib": 7972.0,
+        "memory_used_mib": 118816.0,
+        "memory_free_mib": 24343.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 45.0,
-        "power_draw_w": 98.62,
+        "temperature_c": 41.0,
+        "power_draw_w": 97.3,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3753,11 +3648,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135379.0,
-        "memory_free_mib": 7780.0,
+        "memory_used_mib": 119008.0,
+        "memory_free_mib": 24151.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 46.0,
-        "power_draw_w": 101.96,
+        "temperature_c": 40.0,
+        "power_draw_w": 98.36,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3766,11 +3661,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135187.0,
-        "memory_free_mib": 7972.0,
+        "memory_used_mib": 118816.0,
+        "memory_free_mib": 24343.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 44.0,
-        "power_draw_w": 102.46,
+        "temperature_c": 40.0,
+        "power_draw_w": 99.85,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       },
@@ -3779,11 +3674,11 @@
         "gpu_name": "NVIDIA H200 NVL",
         "utilization_gpu_pct": 0.0,
         "utilization_memory_pct": 0.0,
-        "memory_used_mib": 135379.0,
-        "memory_free_mib": 7780.0,
+        "memory_used_mib": 119008.0,
+        "memory_free_mib": 24151.0,
         "memory_total_mib": 143771.0,
-        "temperature_c": 46.0,
-        "power_draw_w": 104.11,
+        "temperature_c": 41.0,
+        "power_draw_w": 101.12,
         "clocks_sm_mhz": 1785.0,
         "clocks_memory_mhz": 3201.0
       }
@@ -3791,9 +3686,9 @@
     "error": null
   },
   "aggregate": {
-    "gpu_memory_used_gb": 1057.367,
-    "kv_cache_usage": null,
-    "prefix_cache_hit_rate": null
+    "gpu_memory_used_gb": 929.393,
+    "kv_cache_usage": 0.0,
+    "prefix_cache_hit_rate": 0.014219852246847747
   },
   "error": null
 }

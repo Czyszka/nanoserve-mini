@@ -2,10 +2,10 @@
   "schema": "nanoserve-mini.request-once.v2",
   "methodology": "mlperf_inspired_lite",
   "benchmark_mode": "singlestream_lite_correctness",
-  "timestamp": "2026-06-05T10:02:17.154655+00:00",
+  "timestamp": "2026-06-05T09:44:30.893865+00:00",
   "controls": {
-    "model": "kimi-k2.6",
-    "base_url": "http://127.0.0.1:8000",
+    "model": "DeepSeek-V4-Flash",
+    "base_url": "http://127.0.0.1:8004",
     "dtype": null,
     "quantization": null,
     "gpu_model": null,
@@ -15,7 +15,7 @@
     "max_num_batched_tokens": null,
     "decoding": {
       "temperature": 0.0,
-      "max_tokens": 1024
+      "max_tokens": 64
     },
     "warmup_runs": 0,
     "measured_runs": 1,
@@ -25,32 +25,32 @@
       "name": "single-target-bench-suite",
       "prompt_source": "literal",
       "prompt_chars": 29,
-      "max_tokens": 1024,
+      "max_tokens": 64,
       "decoding": {
         "temperature": 0.0,
-        "max_tokens": 1024
+        "max_tokens": 64
       },
       "concurrency": 1,
       "arrival_process": "single",
       "shared_prefixes": false
     },
     "notes": null,
-    "run_id": "2026-06-05_kimi-k2-6_run-05",
-    "run_uuid": "e4cc5b1abb914c368484234abca5c1bd",
+    "run_id": "2026-06-05_deepseek-v4-flash_run-01",
+    "run_uuid": "d5de1e6f04e94c9f91e911ad1f5835dd",
     "script_name": "request_once.py",
     "git_commit": "ec3df59fc5f8d9ac288faf0b33adf922502ccb99"
   },
   "request": {
     "prompt": "Say hi in one short sentence.",
-    "max_tokens": 1024,
+    "max_tokens": 64,
     "temperature": 0.0
   },
   "metrics": {
-    "e2e_seconds": 31.34030337596778,
-    "output_chars": 10,
-    "prompt_tokens": 15,
-    "completion_tokens": 303,
-    "total_tokens": 318,
+    "e2e_seconds": 1.5820435249479488,
+    "output_chars": 3,
+    "prompt_tokens": 11,
+    "completion_tokens": 3,
+    "total_tokens": 14,
     "completed": true
   },
   "server_metrics": {
@@ -59,9 +59,9 @@
     "prefix_cache_hit_rate": null
   },
   "response": {
-    "id": "chatcmpl-a30e453bc4ddcce5",
-    "model": "kimi-k2.6"
+    "id": "chatcmpl-a3c8550edc43382f",
+    "model": "DeepSeek-V4-Flash"
   },
-  "output_text": " Hi there!",
+  "output_text": "Hi!",
   "error": null
 }
