@@ -18,7 +18,7 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 **Phase 1 (weeks 1-3 of 12)** — vLLM serving baseline + observability + multi-model proxy.
 
-Phase 1 is now past the minimum proxy/benchmark milestone, but not fully complete because the real Grafana dashboard and W1 write-up are still missing.
+Phase 1 minimum milestone met: proxy/benchmark done, W1 write-up complete (all 8 threads, `5fc9648`), Grafana dashboard validated under batched load for W1 (fuller panel hardening continues under #34).
 
 Live state:
 
@@ -33,7 +33,7 @@ Live state:
 Phase 1 deliverables still owed:
 
 - **Prometheus + Grafana dashboard** showing useful live vLLM metrics during load — a provisioned dashboard JSON now exists; remaining work is validating its panels against real metric names with live load.
-- **W1 write-up** — started, but still blocked on clean interpretation of 2026-05-27 evidence and missing T1/T6/T3 sweep artifacts.
+- **W1 write-up** — DONE (2026-06-05): all 8 threads written from committed evidence with `## Evidence` provenance; index baseline table + KV-budget synthesis filled (`5fc9648`).
 
 ---
 
@@ -139,10 +139,10 @@ status, not a task list. Update when work moves.
     `reasoning_chars` 0 vs 242, `ttft_any_token_seconds` null vs 0.214 s.
     Parser fix #31 verified working direct; proxy unusable as the single
     driver for Kimi reasoning streams in this LiteLLM version.
-  - **Remaining:** W1 thread write-ups using the new numbers (plan in
-    "Immediate next steps" below). T5 dashboard panel validation under load
-    is **decided done-for-W1** (2 screenshots + `full-load/`); fuller work
-    deferred to #34, not a W1 blocker.
+  - **DONE (2026-06-05):** all W1 thread write-ups written from these numbers
+    with `## Evidence` provenance (commits `bfe82bf`/`eaa3694`/`77df2f5`/
+    `023f691`/`c2be652`/`5fc9648`). T5 closed done-for-W1; fuller panels under
+    #34.
   - **2026-06-05 (laptop) organized & audited** — see
     `results/runs/2026-06-05_w1_evidence/session/session_notes.md` +
     `results/summaries/w1-evidence-cross-session.md`. Auto-id run dirs
@@ -170,33 +170,23 @@ sequences them. This section only points at active work — it is not a task lis
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step — W1 write-up completion (laptop, doc-only).** The
-modular draft (`docs/writeups/w1-multi-model-serving-baseline.md` + `w1/`)
-is frozen at the 2026-05-27 state; T1/T3/T6 are "evidence needed"
-placeholders while the data already exists (`d0bb634`). Source map per
-thread is in the #37 In-flight entry above.
+**W1 write-up — COMPLETE (2026-06-05 laptop pass).** All eight threads in
+`docs/writeups/w1/` are written from committed evidence (`d0bb634`), each with
+a `## Evidence` provenance block; the index
+(`docs/writeups/w1-multi-model-serving-baseline.md`) has its baseline table,
+KV-budget synthesis, and status tables filled. Commits: T6 `bfe82bf`, T1
+`eaa3694`, T3 `77df2f5`, T4/T8 `023f691`, T5 `c2be652`, INDEX `5fc9648`.
+Honesty corrections folded in: T6 A/B has a 2-flag impurity and length-confound
+(lead repeated p50 2.0×, not single-shot 3.8×); T1+T3 unified as the same
+negative-KV-budget crash; T8 strip upgraded to a `completed:false` usability
+hazard. Structure kept modular per decision; no GPU slot needed to publish.
 
-Decisions locked 2026-06-05:
-
-- **T5 = done for W1** — describe `t5_metrics/full-load/` +
-  `prometheus_summary.txt` + 2 Grafana screenshots as sufficient; fuller
-  panel validation stays under #34 (not a W1 blocker).
-- **Structure stays modular** — index + 8 thread files; fill content +
-  provenance only, no inlining this pass.
-- **T8 full R1–R8 stays deferred** (#44) — T8 file gets a link refresh only.
-
-Order: (1) T6 placeholder → paired A/B findings (lead headline; use
-`run-05_eagle3-off-paired`, **never** `-rerun`); (2) T1 → DEP `exited 1`
-investigation; (3) T3 → clean sweep replacing the 0.25-caveat; (4) T4/T8
-refresh links to semantic dirs + paired `delta.reasoning`-strip proof;
-(5) T5 done-for-W1 paragraph; (6) INDEX baseline table from
-`bench_suite/summary.json` + re-date status tables to 2026-06-05.
-
-Provenance rule (so no claim is unsourced): each thread file ends with an
-`## Evidence` block mapping every headline number/conclusion → artifact
-path + run-id + commit `d0bb634`, with the T6 integrity note
-(`fc97700` overwrote OFF in place; paired recovered from `ec3df59`).
-Validation: doc-only → `git diff --check` + `git status`.
+**Next concrete step.** W1 is publishable. Open post-W1 work, all out of W1
+scope: #34 (DCGM/GPU panels, LiteLLM exporter 404, L2 causal checks), #44
+(T8 R1–R8 concurrency program), #48 (reconcile T6 vs speculative-decoding
+methodology), and a DeepSeek real-generation workload so its throughput
+baseline becomes meaningful (currently ~3-token smoke). Pick the next phase
+target before starting; W1 itself needs no further action.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
