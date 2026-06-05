@@ -139,6 +139,18 @@ status, not a task list. Update when work moves.
     driver for Kimi reasoning streams in this LiteLLM version.
   - **Still missing:** T5 Grafana dashboard panel validation under load
     (was deferred), W1 thread write-ups using the new numbers.
+  - **2026-06-05 (laptop) organized & audited** — see
+    `results/runs/2026-06-05_w1_evidence/session/session_notes.md` +
+    `results/summaries/w1-evidence-cross-session.md`. Auto-id run dirs
+    renamed to semantic aliases (`run-04_eagle3-on`,
+    `run-05_eagle3-off-paired`/`-rerun`, `run-0{1,3}_t8-{proxy,direct}`,
+    deepseek `run-0{1,2}_baseline`). **Integrity:** final server commit
+    `fc97700` re-ran and overwrote OFF/deepseek results in place; the T6
+    OFF **paired 5×5** generation (09:17, single-shot 2489 ms) was recovered
+    from `ec3df59` and is the A/B partner for ON — use it, not the unpaired
+    `-rerun` (10:02, 10 runs, 1365 ms). Lead T6 with **repeated ~2× p50
+    TTFT** (robust); single-shot E2E 2.1×–3.8× is temp=0-variance-sensitive.
+    SWE-bench dataset kept intentionally as #34 load workload.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 
@@ -362,6 +374,37 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-05 (laptop) - W1 session organization, audit, run-dir cleanup
+
+- Why: skrupulatnie podsumować i uporządkować dużą sesję serwerową przed
+  pisaniem write-upów W1.
+- Did:
+  - Audyt integralności wykrył, że końcowy commit `fc97700`
+    ("results od 202600605") **re-runował i nadpisał** w miejscu wyniki
+    `kimi run-05` (OFF) + `deepseek run-01/02`, rozjeżdżając repo z
+    `bench_off.log` i handoffem. Czyste (log==json): `run-04` ON,
+    `run-01/03` T8.
+  - **T6 OFF miał dwie generacje:** paired @09:17 (5 runs, single-shot
+    2489 ms, 143 chunks) i rerun @10:02 (10 runs, 1365 ms, 62 chunks).
+    Odzyskałem paired z `ec3df59` (`git checkout`) → osobny katalog;
+    rerun zachowany obok. Para 5×5 jest właściwym A/B do ON. Handoff PM
+    cytował poprawne (paired) liczby — pomyłka była tylko taka, że w
+    working tree leżał rerun.
+  - **Run-diry przemianowane** (`git mv`, run-id zostaje prefiksem):
+    `run-04_eagle3-on`, `run-05_eagle3-off-paired`,
+    `run-05_eagle3-off-rerun`, `run-01_t8-proxy`, `run-03_t8-direct`,
+    deepseek `run-0{1,2}_baseline`. Tylko `agent-state.md` referował
+    stare nazwy poza `results/`.
+  - **Nowe dokumenty:**
+    `results/runs/2026-06-05_w1_evidence/session/session_notes.md`
+    (audyt + tabele liczb + mapowanie), `session/artifact_manifest.txt`,
+    `results/summaries/w1-evidence-cross-session.md` (cross-session view
+    27.05 / 03.06 / 05.06 per wątek W1).
+  - SWE-bench dataset: decyzja **zostawić** (workload do #34), udokumentowany.
+- Validation: `git diff --check` (poniżej); brak `.py` touched (rename +
+  docs/bench). `first_ttft.json` zostawiony bez opisu (do dopytania).
+- Next: write-upy W1 — T6 → T1 → T3 → T8/T4 → T5.
 
 ### 2026-06-05 (PM) - W1 server slot close-out: T6 OFF + T1 DEP + restore
 

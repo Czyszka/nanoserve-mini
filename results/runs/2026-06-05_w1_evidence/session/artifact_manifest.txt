@@ -1,0 +1,72 @@
+# 2026-06-05 W1 evidence — artifact manifest
+# Generated on laptop during post-session organization (currentDate 2026-06-05).
+# Human narrative + audit: session/session_notes.md
+# Cross-session view: results/summaries/w1-evidence-cross-session.md
+
+## Run-directory map (auto-id -> semantic alias; embedded controls.run_id unchanged)
+  run-01_t8-proxy            kimi  :4000  T8/T4 proxy path
+  run-03_t8-direct           kimi  :8000  T8/T4 direct path
+  run-04_eagle3-on           kimi  :8000  T6 Eagle3 ON
+  run-05_eagle3-off-paired   kimi  :8000  T6 Eagle3 OFF (paired 5x5 -- USE FOR A/B; recovered from ec3df59)
+  run-05_eagle3-off-rerun    kimi  :8000  T6 Eagle3 OFF (end-of-session rerun, 10 runs, fc97700)
+  run-01_baseline            deepseek :8004  direct baseline
+  run-02_baseline            deepseek :8004  direct baseline
+
+## Integrity: fc97700 overwrote in-place: kimi run-05, deepseek run-01/02 (latency+repeated).
+##            Clean (log==json): run-04 (ON), run-01/03 (T8). See session_notes.md.
+
+## w1_evidence/ thread artifacts
+results/runs/2026-06-05_w1_evidence/2026-06-05_grafana_dashboard-max_num_seqs_1.png
+results/runs/2026-06-05_w1_evidence/2026-06-05_grafana_dashboard-max_num_seqs_32.png
+results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl
+results/runs/2026-06-05_w1_evidence/session/artifact_manifest.txt
+results/runs/2026-06-05_w1_evidence/session/docker_ps_start.txt
+results/runs/2026-06-05_w1_evidence/session/nvidia_smi_start.txt
+results/runs/2026-06-05_w1_evidence/session/restore_engine_cmd.json
+results/runs/2026-06-05_w1_evidence/session/restore_smoke.json
+results/runs/2026-06-05_w1_evidence/session/session_notes.md
+results/runs/2026-06-05_w1_evidence/session/start_commit.txt
+results/runs/2026-06-05_w1_evidence/t1_dep/dep_engine_cmd.json
+results/runs/2026-06-05_w1_evidence/t1_dep/dep_full.log
+results/runs/2026-06-05_w1_evidence/t1_dep/dep_startup.log
+results/runs/2026-06-05_w1_evidence/t1_dep/dep_state.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/cap015_status.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/log_cap015_FAILED.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/log_cap020.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/log_cap025.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/log_restored_default.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/nvidia_smi_cap015_FAILED.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/nvidia_smi_cap020.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/nvidia_smi_cap025.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/ttft_cap020.json
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/ttft_cap025.json
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/verify_cap020.txt
+results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/verify_cap025.txt
+results/runs/2026-06-05_w1_evidence/t5_metrics/full-load/vllm_kimi_metrics.txt
+results/runs/2026-06-05_w1_evidence/t5_metrics/full-load/vllm_small_metrics.txt
+results/runs/2026-06-05_w1_evidence/t5_metrics/prometheus_summary.txt
+results/runs/2026-06-05_w1_evidence/t6_eagle3/bench_off.log
+results/runs/2026-06-05_w1_evidence/t6_eagle3/bench_on.log
+results/runs/2026-06-05_w1_evidence/t6_eagle3/engine_cmd_eagle3_off.json
+results/runs/2026-06-05_w1_evidence/t6_eagle3/engine_cmd_eagle3_on.json
+results/runs/2026-06-05_w1_evidence/t6_eagle3/kimi_log_eagle3_off.txt
+results/runs/2026-06-05_w1_evidence/t6_eagle3/kimi_log_eagle3_on.txt
+results/runs/2026-06-05_w1_evidence/vllm_bench_serve_help.txt
+
+## t5_metrics/eagle3-{on,off} side snapshots (counts)
+  eagle3-on  snap_*.json : 144
+  eagle3-on  vllm_metrics_*.txt : 36
+  eagle3-off snap_*.json : 48
+  eagle3-off vllm_metrics_*.txt : 12
+
+## Auto-id bench-suite run directories (top-level files per dir)
+  results/runs/2026-06-05_kimi-k2-6_run-01_t8-proxy/
+  results/runs/2026-06-05_kimi-k2-6_run-03_t8-direct/
+  results/runs/2026-06-05_kimi-k2-6_run-04_eagle3-on/
+  results/runs/2026-06-05_kimi-k2-6_run-05_eagle3-off-paired/
+  results/runs/2026-06-05_kimi-k2-6_run-05_eagle3-off-rerun/
+  results/runs/2026-06-05_deepseek-v4-flash_run-01_baseline/
+  results/runs/2026-06-05_deepseek-v4-flash_run-02_baseline/
+
+## Related (outside this dir)
+  results/raw/first_ttft.json  -- standalone Kimi TTFT probe (fc97700), thread ownership TBD
