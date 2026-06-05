@@ -253,8 +253,9 @@ docker inspect vllm --format '{{json .Config.Cmd}}' > "$OUT/engine_cmd_eagle3_on
 T5PID=$!
 
 uv run python -m benchmarks.scripts.run_bench_suite \
-  --base-url http://127.0.0.1:4000 --metrics-base-url http://127.0.0.1:8000 \
+  --base-url http://127.0.0.1:8000 --metrics-base-url http://127.0.0.1:8000 \
   --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" \
+  --max-tokens 1024 \
   --warmup 1 --runs 5 > "$OUT/bench_on.log" 2>&1
 
 wait $T5PID 2>/dev/null || true
@@ -264,7 +265,7 @@ docker logs vllm --tail 1000 > "$OUT/kimi_log_eagle3_on.txt"
 ### C2 — restart bez Eagle3 + bench OFF
 
 OFF = lustro komendy ON minus **wyłącznie** `--speculative-config` (TP=8,
-mem 0.65, max-num-seqs 1, max-model-len 131072 zachowane) → fair A/B.
+mem 0.60, max-num-seqs 1, max-model-len 131072 zachowane) → fair A/B.
 
 ```bash
 cat > /tmp/kimi-no-eagle3.yml <<'EOF'
@@ -274,7 +275,7 @@ services:
       --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6
       --host=0.0.0.0 --port=8000 --trust-remote-code
       --enable-expert-parallel --tensor-parallel-size 8
-      --gpu-memory-utilization 0.65
+      --gpu-memory-utilization 0.6
       --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2
       --enable-auto-tool-choice --language-model-only
       --max-num-seqs 1 --max-model-len 131072
@@ -300,10 +301,10 @@ docker inspect vllm --format '{{json .Config.Cmd}}' > "$OUT/engine_cmd_eagle3_of
 T5PID=$!
 
 uv run python -m benchmarks.scripts.run_bench_suite \
-  --base-url http://127.0.0.1:4000 --metrics-base-url http://127.0.0.1:8000 \
+  --base-url http://127.0.0.1:8000 --metrics-base-url http://127.0.0.1:8000 \
   --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" \
   --warmup 1 --runs 5 \
-  --run-id "$(date +%F)_kimi-k2.6_eagle3-off" > "$OUT/bench_off.log" 2>&1
+  --max-tokens 1024 > "$OUT/bench_off.log" 2>&1
 
 wait $T5PID 2>/dev/null || true
 docker logs vllm --tail 1000 > "$OUT/kimi_log_eagle3_off.txt"
@@ -328,7 +329,7 @@ services:
       --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6
       --host=0.0.0.0 --port=8000 --trust-remote-code
       --enable-expert-parallel --data-parallel-size 8
-      --gpu-memory-utilization 0.65
+      --gpu-memory-utilization 0.6
       --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2
       --enable-auto-tool-choice --language-model-only
       --max-num-seqs 1 --max-model-len 131072
@@ -359,9 +360,9 @@ for _ in $(seq 1 180); do curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1
 
 docker inspect vllm --format '{{json .Config.Cmd}}' > "$RUN_DIR/session/restore_engine_cmd.json"  # sprawdź: speculative-config znów obecny
 uv run python -m benchmarks.scripts.measure_ttft_once \
-  --base-url http://127.0.0.1:4000 --model kimi-k2.6 \
+  --base-url http://127.0.0.1:8000 --model kimi-k2.6 \
   --api-key "$LITELLM_MASTER_KEY" --prompt "say OK" \
-  --output "$RUN_DIR/session/restore_smoke.json"
+  --max-tokens 1024 --output "$RUN_DIR/session/restore_smoke.json"
 ```
 
 Materiał T6: `bench_on.log` vs `bench_off.log` (TTFT, TPOT/ITL, throughput)

@@ -1,0 +1,40 @@
+phase:    pre
+vllm:     scrape_ok=True metrics=130
+gpu:      available=True rows=8
+aggregate: gpu_memory_used_gb=927.51 kv_cache_usage=0.0 prefix_cache_hit_rate=0.0
+saved:    results/runs/2026-06-05_kimi-k2-6_run-04/server_metrics/snapshot_pre.json
+saved: results/runs/2026-06-05_kimi-k2-6_run-04/singlestream_lite_correctness/result.json
+id:    chatcmpl-800d00d2567ab84e
+model: kimi-k2.6
+usage: prompt=15 completion=123 total=138
+---
+ Hi there!
+TTFT (content): 652.51 ms
+TTFT (any):     203.71 ms
+E2E:            674.2 ms
+TPOT (content): 0.32 ms/tok
+TPOT (any):     6.92 ms/tok
+reasoning:      240 chars
+chunks:         24
+saved:          results/runs/2026-06-05_kimi-k2-6_run-04/singlestream_lite_latency/result.json
+[W0] TTFT= 1950.5 ms  E2E= 1970.9 ms
+[M0] TTFT= 1698.5 ms  E2E= 1720.2 ms
+[M1] TTFT=  836.7 ms  E2E=  856.9 ms
+[M2] TTFT=  793.3 ms  E2E=  814.0 ms
+[M3] TTFT=  832.3 ms  E2E=  853.7 ms
+[M4] TTFT= 1676.6 ms  E2E= 1677.1 ms
+---
+measured runs: 5  errors: 0
+TTFT  p50=836.7 ms  p95=1694.2 ms  min=793.3 ms  max=1698.5 ms
+E2E   p50=856.9 ms  p95=1711.6 ms  min=814.0 ms  max=1720.2 ms
+TPOT  p50=0.2 ms  p95=0.2 ms
+jsonl:   results/runs/2026-06-05_kimi-k2-6_run-04/singlestream_lite_repeated/results.jsonl
+summary: results/runs/2026-06-05_kimi-k2-6_run-04/singlestream_lite_repeated/summary.json
+phase:    post
+vllm:     scrape_ok=True metrics=130
+gpu:      available=True rows=8
+aggregate: gpu_memory_used_gb=927.51 kv_cache_usage=0.0 prefix_cache_hit_rate=0.0
+saved:    results/runs/2026-06-05_kimi-k2-6_run-04/server_metrics/snapshot_post.json
+run_id:   2026-06-05_kimi-k2-6_run-04
+manifest: results/runs/2026-06-05_kimi-k2-6_run-04/bench_suite/summary.json
+completed: True
