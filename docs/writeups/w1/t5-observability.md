@@ -30,6 +30,60 @@ exporter is not currently scraping cleanly, so T8 has no proxy-side cross-check
 from this dataset either. Fix `prometheus_callback` in
 `serving/compose/litellm-config.yaml` before re-capture.
 
+## 2026-06-05 status — validated under load (W1 done)
+
+The dashboard is now validated against live load, which closes T5 for W1
+(fuller panel hardening continues under #34). Two things were established.
+
+**Metric names are real.** All Phase 1 dashboard panels resolve against the
+live 2026-06-05 `/metrics` dumps (`t5_metrics/full-load/vllm_kimi_metrics.txt`,
+`…/vllm_small_metrics.txt`): every query maps to an actual vLLM v0.20.0 series
+(label `model_name`), and `spec_decode_*` appears only under Kimi with Eagle3
+ON. No dashboard JSON fix was needed. The repeatable procedure is in
+`serving/runbooks/load-test-and-grafana.md` (offline SWE-bench Lite workload;
+needs `HF_HUB_OFFLINE=1`, `--trust-remote-code`).
+
+**Panels fill under real load.** A batched run (`--max-num-seqs 32`, 3 h
+window, `prometheus_summary.txt`) drove the node hard enough to populate the
+queue/latency/KV panels that single-stream benches leave flat:
+
+| Signal (batched, max-num-seqs 32) | Peak / value |
+|---|---|
+| requests running (kimi) | 32 |
+| requests waiting (kimi) | 45 |
+| generation throughput | 327 tok/s |
+| prompt throughput | 1039 tok/s |
+| KV cache usage | 44% peak |
+| TTFT p50 / p95 | 11.2 s / 59.7 s |
+| E2E p50 / p95 | 45.6 s / 90.8 s |
+| ITL p50 | 0.106 s |
+| Eagle3 draft acceptance | 0.493 |
+| preemptions | 0 |
+
+Read with the correlation playbook below (still **L0/L1** — one window, no
+controlled counterfactual):
+
+- **Scheduler-limited, not KV-limited.** waiting (45) exceeds running (32)
+  while KV usage peaks at only 44% and preemptions are 0 — the queue forms from
+  concurrency/scheduling capacity, not KV exhaustion or eviction thrash. TTFT
+  p50 11.2 s (vs ~0.84 s single-stream in T6) is dominated by queue time at this
+  offered load — exactly the "vLLM TTFT high + waiting high" row of the
+  playbook.
+- **Eagle3 acceptance is now quantified.** `spec acceptance = 0.493` answers the
+  open item flagged in T6: under batched load the draft model's tokens are
+  accepted ~49% of the time. T6 measured the latency benefit but not acceptance;
+  this is the missing number, from the same `spec_decode_*` family.
+
+The two captured screenshots contrast the regimes:
+`2026-06-05_grafana_dashboard-max_num_seqs_1.png` (single-stream — queue panels
+flat) and `…max_num_seqs_32.png` (batched — queue/throughput/KV panels live).
+
+**Scope decision.** This is sufficient observability evidence for W1: metric
+names validated, panels demonstrably fill under load, and the readings are
+labelled diagnostic (L0/L1), not causal. Fuller hardening — DCGM/GPU hardware
+panels, the LiteLLM exporter 404 fix, and L2 controlled counterfactuals —
+remains under #34, not a W1 blocker.
+
 ## Inventory: availability is not evidence
 
 Use `results/raw/observability/vllm-metrics.txt` as a metric availability
@@ -237,6 +291,19 @@ rates, scheduler pressure, KV/cache behavior, request outcomes, and GPU
 hardware telemetry. Process/Python metrics, `*_created` gauges,
 idle zero-value histograms, speculative-decoding counters before T6, and
 miscellaneous cache namespaces should stay secondary diagnostics.
+
+## Evidence
+
+| Claim | Source |
+|---|---|
+| Live metric-name validation (panels map to real vLLM v0.20.0 series) | `results/runs/2026-06-05_w1_evidence/t5_metrics/full-load/vllm_kimi_metrics.txt`, `…/vllm_small_metrics.txt` |
+| Batched-load summary (running/waiting/throughput/KV/TTFT/E2E/ITL/acceptance/preemptions) | `results/runs/2026-06-05_w1_evidence/t5_metrics/prometheus_summary.txt` |
+| Dashboard under load vs idle | `results/runs/2026-06-05_w1_evidence/2026-06-05_grafana_dashboard-max_num_seqs_{1,32}.png` |
+| Repeatable load-test + Grafana procedure | `serving/runbooks/load-test-and-grafana.md` |
+| Per-arm metric snapshots (Eagle3 on/off side capture) | `results/runs/2026-06-05_w1_evidence/t5_metrics/eagle3-{on,off}/` |
+| Fuller validation / DCGM / exporter 404 (deferred) | issue #34 |
+
+2026-06-05 artifacts organized under commit `d0bb634`.
 
 ## Reference
 
