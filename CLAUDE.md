@@ -11,6 +11,17 @@ Project entrypoint for Claude Code.
 - Surgical edits: touch only what the task needs; clean up only the mess your
   own change introduced — never silently rewrite unrelated or shared work.
 
+## Allowed commands
+
+`.claude/settings.json` (`permissions.allow`) lists the commands pre-approved
+in this repo — read-only git/`gh`, `uv`, `ruff`, `pytest`, `ls`, `find`,
+`rg`, plus `git add`/`commit`/`push` and friends. Prefer these exact forms so
+calls run without a permission prompt: reach for an allowed command when one
+fits the task (e.g. `rg` over ad-hoc shell `grep`, `git diff` over a custom
+pipeline). If a task genuinely needs something outside the list, run it anyway
+and accept the prompt — never skip or weaken required work just to stay inside
+the allowlist.
+
 ## Token economy
 
 Conversation budget is scarce (sometimes a few messages, then a multi-hour

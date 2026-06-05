@@ -137,8 +137,10 @@ status, not a task list. Update when work moves.
     `reasoning_chars` 0 vs 242, `ttft_any_token_seconds` null vs 0.214 s.
     Parser fix #31 verified working direct; proxy unusable as the single
     driver for Kimi reasoning streams in this LiteLLM version.
-  - **Still missing:** T5 Grafana dashboard panel validation under load
-    (was deferred), W1 thread write-ups using the new numbers.
+  - **Remaining:** W1 thread write-ups using the new numbers (plan in
+    "Immediate next steps" below). T5 dashboard panel validation under load
+    is **decided done-for-W1** (2 screenshots + `full-load/`); fuller work
+    deferred to #34, not a W1 blocker.
   - **2026-06-05 (laptop) organized & audited** — see
     `results/runs/2026-06-05_w1_evidence/session/session_notes.md` +
     `results/summaries/w1-evidence-cross-session.md`. Auto-id run dirs
@@ -161,19 +163,38 @@ status, not a task list. Update when work moves.
 Detailed tasks live in issues; `docs/plans/2026-05-19-post-server-laptop-plan.md`
 sequences them. This section only points at active work — it is not a task list.
 
-- **#37** — schedule a follow-up server slot for missing T1/T6/T3 evidence:
-  DEP startup failure capture, Kimi Eagle3 ON/OFF comparison, and explicit
-  DeepSeek VRAM cap sweep with filenames matching actual runtime caps.
+- **#37** — server evidence for T1/T6/T3 is **collected** (2026-06-05,
+  `d0bb634`); remaining work is the laptop write-up below, not another slot.
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** **laptop work** — W1 thread write-ups using the
-2026-06-05 numbers. Server slot for Phase 1 is effectively done modulo
-T5 dashboard validation. Order: (1) T6 thread with the ON/OFF paired
-numbers + #48 methodology check; (2) T1 thread with DEP `exited 1`
-evidence; (3) T3 thread refresh with the clean sweep; (4) T8/T4 update
-with the LiteLLM `delta.reasoning` strip (paired `run-01` vs `run-03`);
-(5) only then T5 dashboard validation under live load.
+**Next concrete step — W1 write-up completion (laptop, doc-only).** The
+modular draft (`docs/writeups/w1-multi-model-serving-baseline.md` + `w1/`)
+is frozen at the 2026-05-27 state; T1/T3/T6 are "evidence needed"
+placeholders while the data already exists (`d0bb634`). Source map per
+thread is in the #37 In-flight entry above.
+
+Decisions locked 2026-06-05:
+
+- **T5 = done for W1** — describe `t5_metrics/full-load/` +
+  `prometheus_summary.txt` + 2 Grafana screenshots as sufficient; fuller
+  panel validation stays under #34 (not a W1 blocker).
+- **Structure stays modular** — index + 8 thread files; fill content +
+  provenance only, no inlining this pass.
+- **T8 full R1–R8 stays deferred** (#44) — T8 file gets a link refresh only.
+
+Order: (1) T6 placeholder → paired A/B findings (lead headline; use
+`run-05_eagle3-off-paired`, **never** `-rerun`); (2) T1 → DEP `exited 1`
+investigation; (3) T3 → clean sweep replacing the 0.25-caveat; (4) T4/T8
+refresh links to semantic dirs + paired `delta.reasoning`-strip proof;
+(5) T5 done-for-W1 paragraph; (6) INDEX baseline table from
+`bench_suite/summary.json` + re-date status tables to 2026-06-05.
+
+Provenance rule (so no claim is unsourced): each thread file ends with an
+`## Evidence` block mapping every headline number/conclusion → artifact
+path + run-id + commit `d0bb634`, with the T6 integrity note
+(`fc97700` overwrote OFF in place; paired recovered from `ec3df59`).
+Validation: doc-only → `git diff --check` + `git status`.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
