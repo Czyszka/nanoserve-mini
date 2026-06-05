@@ -150,3 +150,17 @@ reopen. The next maturity step is to ask when the project needs DB-backed
 per-user keys, structured request logging, governance, and eventually
 content-aware routing. That is a transition from baseline model routing to a
 managed inference control plane; it is outside the minimum W1 proof.
+
+## Evidence
+
+| Claim | Source |
+|---|---|
+| Proxy fronts both vLLM backends; explicit `model`-name routing | `serving/compose/litellm-config.yaml`, `serving/compose/docker-compose.kimi-k2.6.yml` |
+| Both models reachable through `:4000` | `results/runs/2026-05-19_litellm-smoke/{models,litellm_kimi_smoke,litellm_deepseek_smoke}.json` |
+| Bench completed through the proxy for both models | `results/runs/2026-05-19_kimi-k2-6_run-01/bench_suite/summary.json`, `results/runs/2026-05-19_deepseek-v4-flash_run-01/bench_suite/summary.json` |
+| The hop's cost is an open empirical question, not assumed free | T8 + issue #44 |
+| Known boundary limit: proxy strips Kimi reasoning deltas (can return `completed:false`) | T8 §2026-06-05; `results/runs/2026-06-05_kimi-k2-6_run-0{1,3}_t8-{proxy,direct}/` |
+
+The reasoning-strip limit means this boundary is sound for routing but **not**
+transparent for reasoning-model streams — direct vLLM remains the required path
+for those, per T8.

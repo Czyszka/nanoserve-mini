@@ -143,6 +143,30 @@ proxy-relay behavior, not added compute.
 > see `reasoning_chars=0`. T2 measurement capability and T8 proxy behavior must
 > be read together.
 
+## 2026-06-05 confirmation — independent, and a sharper consequence
+
+A second paired capture (renamed `run-01_t8-proxy` `:4000` vs `run-03_t8-direct`
+`:8000`, same prompt, `max_tokens=64`, `temperature=0`) reproduces the strip and
+exposes its operational cost:
+
+| Path | chunks | reasoning_chars | any-token TTFT (s) | E2E (s) | completed |
+|---|---:|---:|---:|---:|---|
+| direct `:8000` | 26 | 242 | 0.214 | 0.753 | true |
+| proxy `:4000` | 3 | 0 | null | 0.806 | **false** |
+
+Both consumed the full 64-token budget. On the direct path the reasoning trace
+streamed (242 chars over 26 chunks) and the request completed. On the proxy path
+LiteLLM stripped `delta.reasoning`, so the client saw 3 content-less chunks, **no
+any-token TTFT at all**, and the request finished `completed: false` — the entire
+token budget was spent on reasoning the consumer never received.
+
+This upgrades the finding from "streaming-semantics change" to a **usability
+hazard for reasoning models under a finite `max_tokens`**: through the proxy a
+reasoning-heavy request can return effectively nothing. It is the paired evidence
+behind the conclusion that LiteLLM `main-v1.66.0-stable` is unusable as the
+*sole* driver for Kimi reasoning streams; direct vLLM is required (or a LiteLLM
+version/config that preserves reasoning deltas).
+
 ## Pilot (2026-05-27) — what the rig confirmed
 
 Paired direct-vs-proxy, single-stream, ABBA-ordered, 10 pairs/model, loopback.
@@ -176,3 +200,16 @@ prompt `"say OK"`, warmup `0`, measured `1`/file, concurrency `1`, script
 `measure_ttft_once.py`, git_commit `5ce0881`. The full program holds all of these
 fixed and changes one lever at a time (concurrency in R2, payload in R3, stream
 flag in R5).
+
+## Evidence
+
+| Claim | Source |
+|---|---|
+| 2026-05-27 pilot (40/40, ABBA, strip + TTFT deltas) | `results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md` |
+| 2026-06-05 proxy: 3 chunks, `reasoning_chars` 0, any-token TTFT null, `completed:false` | `results/runs/2026-06-05_kimi-k2-6_run-01_t8-proxy/singlestream_lite_latency/result.json` |
+| 2026-06-05 direct: 26 chunks, `reasoning_chars` 242, any-token TTFT 0.214 s, `completed:true` | `results/runs/2026-06-05_kimi-k2-6_run-03_t8-direct/singlestream_lite_latency/result.json` |
+| Parser distinguishing any-token vs final-answer TTFT (#31) | `benchmarks/scripts/_client.py`; T2 |
+| Full R1–R8 program (intentionally deferred) | issue #44 |
+
+2026-06-05 artifacts organized under commit `d0bb634`; **the proxy/direct arms
+are the renamed `run-01_t8-proxy` / `run-03_t8-direct` dirs.**
