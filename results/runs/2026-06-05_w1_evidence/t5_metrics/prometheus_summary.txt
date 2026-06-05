@@ -1,0 +1,13 @@
+# T5 batched run (max-num-seqs=32) — Prometheus summary, window=3h
+peak requests running: kimi-k2.6=32
+peak requests waiting: kimi-k2.6=45
+peak gen throughput tok/s: kimi-k2.6=327.10909090909087
+peak prompt throughput tok/s: kimi-k2.6=1039.3454545454545
+peak KV cache %: kimi-k2.6=44.13816767699874
+E2E p50 s: all=45.634715025906736
+E2E p95 s: all=90.8426966292134
+TTFT p50 s: all=11.190476190476152
+TTFT p95 s: all=59.74358974358975
+ITL p50 s: all=0.1059846115865701
+spec acceptance: kimi-k2.6=0.4934158141271698
+preemptions in window: kimi-k2.6=0
