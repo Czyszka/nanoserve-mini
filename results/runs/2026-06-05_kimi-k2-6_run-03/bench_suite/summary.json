@@ -1,0 +1,150 @@
+{
+  "schema": "nanoserve-mini.bench-suite.v1",
+  "script_name": "run_bench_suite.py",
+  "run_id": "2026-06-05_kimi-k2-6_run-03",
+  "model": "kimi-k2.6",
+  "base_url": "http://127.0.0.1:8000",
+  "metrics_base_url": "http://127.0.0.1:8000",
+  "started_at": "2026-06-05T08:53:55.896392+00:00",
+  "ended_at": "2026-06-05T08:54:02.185988+00:00",
+  "generated_run_id": true,
+  "completed": true,
+  "error": null,
+  "steps": [
+    {
+      "name": "snapshot_pre",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8000",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-06-05_kimi-k2-6_run-03",
+        "--phase",
+        "pre"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-06-05T08:53:55.896407+00:00",
+      "ended_at": "2026-06-05T08:53:56.266481+00:00",
+      "output_paths": [
+        "results/runs/2026-06-05_kimi-k2-6_run-03/server_metrics/snapshot_pre.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "request_once",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8000",
+        "--model",
+        "kimi-k2.6",
+        "--prompt",
+        "Say hi in one short sentence.",
+        "--max-tokens",
+        "64",
+        "--temperature",
+        "0.0",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-06-05_kimi-k2-6_run-03",
+        "--api-key",
+        "sk-local-disabled",
+        "--workload",
+        "single-target-bench-suite"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-06-05T08:53:56.266565+00:00",
+      "ended_at": "2026-06-05T08:53:57.070505+00:00",
+      "output_paths": [
+        "results/runs/2026-06-05_kimi-k2-6_run-03/singlestream_lite_correctness/result.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "measure_ttft_once",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8000",
+        "--model",
+        "kimi-k2.6",
+        "--prompt",
+        "Say hi in one short sentence.",
+        "--max-tokens",
+        "64",
+        "--temperature",
+        "0.0",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-06-05_kimi-k2-6_run-03",
+        "--api-key",
+        "sk-local-disabled",
+        "--workload",
+        "single-target-bench-suite"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-06-05T08:53:57.070537+00:00",
+      "ended_at": "2026-06-05T08:53:57.829641+00:00",
+      "output_paths": [
+        "results/runs/2026-06-05_kimi-k2-6_run-03/singlestream_lite_latency/result.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "run_sequential_benchmark",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8000",
+        "--model",
+        "kimi-k2.6",
+        "--prompt",
+        "Say hi in one short sentence.",
+        "--max-tokens",
+        "64",
+        "--temperature",
+        "0.0",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-06-05_kimi-k2-6_run-03",
+        "--api-key",
+        "sk-local-disabled",
+        "--workload",
+        "single-target-bench-suite",
+        "--warmup",
+        "1",
+        "--runs",
+        "5"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-06-05T08:53:57.829678+00:00",
+      "ended_at": "2026-06-05T08:54:01.948304+00:00",
+      "output_paths": [
+        "results/runs/2026-06-05_kimi-k2-6_run-03/singlestream_lite_repeated/results.jsonl",
+        "results/runs/2026-06-05_kimi-k2-6_run-03/singlestream_lite_repeated/summary.json"
+      ],
+      "error": null
+    },
+    {
+      "name": "snapshot_post",
+      "argv": [
+        "--base-url",
+        "http://127.0.0.1:8000",
+        "--timeout",
+        "120.0",
+        "--run-id",
+        "2026-06-05_kimi-k2-6_run-03",
+        "--phase",
+        "post"
+      ],
+      "exit_code": 0,
+      "started_at": "2026-06-05T08:54:01.948344+00:00",
+      "ended_at": "2026-06-05T08:54:02.185968+00:00",
+      "output_paths": [
+        "results/runs/2026-06-05_kimi-k2-6_run-03/server_metrics/snapshot_post.json"
+      ],
+      "error": null
+    }
+  ]
+}
