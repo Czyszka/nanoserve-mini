@@ -1,0 +1,67 @@
+{
+  "schema": "nanoserve-mini.request-once.v2",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_correctness",
+  "timestamp": "2026-06-05T08:24:05.169466+00:00",
+  "controls": {
+    "model": "kimi-k2.6",
+    "base_url": "http://127.0.0.1:4000",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 64
+    },
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "workload": "single-target-bench-suite",
+    "workload_spec": {
+      "name": "single-target-bench-suite",
+      "prompt_source": "literal",
+      "prompt_chars": 29,
+      "max_tokens": 64,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 64
+      },
+      "concurrency": 1,
+      "arrival_process": "single",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": "2026-06-05_kimi-k2-6_run-01",
+    "run_uuid": "5859768dfd2b43d9b17cd90ca0a09ede",
+    "script_name": "request_once.py",
+    "git_commit": "208e0729ec405bc12673aae32ab13b19f28824c6"
+  },
+  "request": {
+    "prompt": "Say hi in one short sentence.",
+    "max_tokens": 64,
+    "temperature": 0.0
+  },
+  "metrics": {
+    "e2e_seconds": 3.6162959050852805,
+    "output_chars": 0,
+    "prompt_tokens": 15,
+    "completion_tokens": 64,
+    "total_tokens": 79,
+    "completed": true
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "response": {
+    "id": "chatcmpl-8887a921651bb91e",
+    "model": "kimi-k2.6"
+  },
+  "output_text": "",
+  "error": null
+}
