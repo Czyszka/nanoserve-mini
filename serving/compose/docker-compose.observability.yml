@@ -27,11 +27,25 @@ services:
       GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_RENDERING_SERVER_URL: "http://renderer:8081/render"
+      GF_RENDERING_CALLBACK_URL: "http://grafana:3000/"
+      GF_RENDERING_RENDERER_TOKEN: "${GRAFANA_RENDERER_TOKEN:?set GRAFANA_RENDERER_TOKEN in .env}"
     volumes:
       - /home/ubuntusrv2/working/nanoserve-observability/grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus
+      - renderer
+    networks:
+      - nanoserve-net
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    container_name: grafana-image-renderer
+    hostname: renderer
+    restart: unless-stopped
+    environment:
+      AUTH_TOKEN: "${GRAFANA_RENDERER_TOKEN:?set GRAFANA_RENDERER_TOKEN in .env}"
     networks:
       - nanoserve-net
 
