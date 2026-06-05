@@ -70,6 +70,7 @@ captures TTFT/TPOT/throughput numbers to pair with the screenshot.
 ```bash
 DS=/tmp/swe_bench_vllm.jsonl
 COMMON="--backend vllm --base-url http://127.0.0.1:8000 --model kimi-k2.6 \
+  --trust-remote-code \
   --dataset-name custom --dataset-path $DS \
   --custom-output-len 256 --ignore-eos \
   --save-result --result-dir /tmp/t5_bench \
@@ -91,6 +92,12 @@ Push `--max-concurrency` higher if phase C never makes `num_requests_waiting`
 leave zero (you haven't hit `max_num_seqs` yet).
 
 Notes:
+- **Kimi needs `--trust-remote-code`** — bench-serve inits a client-side tokenizer
+  and Kimi K2.6 ships custom tokenizer code ("contains custom code which must be
+  executed"). If it still complains, either point at the cached tokenizer
+  (`--tokenizer moonshotai/Kimi-K2.6`, must be in `~/hf_cache`) or skip it
+  entirely with `--skip-tokenizer-init` (token metrics still come from vLLM
+  `/metrics`, so the T5 dashboard is unaffected).
 - 300-prompt file + `--num-prompts 600` (phase C) → vLLM **oversamples** (repeats)
   prompts by default; the repeats also exercise the **prefix-cache hit** panel.
   Add `--no-oversample` if you want strictly unique prompts.
