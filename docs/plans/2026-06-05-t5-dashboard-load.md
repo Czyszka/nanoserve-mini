@@ -95,7 +95,7 @@ vllm bench serve $COMMON --num-warmups 8 --num-prompts 120 --max-concurrency 4 \
 vllm bench serve $COMMON --num-prompts 300 --max-concurrency 16 \
   --result-filename phaseB_c16.json
 # phase C — saturate (fills the waiting-queue panel)
-vllm bench serve $COMMON --num-prompts 600 --max-concurrency 64 \
+vllm bench serve $COMMON --num-prompts 300 --max-concurrency 64 \
   --result-filename phaseC_c64.json
 ```
 
