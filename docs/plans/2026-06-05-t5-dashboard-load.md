@@ -82,7 +82,7 @@ captures TTFT/TPOT/throughput numbers to pair with the screenshot.
 ```bash
 DS=/tmp/swe_bench_vllm.jsonl
 COMMON="--backend vllm --base-url http://127.0.0.1:8000 --model kimi-k2.6 \
-  --trust-remote-code \
+  --trust-remote-code --tokenizer moonshotai/Kimi-K2.6 \
   --dataset-name custom --dataset-path $DS \
   --custom-output-len 256 --ignore-eos \
   --save-result --result-dir /tmp/t5_bench \
