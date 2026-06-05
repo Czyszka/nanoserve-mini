@@ -1,0 +1,102 @@
+{
+  "schema": "nanoserve-mini.sequential-bench.v3",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_repeated",
+  "timestamp": "2026-06-05T08:24:10.448985+00:00",
+  "controls": {
+    "model": "kimi-k2.6",
+    "base_url": "http://127.0.0.1:4000",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 64
+    },
+    "warmup_runs": 1,
+    "measured_runs": 5,
+    "concurrency": 1,
+    "workload": "single-target-bench-suite",
+    "workload_spec": {
+      "name": "single-target-bench-suite",
+      "prompt_source": "literal",
+      "prompt_chars": 29,
+      "max_tokens": 64,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 64
+      },
+      "concurrency": 1,
+      "arrival_process": "sequential",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": "2026-06-05_kimi-k2-6_run-01",
+    "run_uuid": "dbe31d98e38a4912a10d628df8d04825",
+    "script_name": "run_sequential_benchmark.py",
+    "git_commit": "208e0729ec405bc12673aae32ab13b19f28824c6"
+  },
+  "request": {
+    "prompt": "Say hi in one short sentence.",
+    "max_tokens": 64,
+    "temperature": 0.0
+  },
+  "summary": {
+    "measured_runs": 5,
+    "errors": 0,
+    "ttft_seconds": {
+      "count": 0,
+      "min": null,
+      "p50": null,
+      "p95": null,
+      "max": null,
+      "mean": null
+    },
+    "e2e_seconds": {
+      "count": 5,
+      "min": 0.7151245450368151,
+      "p50": 0.7438401350518689,
+      "p95": 0.7583838140359148,
+      "max": 0.7590656790416688,
+      "mean": 0.7397929566213861
+    },
+    "tpot_seconds": {
+      "count": 0,
+      "min": null,
+      "p50": null,
+      "p95": null,
+      "max": null,
+      "mean": null
+    },
+    "prompt_tokens": {
+      "count": 5,
+      "min": 15.0,
+      "p50": 15.0,
+      "p95": 15.0,
+      "max": 15.0,
+      "mean": 15.0
+    },
+    "completion_tokens": {
+      "count": 5,
+      "min": 64.0,
+      "p50": 64.0,
+      "p95": 64.0,
+      "max": 64.0,
+      "mean": 64.0
+    },
+    "measured_wall_clock_seconds": 3.6994612589478493,
+    "request_throughput": 1.351548144451182,
+    "output_chars_per_second": null,
+    "output_tokens_per_second": 86.49908124487565
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "error": null
+}
