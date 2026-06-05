@@ -2,7 +2,7 @@
   "schema": "nanoserve-mini.ttft-once.v2",
   "methodology": "mlperf_inspired_lite",
   "benchmark_mode": "singlestream_lite_latency",
-  "timestamp": "2026-06-05T09:17:53.864365+00:00",
+  "timestamp": "2026-06-05T10:02:18.547493+00:00",
   "controls": {
     "model": "kimi-k2.6",
     "base_url": "http://127.0.0.1:8000",
@@ -36,9 +36,9 @@
     },
     "notes": null,
     "run_id": "2026-06-05_kimi-k2-6_run-05",
-    "run_uuid": "1782aa7369064869a314f2c2c881d3ac",
+    "run_uuid": "ca81165ce4d84892a5b13b6b41d001e6",
     "script_name": "measure_ttft_once.py",
-    "git_commit": "8a3b3aaff69b76e648278c78787f46e63fd8fa18"
+    "git_commit": "ec3df59fc5f8d9ac288faf0b33adf922502ccb99"
   },
   "request": {
     "prompt": "Say hi in one short sentence.",
@@ -46,18 +46,18 @@
     "temperature": 0.0
   },
   "metrics": {
-    "ttft_seconds": 2.4887043639319018,
-    "ttft_any_token_seconds": 0.20305604592431337,
-    "e2e_seconds": 2.5362997140036896,
-    "tpot_seconds": 0.0003375556742679988,
-    "tpot_any_token_seconds": 0.016547827433187064,
-    "output_tokens_per_second": 55.987074089065416,
-    "chunks_received": 143,
+    "ttft_seconds": 1.364707567030564,
+    "ttft_any_token_seconds": 0.12134003406390548,
+    "e2e_seconds": 1.3887633250560611,
+    "tpot_seconds": 0.000164765465928063,
+    "tpot_any_token_seconds": 0.008680981445151751,
+    "output_tokens_per_second": 105.84956943190154,
+    "chunks_received": 62,
     "output_chars": 10,
     "reasoning_chars": 546,
     "prompt_tokens": 15,
-    "completion_tokens": 142,
-    "total_tokens": 157,
+    "completion_tokens": 147,
+    "total_tokens": 162,
     "completed": true
   },
   "server_metrics": {

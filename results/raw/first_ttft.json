@@ -2,10 +2,10 @@
   "schema": "nanoserve-mini.ttft-once.v2",
   "methodology": "mlperf_inspired_lite",
   "benchmark_mode": "singlestream_lite_latency",
-  "timestamp": "2026-05-19T11:08:56.807436+00:00",
+  "timestamp": "2026-06-05T10:00:14.891232+00:00",
   "controls": {
-    "model": "DeepSeek-V4-Flash",
-    "base_url": "http://127.0.0.1:4000",
+    "model": "kimi-k2.6",
+    "base_url": "http://127.0.0.1:8000",
     "dtype": null,
     "quantization": null,
     "gpu_model": null,
@@ -15,46 +15,49 @@
     "max_num_batched_tokens": null,
     "decoding": {
       "temperature": 0.0,
-      "max_tokens": 64
+      "max_tokens": 1024
     },
     "warmup_runs": 0,
     "measured_runs": 1,
     "concurrency": 1,
-    "workload": "single-target-bench-suite",
+    "workload": "single-prompt-smoke",
     "workload_spec": {
-      "name": "single-target-bench-suite",
+      "name": "single-prompt-smoke",
       "prompt_source": "literal",
       "prompt_chars": 29,
-      "max_tokens": 64,
+      "max_tokens": 1024,
       "decoding": {
         "temperature": 0.0,
-        "max_tokens": 64
+        "max_tokens": 1024
       },
       "concurrency": 1,
       "arrival_process": "single",
       "shared_prefixes": false
     },
     "notes": null,
-    "run_id": "2026-05-19_deepseek-v4-flash_run-06",
-    "run_uuid": "a7684a61ebba47f4b4b7656be97d3bac",
+    "run_id": null,
+    "run_uuid": "89a206a1e3434931b20d9a4774fc83bb",
     "script_name": "measure_ttft_once.py",
-    "git_commit": "bd028eed3fa1667291c0ddcfa86026d14e6f4084"
+    "git_commit": "ec3df59fc5f8d9ac288faf0b33adf922502ccb99"
   },
   "request": {
     "prompt": "Say hi in one short sentence.",
-    "max_tokens": 64,
+    "max_tokens": 1024,
     "temperature": 0.0
   },
   "metrics": {
-    "ttft_seconds": 0.33271678799974325,
-    "e2e_seconds": 0.5207019540002875,
-    "tpot_seconds": 0.09399258300027213,
-    "output_tokens_per_second": 5.7614533169167705,
-    "chunks_received": 5,
-    "output_chars": 3,
-    "prompt_tokens": 11,
-    "completion_tokens": 3,
-    "total_tokens": 14,
+    "ttft_seconds": 1.21987413498573,
+    "ttft_any_token_seconds": 0.2545062949648127,
+    "e2e_seconds": 1.2429133820114657,
+    "tpot_seconds": 0.0002113692387682172,
+    "tpot_any_token_seconds": 0.009067954927033514,
+    "output_tokens_per_second": 88.50174243194789,
+    "chunks_received": 45,
+    "output_chars": 10,
+    "reasoning_chars": 436,
+    "prompt_tokens": 15,
+    "completion_tokens": 110,
+    "total_tokens": 125,
     "completed": true
   },
   "server_metrics": {
@@ -62,6 +65,6 @@
     "kv_cache_usage": null,
     "prefix_cache_hit_rate": null
   },
-  "output_text": "Hi!",
+  "output_text": " Hi there!",
   "error": null
 }

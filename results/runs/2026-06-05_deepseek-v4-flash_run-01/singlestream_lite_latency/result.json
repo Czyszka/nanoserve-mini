@@ -2,10 +2,10 @@
   "schema": "nanoserve-mini.ttft-once.v2",
   "methodology": "mlperf_inspired_lite",
   "benchmark_mode": "singlestream_lite_latency",
-  "timestamp": "2026-05-19T10:55:34.302257+00:00",
+  "timestamp": "2026-06-05T09:44:33.139704+00:00",
   "controls": {
     "model": "DeepSeek-V4-Flash",
-    "base_url": "http://127.0.0.1:4000",
+    "base_url": "http://127.0.0.1:8004",
     "dtype": null,
     "quantization": null,
     "gpu_model": null,
@@ -35,10 +35,10 @@
       "shared_prefixes": false
     },
     "notes": null,
-    "run_id": "2026-05-19_deepseek-v4-flash_run-05",
-    "run_uuid": "78038def5c7b442cb10abdc9728c98b2",
+    "run_id": "2026-06-05_deepseek-v4-flash_run-01",
+    "run_uuid": "495ec5b9d2554ce3a761f031cc42c562",
     "script_name": "measure_ttft_once.py",
-    "git_commit": "bd028eed3fa1667291c0ddcfa86026d14e6f4084"
+    "git_commit": "ec3df59fc5f8d9ac288faf0b33adf922502ccb99"
   },
   "request": {
     "prompt": "Say hi in one short sentence.",
@@ -46,12 +46,15 @@
     "temperature": 0.0
   },
   "metrics": {
-    "ttft_seconds": 0.3539294150000387,
-    "e2e_seconds": 0.5435172640000019,
-    "tpot_seconds": 0.09479392449998159,
-    "output_tokens_per_second": 5.519603881432531,
-    "chunks_received": 5,
+    "ttft_seconds": 1.512293303036131,
+    "ttft_any_token_seconds": 1.512293303036131,
+    "e2e_seconds": 2.2399415959371254,
+    "tpot_seconds": 0.3638241464504972,
+    "tpot_any_token_seconds": 0.3638241464504972,
+    "output_tokens_per_second": 1.339320634717214,
+    "chunks_received": 4,
     "output_chars": 3,
+    "reasoning_chars": 0,
     "prompt_tokens": 11,
     "completion_tokens": 3,
     "total_tokens": 14,
