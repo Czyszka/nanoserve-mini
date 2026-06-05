@@ -106,7 +106,7 @@ set -a; source .env; set +a
 test -n "$LITELLM_MASTER_KEY" || { echo "missing LITELLM_MASTER_KEY in .env"; exit 1; }
 
 # .env NIE powinien pinować capa DeepSeeka — sweep robimy w shellu
-grep -n '^DEEPSEEK_GPU_MEM_UTIL=' serving/compose/.env \
+grep -n '^DEEPSEEK_GPU_MEM_UTIL=' .env \
   && echo "WARNING: .env pins DEEPSEEK_GPU_MEM_UTIL — shell export w Cz.B i tak nadpisze, ale po sesji wróci do tej wartości" \
   || echo "no DEEPSEEK_GPU_MEM_UTIL in .env (default 0.25) — OK"
 
