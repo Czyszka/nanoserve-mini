@@ -113,7 +113,9 @@ status, not a task list. Update when work moves.
     healthy with matching `verify_cap*.txt` and `ttft_cap*.json`. Filenames
     finally match runtime caps. Compose default lowered to 0.20.
   - **T6 (ON + OFF complete, paired):** `engine_cmd_eagle3_{on,off}.json`
-    confirm fair A/B (OFF differs only by `--speculative-config` removal).
+    show the A/B differs by **two** flags — OFF drops `--speculative-config`
+    (intended) *and* `--max-num-batched-tokens 4096` (impurity; immaterial for
+    this 15-tok prompt at `max-num-seqs 1`, would matter under concurrency).
     Single-shot latency: ON TTFT(content) 652 ms / TPOT(any) 6.92 ms/tok /
     E2E 674 ms / 24 chunks; OFF TTFT(content) 2489 ms / TPOT(any) 16.55
     ms/tok / E2E 2536 ms / 143 chunks. TTFT(any) ≈ 204 ms in both — Eagle3
