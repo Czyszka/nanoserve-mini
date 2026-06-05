@@ -9,6 +9,20 @@ possible full `nanoserve` follow-up.
 
 > **[→ Interactive architecture diagram](https://czyszka.github.io/nanoserve-mini/architecture.html)** — full visual map of services, scripts, modules, and data flows.
 
+## Phase 1 results
+
+Live Grafana dashboard during a load test of **Kimi-K2.6** (vLLM, TP=8, Eagle3
+speculative decoding, batched `--max-num-seqs 32`) driven by a SWE-bench Lite
+workload through `vllm bench serve` — request queue, token throughput,
+TTFT / ITL / E2E latency, KV-cache usage and spec-decode acceptance, all scraped
+into Prometheus and rendered from the provisioned Phase 1 dashboard.
+
+<a href="results/runs/2026-06-05_w1_evidence/2026-06-05_grafana_dashboard-max_num_seqs_32.png">
+  <img src="results/runs/2026-06-05_w1_evidence/2026-06-05_grafana_dashboard-max_num_seqs_32.png" width="760" alt="vLLM Phase 1 Grafana dashboard under load — Kimi K2.6, max_num_seqs=32: request queue, throughput, latency, KV cache and spec-decode acceptance">
+</a>
+
+<sub><i>Click the image to view it full size.</i></sub>
+
 ## Current work
 
 Source of truth for human work: this README.
@@ -25,14 +39,16 @@ What works:
 - Benchmark scripts exist under `benchmarks/scripts/`.
 - `benchmarks/scripts/run_bench_suite.py` has completed proxy benchmark
   runs for both models.
-- Prometheus + Grafana compose exists, including a provisioned Phase 1
-  dashboard that still needs live-load validation.
+- Prometheus + Grafana compose with a provisioned Phase 1 dashboard,
+  validated under live `vllm bench serve` load (see *Phase 1 results* above).
 
 Next 3 actions:
 
-1. Validate the Grafana dashboard under live benchmark load.
-2. Add/validate DCGM Exporter GPU hardware metrics.
-3. Prepare the W1 write-up after observability is coherent.
+1. Add/validate DCGM Exporter GPU hardware metrics (power, SM/Tensor/DRAM
+   activity, VRAM) — the load test showed 100% GPU-util at ~180 W, a
+   memory-bound signal invisible without DCGM.
+2. Prepare the W1 write-up now that observability is coherent.
+3. Capture bench numbers from Prometheus into the W1 evidence summary.
 
 Do not use `docs/operations/agent-state.md` as the human project dashboard. It
 is an AI-agent handoff file.
