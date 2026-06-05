@@ -77,7 +77,7 @@ wymusza stały decode. `--save-result` zbiera liczby pod write-up.
 ```bash
 DS=/tmp/swe_bench_vllm.jsonl
 COMMON="--backend vllm --base-url http://127.0.0.1:8000 --model kimi-k2.6 \
-  --trust-remote-code \
+  --trust-remote-code --tokenizer moonshotai/Kimi-K2.6 \
   --dataset-name custom --dataset-path $DS \
   --custom-output-len 256 --ignore-eos \
   --save-result --result-dir /tmp/t5_bench \
@@ -96,7 +96,12 @@ widać rosnące schodki obciążenia.
 
 Tuning: jeśli w fazie C **Requests waiting** zostaje na zerze → podbij
 `--max-concurrency` (96/128); nie dobiłeś do `max_num_seqs`.
-Tokenizer dalej marudzi → `--tokenizer moonshotai/Kimi-K2.6` lub `--skip-tokenizer-init`.
+`--tokenizer moonshotai/Kimi-K2.6` jest wymagany w trybie offline (klient benchu
+sam nie znajdzie tokenizera Kimiego); musi być w zamontowanym `~/hf_cache`. Jeśli
+i to zawiedzie → `--skip-tokenizer-init` (metryki i tak z `/metrics` vLLM).
+Pamiętaj: `max-num-seqs=1` w compose = brak batchingu (artefakt T6 single-stream);
+do load testu ustaw `--max-num-seqs 32`+ i zrób `up -d vllm` (recreate kasuje
+`pip install` i plik z `/tmp` — powtórz krok 3-4).
 Brak `/v1/completions` → `--backend openai-chat --endpoint /v1/chat/completions`.
 
 ## Krok 6 — screen w fazie C
