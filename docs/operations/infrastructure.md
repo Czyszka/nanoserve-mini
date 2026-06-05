@@ -103,7 +103,11 @@ Przed wejściem na serwer powinny być gotowe:
 - lista eksperymentów,
 - oczekiwane output paths,
 - fallback plan,
-- `.env` / sekrety ustawione lokalnie na serwerze,
+- `.env` / sekrety ustawione lokalnie na serwerze. **Kanoniczna
+  lokalizacja: główny katalog repo (`~/nanoserve-mini/.env`), nie
+  `serving/compose/.env`.** `docker compose` jest odpalany z roota repo,
+  więc auto-ładuje root `.env`; ręczne `source .env` w planach też zakłada
+  root. Plik jest w `.gitignore` (`.env`), commitujemy tylko `.env.example`.
 - model / cache przygotowany, jeśli to możliwe.
 
 ---
