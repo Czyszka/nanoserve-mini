@@ -1,0 +1,1 @@
+{"status":"success","data":{"resultType":"vector","result":[{"metric":{"engine":"0","instance":"vllm:8000","job":"vllm-kimi","model_name":"kimi-k2.6"},"value":[1780650154.677,"0"]},{"metric":{"engine":"0","instance":"vllm-small:8004","job":"vllm-small-deepseek","model_name":"DeepSeek-V4-Flash"},"value":[1780650154.677,"0"]}]}}
