@@ -96,7 +96,10 @@ status, not a task list. Update when work moves.
   `docs/plans/2026-06-05-t5-dashboard-load.md` — flags verified against the
   committed `vllm_bench_serve_help.txt`; workload is the offline SWE-bench Lite
   300 set (`benchmarking/swe_bench_vllm.jsonl`) via `--dataset-name custom`
-  (no internet needed — prompts baked in), `random` as fallback. Harness is
+  (no internet needed — prompts baked in), `random` as fallback. Repeatable
+  procedure now lives in `serving/runbooks/load-test-and-grafana.md` (verified
+  2026-06-05: needs `HF_HUB_OFFLINE=1`, `pip install pandas datasets`,
+  `--trust-remote-code`; bench ran, panels fill under load). Harness is
   sequential-only, so
   single-stream benches won't light up the queue panels — hence the bench-serve
   ramp.

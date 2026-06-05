@@ -7,6 +7,7 @@ Używaj ich, gdy potrzebujesz wykonać znaną procedurę z minimalną improwizac
 ## Lista runbooków
 
 - [`server-env-bootstrap.md`](./server-env-bootstrap.md) — bootstrap / re-walidacja środowiska serwera GPU: snapshot env + decyzja Docker vs uv-native dla vLLM.
+- [`load-test-and-grafana.md`](./load-test-and-grafana.md) — load test vLLM (`vllm bench serve`) + podgląd metryk w Grafanie i screen; z gotchami z sesji 2026-06-05 (offline env, `pip install pandas datasets`, `--trust-remote-code`).
 
 ## Zasady
 
