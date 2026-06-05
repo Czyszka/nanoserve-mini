@@ -99,17 +99,35 @@ status, not a task list. Update when work moves.
     traceback, `log_cap015_FAILED.txt`); cap 0.20 and 0.25 both come up
     healthy with matching `verify_cap*.txt` and `ttft_cap*.json`. Filenames
     finally match runtime caps. Compose default lowered to 0.20.
-  - **T6 (ON only so far):** `engine_cmd_eagle3_on.json` +
-    `kimi_log_eagle3_on.txt` captured. OFF run still owed. User is running
-    bumped-max-tokens benches now with the corrected compose.
+  - **T6 (ON + OFF complete, paired):** `engine_cmd_eagle3_{on,off}.json`
+    confirm fair A/B (OFF differs only by `--speculative-config` removal).
+    Single-shot latency: ON TTFT(content) 652 ms / TPOT(any) 6.92 ms/tok /
+    E2E 674 ms / 24 chunks; OFF TTFT(content) 2489 ms / TPOT(any) 16.55
+    ms/tok / E2E 2536 ms / 143 chunks. TTFT(any) ≈ 204 ms in both — Eagle3
+    does not help the first token (expected). Repeated (5 measured runs):
+    ON TTFT p50/p95 = 837/1694 ms, OFF 1675/4426 ms. Net: Eagle3 gives
+    ~3.8× E2E and ~2.4× TPOT(any) on single-stream with this prompt.
+  - **T1 DEP:** captured — `dep_state.txt` = `exited 1` (clean startup
+    crash, not a hang); `dep_engine_cmd.json` + `dep_full.log` +
+    `dep_startup.log` saved. Confirms "single-node DEP does not work"
+    deterministically.
+  - **T5 (side capture):** 12×10s `vllm:num_requests_*` / `kv_cache_usage`
+    / generation rate snapshots collected in both ON and OFF benches under
+    `t5_metrics/eagle3-{on,off}/`. Free side data, dashboard validation
+    still owed (but no longer blocking W1).
+  - **C4 restore:** Kimi back in Eagle3-ON config; `restore_engine_cmd.json`
+    shows `speculative-config` present; `restore_smoke.json` completed=True
+    (TTFT_any 1.26 s, 19 chunks, 183 reasoning_chars).
   - **T4/T8 LiteLLM limit:** paired Kimi K2.6 benches run-01 (proxy :4000)
     vs run-03 (direct :8000), same prompt + max_tokens=64, prove LiteLLM
     `main-v1.66.0-stable` strips `delta.reasoning`: 3 vs 26 chunks,
     `reasoning_chars` 0 vs 242, `ttft_any_token_seconds` null vs 0.214 s.
     Parser fix #31 verified working direct; proxy unusable as the single
     driver for Kimi reasoning streams in this LiteLLM version.
-  - **Still missing:** T6 OFF (Eagle3 disabled comparison), T1 DEP startup
-    failure capture, T5 dashboard validation.
+  - **Still missing:** T5 Grafana dashboard panel validation under load
+    (was deferred), W1 thread write-ups using the new numbers.
+- **#48 — speculative decoding methodology:** new research issue tracking a
+  JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 
 ---
 
@@ -124,14 +142,13 @@ sequences them. This section only points at active work — it is not a task lis
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** finish the in-flight 2026-06-05 Kimi slot — Eagle3
-OFF run mirroring the ON config (direct :8000, same bumped max_tokens,
-save `engine_cmd_eagle3_off.json`) + T1 DEP startup capture, then restore
-Eagle3-ON. T3 clean sweep is **done** as of `208e072` (cap 0.15 hard-fail,
-0.20 and 0.25 OK with matching filenames + verify). Laptop afterward: write
-up T3/T6/T8 threads with the new numbers — T8 gets a concrete
-LiteLLM-strips-`delta.reasoning` limit, paired evidence in
-`results/runs/2026-06-05_kimi-k2-6_run-{01,03}/`.
+**Next concrete step:** **laptop work** — W1 thread write-ups using the
+2026-06-05 numbers. Server slot for Phase 1 is effectively done modulo
+T5 dashboard validation. Order: (1) T6 thread with the ON/OFF paired
+numbers + #48 methodology check; (2) T1 thread with DEP `exited 1`
+evidence; (3) T3 thread refresh with the clean sweep; (4) T8/T4 update
+with the LiteLLM `delta.reasoning` strip (paired `run-01` vs `run-03`);
+(5) only then T5 dashboard validation under live load.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -321,6 +338,39 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-05 (PM) - W1 server slot close-out: T6 OFF + T1 DEP + restore
+
+- Why: dokończyć blok Kimi z planu (Cz. C: T6 OFF + T1 DEP + restore) po
+  porannym T3 clean i T6 ON.
+- Did (commit `ec3df59` + `3b12fff` gitignore allowlist):
+  - **T6 Eagle3 OFF:** `engine_cmd_eagle3_off.json` (brak speculative,
+    TP=8 zachowany), `bench_off.log`, `kimi_log_eagle3_off.txt`, auto-id
+    `results/runs/2026-06-05_kimi-k2-6_run-05/` z pełnymi metrykami.
+  - **T6 paired numbers (single-shot latency):** ON TTFT(content) 652 ms,
+    TPOT(any) 6.92 ms/tok, 24 chunki; OFF 2489 ms, 16.55 ms/tok, 143
+    chunki. TTFT(any) ≈ 204 ms w obu (Eagle3 nie pomaga pierwszemu
+    tokenowi — zgodnie z teorią). Repeated p50 TTFT: ON 837 ms vs OFF
+    1675 ms. Eagle3 ≈ 3.8× E2E, ≈ 2.4× TPOT(any).
+  - **T1 DEP:** `dep_state.txt` = `exited 1` (czysty crash startu),
+    pełne `dep_full.log` + `dep_startup.log` + `dep_engine_cmd.json`.
+  - **C4 restore:** Kimi z powrotem w Eagle3-ON, `restore_engine_cmd.json`
+    potwierdza speculative-config, `restore_smoke.json` completed=True.
+  - **T5 (boczne):** 12×10s snapshoty `vllm:num_requests_*`,
+    `kv_cache_usage_perc`, `rate(vllm:generation_tokens_total[1m])` w
+    obu wariantach (`t5_metrics/eagle3-{on,off}/`).
+  - **.gitignore allowlist:** dorzucone `!t6_eagle3/bench_*.log` i
+    `!t1_dep/dep_*.log` żeby plan-named evidence logi weszły do repo bez
+    `git add -f`.
+- Validation: `git diff --check` OK; brak `.py` touched (manifest +
+  artefakty + plan tweaks).
+- Caveats:
+  - Auto-id run dirs wyszły jako `run-04` (ON) i `run-05` (OFF) zamiast
+    planowych `_eagle3-{on,off}` — `run_bench_suite.py` nie respektuje
+    `--run-id` albo użyto innej ścieżki. Nie blokujące; do laptop-side
+    follow-up: ewentualnie udoskonalić skrypt albo doczepić alias.
+  - Commit `ec3df59` zawiera **`results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl`** (300 SWE-bench promptów) — to nie jest z planu W1 ani z roadmap Phase 1; flaga scope-creep, do decyzji laptop-side (zostawić jako dataset do późniejszego workloadu albo wyrzucić z repo, dodać do `.gitignore`).
+- Next: laptop write-up W1 threads (T6 → T1 → T3 → T8/T4 → T5 dashboard).
 
 ### 2026-06-05 - W1 server slot: compose defaults, T3 clean, T6 ON, LiteLLM strip
 
