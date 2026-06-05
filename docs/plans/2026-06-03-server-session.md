@@ -102,7 +102,7 @@ git pull --ff-only origin main
 uv sync --extra dev
 
 # load env (standardowa metoda: set -a / source / set +a)
-set -a; source serving/compose/.env; set +a
+set -a; source .env; set +a
 test -n "$LITELLM_MASTER_KEY" || { echo "missing LITELLM_MASTER_KEY in .env"; exit 1; }
 
 # .env NIE powinien pinować capa DeepSeeka — sweep robimy w shellu
@@ -149,7 +149,7 @@ run_t3_cap () {
   docker compose -f "$COMPOSE" up -d --force-recreate vllm-small
 
   ok=0
-  for _ in $(seq 1 60); do
+  for _ in $(seq 1 600); do
     curl -fsS http://127.0.0.1:8004/health >/dev/null 2>&1 && { ok=1; break; }
     sleep 5
   done
@@ -177,13 +177,17 @@ run_t3_cap 0.20     # kandydat
 # finał: zdejmij shell override -> wraca do compose default (lub wartości z .env)
 unset DEEPSEEK_GPU_MEM_UTIL
 docker compose -f "$COMPOSE" up -d --force-recreate vllm-small
-for _ in $(seq 1 60); do curl -fsS http://127.0.0.1:8004/health >/dev/null 2>&1 && break; sleep 5; done
+for _ in $(seq 1 240); do curl -fsS http://127.0.0.1:8004/health >/dev/null 2>&1 && break; sleep 5; done
 docker logs vllm-small --tail 200 > "$OUT/log_restored_default.txt" 2>&1
 ```
 
 Materiał T3 (laptop): z `log_cap*.txt` — `Loading model weights` (MiB),
 `Available KV cache memory`, `GPU KV cache size` (tokeny), ewentualny
 OOM/traceback; z `nvidia_smi_cap*.txt` — ile VRAM wolne / dla Kimi.
+
+//todo Byl fail dla CAP 0.15. Zrwocic uwage na aktualy compose dla kimi i v4-flash
+//todo bench na przyszlosc: https://jarvislabs.ai/blog/speculative-decoding-vllm-faster-llm-inference
+
 **Decyzja o finalnym capie zapada laptop-side po sesji.**
 
 > Jeśli `verify_cap*.txt` pokaże runtime ≠ intencja → **przerwij i sprawdź**
@@ -198,9 +202,9 @@ OOM/traceback; z `nvidia_smi_cap*.txt` — ile VRAM wolne / dla Kimi.
 restartach Kimi, evidence T3 jest już w repo i stan odzwierciedlony.
 
 ```bash
-git add results/runs/2026-06-03_w1_evidence/t3_deepseek_vram \
-        results/runs/2026-06-03_w1_evidence/session
-git commit -m "bench: W1 T3 DeepSeek VRAM sweep (2026-06-03)"
+git add results/runs/2026-06-05_w1_evidence/t3_deepseek_vram \
+        results/runs/2026-06-05_w1_evidence/session
+git commit -m "bench: W1 T3 DeepSeek VRAM sweep (2026-06-05)"
 git push origin main
 ```
 
@@ -251,8 +255,7 @@ T5PID=$!
 uv run python -m benchmarks.scripts.run_bench_suite \
   --base-url http://127.0.0.1:4000 --metrics-base-url http://127.0.0.1:8000 \
   --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" \
-  --warmup 1 --runs 5 \
-  --run-id "$(date +%F)_kimi-k2.6_eagle3-on" > "$OUT/bench_on.log" 2>&1
+  --warmup 1 --runs 5 > "$OUT/bench_on.log" 2>&1
 
 wait $T5PID 2>/dev/null || true
 docker logs vllm --tail 1000 > "$OUT/kimi_log_eagle3_on.txt"
