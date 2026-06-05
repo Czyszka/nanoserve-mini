@@ -118,6 +118,14 @@ KV cache wysoko.
 
 ## Krok 7 — zgarnij wyniki + commit
 
+> ⚠️ **NAJPIERW `cp`, POTEM `compose down`.** `--save-result` zapisuje do
+> `/tmp/t5_bench` **wewnątrz kontenera** — `compose down` (a nawet `up -d` po
+> zmianie configu) kasuje warstwę kontenera i te pliki przepadają. Skopiuj je na
+> host zanim ruszysz stack. Metryki serwera przeżyją (Prometheus TSDB jest na
+> host bind-mount `…/nanoserve-observability/prometheus-data` i `down` go nie
+> rusza), więc nawet po utracie JSON-ów liczby odtworzysz zapytaniami do
+> Prometheusa dla okna testu — ale to plan B, nie plan A.
+
 ```bash
 # wyjście z kontenera, potem z hosta:
 docker compose -f serving/compose/docker-compose.kimi-k2.6.yml cp \
@@ -130,6 +138,10 @@ git push origin main
 ```
 
 OK: bench JSON-y + screen w repo (PNG trzymaj mały; duże artefakty → tylko ścieżka + repro).
+
+Plan B (jeśli JSON-y przepadły przed `cp`): odtwórz liczby z Prometheusa dla okna
+testu — `max_over_time(...[W])` dla peaków (running/waiting/KV/throughput) i
+`histogram_quantile(q, sum by (le)(increase(..._bucket[W])))` dla E2E/TTFT/ITL.
 
 ---
 
