@@ -22,8 +22,8 @@ Phase 1 is now past the minimum proxy/benchmark milestone, but not fully complet
 
 Live state:
 
-- Kimi-K2.6 runs on the 8×H200 NVL server through Docker Compose as service `vllm`, exposed on port 8000, using TP=8 + Eagle3 speculative decoding.
-- DeepSeek-V4-Flash runs alongside Kimi as service `vllm-small`, exposed on port 8004; current compose default is `DEEPSEEK_GPU_MEM_UTIL:-0.25` after the 2026-05-27 session, but W1 notes still need to reconcile this with the earlier 0.20 plan.
+- Kimi-K2.6 runs on the 8×H200 NVL server through Docker Compose as service `vllm`, exposed on port 8000, using TP=8 + Eagle3 speculative decoding. Compose defaults updated 2026-06-05 (`6c9db1c`): Kimi `--gpu-memory-utilization 0.6` (was 0.65), added `--max-num-batched-tokens 4096`, speculative-config now carries `"max_model_len":8192`.
+- DeepSeek-V4-Flash runs alongside Kimi as service `vllm-small`, exposed on port 8004; current compose default is `DEEPSEEK_GPU_MEM_UTIL:-0.2` after the 2026-06-05 T3 sweep (was 0.25); speculative-config gained `"max_model_len":8192`.
 - OpenWebUI is running in compose, but the 2026-05-27 start snapshot showed it as unhealthy.
 - LiteLLM Proxy runs on port 4000 and routes by `model` to Kimi and DeepSeek. Smoke tests through proxy passed for both upstreams.
 - `run_bench_suite.py` has been run through LiteLLM Proxy for both Kimi K2.6 and DeepSeek-V4-Flash; results are committed.
@@ -92,12 +92,24 @@ status, not a task list. Update when work moves.
   captured a LiteLLM metrics snapshot, not full dashboard evidence.
 - **#37 — W1 write-up:** 2026-05-27 evidence analyzed and written up on the
   laptop. T4 LiteLLM Proxy and T7 host-directories justifications drafted; T8
-  thread file migrated to a post-evidence document (paired direct-vs-proxy
-  deltas, `summary.md` artifact added); T3 thread file rewritten as a partial
-  0.25 runtime baseline with the `cap020` filename caveat; T1/T6/T5 carry
-  explicit "not completed 2026-05-27" status notes; index Thread map +
-  evidence-quality tracker + path A close-out list updated. T1 DEP, T6 Eagle3
-  ON/OFF, T3 clean sweep, and T5 dashboard validation still missing.
+  thread file migrated to a post-evidence document; T1/T5 still pending.
+  **2026-06-05 server slot delivered the missing T3 clean sweep + started T6
+  Eagle3-ON capture + uncovered a new T8/T4 limit:**
+  - **T3 (clean):** cap 0.15 hard-fails on engine init (genuine OOM-style
+    traceback, `log_cap015_FAILED.txt`); cap 0.20 and 0.25 both come up
+    healthy with matching `verify_cap*.txt` and `ttft_cap*.json`. Filenames
+    finally match runtime caps. Compose default lowered to 0.20.
+  - **T6 (ON only so far):** `engine_cmd_eagle3_on.json` +
+    `kimi_log_eagle3_on.txt` captured. OFF run still owed. User is running
+    bumped-max-tokens benches now with the corrected compose.
+  - **T4/T8 LiteLLM limit:** paired Kimi K2.6 benches run-01 (proxy :4000)
+    vs run-03 (direct :8000), same prompt + max_tokens=64, prove LiteLLM
+    `main-v1.66.0-stable` strips `delta.reasoning`: 3 vs 26 chunks,
+    `reasoning_chars` 0 vs 242, `ttft_any_token_seconds` null vs 0.214 s.
+    Parser fix #31 verified working direct; proxy unusable as the single
+    driver for Kimi reasoning streams in this LiteLLM version.
+  - **Still missing:** T6 OFF (Eagle3 disabled comparison), T1 DEP startup
+    failure capture, T5 dashboard validation.
 
 ---
 
@@ -112,11 +124,14 @@ sequences them. This section only points at active work — it is not a task lis
 - **#34** — after W1 evidence is coherent, validate Grafana panels against live
   metric names under load; do not block W1 on DCGM/GPU hardware panels.
 
-**Next concrete step:** schedule a follow-up server slot to collect the missing
-W1 evidence — T3 clean VRAM sweep (0.15/0.20/0.25 with matching filenames), T1
-DEP startup failure capture, T6 Kimi Eagle3 ON/OFF — and fix the LiteLLM
-`prometheus_callback` so T5 dashboard panels and a T8 proxy-side cross-check can
-be validated under live load.
+**Next concrete step:** finish the in-flight 2026-06-05 Kimi slot — Eagle3
+OFF run mirroring the ON config (direct :8000, same bumped max_tokens,
+save `engine_cmd_eagle3_off.json`) + T1 DEP startup capture, then restore
+Eagle3-ON. T3 clean sweep is **done** as of `208e072` (cap 0.15 hard-fail,
+0.20 and 0.25 OK with matching filenames + verify). Laptop afterward: write
+up T3/T6/T8 threads with the new numbers — T8 gets a concrete
+LiteLLM-strips-`delta.reasoning` limit, paired evidence in
+`results/runs/2026-06-05_kimi-k2-6_run-{01,03}/`.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -171,7 +186,7 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 | vLLM setup | Docker Compose using `vllm/vllm-openai:v0.20.0-cu130-ubuntu2404` |
 | vLLM strategy | Kimi uses TP=8 + Eagle3 speculative decoding; single-node DEP did not work |
 | Primary model | `moonshotai/Kimi-K2.6` served as `kimi-k2.6` |
-| Small-model experiment | `deepseek-ai/DeepSeek-V4-Flash` served as `DeepSeek-V4-Flash`, currently tested around 0.25 VRAM cap in the 2026-05-27 artifacts; reconcile before W1 claims |
+| Small-model experiment | `deepseek-ai/DeepSeek-V4-Flash` served as `DeepSeek-V4-Flash`, default cap lowered to 0.20 after 2026-06-05 clean sweep (0.15 hard-fails, 0.20/0.25 OK) |
 | Compose file | `serving/compose/docker-compose.kimi-k2.6.yml` is the canonical Kimi/DeepSeek/OpenWebUI/LiteLLM compose |
 | Interactive UI | OpenWebUI exists in compose but was unhealthy in the 2026-05-27 start snapshot |
 | Multi-model proxy | LiteLLM Proxy is in compose and smoke-tested; benchmark suite ran through it for both models |
@@ -197,6 +212,22 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-05 server slot (T3 clean + T6 ON start + LiteLLM strip diagnosis):
+
+```text
+git diff --check    OK (artefakty + compose; no .py touched)
+```
+
+Commits: `6c9db1c` compose defaults (Kimi 0.65→0.6, +max-num-batched-tokens
+4096, speculative `max_model_len:8192`; DeepSeek 0.25→0.2, speculative
+`max_model_len:8192`); `208e072` T3 sweep (`results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/`:
+`log_cap015_FAILED.txt`, `log_cap0{20,25}.txt` + matching `verify_cap*.txt`
++ `nvidia_smi_cap*.txt` + `ttft_cap0{20,25}.json`); `1ab8057` T6 ON
+(`t6_eagle3/engine_cmd_eagle3_on.json` + `kimi_log_eagle3_on.txt`);
+`277143b` + `cf160cf` Kimi K2.6 paired benches `run-01` (proxy :4000,
+max_tokens 64, TTFT null, 3 chunks, 0 reasoning_chars) vs `run-03` (direct
+:8000, max_tokens 64, TTFT_any 0.214 s, 26 chunks, 242 reasoning_chars).
 
 2026-06-02 W1 T4 wording pass:
 
@@ -290,6 +321,42 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-05 - W1 server slot: compose defaults, T3 clean, T6 ON, LiteLLM strip
+
+- Why: domknąć T3 (po nieudanej próbie 2026-06-03), wystartować T6 Eagle3
+  ON/OFF, zweryfikować że parser TTFT/TPOT działa po stronie Kimi.
+- Did (5 commitów):
+  - `6c9db1c` — compose hardening: Kimi `--gpu-memory-utilization 0.6` (z
+    0.65), `--max-num-batched-tokens 4096`, speculative-config
+    `"max_model_len":8192`; DeepSeek default `0.2` (z 0.25), speculative
+    `"max_model_len":8192`.
+  - `208e072` — **T3 clean sweep**: 0.15 hard-fail (Engine core init
+    traceback), 0.20 i 0.25 OK z `verify_cap*.txt` zgodnymi z runtime +
+    `ttft_cap*.json` + `nvidia_smi_cap*.txt`. Nazwa↔runtime zgadza się
+    pierwszy raz.
+  - `1ab8057` — **T6 Eagle3 ON capture**: `engine_cmd_eagle3_on.json` +
+    `kimi_log_eagle3_on.txt` (1k linii) + drobny tweak planu.
+  - `277143b` + `cf160cf` — **paired Kimi K2.6 benches** ujawniające
+    LiteLLM `delta.reasoning` strip: `run-01` (proxy :4000, 3 chunki, 0
+    reasoning_chars, TTFT null) vs `run-03` (direct :8000, 26 chunków,
+    242 reasoning_chars, TTFT_any 0.214 s, TPOT_any 8.6 ms/tok).
+- Diagnoza LiteLLM: proxy w wersji `main-v1.66.0-stable` strippuje pole
+  `delta.reasoning` specyficzne dla Kimi K2.6 (DeepSeek `reasoning_content`
+  przepuszcza). Parser fix #31 nadal poprawny — direct :8000 daje czyste
+  metryki. Wniosek dla W1 T8/T4: proxy **nie nadaje się** jako jedyny
+  driver dla Kimi reasoning streams — konkretny, paired-evidence limit.
+- Workaround dla benchów: max_tokens=64 jest za małe dla Kimi (model nie
+  zdąży wyjść z reasoning); user podbił max_tokens i kontynuuje T6.
+- Skipped / open: T6 Eagle3 OFF (jeszcze do zrobienia w tym slocie), T1
+  DEP capture, T5 dashboard validation.
+- Validation: `git diff --check` OK; brak `.py` w tych commitach
+  (`pyproject.toml`/`uv.lock` w 1ab8057 — sprawdzić co przybyło przy
+  najbliższym pull-cycle).
+- Next: dokończyć T6 OFF (lustro ON minus `--speculative-config`, ten sam
+  max_tokens, direct :8000) + T1 DEP override (`--data-parallel-size 8`,
+  `restart:"no"`), restore Eagle3-ON. Laptop: write-up T3/T6/T8 z nowymi
+  liczbami.
 
 ### 2026-06-02 - W1 T4 wording pass
 
