@@ -41,50 +41,77 @@ Grafana UI: open dashboard **vLLM Phase 1 — nanoserve-mini**, set time range t
 
 ## 1. Load generation — `vllm bench serve` (in-container, no new code)
 
-Driver runs from inside the vLLM container (CLI ships with the image). Drive
-**direct :8000** (Kimi) — bypasses the LiteLLM reasoning-strip and keeps metrics
-clean. `--dataset-name random` needs no external file → reproducible.
+Flags verified against `results/runs/2026-06-05_w1_evidence/vllm_bench_serve_help.txt`
+(this image's `--help=all`). Driver runs inside the vLLM container (CLI ships with
+the image). Drive **direct :8000** (Kimi) — bypasses the LiteLLM reasoning-strip
+and keeps metrics clean.
+
+**Workload:** the prepared **SWE-bench Lite 300** prompt set
+(`results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl`, one
+`{"prompt": ...}` per line). Fully **offline** — prompts are baked into the JSONL;
+no repo clone, no eval, no internet. Consumed via `--dataset-name custom` (this
+dataset reads the `prompt` field directly). `random` stays as the fallback.
 
 ```bash
-# exec into the running vllm service
+# the JSONL must be visible INSIDE the container; if the repo isn't mounted, copy it in:
+docker compose -f serving/compose/docker-compose.kimi-k2.6.yml cp \
+  results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl \
+  vllm:/tmp/swe_bench_vllm.jsonl
+
 docker compose -f serving/compose/docker-compose.kimi-k2.6.yml exec vllm bash
 ```
 
-Inside the container, run the phased ramp (≈12 min total, screen-worthy):
+Inside the container — phased ramp via `--max-concurrency` (≈12 min total).
+`--ignore-eos --custom-output-len 256` forces a fixed 256-token decode per request
+→ steady, predictable decode load (without it Kimi may EOS early and the decode
+panels go choppy). `--num-warmups 8` uses the built-in warmup. `--save-result`
+captures TTFT/TPOT/throughput numbers to pair with the screenshot.
 
 ```bash
-# warmup (not screenshotted)
-vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
-  --model kimi-k2.6 --dataset-name random \
-  --random-input-len 1024 --random-output-len 256 \
-  --num-prompts 32 --max-concurrency 4
+DS=/tmp/swe_bench_vllm.jsonl
+COMMON="--backend vllm --base-url http://127.0.0.1:8000 --model kimi-k2.6 \
+  --dataset-name custom --dataset-path $DS \
+  --custom-output-len 256 --ignore-eos \
+  --save-result --result-dir /tmp/t5_bench \
+  --metadata phase=t5 model=kimi-k2.6 eagle3=on"
 
 # phase A — light
-vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
-  --model kimi-k2.6 --dataset-name random \
-  --random-input-len 1024 --random-output-len 256 \
-  --num-prompts 120 --max-concurrency 4
-
+vllm bench serve $COMMON --num-warmups 8 --num-prompts 120 --max-concurrency 4 \
+  --result-filename phaseA_c4.json
 # phase B — medium
-vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
-  --model kimi-k2.6 --dataset-name random \
-  --random-input-len 1024 --random-output-len 256 \
-  --num-prompts 300 --max-concurrency 16
-
+vllm bench serve $COMMON --num-prompts 300 --max-concurrency 16 \
+  --result-filename phaseB_c16.json
 # phase C — saturate (fills the waiting-queue panel)
-vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
-  --model kimi-k2.6 --dataset-name random \
-  --random-input-len 1024 --random-output-len 256 \
-  --num-prompts 600 --max-concurrency 64
+vllm bench serve $COMMON --num-prompts 600 --max-concurrency 64 \
+  --result-filename phaseC_c64.json
 ```
 
 Run A→B→C back-to-back (no long gaps) so the 15-min window shows a clean ramp.
-Adjust `--max-concurrency` upward if phase C never makes `num_requests_waiting`
-leave zero (that means you haven't hit `max_num_seqs` yet).
+Push `--max-concurrency` higher if phase C never makes `num_requests_waiting`
+leave zero (you haven't hit `max_num_seqs` yet).
 
-Fallback if `vllm bench serve` is unavailable in this image:
-`python -m vllm.entrypoints.cli.main bench serve ...` or the older
-`vllm/benchmarks/benchmark_serving.py`.
+Notes:
+- 300-prompt file + `--num-prompts 600` (phase C) → vLLM **oversamples** (repeats)
+  prompts by default; the repeats also exercise the **prefix-cache hit** panel.
+  Add `--no-oversample` if you want strictly unique prompts.
+- If Kimi's :8000 doesn't serve `/v1/completions`, switch to chat:
+  `--backend openai-chat --endpoint /v1/chat/completions` (the custom dataset
+  gets the chat template applied automatically; add `--skip-chat-template` to opt
+  out).
+- One-command alternative to the manual ramp: a single linear ramp via
+  `--ramp-up-strategy linear --ramp-up-start-rps 1 --ramp-up-end-rps 30` (drop
+  `--max-concurrency`) — one clean increasing-load curve, nice for a single
+  screenshot but a less controlled saturation point.
+- Fallback workload (no file needed): `--dataset-name random --random-input-len
+  1024 --random-output-len 256` in place of the `custom`/`--dataset-path` flags.
+
+Pull the bench JSONs back for the W1 record:
+
+```bash
+docker compose -f serving/compose/docker-compose.kimi-k2.6.yml cp \
+  vllm:/tmp/t5_bench \
+  results/runs/2026-06-05_w1_evidence/t5_metrics/bench/
+```
 
 ## 2. What each panel should show at the screenshot moment
 

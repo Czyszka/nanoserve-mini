@@ -93,7 +93,11 @@ status, not a task list. Update when work moves.
   (label `model_name`), no JSON fix needed; `spec_decode_*` confirmed present
   only under Kimi Eagle3-ON. Remaining: drive concurrent load (`vllm bench
   serve`) so queue/latency/KV panels fill, then screenshot. Runbook:
-  `docs/plans/2026-06-05-t5-dashboard-load.md`. Harness is sequential-only, so
+  `docs/plans/2026-06-05-t5-dashboard-load.md` — flags verified against the
+  committed `vllm_bench_serve_help.txt`; workload is the offline SWE-bench Lite
+  300 set (`benchmarking/swe_bench_vllm.jsonl`) via `--dataset-name custom`
+  (no internet needed — prompts baked in), `random` as fallback. Harness is
+  sequential-only, so
   single-stream benches won't light up the queue panels — hence the bench-serve
   ramp.
 - **#37 — W1 write-up:** 2026-05-27 evidence analyzed and written up on the
