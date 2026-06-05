@@ -1,0 +1,200 @@
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  35% Completed | 16/46 [00:05<00:09,  3.16it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  37% Completed | 17/46 [00:05<00:08,  3.25it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  39% Completed | 18/46 [00:06<00:08,  3.31it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  41% Completed | 19/46 [00:06<00:08,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  43% Completed | 20/46 [00:06<00:07,  3.35it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  46% Completed | 21/46 [00:07<00:07,  3.38it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  48% Completed | 22/46 [00:07<00:07,  3.38it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  50% Completed | 23/46 [00:07<00:06,  3.39it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  52% Completed | 24/46 [00:08<00:06,  3.37it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  54% Completed | 25/46 [00:08<00:06,  3.37it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  57% Completed | 26/46 [00:08<00:05,  3.36it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  59% Completed | 27/46 [00:08<00:05,  3.37it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  61% Completed | 28/46 [00:09<00:05,  3.35it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  63% Completed | 29/46 [00:09<00:05,  3.36it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  65% Completed | 30/46 [00:09<00:04,  3.36it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  67% Completed | 31/46 [00:10<00:04,  3.38it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  70% Completed | 32/46 [00:10<00:04,  3.36it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  72% Completed | 33/46 [00:10<00:03,  3.36it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  74% Completed | 34/46 [00:11<00:03,  3.33it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  76% Completed | 35/46 [00:11<00:03,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  78% Completed | 36/46 [00:11<00:03,  3.33it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  80% Completed | 37/46 [00:11<00:02,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  83% Completed | 38/46 [00:12<00:02,  3.32it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  85% Completed | 39/46 [00:12<00:02,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  87% Completed | 40/46 [00:12<00:01,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  89% Completed | 41/46 [00:13<00:01,  3.35it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  91% Completed | 42/46 [00:13<00:01,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  93% Completed | 43/46 [00:13<00:00,  3.35it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  96% Completed | 44/46 [00:13<00:00,  3.34it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards: 100% Completed | 46/46 [00:14<00:00,  3.27it/s]
+(Worker_TP0 pid=835) 
+(Worker_TP0 pid=835) INFO 06-05 07:44:58 [default_loader.py:384] Loading weights took 14.08 seconds
+(Worker_TP0 pid=835) INFO 06-05 07:44:58 [mxfp4.py:1263] Using MoEPrepareAndFinalizeNoDPEPModular
+(Worker_TP0 pid=835) INFO 06-05 07:45:00 [gpu_model_runner.py:4801] Loading drafter model...
+(Worker_TP0 pid=835) INFO 06-05 07:45:01 [weight_utils.py:904] Filesystem type for checkpoints: EXT4. Checkpoint size: 148.66 GiB. Available RAM: 2965.80 GiB.
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:   0% Completed | 0/46 [00:00<?, ?it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:   9% Completed | 4/46 [00:00<00:01, 30.59it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  17% Completed | 8/46 [00:00<00:01, 25.08it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  24% Completed | 11/46 [00:00<00:01, 23.83it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  30% Completed | 14/46 [00:00<00:01, 23.21it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  37% Completed | 17/46 [00:00<00:01, 22.91it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  43% Completed | 20/46 [00:00<00:01, 22.75it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  50% Completed | 23/46 [00:00<00:01, 22.81it/s]
+(Worker_TP7 pid=842) INFO 06-05 07:45:02 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP7 pid=842) INFO 06-05 07:45:02 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP7 pid=842) INFO 06-05 07:45:02 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP7 pid=842) INFO 06-05 07:45:02 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  57% Completed | 26/46 [00:01<00:00, 22.70it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  63% Completed | 29/46 [00:01<00:00, 22.58it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  70% Completed | 32/46 [00:01<00:00, 22.55it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  76% Completed | 35/46 [00:01<00:00, 22.44it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  83% Completed | 38/46 [00:01<00:00, 22.35it/s]
+(Worker_TP5 pid=840) INFO 06-05 07:45:03 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP5 pid=840) INFO 06-05 07:45:03 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP5 pid=840) INFO 06-05 07:45:03 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP5 pid=840) INFO 06-05 07:45:03 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  89% Completed | 41/46 [00:01<00:00, 22.20it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards:  96% Completed | 44/46 [00:01<00:00, 22.17it/s]
+(Worker_TP0 pid=835) Loading safetensors checkpoint shards: 100% Completed | 46/46 [00:02<00:00, 19.84it/s]
+(Worker_TP0 pid=835) 
+(Worker_TP0 pid=835) INFO 06-05 07:45:03 [deepseek_v4_mtp.py:442] MTP draft model loaded: 39 params
+(Worker_TP0 pid=835) INFO 06-05 07:45:03 [default_loader.py:384] Loading weights took 2.35 seconds
+(Worker_TP0 pid=835) INFO 06-05 07:45:04 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP0 pid=835) INFO 06-05 07:45:04 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP0 pid=835) INFO 06-05 07:45:04 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP0 pid=835) INFO 06-05 07:45:04 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP1 pid=836) INFO 06-05 07:45:04 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP1 pid=836) INFO 06-05 07:45:04 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP1 pid=836) INFO 06-05 07:45:04 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP1 pid=836) INFO 06-05 07:45:04 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP3 pid=838) INFO 06-05 07:45:04 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP3 pid=838) INFO 06-05 07:45:04 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP3 pid=838) INFO 06-05 07:45:04 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP3 pid=838) INFO 06-05 07:45:04 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP0 pid=835) INFO 06-05 07:45:04 [gpu_model_runner.py:4879] Model loading took 20.32 GiB memory and 22.990172 seconds
+(Worker_TP4 pid=839) INFO 06-05 07:45:04 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP4 pid=839) INFO 06-05 07:45:04 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP4 pid=839) INFO 06-05 07:45:04 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP4 pid=839) INFO 06-05 07:45:04 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP2 pid=837) INFO 06-05 07:45:07 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP2 pid=837) INFO 06-05 07:45:07 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP2 pid=837) INFO 06-05 07:45:07 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP2 pid=837) INFO 06-05 07:45:07 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(Worker_TP6 pid=841) INFO 06-05 07:45:09 [llm_base_proposer.py:1445] Detected MTP model. Sharing target model embedding weights with the draft model.
+(Worker_TP6 pid=841) INFO 06-05 07:45:09 [llm_base_proposer.py:1501] Detected MTP model. Sharing target model lm_head weights with the draft model.
+(Worker_TP6 pid=841) INFO 06-05 07:45:09 [llm_base_proposer.py:1525] Shared target model lm_head with MTP shared_head.head.
+(Worker_TP6 pid=841) INFO 06-05 07:45:09 [llm_base_proposer.py:1535] Detected MTP model with topk_indices_buffer. Sharing target model topk_indices_buffer with the draft model.
+(EngineCore pid=629) INFO 06-05 07:46:11 [shm_broadcast.py:681] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+(Worker_TP5 pid=840) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP5 pid=840)   warnings.warn(
+(Worker_TP6 pid=841) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP6 pid=841)   warnings.warn(
+(Worker_TP3 pid=838) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP3 pid=838)   warnings.warn(
+(Worker_TP1 pid=836) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP1 pid=836)   warnings.warn(
+(Worker_TP4 pid=839) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP4 pid=839)   warnings.warn(
+(Worker_TP7 pid=842) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP7 pid=842)   warnings.warn(
+(Worker_TP0 pid=835) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP0 pid=835)   warnings.warn(
+(Worker_TP2 pid=837) /usr/local/lib/python3.12/dist-packages/torch/_inductor/compile_fx.py:322: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplication available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+(Worker_TP2 pid=837)   warnings.warn(
+(Worker_TP0 pid=835) 2026-06-05 07:45:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP0 pid=835) 2026-06-05 07:45:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP0 pid=835) 2026-06-05 07:45:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP0 pid=835) 2026-06-05 07:45:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP0 pid=835) INFO 06-05 07:46:21 [gpu_worker.py:440] Available KV cache memory: 6.5 GiB
+(EngineCore pid=629) INFO 06-05 07:46:21 [kv_cache_utils.py:1711] GPU KV cache size: 5,284 tokens
+(EngineCore pid=629) INFO 06-05 07:46:21 [kv_cache_utils.py:1716] Maximum concurrency for 65,536 tokens per request: 6.51x
+(EngineCore pid=629) INFO 06-05 07:47:22 [shm_broadcast.py:681] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+(EngineCore pid=629) INFO 06-05 07:48:22 [shm_broadcast.py:681] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+(EngineCore pid=629) INFO 06-05 07:49:22 [shm_broadcast.py:681] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+(Worker_TP2 pid=837) 2026-06-05 07:45:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP2 pid=837) 2026-06-05 07:45:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP2 pid=837) 2026-06-05 07:45:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP2 pid=837) 2026-06-05 07:45:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP2 pid=837) INFO 06-05 07:50:14 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP0 pid=835) INFO 06-05 07:50:14 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP0 pid=835) DeepGEMM warmup:   0%|          | 0/521 [00:00<?, ?it/s]DeepGEMM warmup:   0%|          | 1/521 [00:02<25:20,  2.92s/it]DeepGEMM warmup:   1%|          | 6/521 [00:05<06:35,  1.30it/s]DeepGEMM warmup:   2%|▏         | 8/521 [00:07<07:42,  1.11it/s]DeepGEMM warmup:   2%|▏         | 12/521 [00:09<05:24,  1.57it/s]DeepGEMM warmup:   3%|▎         | 14/521 [00:10<05:50,  1.45it/s]DeepGEMM warmup:   3%|▎         | 17/521 [00:12<05:26,  1.54it/s]DeepGEMM warmup:   4%|▎         | 19/521 [00:15<06:47,  1.23it/s]DeepGEMM warmup:   4%|▍         | 21/521 [00:19<09:30,  1.14s/it]DeepGEMM warmup:   5%|▍         | 25/521 [00:21<07:48,  1.06it/s]DeepGEMM warmup:   5%|▌         | 27/521 [00:24<08:36,  1.05s/it]DeepGEMM warmup:   6%|▌         | 31/521 [00:27<07:31,  1.08it/s]DeepGEMM warmup:   6%|▌         | 32/521 [00:30<09:14,  1.13s/it]DeepGEMM warmup:   7%|▋         | 34/521 [00:34<11:08,  1.37s/it]DeepGEMM warmup:   8%|▊         | 40/521 [00:37<07:17,  1.10it/s]DeepGEMM warmup:   8%|▊         | 43/521 [00:40<07:18,  1.09it/s]DeepGEMM warmup:  10%|▉         | 51/521 [00:43<04:59,  1.57it/s]DeepGEMM warmup:  10%|█         | 53/521 [00:50<08:34,  1.10s/it]DeepGEMM warmup:  14%|█▍        | 72/521 [00:52<03:18,  2.27it/s]DeepGEMM warmup:  15%|█▌        | 79/521 [00:55<03:05,  2.39it/s]DeepGEMM warmup:  16%|█▌        | 83/521 [00:59<03:52,  1.89it/s]DeepGEMM warmup:  17%|█▋        | 87/521 [01:02<04:05,  1.77it/s]DeepGEMM warmup:  18%|█▊        | 92/521 [01:04<03:58,  1.80it/s]DeepGEMM warmup:  19%|█▊        | 97/521 [01:09<04:29,  1.57it/s]DeepGEMM warmup:  19%|█▉        | 101/521 [01:11<04:31,  1.54it/s]DeepGEMM warmup:  21%|██▏       | 112/521 [01:19<04:31,  1.51it/s]DeepGEMM warmup:  23%|██▎       | 118/521 [01:23<04:26,  1.51it/s]DeepGEMM warmup:  24%|██▍       | 124/521 [01:26<04:06,  1.61it/s]DeepGEMM warmup:  26%|██▌       | 133/521 [01:31<03:47,  1.71it/s]DeepGEMM warmup:  27%|██▋       | 140/521 [01:34<03:23,  1.87it/s]DeepGEMM warmup:  28%|██▊       | 145/521 [01:41<04:53,  1.28it/s]DeepGEMM warmup:  29%|██▉       | 151/521 [01:48<05:21,  1.15it/s]DeepGEMM warmup:  31%|███       | 162/521 [01:53<04:01,  1.49it/s]DeepGEMM warmup:  36%|███▋      | 190/521 [01:55<01:45,  3.13it/s]DeepGEMM warmup:  37%|███▋      | 192/521 [01:58<02:04,  2.65it/s]DeepGEMM warmup:  38%|███▊      | 199/521 [02:00<02:00,  2.67it/s]DeepGEMM warmup:  39%|███▉      | 204/521 [02:03<02:07,  2.48it/s]DeepGEMM warmup:  40%|████      | 209/521 [02:06<02:14,  2.33it/s]DeepGEMM warmup:  41%|████      | 214/521 [02:08<02:20,  2.18it/s]DeepGEMM warmup:  42%|████▏     | 217/521 [02:13<03:11,  1.59it/s]DeepGEMM warmup:  43%|████▎     | 225/521 [02:16<02:34,  1.91it/s]DeepGEMM warmup:  45%|████▌     | 236/521 [02:18<01:52,  2.54it/s]DeepGEMM warmup:  46%|████▋     | 241/521 [02:20<01:55,  2.42it/s]DeepGEMM warmup:  47%|████▋     | 243/521 [02:23<02:19,  1.99it/s]DeepGEMM warmup:  48%|████▊     | 248/521 [02:25<02:15,  2.01it/s]DeepGEMM warmup:  48%|████▊     | 252/521 [02:28<02:28,  1.81it/s]DeepGEMM warmup:  49%|████▉     | 256/521 [02:31<02:30,  1.77it/s]DeepGEMM warmup:  50%|█████     | 261/521 [02:33<02:22,  1.82it/s]DeepGEMM warmup:  51%|█████     | 266/521 [02:36<02:21,  1.81it/s]DeepGEMM warmup:  52%|█████▏    | 270/521 [02:39<02:24,  1.74it/s]DeepGEMM warmup:  53%|█████▎    | 275/521 [02:41<02:16,  1.80it/s]DeepGEMM warmup:  54%|█████▍    | 281/521 [02:44<02:03,  1.94it/s]DeepGEMM warmup:  54%|█████▍    | 283/521 [02:47<02:41,  1.47it/s]DeepGEMM warmup:  56%|█████▌    | 293/521 [02:50<01:46,  2.15it/s]DeepGEMM warmup:  58%|█████▊    | 302/521 [02:52<01:28,  2.47it/s]DeepGEMM warmup:  59%|█████▉    | 309/521 [02:55<01:24,  2.50it/s]DeepGEMM warmup:  60%|██████    | 314/521 [02:58<01:29,  2.30it/s]DeepGEMM warmup:  61%|██████▏   | 320/521 [03:01<01:35,  2.11it/s]DeepGEMM warmup:  64%|██████▎   | 331/521 [03:04<01:11,  2.66it/s]DeepGEMM warmup:  68%|██████▊   | 354/521 [03:07<00:38,  4.32it/s]DeepGEMM warmup:  69%|██████▉   | 359/521 [03:10<00:45,  3.58it/s]DeepGEMM warmup:  69%|██████▉   | 361/521 [03:12<00:58,  2.72it/s]DeepGEMM warmup:  70%|███████   | 367/521 [03:15<01:01,  2.51it/s]DeepGEMM warmup:  72%|███████▏  | 374/521 [03:20<01:07,  2.17it/s]DeepGEMM warmup:  75%|███████▌  | 391/521 [03:28<01:00,  2.14it/s]DeepGEMM warmup:  76%|███████▌  | 396/521 [03:34<01:16,  1.63it/s]DeepGEMM warmup:  77%|███████▋  | 403/521 [03:39<01:13,  1.61it/s]DeepGEMM warmup:  80%|████████  | 418/521 [03:46<00:58,  1.78it/s]DeepGEMM warmup:  82%|████████▏ | 428/521 [03:52<00:53,  1.75it/s]DeepGEMM warmup: 100%|██████████| 521/521 [03:52<00:00,  2.24it/s]
+(Worker_TP4 pid=839) 2026-06-05 07:45:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP4 pid=839) 2026-06-05 07:45:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP4 pid=839) 2026-06-05 07:45:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP4 pid=839) 2026-06-05 07:45:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP4 pid=839) INFO 06-05 07:50:14 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP6 pid=841) 2026-06-05 07:45:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP6 pid=841) 2026-06-05 07:45:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP6 pid=841) 2026-06-05 07:45:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP6 pid=841) 2026-06-05 07:45:42  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP6 pid=841) INFO 06-05 07:50:15 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP7 pid=842) 2026-06-05 07:45:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP7 pid=842) 2026-06-05 07:45:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP7 pid=842) 2026-06-05 07:45:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP7 pid=842) 2026-06-05 07:45:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP7 pid=842) INFO 06-05 07:50:15 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP5 pid=840) 2026-06-05 07:45:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP5 pid=840) 2026-06-05 07:45:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP5 pid=840) 2026-06-05 07:45:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP5 pid=840) 2026-06-05 07:45:43  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP5 pid=840) INFO 06-05 07:50:15 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP1 pid=836) 2026-06-05 07:45:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP1 pid=836) 2026-06-05 07:45:26  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP1 pid=836) 2026-06-05 07:45:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP1 pid=836) 2026-06-05 07:45:43  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP1 pid=836) INFO 06-05 07:50:15 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(Worker_TP3 pid=838) 2026-06-05 07:45:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_pre_big_fuse_tilelang` with `out_idx=None`
+(Worker_TP3 pid=838) 2026-06-05 07:45:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_pre_big_fuse_tilelang`
+(Worker_TP3 pid=838) 2026-06-05 07:45:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:133): TileLang begins to compile kernel `mhc_post_tilelang` with `out_idx=None`
+(Worker_TP3 pid=838) 2026-06-05 07:45:43  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:141): TileLang completes to compile kernel `mhc_post_tilelang`
+(Worker_TP3 pid=838) INFO 06-05 07:50:18 [kernel_warmup.py:44] Skipping FlashInfer autotune because it is disabled.
+(EngineCore pid=629) INFO 06-05 07:50:23 [shm_broadcast.py:681] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+(EngineCore pid=629) INFO 06-05 07:50:42 [core.py:306] init engine (profile, create kv cache, warmup model) took 331.73 s
+(EngineCore pid=629) INFO 06-05 07:50:44 [vllm.py:840] Asynchronous scheduling is enabled.
+(EngineCore pid=629) WARNING 06-05 07:50:44 [vllm.py:896] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=629) WARNING 06-05 07:50:44 [vllm.py:914] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=629) INFO 06-05 07:50:44 [kernel.py:205] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'])
+(EngineCore pid=629) WARNING 06-05 07:50:44 [vllm.py:1402] max_num_scheduled_tokens is set to 2048 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(EngineCore pid=629) INFO 06-05 07:50:44 [vllm.py:1089] Cudagraph is disabled under eager mode
+(EngineCore pid=629) WARNING 06-05 07:50:44 [vllm.py:1248] Auto-initialization of reasoning token IDs failed. Please check whether your reasoning parser has implemented the `reasoning_start_str` and `reasoning_end_str`.
+(EngineCore pid=629) INFO 06-05 07:50:44 [compilation.py:303] Enabled custom fusions: norm_quant, act_quant, allreduce_rms
+(APIServer pid=1) INFO 06-05 07:50:44 [api_server.py:598] Supported tasks: ['generate']
+(APIServer pid=1) INFO 06-05 07:50:45 [parser_manager.py:202] "auto" tool choice has been enabled.
+(APIServer pid=1) WARNING 06-05 07:50:45 [model.py:1437] Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 1.0, 'top_p': 1.0}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+(APIServer pid=1) INFO 06-05 07:50:46 [api_server.py:602] Starting vLLM server on http://0.0.0.0:8004
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:37] Available routes are:
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /openapi.json, Methods: GET, HEAD
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /docs, Methods: GET, HEAD
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: GET, HEAD
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /redoc, Methods: GET, HEAD
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /tokenize, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /detokenize, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /load, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /version, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /health, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/models, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /ping, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /ping, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /invocations, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/chat/completions, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/chat/completions/batch, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/responses, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/responses/{response_id}, Methods: GET
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/responses/{response_id}/cancel, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/completions, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/messages, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/messages/count_tokens, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /inference/v1/generate, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /scale_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /is_scaling_elastic_ep, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /generative_scoring, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/chat/completions/render, Methods: POST
+(APIServer pid=1) INFO 06-05 07:50:46 [launcher.py:46] Route: /v1/completions/render, Methods: POST
+(APIServer pid=1) INFO:     Started server process [1]
+(APIServer pid=1) INFO:     Waiting for application startup.
+(APIServer pid=1) INFO:     Application startup complete.
+(APIServer pid=1) INFO:     127.0.0.1:57292 - "GET /health HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     172.19.0.5:58492 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=1) INFO:     172.19.0.1:48562 - "GET /health HTTP/1.1" 200 OK
