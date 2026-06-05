@@ -61,6 +61,18 @@ docker compose -f serving/compose/docker-compose.kimi-k2.6.yml cp \
 docker compose -f serving/compose/docker-compose.kimi-k2.6.yml exec vllm bash
 ```
 
+Prerequisites inside the container (this vLLM image ships without bench extras):
+
+```bash
+export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1   # use ~/hf_cache, don't phone HF
+pip install pandas datasets                        # bench dataset deps (NOT vllm[bench])
+```
+
+Do **not** run `pip install vllm[bench]` here — it can reinstall/upgrade vllm+torch
+and break the running server. Install only the leaf deps; add `pyarrow`/`pillow` if
+a later import complains. These installs are ephemeral (gone on container restart),
+which is fine for the T5 session.
+
 Inside the container — phased ramp via `--max-concurrency` (≈12 min total).
 `--ignore-eos --custom-output-len 256` forces a fixed 256-token decode per request
 → steady, predictable decode load (without it Kimi may EOS early and the decode
