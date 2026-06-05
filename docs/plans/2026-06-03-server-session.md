@@ -383,14 +383,14 @@ Zostało ≥ 15 min? → H (stretch). Jeśli nie → od razu I.
 OUT="$RUN_DIR/t5_metrics/full-load"; mkdir -p "$OUT"
 
 ( uv run python -m benchmarks.scripts.run_bench_suite \
-    --base-url http://127.0.0.1:4000 --metrics-base-url http://127.0.0.1:8000 \
-    --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" --warmup 1 --runs 5 \
-    --run-id "$(date +%F)_kimi-k2.6_t5-load" > "$OUT/kimi_load.log" 2>&1 ) &
+    --base-url http://127.0.0.1:8000 --metrics-base-url http://127.0.0.1:8000 \
+    --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" --warmup 1 --runs 10 \
+    --max-tokens 1024 > "$OUT/kimi_load.log" 2>&1 ) &
 KIMI_PID=$!
 ( uv run python -m benchmarks.scripts.run_bench_suite \
-    --base-url http://127.0.0.1:4000 --metrics-base-url http://127.0.0.1:8004 \
-    --model DeepSeek-V4-Flash --api-key "$LITELLM_MASTER_KEY" --warmup 1 --runs 5 \
-    --run-id "$(date +%F)_DeepSeek-V4-Flash_t5-load" > "$OUT/ds_load.log" 2>&1 ) &
+    --base-url http://127.0.0.1:8004 --metrics-base-url http://127.0.0.1:8004 \
+    --model DeepSeek-V4-Flash --api-key "$LITELLM_MASTER_KEY" --warmup 1 --runs 10 \
+    --max-tokens 1024 > "$OUT/ds_load.log" 2>&1 ) &
 DS_PID=$!
 
 # w trakcie loadu: screenshot z lapka (Grafana http://<server>:3001 -> vLLM Phase 1)
