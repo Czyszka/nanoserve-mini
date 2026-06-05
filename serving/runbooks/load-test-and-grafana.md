@@ -139,9 +139,43 @@ git push origin main
 
 OK: bench JSON-y + screen w repo (PNG trzymaj mały; duże artefakty → tylko ścieżka + repro).
 
-Plan B (jeśli JSON-y przepadły przed `cp`): odtwórz liczby z Prometheusa dla okna
-testu — `max_over_time(...[W])` dla peaków (running/waiting/KV/throughput) i
-`histogram_quantile(q, sum by (le)(increase(..._bucket[W])))` dla E2E/TTFT/ITL.
+### Plan B — odtworzenie liczb z Prometheusa
+
+Jeśli JSON-y `--save-result` przepadły przed `cp` (albo chcesz liczby niezależne od
+klienta): Prometheus TSDB ma całą historię okna testu. Ustaw `WIN` na okno
+pokrywające ramp (np. `3h`, jeśli test był w ostatnich 3 h). Skrypt zapisuje
+podsumowanie do repo i commituje.
+
+```bash
+WIN=3h
+P=http://127.0.0.1:9090/api/v1/query
+OUT=results/runs/2026-06-05_w1_evidence/t5_metrics/prometheus_summary.txt
+M='model_name="kimi-k2.6"'
+q(){ curl -s --data-urlencode "query=$1" "$P" \
+  | jq -r --arg L "$2" '"\($L): " + ((.data.result[]? | "\(.metric.model_name // "all")=\(.value[1])") // "n/a")'; }
+{
+echo "# T5 batched run (max-num-seqs=32) — Prometheus summary, window=$WIN"
+q "max_over_time(vllm:num_requests_running{$M}[$WIN])"                         "peak requests running"
+q "max_over_time(vllm:num_requests_waiting{$M}[$WIN])"                         "peak requests waiting"
+q "max_over_time(rate(vllm:generation_tokens_total{$M}[1m])[$WIN:1m])"         "peak gen throughput tok/s"
+q "max_over_time(rate(vllm:prompt_tokens_total{$M}[1m])[$WIN:1m])"             "peak prompt throughput tok/s"
+q "max_over_time(vllm:kv_cache_usage_perc{$M}[$WIN])*100"                      "peak KV cache %"
+q "histogram_quantile(0.50, sum by (le)(increase(vllm:e2e_request_latency_seconds_bucket{$M}[$WIN])))"  "E2E p50 s"
+q "histogram_quantile(0.95, sum by (le)(increase(vllm:e2e_request_latency_seconds_bucket{$M}[$WIN])))"  "E2E p95 s"
+q "histogram_quantile(0.50, sum by (le)(increase(vllm:time_to_first_token_seconds_bucket{$M}[$WIN])))"  "TTFT p50 s"
+q "histogram_quantile(0.95, sum by (le)(increase(vllm:time_to_first_token_seconds_bucket{$M}[$WIN])))"  "TTFT p95 s"
+q "histogram_quantile(0.50, sum by (le)(increase(vllm:inter_token_latency_seconds_bucket{$M}[$WIN])))"  "ITL p50 s"
+q "increase(vllm:spec_decode_num_accepted_tokens_total{$M}[$WIN]) / increase(vllm:spec_decode_num_draft_tokens_total{$M}[$WIN])" "spec acceptance"
+q "increase(vllm:num_preemptions_total{$M}[$WIN])"                            "preemptions in window"
+} | tee "$OUT"
+
+git add "$OUT"
+git commit -m "bench: T5 Prometheus metric summary for batched run (#34)"
+git push origin main
+```
+
+OK: `prometheus_summary.txt` w repo z peakami (running/waiting/KV/throughput) i
+percentylami (E2E/TTFT/ITL) dla okna testu — zastępuje utracone client-side JSON-y.
 
 ---
 
