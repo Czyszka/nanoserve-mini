@@ -39,6 +39,9 @@ tmp/
 # Commit small structured artifacts: .json .jsonl .csv .md .txt
 # Ignore large/local-only artifacts inside run directories
 results/runs/**/*.log
+# W1 evidence exceptions — small, plan-named bench/DEP logs are deliverables, not noise
+!results/runs/**/t6_eagle3/bench_*.log
+!results/runs/**/t1_dep/dep_*.log
 results/runs/**/*.ncu-rep
 results/runs/**/*.nsys-rep
 results/runs/**/*.sqlite
