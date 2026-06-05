@@ -234,6 +234,17 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Open questions / blockers
 
+- [ ] **GPU hardware metrics (DCGM) — HIGH VALUE, elevated 2026-06-05.** vLLM
+  `/metrics` has zero GPU-load signal (power, SM/Tensor/DRAM activity, VRAM).
+  The 2026-06-05 load test surfaced exactly why this matters: nvidia-smi showed
+  100% GPU-Util but only ~180-200 W / 600 W (memory-bound decode) — invisible on
+  the current dashboard. Plan: add a `dcgm-exporter` container, a Prometheus
+  scrape job for it, and a "GPU hardware" dashboard row
+  (`DCGM_FI_DEV_POWER_USAGE`, `DCGM_FI_PROF_SM_ACTIVE`,
+  `DCGM_FI_PROF_PIPE_TENSOR_ACTIVE`, `DCGM_FI_PROF_DRAM_ACTIVE`,
+  `DCGM_FI_DEV_FB_USED`). Config is laptop-writable prep (no GPU needed to
+  author); exporter run needs a server slot. Still under #34 — was "deferred,
+  don't block W1"; now the most valuable observability extension.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
