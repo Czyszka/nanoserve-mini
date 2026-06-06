@@ -113,10 +113,14 @@ This repository does not yet implement the fuller control-plane features often
 associated with LiteLLM Proxy.
 
 First, API keys are not per user. The current configuration uses one
-`LITELLM_MASTER_KEY`. Per-user virtual keys require persistent state for keys,
-users, teams, budgets, and usage accounting; in practice that means adding a
-DB-backed key-management layer. That is future work, not evidence from the
-current compose file.
+`LITELLM_MASTER_KEY`. Per-user virtual keys are not a stateless add-on:
+LiteLLM's docs require a **Postgres database** (`DATABASE_URL`, a master key,
+then `/key/generate`) to store keys, users, teams, budgets, and per-request
+usage. Reaching the DoD's "API keys per user" therefore means standing up
+DB-backed key management, not tuning the current compose file — and on the
+pinned `main-v1.66.0-stable` image that enablement warrants migration
+smoke-tests, since Prisma migrations can fail and leave silent schema drift
+rather than erroring cleanly (see External evidence).
 
 Second, logging is currently container logging. `LITELLM_LOG: INFO` gives
 stdout-level operational logs from the proxy process. It is not structured
@@ -125,10 +129,15 @@ extended in those directions through DB/UI logs, external observability sinks,
 or callback-based loggers, but none of those paths are enabled in W1.
 
 Third, the proxy introduces another processing hop. The correct claim is not
-that this hop is free. The correct claim is that its cost is an empirical
-question isolated in T8. Public or synthetic proxy benchmark numbers are not
-evidence for this 8xH200 setup, pinned LiteLLM image, prompt mix, streaming
-behavior, or concurrency level.
+that this hop is free — it is that its cost is an empirical question isolated in
+T8. LiteLLM's own published figure (8 ms P95 at 1k RPS) is measured against a
+*fake* OpenAI endpoint on a 4 CPU / 8 GB box, and its performance is
+version-dependent: aiohttp became the default transport only in v1.72.0, well
+after our pinned `main-v1.66.0-stable`. So that number is not evidence for this
+8×H200 setup, pinned image, prompt mix, streaming behavior, or concurrency
+level. The right method is the one LiteLLM itself supplies — read the
+`x-litellm-overhead-duration-ms` header on our own request path — which is what
+T8 does.
 
 The 2026-05-27 T8 pilot therefore bounds the claim: the proxy path was usable,
 and it revealed a real Kimi streaming-semantics difference, but it did not
@@ -141,7 +150,7 @@ issue #44.
 |---|---|
 | Expose each vLLM backend directly | vLLM already provides OpenAI-compatible endpoints and direct ports are valuable controls. They do not, however, provide one multi-model endpoint. Client scripts would need to encode `model -> base_url` routing themselves, which is exactly the coupling T4 removes. |
 | nginx reverse proxy | A generic reverse proxy can route HTTP traffic, but model-aware OpenAI routing requires reading and interpreting the request body or maintaining custom path conventions. That would turn W1 into an ad hoc gateway implementation rather than a serving baseline. |
-| vLLM Semantic Router | Semantic Router is relevant when the project asks whether routing should depend on request content, cost, latency, or model capability. W1 only needs explicit routing by the `model` field; content-aware policy belongs to the later routing work. |
+| vLLM Semantic Router | Semantic Router is relevant when the project asks whether routing should depend on request content, cost, latency, or model capability. Its reported gains come from the *routing policy*, not from adding or removing a gateway hop — "When to Reason" measures −47.1% latency, −48.5% tokens and +10.2 pp MMLU-Pro accuracy against direct inference (arXiv:2510.08731). W1 only needs explicit routing by the `model` field; content-aware policy belongs to the later routing work. |
 
 ## Future link
 
@@ -150,6 +159,20 @@ reopen. The next maturity step is to ask when the project needs DB-backed
 per-user keys, structured request logging, governance, and eventually
 content-aware routing. That is a transition from baseline model routing to a
 managed inference control plane; it is outside the minimum W1 proof.
+
+## External evidence (verified)
+
+The external claims this thread leans on were checked against primary sources
+(vendor docs / paper) on 2026-06-06:
+
+| Claim used in T4 | Status | Source |
+|---|---|---|
+| Per-user virtual keys require a Postgres DB (`DATABASE_URL`, master key, `/key/generate`) | confirmed | [docs.litellm.ai/docs/proxy/virtual_keys](https://docs.litellm.ai/docs/proxy/virtual_keys) |
+| LiteLLM's published latency (8 ms P95 @ 1k RPS) is synthetic — fake OpenAI endpoint, 4 CPU / 8 GB | confirmed | [docs.litellm.ai/docs/benchmarks](https://docs.litellm.ai/docs/benchmarks) |
+| Each response carries `x-litellm-overhead-duration-ms` (measure overhead on your own path) | confirmed | [docs.litellm.ai/docs/benchmarks](https://docs.litellm.ai/docs/benchmarks) |
+| Proxy performance is version-dependent — aiohttp became the default transport in v1.72.0 (≈2× RPS) | confirmed | [release_notes/v1-72-0-stable](https://docs.litellm.ai/release_notes/v1-72-0-stable), [PR #11097](https://github.com/BerriAI/litellm/pull/11097) |
+| Semantic routing's gain is from policy, not the hop: −47.1% latency, −48.5% tokens, +10.2 pp MMLU-Pro vs direct inference | confirmed | [arXiv:2510.08731](https://arxiv.org/abs/2510.08731) (NeurIPS 2025) |
+| DB key management on a pinned tag needs migration smoke-tests — Prisma migrations can fail and leave schema drift | confirmed (general); specific v1.66.0 `team_member_permissions` issue not located | [docs.litellm.ai/docs/troubleshoot/prisma_migrations](https://docs.litellm.ai/docs/troubleshoot/prisma_migrations), [#14596](https://github.com/BerriAI/litellm/issues/14596) |
 
 ## Evidence
 
