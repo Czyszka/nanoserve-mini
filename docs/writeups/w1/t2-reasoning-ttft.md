@@ -79,43 +79,13 @@ this thread was in this second layer: vLLM exposed reasoning deltas, but
 our benchmark parser treated `delta.content` as the only token channel
 worth timing.
 
-In this Kimi-K2.6/vLLM setup, the captured streams show reasoning output
-before any final-answer content. Some reasoning-model serving stacks
-expose a similar split through model-specific markers or parser-specific
-response fields, but the exact channel layout is implementation-dependent.
-In some model families, for example, reasoning text can be delimited by
-explicit markers such as:
-
-```text
-<think>
-... reasoning text ...
-</think>
-final answer text
-```
-
-A reasoning parser can then classify the generated text like this:
-
-```text
-inside reasoning markers      -> reasoning channel
-after reasoning markers       -> final content channel
-```
-
-In an OpenAI-compatible streaming response, that split may become visible
-as different delta fields:
-
-```text
-delta.reasoning         -> reasoning trace token/text
-delta.reasoning_content -> alternative reasoning field used by some APIs/models
-delta.content           -> final assistant answer token/text
-```
-
-For a model served with separated reasoning/content channels, "first
-token" is ambiguous:
-
-```text
-first reasoning token      -> the model has started producing reasoning output
-first final content token  -> the user-visible final answer has started
-```
+In this Kimi-K2.6/vLLM setup the captured streams
+(`stream_short_prompt.sse.txt`, `stream_exact_ok.sse.txt`) show reasoning
+output before any final-answer content: vLLM emits it in `delta.reasoning` /
+`delta.reasoning_content`, with the final answer arriving later (if at all) in
+`delta.content`. The exact field layout is implementation-dependent, but with
+reasoning and content on separate channels "first token" is ambiguous, so W1
+tracks both explicitly:
 
 | Metric | Starts when | Meaning |
 |---|---|---|
@@ -131,7 +101,7 @@ server-side parsing, and SSE serialization. In this write-up, "token
 TTFT" therefore means the first non-empty client-observable generation
 delta, not a timestamp taken inside the model executor.
 
-## Evidence
+## Captured streams
 
 Raw Server-Sent Events were captured on the server session and committed
 to `results/runs/2026-05-19_kimi-k2-6_stream-debug/stream_debug/`.
@@ -190,19 +160,82 @@ but only as evidence that the non-streaming capture path must omit
 ## Redirect
 
 The parser was timing TTFT off the first `delta.content` token only. Given
-the evidence, `TTFT: n/a` was the correct answer to the question the
-parser was asking: in the short prompt capture no content token exists, so
-a content-only TTFT is genuinely undefined. The defect was not the timer
-and not a missed token. It was the definition.
+the evidence, `TTFT: n/a` was the correct answer to the question the parser
+was asking: in the short-prompt capture no content token exists, so a
+content-only TTFT is genuinely undefined. The defect was not the timer and
+not a missed token — it was the definition. `TTFT: n/a` is not evidence that
+generation did not start; it is evidence that no token appeared in the
+content channel, while the model was streaming `delta.reasoning`.
 
-Therefore, `TTFT: n/a` is not evidence that generation did not start. It
-is evidence that no token appeared in the channel used by the content-only
-metric definition. In this run, the model produced observable output in
-`delta.reasoning`, while the benchmark waited for `delta.content`.
+## Client-side TTFT vs vLLM's server-side TTFT
 
-The server-side reasoning parser exposed the model's reasoning output as
-`delta.reasoning`; the benchmark/client parser ignored that channel and
-treated `delta.content` as the only signal of generation.
+The benchmark scripts measure TTFT as a **client**: wall-clock from issuing
+the request to receiving the first stream delta (`measure_ttft_once.py`).
+vLLM also measures TTFT, but **server-side**, via its Prometheus histogram
+`vllm:time_to_first_token_seconds`. These are *different numbers for the same
+request*, and four factors drive the gap.
+
+**1. Path scope (where the clock runs).** The client clock spans transport
+(socket + HTTP, non-zero even on loopback), any proxy hop, server-side
+queueing, prefill, SSE serialization, and the client's own parse loop. vLLM's
+clock starts only once the request is inside the engine and stops at the first
+generated token — it never sees transport, the proxy, or the client parser. So
+client TTFT ≥ server TTFT by those terms. Isolating each term is exactly T8's
+"shared reference clock" method (snapshot vLLM's histograms around an isolated
+request), which is deferred to #44: this session captured client-side timings
+only, and the `server_metrics` block in every record is `null`.
+
+**2. What counts as "first token" — the channel.** This is the T2 finding, and
+it is where **Kimi and DeepSeek diverge in our own data**. vLLM counts the
+first *generated* token regardless of whether the reasoning parser later labels
+it reasoning or content. The client counts the first non-empty delta *in the
+channel it watches*. The 2026-05-27 paired pilot (single-stream, direct path,
+10 requests/model) shows the consequence:
+
+| Model (direct, n=10) | client content-TTFT | client any-token-TTFT |
+|---|---:|---:|
+| Kimi-K2.6 | 0.592 s | 0.209 s |
+| DeepSeek-V4-Flash | 0.253 s | 0.253 s |
+
+For **Kimi** the *same* stream gives a 0.592 s content-TTFT but a 0.209 s
+any-token-TTFT — a ~2.8× gap created purely by channel choice, because Kimi
+streams reasoning first (a representative single capture: `ttft_seconds`
+0.625 s vs `ttft_any_token_seconds` 0.242 s, `reasoning_chars` 189, final
+answer `" OK"`). vLLM's channel-agnostic server-side TTFT therefore tracks the
+*any-token* view (~0.2 s), not the content view (~0.59 s) — the relationship
+T8 R1 will confirm with paired metric snapshots. For **DeepSeek** the first
+emitted delta *is* content, so content-TTFT = any-token-TTFT = 0.253 s and the
+channel choice is moot; server and client first-token notions coincide. The
+single-shot T6 captures reproduce the Kimi split independently (Eagle3 ON:
+content 652 ms vs any-token 204 ms; OFF: 2489 ms vs 203 ms — any-token ≈
+constant ~0.2 s while content-TTFT swings with reasoning length).
+
+**3. Component attribution.** What the client sees as one number, vLLM exposes
+split into `vllm:request_queue_time_seconds`, `request_prefill_time_seconds`,
+`request_decode_time_seconds`, and `inter_token_latency_seconds`. Under the T5
+batched load (max-num-seqs 32, ~45 requests queued) server-side TTFT p50 was
+11.2 s — dominated by queue time, a component a single-stream client TTFT never
+exercises. The client sees the total; only the server can decompose it.
+
+**4. Aggregation.** The client script records one wall-clock value per request
+(repeated runs → p50/p95 over a handful). vLLM reports a histogram aggregated
+over every request in the scrape window (percentiles via Δsum/Δcount).
+Comparing the two requires matched windows and counts, not a single paired
+request.
+
+**Boundary with T8.** T2 fixes the *client-side definition* on the **direct**
+stream (which channel starts the timer). T8 shows the **proxy** path removes
+the reasoning channel entirely — LiteLLM collapses `delta.reasoning`, so proxy
+clients get `reasoning_chars=0` and any-token-TTFT jumps to the content-TTFT
+(~0.21 → ~0.61 s, *not* latency) or, under a tight `max_tokens`,
+`completed:false`. T2 = the client metric; T8 = the proxy mangling the channel
+that metric depends on.
+
+**Consequence:** a client TTFT and a vLLM TTFT for "the same" request can
+legitimately differ, and for a reasoning model like Kimi the *channel* term
+(factor 2) dominates the rest. Every TTFT in W1 must therefore name both its
+**measurement point** (client vs server) and its **channel** (content vs
+any-token).
 
 ## Scope and threats to validity
 
@@ -213,11 +246,6 @@ universal claim that every reasoning model always emits a reasoning
 channel before a content channel. Other serving stacks may hide reasoning,
 merge it into content, expose it under a different field, or suppress it
 entirely.
-
-The robust conclusion is narrower: a latency script must state which
-observable channel it treats as the first token. Without a shared channel
-definition, `ttft_seconds`, `ttft_any_token_seconds`, and any
-reasoning-only TTFT are not directly comparable.
 
 ## Source
 
@@ -234,14 +262,24 @@ that existing fields kept their semantics and the schema identifier stayed
   failing silently.
 - Tests for both reasoning-field variants were added.
 
+## Evidence
+
+| Claim | Source |
+|---|---|
+| `TTFT: n/a` reproduced; Kimi streams reasoning-first, content may never arrive within 64 tokens | `results/runs/2026-05-19_kimi-k2-6_stream-debug/stream_debug/{stream_short_prompt,stream_exact_ok}.sse.txt` |
+| Kimi content-TTFT ≠ any-token-TTFT (0.592 vs 0.209 s, n=10); DeepSeek coincide (0.253 s) | `results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md` |
+| Representative single record: `ttft_seconds` 0.625 vs `ttft_any_token_seconds` 0.242 s, `reasoning_chars` 189, answer `" OK"` | `results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/kimi_1_A_direct.json` |
+| Kimi single-shot split reproduced (ON 652/204 ms, OFF 2489/203 ms) | `results/runs/2026-06-05_kimi-k2-6_run-04_eagle3-on/`, `…_run-05_eagle3-off-paired/` (`singlestream_lite_latency/result.json`) |
+| #31 fix: `extract_stream_reasoning_text`, `ttft_any_token_seconds`, `tpot_any_token_seconds`, all-reasoning → `completed` | `benchmarks/scripts/_client.py`, `benchmarks/scripts/measure_ttft_once.py`; tests `benchmarks/scripts_tests/test_{client,measure_ttft_once}.py` (commit `cca4022`) |
+| Server-side single-stream TTFT not captured (`server_metrics` null) → paired client-vs-server isolation deferred | T8 R1 / issue #44 |
+| Invalid non-stream capture excluded (`stream_options` + `stream:false`) | `results/runs/2026-05-19_kimi-k2-6_stream-debug/stream_debug/nonstream_short_prompt.sse.json` |
+
 ## Conclusion
 
-For a model served with separated reasoning/content channels, TTFT is not
-a single number. From the inference engine perspective, reasoning tokens
-and final-answer tokens are both generated by the same autoregressive
-decode loop. From the API and benchmark perspective, however, they are
-different observable channels. Every TTFT figure later in W1 must
-therefore name which channel it measures.
+TTFT for a reasoning model is not one number but a (measurement point,
+channel) pair. That is why T6 reports `ttft_any_token_seconds` next to
+content TTFT, and why T8 treats the proxy's loss of the reasoning channel as
+a correctness issue, not a latency one.
 
 ## Reference
 
