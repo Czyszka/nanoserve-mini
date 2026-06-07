@@ -125,12 +125,22 @@ scope for W1 and is a separate, later question.
 
 Independently of any latency number, the pilot established a genuine qualitative
 result: **the proxy changes Kimi's streaming semantics.** On the direct path the
-stream carries the reasoning trace (`reasoning_chars` ≈ 189 in the sample); on
-the proxy path it does not (`reasoning_chars = 0`) — LiteLLM collapses
-`delta.reasoning` / `delta.reasoning_content` into the final-answer stream. The
-consequence: median `ttft_any_token_seconds` goes ~0.21 s (direct) → ~0.61 s
-(proxy), a ~3× shift that is **not latency** — it is the proxy delivering the
-first token only when the final answer begins.
+stream carries the reasoning trace (`reasoning_chars` ≈ 189 in the 2026-05-27
+sample, 242 in the 2026-06-05 capture); on the proxy path it does not
+(`reasoning_chars = 0`) — LiteLLM **does not forward the reasoning phase**,
+collapsing it into the final-answer stream. The consequence (2026-05-27 medians):
+client `ttft_any_token_seconds` goes ~0.21 s (direct) → ~0.61 s (proxy), a ~3×
+shift that is **not latency** — it is the proxy delivering the first token only
+when the final answer begins.
+
+This is why the effect is **Kimi-specific in our data**: the dropped reasoning
+phase is only observable where `ttft_any_token` < final-answer `ttft` — i.e.
+where a reasoning phase streams *before* the answer. Kimi shows that gap (any
+0.209 ≪ final 0.592 on direct, collapsing to 0.608 = 0.608 on proxy); DeepSeek's
+trivial `"say OK"` produced no early reasoning phase at all (any = final on *both*
+paths, 0.253 and 0.279), so there was nothing to collapse. That is an absence of
+the *symptom* for this prompt, not proof DeepSeek is immune — a reasoning-heavy
+DeepSeek prompt would be needed to test it (R7).
 
 R1 will make this airtight: if vLLM's server-side TTFT is identical on both paths
 while client any-token TTFT differs 3×, the difference is proven to be
@@ -146,7 +156,8 @@ proxy-relay behavior, not added compute.
 ## 2026-06-05 confirmation — independent, and a sharper consequence
 
 A second paired capture (renamed `run-01_t8-proxy` `:4000` vs `run-03_t8-direct`
-`:8000`, same prompt, `max_tokens=64`, `temperature=0`) reproduces the strip and
+`:8000`, prompt `"Say hi in one short sentence."` — 15 tokens, distinct from the
+pilot's `"say OK"` — `max_tokens=64`, `temperature=0`) reproduces the strip and
 exposes its operational cost:
 
 | Path | chunks | reasoning_chars | any-token TTFT (s) | E2E (s) | completed |
@@ -154,18 +165,25 @@ exposes its operational cost:
 | direct `:8000` | 26 | 242 | 0.214 | 0.753 | true |
 | proxy `:4000` | 3 | 0 | null | 0.806 | **false** |
 
-Both consumed the full 64-token budget. On the direct path the reasoning trace
-streamed (242 chars over 26 chunks) and the request completed. On the proxy path
-LiteLLM stripped `delta.reasoning`, so the client saw 3 content-less chunks, **no
-any-token TTFT at all**, and the request finished `completed: false` — the entire
-token budget was spent on reasoning the consumer never received.
+The sharp part is that the underlying generation was **the same on both paths**:
+both produced 64 completion tokens, and both have `output_chars = 0` — the final
+answer never started within the cap, so the whole budget went to reasoning (a Kimi
++ short-`max_tokens` property, *not* a proxy effect). The only difference is
+delivery. On the direct path the reasoning trace streamed (242 chars over 26
+chunks), so the client received usable tokens and the request is `completed:
+true`. On the proxy path LiteLLM dropped the reasoning phase, so the client saw 3
+content-less chunks, **no any-token TTFT at all**, and `completed: false` — it
+received nothing. Same tokens generated, opposite client outcome: that pins the
+difference on relay behavior, not compute.
 
 This upgrades the finding from "streaming-semantics change" to a **usability
 hazard for reasoning models under a finite `max_tokens`**: through the proxy a
 reasoning-heavy request can return effectively nothing. It is the paired evidence
 behind the conclusion that LiteLLM `main-v1.66.0-stable` is unusable as the
 *sole* driver for Kimi reasoning streams; direct vLLM is required (or a LiteLLM
-version/config that preserves reasoning deltas).
+version/config that preserves reasoning deltas). This is the exact limit T4 cites
+for the proxy boundary ([t4-litellm-proxy.md](t4-litellm-proxy.md)): sound for
+routing, not transparent for reasoning streams.
 
 ## Pilot (2026-05-27) — what the rig confirmed
 
@@ -183,9 +201,9 @@ Full analysis: [`summary.md`](../../../results/runs/2026-05-27_w1_evidence/t8_pr
 What the pilot **did** establish:
 
 - The ABBA paired-measurement harness works end-to-end against both models.
-- A loopback, single-stream **reference point** for (A): final-answer TTFT delta
-  ~+16 ms (Kimi) / ~+26 ms (DeepSeek) — a baseline R1 will attribute and R2 will
-  stress.
+- A loopback, single-stream **reference point** for (A): final-answer TTFT
+  paired-delta median ~+17 ms (Kimi) / ~+26 ms (DeepSeek) — a baseline R1 will
+  attribute and R2 will stress.
 - The streaming-semantics finding above (the real result).
 
 What the pilot is **not**: it is c=1, one prompt, short output, streaming-only,
@@ -197,9 +215,11 @@ scope the experiment, and it did.
 From a representative request (`kimi_1_A_direct.json`); identical across A and B
 except `base_url`: model, temperature `0.0`, max_tokens `64`, `stream=true`,
 prompt `"say OK"`, warmup `0`, measured `1`/file, concurrency `1`, script
-`measure_ttft_once.py`, git_commit `5ce0881`. The full program holds all of these
-fixed and changes one lever at a time (concurrency in R2, payload in R3, stream
-flag in R5).
+`measure_ttft_once.py`, git_commit `5ce0881`. The 2026-06-05 confirmation instead
+used prompt `"Say hi in one short sentence."` (15 tokens) at commits `208e0729`
+(proxy `run-01`) / `277143b` (direct `run-03`). The full program holds all of
+these fixed and changes one lever at a time (concurrency in R2, payload in R3,
+stream flag in R5).
 
 ## Evidence
 
