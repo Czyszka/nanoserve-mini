@@ -164,12 +164,15 @@ status, not a task list. Update when work moves.
     generic tutorial cut), T3 `6f3474d` (KV size-vs-concurrency lines
     grounded in `kv_cache_utils.py`, open bug #40691, MiB/GiB units,
     0.20-vs-0.25 serving rationale), T4 `0f635d9` (6-row verified
-    external-evidence table w/ real URLs). **T5–T8 not yet given this
-    pass.** Untracked `docs/writeups/w1/T4-deep-research-report.md`
+    external-evidence table w/ real URLs). **T5–T8 hardened in the
+    2026-06-07 pass (handoff log).** Untracked `docs/writeups/w1/T4-deep-research-report.md`
     (source material, opaque `citeturn` tokens) left out of git pending
     keep-as-appendix vs delete.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
+- **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
+  on floating tags (`latest`/`v3`) unlike the pinned serving compose; pin to
+  exact versions + digests (config-only, next server touch). Flagged by T7.
 
 ---
 
@@ -275,22 +278,43 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 - [ ] **GPU hardware metrics (DCGM) — HIGH VALUE, elevated 2026-06-05.** vLLM
   `/metrics` has zero GPU-load signal (power, SM/Tensor/DRAM activity, VRAM).
   The 2026-06-05 load test surfaced exactly why this matters: nvidia-smi showed
-  100% GPU-Util but only ~180-200 W / 600 W (memory-bound decode) — invisible on
+  100% GPU-Util but only ~180-240 W / 600 W (memory-bound decode) — invisible on
   the current dashboard. Plan: add a `dcgm-exporter` container, a Prometheus
   scrape job for it, and a "GPU hardware" dashboard row
   (`DCGM_FI_DEV_POWER_USAGE`, `DCGM_FI_PROF_SM_ACTIVE`,
   `DCGM_FI_PROF_PIPE_TENSOR_ACTIVE`, `DCGM_FI_PROF_DRAM_ACTIVE`,
   `DCGM_FI_DEV_FB_USED`). Config is laptop-writable prep (no GPU needed to
   author); exporter run needs a server slot. Still under #34 — was "deferred,
-  don't block W1"; now the most valuable observability extension.
+  don't block W1"; now the most valuable observability extension. **2026-06-07:**
+  added a #34 comment scoping a follow-on study — correlate GPU-util ↔ HBM
+  bandwidth and disambiguate HBM-bound vs TP-comms-bound (4-way NVLink = 2 islands
+  of 4; TP=8 crosses islands, so cross-island all-reduce stays on PCIe even with
+  bridges); needs DCGM `DRAM_ACTIVE` / `TENSOR_ACTIVE` / `NVLINK_*` / `PCIE_*`
+  counters; maps to W2.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
 - [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
+- [ ] **Eagle3 draft-model VRAM — half-measured (T6).** OFF target load is 71.16
+  GiB/GPU at TP=8 (`kimi_log_eagle3_off.txt:95`); no committed log captured the
+  Eagle3-ON loading phase, so the draft delta is unknown. Cheap to close:
+  production Kimi runs Eagle3-ON, so `docker logs vllm | grep "Model loading
+  took"` on the next server touch gives ON; `ON − 71.16 GiB` = draft VRAM.
 
 ---
 
 ## Last validation
+
+2026-06-07 W1 deep-review pass (T5–T8) + ops:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+Docs-only: hardened T5–T8 against committed evidence (commits `8e299ae` T5,
+`ac13782` T6, `0db3593` T7, `afd478b` T8); created issue #49 (pin observability
+images) and added a #34 research comment (GPU-util↔HBM / NVLink study). No `ruff`
+/ `pytest` run.
 
 2026-06-06 W1 deep-review pass (T1–T4):
 
@@ -410,6 +434,49 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-07 (laptop) - W1 deep-review pass: T5–T8 hardened + ops
+
+- Why: continue the thread-by-thread review (teoria → dowód w projekcie,
+  naukowa skrupulatność) for the remaining four W1 threads, verifying every
+  figure against committed artifacts.
+- Did (4 docs-only commits, one thread each):
+  - `8e299ae` **T5** — dropped the stale 2026-05-27 status; footnoted gauge
+    (kimi) vs all-request (TTFT/E2E/ITL) labels; softened "TTFT dominated by
+    queue time" to L1 (queue_time histogram present but per-window percentile
+    not captured — attribution rests on the waiting>running gauge); added the
+    informal hardware reading (100% util at ~180–240 W / 600 W = memory-bound
+    decode); marked the metric-helper recommendation resolved
+    (`_server_metrics.py` already uses current names); added "Applied analysis"
+    (playbook walked over the 06-05 capture with L-levels) and "Conclusions"
+    (project-specific vLLM knobs to raise compute, throughput-bought-with-latency).
+  - `ac13782` **T6** — rewrote in pedagogical style (one-pass idea + method
+    table draft/n-gram/suffix/MLP/EAGLE adapted from JarvisLabs #48, model-scale
+    trend); grounded acceptance economics from the server log (per-position
+    0.80/0.55/0.42, mean length 2.8–3.1, ideal ~2.8× vs realized TPOT 2.4×);
+    explained the two-TTFT divergence (ttft-any prefill-bound, ttft-content =
+    prefill + reasoning decode); cost (41% drafts rejected, paid from idle
+    compute; VRAM half-measured — OFF 71.16 GiB/GPU TP=8, ON not captured); fixed
+    the A/B impurity to 4096 (ON) vs 8192 (OFF default); softened correctness.
+  - `0db3593` **T7** — provenance to house style (compose file + lines, Evidence
+    table); cross-linked the T5 evidence payoff; grounded the UID/GID risk
+    (Grafana non-root, Prometheus nobody; did not materialize 06-05); flagged
+    unpinned observability images → **issue #49**.
+  - `afd478b` **T8** — corrected Kimi pilot delta to +17 ms; sharpened the
+    completed:false hazard (both paths 64 tok of pure reasoning, output_chars 0 —
+    only delivery differs); reframed Kimi-vs-DeepSeek asymmetry (dropped
+    reasoning phase, visible only where ttft-any < ttft-content; DeepSeek absence
+    of symptom ≠ immunity → R7); documented 06-05 controls (prompt "Say hi…",
+    distinct from pilot "say OK"); cross-ref T4; `metrics_delta.py` confirmed.
+- Also: created **#49** (pin observability images); added a **#34** research
+  comment scoping the GPU-util↔HBM / NVLink ROI study (disambiguate HBM-bound vs
+  TP-comms-bound; 4-way NVLink = 2 islands of 4, TP=8 crosses islands; maps to W2).
+- Validation: `git diff --check` OK on each (docs-only; no `.py` touched).
+- Open: Eagle3-ON draft VRAM not captured (open questions); untracked
+  `T4-deep-research-report.md` keep-vs-delete still undecided. **All 8 W1 threads
+  now hardened.**
+- Next: optional final cross-thread W1 index pass; decide the T4 report file;
+  post-W1 work (#34 DCGM + HBM study, #44 R1–R8, #48, #49) unchanged.
 
 ### 2026-06-06 (laptop) - W1 deep-review pass: T1–T4 hardened against sources
 
