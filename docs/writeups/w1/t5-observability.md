@@ -16,21 +16,11 @@ The title deliberately goes beyond vLLM `/metrics`. vLLM exposes the
 serving-engine view: queueing, token rates, request latency, KV cache,
 and request outcomes. It does not expose the full hardware state of the
 8×H200 node. GPU utilization, VRAM, power, and temperature need DCGM
-Exporter or `nvidia-smi`. For now, the hardware layer is part of the T5
-observability plan; the final write-up should mark which GPU signals were
-actually collected and which remain planned.
+Exporter or `nvidia-smi`. In W1 the hardware layer was observed only informally
+(`nvidia-smi` watched live, not logged); DCGM-based capture remains planned under
+#34 — see the load result below.
 
-## 2026-05-27 status
-
-Not completed. Prometheus and Grafana were running, but dashboard panels were
-not validated under live load. The single attempted proxy-side capture
-(`results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/litellm_metrics_post.txt`)
-returned a 22-byte HTTP 404 (`{"detail":"Not Found"}`); the LiteLLM Prometheus
-exporter is not currently scraping cleanly, so T8 has no proxy-side cross-check
-from this dataset either. Fix `prometheus_callback` in
-`serving/compose/litellm-config.yaml` before re-capture.
-
-## 2026-06-05 status — validated under load (W1 done)
+## Result: dashboard validated under load (2026-06-05)
 
 The dashboard is now validated against live load, which closes T5 for W1
 (fuller panel hardening continues under #34). Two things were established.
@@ -60,19 +50,42 @@ queue/latency/KV panels that single-stream benches leave flat:
 | Eagle3 draft acceptance | 0.493 |
 | preemptions | 0 |
 
+All values are from `prometheus_summary.txt` (3 h Prometheus window). The gauge
+peaks — running, waiting, KV, throughput, acceptance, preemptions — are the
+`kimi-k2.6` series; the TTFT/E2E/ITL percentiles are over **all** requests in the
+window (`all` in that file), so they are not strictly Kimi-only.
+
 Read with the correlation playbook below (still **L0/L1** — one window, no
 controlled counterfactual):
 
-- **Scheduler-limited, not KV-limited.** waiting (45) exceeds running (32)
-  while KV usage peaks at only 44% and preemptions are 0 — the queue forms from
-  concurrency/scheduling capacity, not KV exhaustion or eviction thrash. TTFT
-  p50 11.2 s (vs ~0.84 s single-stream in T6) is dominated by queue time at this
-  offered load — exactly the "vLLM TTFT high + waiting high" row of the
-  playbook.
+- **Scheduler-limited, not KV-limited.** waiting (45) exceeds running (32) while
+  KV usage peaks at only 44% and preemptions are 0 — the queue forms from
+  concurrency/scheduling capacity (the `max-num-seqs 32` admission cap), not KV
+  exhaustion or eviction thrash. A *preemption* is vLLM evicting an already-
+  running request when the KV-block pool cannot grow it further, then recomputing
+  its KV on reschedule; KV exhaustion would therefore show KV → ~100% with
+  preemptions > 0, which is not what we see. TTFT p50 rises to 11.2 s (vs ~0.84 s
+  single-stream in T6), consistent with requests sitting in the WAITING phase
+  before execution — the "vLLM TTFT high + waiting high" row of the playbook.
+  This stays an **L1 diagnostic**: `vllm:request_queue_time_seconds` is
+  instrumented but its per-window percentile was not captured in this run (the
+  only committed scrape of it, `full-load/vllm_kimi_metrics.txt`, is near-idle —
+  15 requests, 0.6 ms total), so the attribution rests on the waiting>running
+  gauge, not a measured queue-time breakdown.
 - **Eagle3 acceptance is now quantified.** `spec acceptance = 0.493` answers the
-  open item flagged in T6: under batched load the draft model's tokens are
-  accepted ~49% of the time. T6 measured the latency benefit but not acceptance;
-  this is the missing number, from the same `spec_decode_*` family.
+  open item flagged in T6: under this batched workload the draft model's tokens
+  are accepted ~49% of the time. T6 measured the latency benefit but not
+  acceptance; this is the missing number, from the same `spec_decode_*` family.
+- **Hardware layer — observed informally, not dashboarded.** During the batched
+  run `nvidia-smi` (watched live in a terminal, not logged) showed 100% GPU-Util
+  while board power held at only ~180–240 W of the 600 W per-GPU limit. That is
+  the memory-bound decode signature: the SMs report busy, but the card is far
+  from its power/compute ceiling because decode is bottlenecked on HBM bandwidth,
+  not FLOPs — and it is invisible to vLLM `/metrics`, which reports engine state,
+  not silicon state. DCGM Exporter was deliberately left out of W1 to keep Phase 1
+  scoped (another brick, and no time in this slot); proper hardware telemetry
+  (power, SM/DRAM activity, VRAM) is considered necessary going forward and is
+  tracked under #34.
 
 The two captured screenshots contrast the regimes:
 `2026-06-05_grafana_dashboard-max_num_seqs_1.png` (single-stream — queue panels
@@ -249,6 +262,39 @@ Examples:
 | client TTFT high + vLLM TTFT normal | overhead or timing-definition mismatch outside vLLM | compare direct vLLM vs LiteLLM Proxy with the same prompt/config | proxy-path client TTFT is higher while vLLM TTFT remains similar |
 | prefix hit rate rises while prefill/TTFT falls | prefix cache likely reduces prefill work | compare repeated-prefix workload against non-shared-prefix workload | prefix hits increase and prompt-processing latency/TTFT falls only in the repeated-prefix condition |
 
+## Applied analysis: the 2026-06-05 capture through the playbook
+
+The sections above are the framework; this is it applied to the one batched
+capture we have (`prometheus_summary.txt`, `max-num-seqs 32`). It is a single
+window with no isolated lever, so every reading below is **L0/L1** — diagnostic,
+not causal.
+
+| Observed (batched, max-num-seqs 32) | Playbook row matched | Reading | Level |
+|---|---|---|---|
+| TTFT p50 11.2 s; waiting 45 > running 32; KV 44%; preemptions 0 | "vLLM TTFT high + queue/waiting high", and the *negation* of "KV usage rising with waiting" | first-token delay forms in the WAITING phase from the `max-num-seqs 32` admission cap, not KV exhaustion | L1 |
+| prompt 1039 tok/s vs generation 327 tok/s | Token pipeline (prefill vs decode) | prefill moves ~3× the token rate of decode — expected (prefill is parallel over prompt tokens, decode is sequential); the node's decode ceiling here is ~327 tok/s aggregate | L0 |
+| ITL p50 0.106 s across 32 streams | self-consistency check | 32 × 1/0.106 ≈ 302 tok/s ≈ the 327 tok/s aggregate (gap within p50-vs-mean and spec-decode bursting) — the gauge and the histogram corroborate each other | L0 |
+| ITL p50 0.106 s vs T6 single-stream TPOT 6.9 ms | "ITL/TPOT high under load" | per-token latency ~15× higher under batch-32 than single-stream — the concurrency throughput-vs-latency trade-off | L1 (confounded) |
+| spec acceptance 0.493 | spec-decode family | Eagle3 drafts accepted ~49% under this batched workload (closes T6's open item) | L0 |
+| nvidia-smi 100% util, ~180–240 W / 600 W | "ITL/TPOT high + GPU util high" | decode path is busy but the card is far from its power ceiling — memory-bound *or* TP-comms-bound; util% alone cannot tell them apart | L1 (ambiguous; → #34) |
+
+**What the capture supports.** Exactly one L1 diagnosis, taken jointly: beyond
+the `max-num-seqs 32` admission cap the node is **scheduler-concurrency-bound,
+not KV-bound**, and first-token latency is queue-dominated. The waiting>running
+gauge, KV at only 44%, and preemptions 0 all point the same way; KV exhaustion
+would instead have shown KV → ~100% with preemptions > 0.
+
+**What it does not support.** No L2/L3 claim. This is one window at one offered
+load with no isolated counterfactual: concurrency, prompt mix, and output length
+were not varied one lever at a time. Two readings are explicitly weaker than they
+look: the ITL-vs-single-stream row is **confounded** (T6 used a 15-token prompt,
+this run used SWE-bench Lite, so prompt length and content differ, not just
+concurrency), and the single-stream T6 point (TTFT ~0.84 s, no queue) is only
+*consistent with* the scheduler-bound reading, not a clean one-lever test.
+Promoting any of these to L2 needs the disambiguation tests in the
+inference-protocol table — above all a concurrency sweep at fixed prompt/output
+distribution, and (for the hardware row) the DCGM-based HBM-vs-comms study in #34.
+
 ## Threats to validity
 
 The correlation playbook can overlead if workload and measurement windows
@@ -267,21 +313,17 @@ Therefore, T5 should distinguish language carefully:
 - **robust claim** — supported causal claim repeated across multiple
   workloads or windows.
 
-## Cleanup found during observability work
+## Helper alignment (resolved)
 
-The server-metrics helper should be checked against the actual metric
-names in the current dump. The useful names are:
-
-```text
-vllm:kv_cache_usage_perc
-vllm:prefix_cache_hits_total
-vllm:prefix_cache_queries_total
-```
-
-The aggregate logic should read KV usage directly from
-`vllm:kv_cache_usage_perc` and compute prefix-cache hit rate from hits /
-queries, preferably using a Prometheus `rate()` in Grafana or a pre/post
-snapshot delta in run summaries.
+The server-metrics helper was checked against the live dump and already uses the
+current names. `benchmarks/scripts/_server_metrics.py` reads KV usage from
+`vllm:kv_cache_usage_perc` (the older `vllm:gpu_cache_usage_perc` is kept only as
+a version fallback) and computes the prefix-cache hit rate from
+`vllm:prefix_cache_hits_total / vllm:prefix_cache_queries_total` — v0.20.0 exposes
+no ready-made hit-rate gauge, so it is derived from the counters. No code change
+was needed; the module documents these names as verified against the v0.20.0 dump.
+For live dashboards the same hit rate is best read with a Prometheus `rate()` over
+the two counters, or a pre/post snapshot delta in run summaries.
 
 ## Decision for W1
 
@@ -291,6 +333,37 @@ rates, scheduler pressure, KV/cache behavior, request outcomes, and GPU
 hardware telemetry. Process/Python metrics, `*_created` gauges,
 idle zero-value histograms, speculative-decoding counters before T6, and
 miscellaneous cache namespaces should stay secondary diagnostics.
+
+## Conclusions: which vLLM knobs would raise compute utilization here
+
+The capture's hardware reading — 100% util at only ~180–240 W / 600 W — is the
+memory-bound decode signature: each decode step reads the whole layer's weights
+from HBM but does little compute per byte, so *arithmetic intensity* is low and
+the tensor cores idle while the memory system works. You do not make decode
+compute-bound; you raise useful FLOPs per HBM byte (a larger decode batch, or
+speculative decoding) or cut the bytes read (quantization). The levers below are
+specific to **this project's** config, not generic.
+
+| Knob (current value) | What it changes | Why it should raise compute here | Status / validation |
+|---|---|---|---|
+| `--max-num-seqs` (Kimi **32**) | decode batch size — how many sequences share each weight read | **directly evidenced**: waiting 45 > running 32 with KV at 44% and preemptions 0, so the admission cap (not memory) holds the batch small; admitting more of the queue raises arithmetic intensity (power/FLOPs) and drains the queue at once | L1 → run the protocol's concurrency sweep at fixed prompt/output; stop when KV → high or preemptions > 0 |
+| `--gpu-memory-utilization` (Kimi **0.6**) | size of the KV pool that funds a bigger batch | a larger KV pool lets a larger batch run without preemption; T3 showed ~26.6 GiB/GPU free at DeepSeek 0.2 co-residency → some headroom to enlarge Kimi's pool | coupled to DeepSeek co-residency — raise only within the T3 budget |
+| `--max-model-len` (Kimi **131072**) | per-sequence worst-case KV reservation | 128k inflates each sequence's KV footprint and caps how many fit; if real prompts are far shorter, lowering it frees KV to raise `--max-num-seqs` | needs the real prompt-length distribution before changing |
+| `--max-num-batched-tokens` (Kimi **4096**) | per-step token budget shared by prefill + decode (chunked prefill) | sized together with `--max-num-seqs`, it keeps decode flowing while prefill chunks compete for the same step | secondary; tune alongside the batch lever |
+| `--speculative-config num_speculative_tokens` (Kimi **3**) | draft tokens verified per forward pass | already a compute lever — Eagle3 verifies k tokens against a single weight read, which is *why* it helps memory-bound decode | **already near-tuned**: measured acceptance 0.493 means pushing k > 3 likely spends compute on rejected drafts |
+| `--enforce-eager` (DeepSeek **set** → CUDA graphs off) | per-step kernel-launch overhead | DeepSeek at `--max-num-seqs 2` is exactly where launch gaps between tiny decode kernels dominate; dropping it (graphs on, as Kimi already runs) closes those gaps | candidate re-test: confirm DeepSeek-V4 starts with graphs — `--enforce-eager` may have been needed for fp8_ds_mla / Lightning Indexer compatibility |
+| expert weight quant (Kimi **4-bit WNA16**) | HBM bytes per weight, and which tensor cores do the matmul | weight-only 4-bit already cuts HBM traffic; an FP8 W8A8 path would also engage the H200 FP8 tensor cores for the matmul itself | bigger change (re-serve + quality trade-off); roadmap **W3** (FP8), out of W1 scope |
+
+**This is throughput you buy with latency.** Compute utilization is not a goal in
+itself: every lever above raises FLOPs-per-HBM-byte by enlarging the decode batch,
+which raises per-request ITL (already ~15× single-stream at batch 32 — see the
+applied analysis). For a latency-critical reasoning model you may deliberately
+leave compute idle to keep ITL low. None of these changed W1's single-stream
+baseline and they are not meant to; they matter when concurrent throughput is the
+target. Only `--max-num-seqs` is supported by this capture — the rest are
+hypotheses that need the protocol's one-lever counterfactuals and the #34 DCGM
+split (`DRAM_ACTIVE` vs `TENSOR_ACTIVE`) to confirm they raise *compute*, not just
+*batch size*.
 
 ## Evidence
 
