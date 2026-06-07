@@ -155,6 +155,19 @@ status, not a task list. Update when work moves.
     `-rerun` (10:02, 10 runs, 1365 ms). Lead T6 with **repeated ~2× p50
     TTFT** (robust); single-shot E2E 2.1×–3.8× is temp=0-variance-sensitive.
     SWE-bench dataset kept intentionally as #34 load workload.
+  - **2026-06-06 (laptop) deep-review pass T1–T4** — thread-by-thread
+    review hardened the four published threads against vLLM source +
+    primary external sources (each commit docs-only, one thread): T1
+    `9473660` (−19.08 GiB KV-budget arithmetic + 88.44 GiB DEP weight
+    decomposition, EP 48/384 cite, util≈0.74 to match TP@0.6), T2
+    `887ebe7` (client-vs-server TTFT mechanism on Kimi/DeepSeek data,
+    generic tutorial cut), T3 `6f3474d` (KV size-vs-concurrency lines
+    grounded in `kv_cache_utils.py`, open bug #40691, MiB/GiB units,
+    0.20-vs-0.25 serving rationale), T4 `0f635d9` (6-row verified
+    external-evidence table w/ real URLs). **T5–T8 not yet given this
+    pass.** Untracked `docs/writeups/w1/T4-deep-research-report.md`
+    (source material, opaque `citeturn` tokens) left out of git pending
+    keep-as-appendix vs delete.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 
@@ -279,6 +292,16 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-06 W1 deep-review pass (T1–T4):
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+Docs-only: hardened the four published W1 threads against vLLM source + primary
+external sources (commits `9473660` T1, `887ebe7` T2, `6f3474d` T3, `0f635d9`
+T4). No `ruff` / `pytest` run.
+
 2026-06-05 server slot (T3 clean + T6 ON start + LiteLLM strip diagnosis):
 
 ```text
@@ -387,6 +410,39 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-06 (laptop) - W1 deep-review pass: T1–T4 hardened against sources
+
+- Why: thread-by-thread review of the published W1 write-ups (teoria → dowód
+  w projekcie, naukowa skrupulatność) — strengthen each against vLLM source
+  and primary external sources instead of re-deriving from memory.
+- Did (4 docs-only commits, one W1 thread each):
+  - `9473660` **T1** — KV-budget bring-up failure deepened: full −19.08 GiB
+    arithmetic from the DEP log, 88.44 GiB weight decomposition (embeddings/
+    lm_head + MLA/norms/router/shared FFN replicated ~22 GiB + 384 routed
+    experts EP-sharded 48/rank ~66.6 GiB, `layer.py:408` cite), load-vs-
+    budget mechanism, DeepSeek co-residency reframed as context not cause,
+    util≈0.74 to match TP@0.6 KV.
+  - `887ebe7` **T2** — refocused on client-side vs vLLM server-side TTFT:
+    4 divergence factors + Kimi/DeepSeek table (content 0.592 vs any 0.209;
+    DeepSeek 0.253 = 0.253), single-stream server-side TTFT flagged not
+    captured (deferred #44), generic `<think>`-marker tutorial cut, theses
+    de-duped.
+  - `6f3474d` **T3** — KV-cache numbers grounded in vLLM source: the
+    "5,284 tokens vs 6.51×" non-reconciliation explained via
+    `_report_kv_cache_config` vs `get_max_concurrency_for_kv_cache_config`
+    (multi-group fp8_ds_mla + Lightning Indexer, 80.7× systematic
+    deflation), flagged as still-open bug `vllm-project/vllm#40691`; MiB/GiB
+    units fixed; added "what 0.20 vs 0.25 gives and takes for serving".
+  - `0f635d9` **T4** — added "External evidence (verified)" 6-row table with
+    real URLs (LiteLLM Postgres keys, synthetic 8 ms/1k RPS, aiohttp v1.72.0,
+    `x-litellm-overhead-duration-ms`, Semantic Router "When to Reason");
+    #A handled honestly (general confirmed, specific v1.66.0 issue not located).
+- Validation: `git diff --check` OK on each (docs-only; no `.py` touched).
+- Open: T5–T8 not yet given this deep-review pass; untracked
+  `T4-deep-research-report.md` (citeturn tokens) — keep-as-appendix vs delete
+  undecided.
+- Next: continue review with T5 (observability) or pick T6/T7/T8.
 
 ### 2026-06-05 (laptop) - W1 session organization, audit, run-dir cleanup
 
