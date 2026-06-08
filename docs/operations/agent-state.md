@@ -287,23 +287,43 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
   author); exporter run needs a server slot. Still under #34 — was "deferred,
   don't block W1"; now the most valuable observability extension. **2026-06-07:**
   added a #34 comment scoping a follow-on study — correlate GPU-util ↔ HBM
-  bandwidth and disambiguate HBM-bound vs TP-comms-bound (4-way NVLink = 2 islands
-  of 4; TP=8 crosses islands, so cross-island all-reduce stays on PCIe even with
-  bridges); needs DCGM `DRAM_ACTIVE` / `TENSOR_ACTIVE` / `NVLINK_*` / `PCIE_*`
-  counters; maps to W2.
+  bandwidth and disambiguate HBM-bound vs TP-comms-bound; needs DCGM
+  `DRAM_ACTIVE` / `TENSOR_ACTIVE` / `NVLINK_*` / `PCIE_*` counters; maps to W2.
+  **2026-06-08 — topology now hard fact, not assumed:** server is **PCIe-only, no
+  NVLink, no NVSwitch** (user-confirmed + vLLM log `kimi_log_eagle3_on.txt:67,138`:
+  custom all-reduce *"not supported on more than two PCIe-only GPUs"*, FlashInfer
+  *"expected on GPUs without NVSwitch… PCIe topologies"*). So all TP=8 all-reduce
+  is on PCIe today; the earlier "4-way NVLink = 2 islands of 4" is a *hypothetical
+  upgrade*, not the current node. Posted a #34 correction comment; T5 hardware
+  layer updated.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
 - [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
-- [ ] **Eagle3 draft-model VRAM — half-measured (T6).** OFF target load is 71.16
-  GiB/GPU at TP=8 (`kimi_log_eagle3_off.txt:95`); no committed log captured the
-  Eagle3-ON loading phase, so the draft delta is unknown. Cheap to close:
-  production Kimi runs Eagle3-ON, so `docker logs vllm | grep "Model loading
-  took"` on the next server touch gives ON; `ON − 71.16 GiB` = draft VRAM.
+- [x] **Eagle3 draft-model VRAM — RESOLVED 2026-06-08 (T6).** Dedicated Eagle3-ON
+  startup capture (`2026-06-08_w1_evidence_extra/t6_eagle/kimi_log_eagle3_on.txt:131`)
+  gives ON loading **71.92 GiB/GPU** vs OFF **71.16 GiB/GPU** → draft adds
+  **≈0.76 GiB/GPU** (~1% of target). Cheap by construction: draft checkpoint only
+  5.62 GiB on disk (`:122`), TP-sharded, and embedding shared with the target
+  (`:107`). KV delta (9.44 vs 9.84) not clean — ON ran production `max_num_seqs=32`.
+  T6 "What it costs" updated.
 
 ---
 
 ## Last validation
+
+2026-06-08 T6 Eagle3 VRAM closed + PCIe topology confirmed:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+New evidence `2026-06-08_w1_evidence_extra/t6_eagle/kimi_log_eagle3_on.txt`
+(committed `131d573`) supplied the Eagle3-ON loading phase. Updated T6 (draft VRAM
+**0.76 GiB/GPU** measured; embedding-sharing mechanism; KV caveat) and T5 (PCIe-only
+interconnect — no NVLink/NVSwitch — as hard evidence). Resolved the Eagle3-VRAM
+open question; corrected the #34 topology note + posted a #34 correction comment.
+No `ruff` / `pytest` (docs-only).
 
 2026-06-07 W1 deep-review pass (T5–T8) + ops:
 

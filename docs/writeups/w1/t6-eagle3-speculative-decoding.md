@@ -16,8 +16,10 @@ single-stream workload it delivers a robust **~2.0× p50 TTFT and ~1.9× decode
 throughput** at temperature 0, with **no first-token penalty** and no observed
 correctness anomaly. The draft model is accepted **~59–72%** of the time
 (per-step it yields ~2.8–3.1 tokens for one target forward pass), and its cost —
-the rejected drafts — is paid out of compute the GPU was leaving idle anyway. The
-benefit is real but bounded; the sections below state exactly which number to
+the rejected drafts — is paid out of compute the GPU was leaving idle anyway. Its
+memory cost is small and now measured: **≈0.76 GiB/GPU** of extra draft weights
+(~1% of the target), because the EAGLE-3 head shares the target's embedding table.
+The benefit is real but bounded; the sections below state exactly which number to
 trust and which not to.
 
 ## How speculative decoding works (the one-pass idea)
@@ -233,19 +235,32 @@ is a plausible tuning lever, but we did not A/B it here.
   near-free on a model this large.
 - **No first-token penalty.** TTFT-any is ≈204 ms in both arms; Eagle3 adds no
   measurable prefill cost.
-- **Draft-model VRAM — half-measured.** The OFF arm's startup log gives the clean
-  target baseline: **71.16 GiB/GPU of weights** at TP=8, plus 9.84 GiB Available
-  KV (`kimi_log_eagle3_off.txt:95,134`). (As a bonus this validates T1's
-  TP-vs-DEP math — TP shards the same 554.30 GiB checkpoint to 71.16 GiB/GPU,
-  against the failed DEP attempt's 88.44 GiB/GPU.) The Eagle3 cost is the **ON**
-  loading figure minus this 71.16 GiB — but the ON capture
-  (`kimi_log_eagle3_on.txt`) begins *after* its loading phase, so the ON number
-  is **not in our committed artifacts**. It is cheap to close: the production Kimi
-  service runs Eagle3-ON by default, so `docker logs vllm | grep "Model loading
-  took"` on the next server touch yields ON directly, and `ON − 71.16 GiB` is the
-  draft's VRAM. EAGLE3 heads are a few transformer layers fused from the target
-  (a small fraction of params by design), so a single-digit-GiB delta is expected
-  — but the measured number is the one to report, and it is not yet in hand.
+- **Draft-model VRAM — measured (2026-06-08).** A dedicated Eagle3-ON startup
+  capture closes the gap the 06-05 A/B left open. The ON loading summary reports
+  **71.92 GiB/GPU** (`2026-06-08_w1_evidence_extra/t6_eagle/kimi_log_eagle3_on.txt:131`,
+  *"Model loading took 71.92 GiB memory"*) against the OFF target baseline of
+  **71.16 GiB/GPU** — so the Eagle3 draft adds **≈0.76 GiB/GPU of resident
+  weights** at TP=8, about **1% of the target footprint** (consistent with
+  EAGLE-3's <5%-param design point). Weight size is independent of
+  `--max-num-seqs`, so this delta is clean even though the 06-08 capture ran the
+  production `max_num_seqs=32` rather than the A/B's 1.
+- **Why the draft is so cheap.** Its checkpoint is only **5.62 GiB on disk**
+  (`:122`, vs the target's 554.30 GiB) and is itself TP-sharded across the 8 GPUs
+  (5.62/8 ≈ 0.70 GiB/GPU, matching the 0.76 measured). vLLM further **shares the
+  target's embedding table with the draft**, keeping only a separate `lm_head`
+  (`:107–108`: *"Detected EAGLE model with embed_tokens identical to the target…
+  Sharing target model embedding weights"*). That embedding reuse is the reason an
+  EAGLE-3 head costs under a GiB per GPU instead of a full small model's worth.
+  This also validates T1's TP-vs-DEP math — TP shards the 554.30 GiB checkpoint to
+  71.16 GiB/GPU, against the failed DEP attempt's 88.44 GiB/GPU.
+- **Second-order KV cost (not cleanly isolated).** Under the fixed
+  `--gpu-memory-utilization 0.6` budget the extra draft weights come out of the KV
+  pool: ON shows **9.44 GiB Available KV** / 141,504 tokens / 1.08× max concurrency
+  at 131 k context (`:174,183`) versus OFF's 9.84 GiB. But the 06-08 ON capture also
+  runs the production `max_num_seqs=32`, whose larger CUDA-graph capture (1.46 GiB)
+  inflates the non-KV overhead relative to the A/B's `max_num_seqs=1`, so that
+  ~0.40 GiB KV drop mixes the draft weights with a bigger graph pool. The clean,
+  config-independent number to report is the **0.76 GiB/GPU weight delta**.
 
 ## What the numbers do NOT show
 
@@ -269,9 +284,11 @@ first-token cost, ~59–72% draft acceptance (~2.8–3.1 tokens per target pass)
 a compute cost paid out of otherwise-idle GPU headroom. That justifies the extra
 draft model and configuration complexity for the Phase 1 latency target, and it
 matches the model-scale trend that makes EAGLE-3 the right family for a 1T-class
-model. The claim is deliberately scoped to single-stream; concurrent-serving
-behavior, `num_speculative_tokens` tuning, and the draft-model memory bound are
-follow-up work, not part of this baseline.
+model. Its memory cost is now pinned at ≈0.76 GiB/GPU (~1% of the target), so the
+draft model is effectively free on VRAM as well as compute. The claim is
+deliberately scoped to single-stream; concurrent-serving behavior and
+`num_speculative_tokens` tuning are the remaining follow-up work, not part of this
+baseline.
 
 ## Evidence
 
@@ -289,7 +306,8 @@ end-of-session commit `fc97700` overwrote the OFF arm in place and the paired
 | Repeated OFF p50/p95 (1675/4426 ms, 58.7 tok/s, 97 tok p50) | `results/runs/2026-06-05_kimi-k2-6_run-05_eagle3-off-paired/singlestream_lite_repeated/summary.json` |
 | Acceptance economics (mean length 2.8–3.1, per-position 0.80/0.55/0.42, avg 59–72%, drafted 1062 / accepted 626) | `results/runs/2026-06-05_w1_evidence/t6_eagle3/kimi_log_eagle3_on.txt` (SpecDecoding metrics, 09:01 window) |
 | Batched acceptance cross-check (0.493) | T5 `prometheus_summary.txt` |
-| Target weight baseline (OFF: 71.16 GiB weights + 9.84 GiB KV @ TP=8, checkpoint 554.30 GiB); ON loading not captured | `results/runs/2026-06-05_w1_evidence/t6_eagle3/kimi_log_eagle3_off.txt:92,95,134` |
+| Target weight baseline (OFF: 71.16 GiB weights + 9.84 GiB KV @ TP=8, checkpoint 554.30 GiB) | `results/runs/2026-06-05_w1_evidence/t6_eagle3/kimi_log_eagle3_off.txt:92,95,134` |
+| Draft-model VRAM (ON loading 71.92 GiB/GPU − OFF 71.16 = **0.76 GiB/GPU**; draft checkpoint 5.62 GiB, embedding shared with target; ON Available KV 9.44 GiB / 141,504 tok @ `max_num_seqs=32`) | `results/runs/2026-06-08_w1_evidence_extra/t6_eagle/kimi_log_eagle3_on.txt:107,122,131,174,183` |
 | Client-side bench logs (run order, no errors) | `results/runs/2026-06-05_w1_evidence/t6_eagle3/bench_{on,off}.log` |
 | Server startup config per arm | `results/runs/2026-06-05_w1_evidence/t6_eagle3/kimi_log_eagle3_{on,off}.txt` |
 | Integrity / paired-vs-rerun provenance | `results/runs/2026-06-05_w1_evidence/session/session_notes.md` |
