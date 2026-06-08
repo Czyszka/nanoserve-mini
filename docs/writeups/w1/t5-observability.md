@@ -86,6 +86,19 @@ controlled counterfactual):
   scoped (another brick, and no time in this slot); proper hardware telemetry
   (power, SM/DRAM activity, VRAM) is considered necessary going forward and is
   tracked under #34.
+- **Interconnect confirmed PCIe-only — no NVLink, no NVSwitch.** The 2026-06-08
+  Eagle3-ON engine log makes the comms topology explicit, not assumed: vLLM
+  disabled custom all-reduce because it is *"not supported on more than two
+  PCIe-only GPUs"* (`2026-06-08_w1_evidence_extra/t6_eagle/kimi_log_eagle3_on.txt:67`)
+  and the FlashInfer all-reduce fallback reports the failure is *"expected on GPUs
+  without NVSwitch (NVLink bridge-only or PCIe topologies)"* (`:138`). So every
+  TP=8 all-reduce on this node traverses **PCIe**. This grounds the comms half of
+  the HBM-vs-comms ambiguity in the playbook below — the inter-GPU path is *known*
+  to be PCIe, which is precisely why a util%-only reading still cannot separate an
+  HBM-bandwidth stall from a PCIe all-reduce stall — and it reframes the NVLink
+  question from "does the bridge help" to "would *adding* bridges help" (a
+  hypothetical upgrade; none are installed). Disambiguating the two remains the
+  DCGM study in #34.
 
 The two captured screenshots contrast the regimes:
 `2026-06-05_grafana_dashboard-max_num_seqs_1.png` (single-stream — queue panels
