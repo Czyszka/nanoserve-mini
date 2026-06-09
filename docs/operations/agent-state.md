@@ -168,6 +168,15 @@ status, not a task list. Update when work moves.
     2026-06-07 pass (handoff log).** Untracked `docs/writeups/w1/T4-deep-research-report.md`
     (source material, opaque `citeturn` tokens) left out of git pending
     keep-as-appendix vs delete.
+- **W1 article deepening (2026-06-09):** critique of `w1-article.md` accepted —
+  article is post-hoc only (no predict→measure analysis, no figures, thin stats,
+  secondary-only citations). Approved plan:
+  `docs/plans/2026-06-09-w1-article-deepening.md` (quantitative boxes, mermaid
+  figures, TL;DR, methods + synthesis sections, primary refs; outline approved).
+  New evidence narrowed by user decision to **P0 GPU counters + P2 hop
+  attribution**; P1 (Eagle3 n=20 clean A/B) and P3 (concurrency sweep)
+  **rejected**. Server slot planned: `docs/plans/2026-06-10-server-session.md`
+  (zero engine restarts — compose already runs `max-num-seqs 32`).
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -197,12 +206,14 @@ Honesty corrections folded in: T6 A/B has a 2-flag impurity and length-confound
 negative-KV-budget crash; T8 strip upgraded to a `completed:false` usability
 hazard. Structure kept modular per decision; no GPU slot needed to publish.
 
-**Next concrete step.** W1 is publishable. Open post-W1 work, all out of W1
-scope: #34 (DCGM/GPU panels, LiteLLM exporter 404, L2 causal checks), #44
-(T8 R1–R8 concurrency program), #48 (reconcile T6 vs speculative-decoding
-methodology), and a DeepSeek real-generation workload so its throughput
-baseline becomes meaningful (currently ~3-token smoke). Pick the next phase
-target before starting; W1 itself needs no further action.
+**Next concrete step.** W1 article deepening
+(`docs/plans/2026-06-09-w1-article-deepening.md`): Etap 1 (laptop-only analysis
+layer — quantitative boxes, figures, TL;DR, synthesis) can start now; the
+2026-06-10 server slot runs P0 GPU counters + P2 hop attribution
+(`docs/plans/2026-06-10-server-session.md`); Etap 3 integrates results into the
+article. Other post-W1 work unchanged: #34 (full DCGM panels, LiteLLM exporter
+404, L2 causal checks), #44 (T8 R2–R8 remainder), #48 (T6 methodology
+reconciliation), DeepSeek real-generation workload.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -311,6 +322,18 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-09 W1 article deepening plan + 2026-06-10 server session plan:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+New `docs/plans/2026-06-09-w1-article-deepening.md` (approved critique +
+outline + laptop/Etap roadmap) and `docs/plans/2026-06-10-server-session.md`
+(P0 GPU counters idle/c1/c64 with tiered dcgmi→exporter→dmon tooling + P2 hop
+attribution via `metrics_delta.py`; zero engine restarts). No `ruff` / `pytest`
+(docs-only).
 
 2026-06-09 W1 portfolio article written:
 
@@ -464,6 +487,26 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-09 (laptop) - W1 article deepening plan + jutrzejsza sesja serwerowa
+
+- Why: user ocenił `w1-article.md` jako za płytki naukowo-inżyniersko i
+  rekrutacyjnie; uzgodniono krytykę i plan pogłębienia.
+- Did: krytyka zaakceptowana (artykuł czysto post-hoc — brak predict→measure,
+  zero figur, statystyka deklarowana nie praktykowana, brak primary refs, brak
+  TL;DR). Zapisany zatwierdzony plan
+  `docs/plans/2026-06-09-w1-article-deepening.md` (boxy ilościowe: roofline /
+  all-reduce, MLA KV bytes/token, model akceptacji Eagle3, Little's law; figury
+  mermaid + embed istniejącego PNG; sekcje TL;DR / Methods / Synthesis;
+  literatura pierwotna) oraz plan sesji
+  `docs/plans/2026-06-10-server-session.md` — **P0** liczniki GPU
+  (idle/c1/c64, tiery dcgmi→dcgm-exporter→nvidia-smi dmon) + **P2** hop
+  attribution (R1, ABBA, mt∈{64,1024}, `metrics_delta.py`). Decyzje usera:
+  P1 (Eagle3 n=20) i P3 (concurrency sweep) odrzucone; struktura artykułu
+  pogłębiana in-place; outline zatwierdzony.
+- Validation: `git diff --check` OK (docs-only).
+- Next: jutro slot serwerowy wg planu 2026-06-10; równolegle/po nim Etap 1
+  (laptop-only) i Etap 3 (integracja) z planu deepening.
 
 ### 2026-06-09 (laptop) - W1 portfolio article written
 
