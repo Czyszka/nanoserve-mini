@@ -312,6 +312,16 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-09 W1 portfolio article written:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+New file `docs/writeups/w1-article.md` — ~2700-word standalone portfolio article
+synthesizing all 8 W1 threads into one readable piece for GitHub. Also added
+`results/runs/2026-06-05_w1_evidence/eagle3_horizontal_flow.png` (298 KB).
+
 2026-06-08 T6 Eagle3 VRAM closed + PCIe topology confirmed:
 
 ```text
@@ -454,6 +464,22 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-09 (laptop) - W1 portfolio article written
+
+- Why: write-upy wątkowe (w1/) są engineering recordem; brakuje jednego,
+  czytelnego portfolio piece do GitHub repo (#37 deliverable).
+- Did: stworzył `docs/writeups/w1-article.md` (~2700 słów) — standalone artykuł
+  syntetyzujący 8 wątków W1: negative-KV-budget arithmetic (T1+T3 unified),
+  TTFT duality for reasoning models (T2+T8), Eagle3 cost/payoff (T6),
+  observability signals vs misleading ones (T5+T7), baseline table z caveats,
+  conscious deferrals (#44, #34, DeepSeek real workload). Wątki pozostają jako
+  engineering appendix; artykuł do nich linkuje.
+  Dodano też `results/runs/2026-06-05_w1_evidence/eagle3_horizontal_flow.png`
+  (298 KB, wcześniej untracked).
+- Validation: `git diff --check` OK (docs-only; no `.py` touched).
+- Next: post-W1 — #34 (DCGM/GPU panels), #44 (T8 R1–R8), #48 (T6 methodology),
+  DeepSeek real-generation workload.
 
 ### 2026-06-07 (laptop) - W1 deep-review pass: T5–T8 hardened + ops
 
