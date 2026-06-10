@@ -1,0 +1,60 @@
+{
+  "schema": "nanoserve-mini.metrics-delta.v1",
+  "methodology": "mlperf_inspired_lite",
+  "timestamp": "2026-06-10T10:54:47.418425+00:00",
+  "pre_file": "results/runs/2026-06-10_w1_article_evidence/p2_hop_attribution/proxy_mt1024_5_pre.json",
+  "post_file": "results/runs/2026-06-10_w1_article_evidence/p2_hop_attribution/proxy_mt1024_5_post.json",
+  "pre_timestamp": "2026-06-10T10:54:45.642801+00:00",
+  "post_timestamp": "2026-06-10T10:54:47.261638+00:00",
+  "per_request": {
+    "vllm:time_to_first_token_seconds": {
+      "metric": "vllm:time_to_first_token_seconds",
+      "delta_sum": 0.08962798118591309,
+      "delta_count": 1.0,
+      "mean_seconds": 0.08962798118591309,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:e2e_request_latency_seconds": {
+      "metric": "vllm:e2e_request_latency_seconds",
+      "delta_sum": 0.7237071990966797,
+      "delta_count": 1.0,
+      "mean_seconds": 0.7237071990966797,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:request_queue_time_seconds": {
+      "metric": "vllm:request_queue_time_seconds",
+      "delta_sum": 3.937492147088051e-05,
+      "delta_count": 1.0,
+      "mean_seconds": 3.937492147088051e-05,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:request_prefill_time_seconds": {
+      "metric": "vllm:request_prefill_time_seconds",
+      "delta_sum": 0.07390280207619071,
+      "delta_count": 1.0,
+      "mean_seconds": 0.07390280207619071,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:request_decode_time_seconds": {
+      "metric": "vllm:request_decode_time_seconds",
+      "delta_sum": 0.6392730749212205,
+      "delta_count": 1.0,
+      "mean_seconds": 0.6392730749212205,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:inter_token_latency_seconds": {
+      "metric": "vllm:inter_token_latency_seconds",
+      "delta_sum": 0.6392730749212205,
+      "delta_count": 28.0,
+      "mean_seconds": 0.022831181247186447,
+      "count_unit": "token-gap",
+      "note": null
+    }
+  },
+  "error": null
+}
