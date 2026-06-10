@@ -83,22 +83,40 @@ Służy do:
 - późniejszego profilowania,
 - późniejszych testów kernela Triton.
 
-### Topologia GPU/CPU (stan wiedzy 2026-06-10)
+### Topologia GPU/CPU (stan wiedzy 2026-06-10; datasheet + env snapshot)
+
+Źródła: datasheet platformy `docs/operations/sys-521ge-tnrt.md` (Supermicro
+**SYS-521GE-TNRT**, płyta X13DEG-OA) i `results/raw/server_env_snapshot.json`
+(lscpu, nvidia-smi z 2026-05-06).
 
 - **Interconnect GPU↔GPU: wyłącznie PCIe** — brak NVLink i NVSwitch.
   Potwierdzone z logów vLLM (custom all-reduce: *"not supported on more than
   two PCIe-only GPUs"*; FlashInfer: *"expected on GPUs without NVSwitch"*).
-- **Płyta dwuprocesorowa (2× CPU)** — fakt podany przez właściciela serwera.
-- **Hipoteza (do weryfikacji):** linie PCIe podzielone między sockety, czyli
-  GPU wiszą pod dwoma root complexami; komunikacja par GPU z różnych socketów
-  przechodzi dodatkowo przez interconnect CPU (UPI) — ścieżka
-  `GPU → PCIe → CPU0 → UPI → CPU1 → PCIe → GPU`. Konsekwencje, jeśli prawda:
-  asymetryczny koszt all-reduce per para GPU, a ewentualne mostki NVLink 4-way
-  muszą być sparowane zgodnie z socketami (wyspy 4+4).
-- Weryfikacja zaplanowana w najbliższym slocie (`nvidia-smi topo -m`, `lscpu`,
-  `numactl --hardware`) — plan
-  `docs/plans/2026-06-10-bottleneck-followup-session.md`, cel w issue #50.
-  Po zebraniu faktów zaktualizować tę sekcję macierzą topologii.
+  **NVLink Bridge jest oficjalną opcją tego chassis** (datasheet: "GPU-GPU
+  interconnect: NVIDIA NVLink Bridge, optional") — ścieżka dokupienia mostków
+  istnieje; decyzja zakupowa = issue #50.
+- **Dual-socket, dual-root:** 2× Intel Xeon Gold 6530 (32C/64T każdy; lscpu:
+  `Socket(s): 2`). Datasheet: architektura **"Dual-Root PCIe"**, CPU↔GPU =
+  *"PCIe 5.0 x16 Switch Dual-Root"* — GPU wiszą pod switchami PCIe, po jednej
+  domenie root na socket. Dodatkowo `NUMA node(s): 4` (SNC-2: każdy socket
+  podzielony na 2 węzły NUMA).
+- **Parowanie GPU za switchami (z bus-ID, do potwierdzenia `topo -m`):**
+  GPU0/1 = `1D/1E`, GPU2/3 = `40/41`, GPU4/5 = `AA/AB`, GPU6/7 = `BB/BC` —
+  cztery pary po wspólnym switchu; zakresy adresów wskazują GPU0–3 pod CPU0,
+  GPU4–7 pod CPU1. Wynikają z tego **trzy klasy ścieżek GPU↔GPU**:
+  1. para za wspólnym switchem (najtaniej),
+  2. wspólny socket, różne switche (przez root complex),
+  3. **cross-socket przez UPI** (`GPU → PCIe → CPU0 → UPI → CPU1 → PCIe →
+     GPU`, najdrożej). TP=8 z konstrukcji przechodzi przez UPI; mostki NVLink
+  4-way muszą być sparowane zgodnie z socketami (wyspy 4+4).
+- **DCGM dostępny na hoście (tier-1):** `dcgmi` działa (potwierdzone
+  2026-06-10) — w planach sesji nie trzeba fallbacków exporter/dmon. Wzorzec
+  samplera: `dcgmi dmon -e 155,1002,1004,1005,1009,1010 -d 1000 -c <N>`
+  (power, SM_ACTIVE, PIPE_TENSOR_ACTIVE, DRAM_ACTIVE, PCIE_TX/RX).
+- Do potwierdzenia na serwerze: `nvidia-smi topo -m` (macierz PIX/PXB/NODE/SYS
+  per para GPU) — w planie
+  `docs/plans/2026-06-10-bottleneck-followup-session.md`; po zebraniu wkleić
+  macierz do tej sekcji.
 
 ### Dostępność
 
