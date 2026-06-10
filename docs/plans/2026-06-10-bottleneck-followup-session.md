@@ -55,9 +55,9 @@ potwierdzony 2026-06-10).
 | A1 | Qwen **TP=2** — pełne badanie (KROKI 1–7) | 40 | qwen ×1 |
 | A2 | Qwen **TP=8** — jw. (kotwica r_PCIe(8) dla Kimi) | 40 | qwen ×1 |
 | A3 | Qwen **TP=4** — jw. (dopełnienie krzywej) | 40 | qwen ×1 |
+| A4 (stretch) | Qwen TP=2 na parze cross-socket (GPU 0,4) — pomiar podatku UPI | 25 | qwen ×1 |
 | **CHECKPOINT 1 — commit A** | | 10 | |
 | C | Qwen TP=2 + `NCCL_P2P_DISABLE=1`: bench c=1/c=64 | 30 | qwen ×1 |
-| A4 (stretch) | Qwen TP=2 na parze cross-socket (GPU 0,4) — pomiar podatku UPI | 25 | qwen ×1 |
 | B | Kimi TP=8 + profiler env: load, profile c=1, podsumowanie traców | 60 | kimi ×1 |
 | D | restore Kimi (plain compose) + close-out + commit | 40 | kimi ×1 |
 
@@ -71,20 +71,30 @@ Przy braku czasu tnij w kolejności: **A4 → C → A3 (TP4)**.
 
 ```bash
 cd ~/nanoserve-mini
+# UWAGA: celowo BEZ `set -euo pipefail` — w interaktywnej sesji SSH errexit
+# zamyka shell (logout) przy pierwszym błędzie i tracisz funkcje/zmienne
+# z Cz. 0. Fail-fast siedzi jawnie w funkcjach (`|| return 1` + statusy).
+
 RUN_DIR=results/runs/$(date +%F)_bottleneck
 P0OUT="$RUN_DIR/qwen_tp_curve"; PROF="$RUN_DIR/kimi_profiler"
 COMPOSE="serving/compose/docker-compose.kimi-k2.6.yml"
+QWEN_COMPOSE="serving/compose/docker-compose.qwen3.6.yml"
 OBS="serving/compose/docker-compose.observability.yml"
 mkdir -p "$P0OUT" "$PROF" "$RUN_DIR/session"
 
 git status && git pull --ff-only origin main
 set -a; source .env; set +a
 
+docker network inspect nanoserve-net >/dev/null 2>&1 || docker network create nanoserve-net
 docker compose -f "$OBS" up -d
 curl -fsS http://127.0.0.1:9090/-/healthy && echo "prometheus OK"
 
 # serving DOWN na czas Qwen (VRAM!)
 docker compose -f "$COMPOSE" stop litellm open-webui vllm vllm-small 2>/dev/null || true
+docker compose -f "$QWEN_COMPOSE" stop vllm 2>/dev/null || true
+# usuń zatrzymany kontener `vllm`, żeby start z compose Qwena nie trafił na
+# konflikt nazwy (oba pliki deklarują container_name: vllm)
+docker compose -f "$COMPOSE" rm -f vllm 2>/dev/null || true
 
 git rev-parse HEAD > "$RUN_DIR/session/start_commit.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
@@ -103,6 +113,34 @@ sample_window () {  # $1=label $2=sekundy
   out="$P0OUT/$1"; date +%s > "${out}_start_epoch.txt"
   dcgmi dmon -e 155,1002,1004,1005,1009,1010 -d 1000 -c "$2" > "${out}_dcgmi.txt" 2>&1
   date +%s > "${out}_end_epoch.txt"
+}
+
+wait_http_health () {  # $1=url $2=attempts $3=sleep_seconds
+  url="$1"; attempts="$2"; pause="$3"
+  for _ in $(seq 1 "$attempts"); do
+    curl -fsS "$url" >/dev/null 2>&1 && return 0
+    sleep "$pause"
+  done
+  echo "health timeout: $url" >&2
+  return 1
+}
+
+start_sample_window () {  # $1=label $2=seconds
+  sample_window "$1" "$2" &
+  SAMPLE_PID=$!
+}
+
+stop_sample_window () {
+  # kończy okno RAZEM z benchem: ubija dcgmi (dziecko podpowłoki) zamiast
+  # czekać do końca okna — czas okna to tylko sufit; zero martwego czekania,
+  # zero próbek idle w ogonie, sampler nigdy nie przeżyje do następnego configu
+  status=0
+  if [ -n "${SAMPLE_PID:-}" ]; then
+    pkill -TERM -P "$SAMPLE_PID" 2>/dev/null || true
+    wait "$SAMPLE_PID" || status=$?
+    unset SAMPLE_PID
+  fi
+  return "$status"
 }
 ```
 
@@ -155,75 +193,87 @@ domyślny (kolejność urządzeń CUDA): TP=2 → GPU{0,1} = wspólny switch PCI
 TP=4 → GPU{0–3} = wspólny socket, TP=8 → wszystkie = przez UPI; zanotuj to w
 session notes przy każdym wyniku (klasa łącza ≠ tylko liczba ranków).
 
-Override parametryzowany `QWEN_TP` (komenda = 1:1 z `engine_cmd.json` runów
-2026-06-10, tylko TP zmienny):
+Dedykowany compose Qwen ma ten sam service/container `vllm` i port `8000`, więc
+observability zostaje bez zmian. TP, placement i warianty testowe ustawiamy przez
+zmienne środowiskowe:
 
 ```bash
-cat > /tmp/qwen-override.yml <<'EOF'
-services:
-  vllm:
-    command: >-
-      --model Qwen/Qwen3.6-35B-A3B --served-model-name=Qwen3.6
-      --host=0.0.0.0 --port=8000 --trust-remote-code
-      --tensor-parallel-size ${QWEN_TP:-2} --enable-expert-parallel
-      --enable-auto-tool-choice --max-model-len 65536 --max-num-seqs 32
-      --gpu-memory-utilization 0.9 --tool-call-parser qwen3_coder
-      --reasoning-parser qwen3 --mm-encoder-tp-mode data
-      --speculative-config '{"method":"mtp","num_speculative_tokens":3, "max_model_len":8192}'
-EOF
-
-run_qwen_tp () {  # $1 = TP (2|4|8), opcjonalnie $2 = sufiks tagu (np. x04)
+run_qwen_tp () {  # $1 = TP (2|4|8), optional $2=tag suffix, optional $3=c1-only
   tp="$1"; tag="tp${tp}${2:-}"
+  mode="${3:-full}"
   export QWEN_TP="$tp"
+  compose_args=(-f "$QWEN_COMPOSE")
+  if [ -n "${QWEN_EXTRA_COMPOSE:-}" ]; then
+    compose_args+=(-f "$QWEN_EXTRA_COMPOSE")
+  fi
 
-  # ── KROK 1: start silnika z zadanym TP ──────────────────────────────
-  docker compose -f "$COMPOSE" -f /tmp/qwen-override.yml ${EXTRA_OVR:+-f $EXTRA_OVR} \
-    up -d --force-recreate vllm
-  for _ in $(seq 1 120); do curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1 && break; sleep 5; done
+  # KROK 1: start silnika z zadanym TP (TP=8: load + capture cudagraphów
+  # potrafi trwać >10 min — limit 20 min, health kończy pętlę wcześniej)
+  docker compose "${compose_args[@]}" up -d --force-recreate vllm || return 1
+  wait_http_health http://127.0.0.1:8000/health 240 5 || return 1
 
   # ── KROK 2: FAIL-FAST verify — runtime musi potwierdzić TP (lekcja 06-10);
-  #            log i engine_cmd zawsze z kontenera `vllm`, nie ze starych ──
+  #            verify grepem po PEŁNYM logu (tail 500 utnie linię configu
+  #            przy TP=8 i przy NCCL_DEBUG=INFO); artefakty z kontenera `vllm` ──
   docker inspect vllm --format '{{json .Config.Cmd}}' > "$P0OUT/engine_cmd_${tag}.json"
-  docker logs vllm 2>&1 | grep -o "tensor_parallel_size=[0-9]*" | head -1 | tee "$P0OUT/verify_${tag}.txt"
+  docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' > "$P0OUT/engine_env_${tag}.txt"
+  docker logs vllm --tail 500 > "$P0OUT/log_start_qwen_${tag}.txt" 2>&1
+  docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$P0OUT/verify_${tag}.txt"
   grep -q "tensor_parallel_size=${tp}" "$P0OUT/verify_${tag}.txt" || { echo "TP MISMATCH — przerwij"; return 1; }
 
   # ── KROK 3: prereqs benchu w świeżym kontenerze + dataset (po każdym
   #            recreate od zera — pip i /tmp nie przeżywają) ──────────────
-  docker compose -f "$COMPOSE" cp \
-    results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl
-  docker compose -f "$COMPOSE" exec vllm bash -c \
-    'export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python -c "import pandas,datasets;print(\"deps ok\")"'
+  docker compose "${compose_args[@]}" cp \
+    results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl || return 1
+  docker compose "${compose_args[@]}" exec vllm bash -c \
+    'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python -c "import pandas,datasets;print(\"deps ok\")"' || return 1
+
+  run_failed=0
 
   # ── KROK 4: okno c=1 (random 64-in/512-out, ignore-eos) + liczniki dcgmi;
-  #            sampler MUSI skończyć przed kolejnym oknem (wait!) ─────────
-  sample_window "qwen_${tag}_c1" 240 & S=$!
-  docker compose -f "$COMPOSE" exec vllm bash -c '
+  #            600 s to sufit — stop_sample_window utnie okno na końcu benchu ──
+  start_sample_window "qwen_${tag}_c1" 600
+  docker compose "${compose_args[@]}" exec vllm bash -c '
     export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
     vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
       --model Qwen3.6 --trust-remote-code --tokenizer Qwen/Qwen3.6-35B-A3B \
       --dataset-name random --random-input-len 64 --random-output-len 512 \
       --ignore-eos --num-warmups 3 --num-prompts 40 --max-concurrency 1 \
       --save-result --result-dir /tmp/qbench --result-filename '"${tag}"'_c1.json'
-  wait $S
+  bench_status=$?
+  stop_sample_window || { echo "WARN: sampler c1 (${tag}) exit != 0"; run_failed=1; }
+  [ "$bench_status" -ne 0 ] && { echo "WARN: bench c1 (${tag}) failed"; run_failed=1; }
 
   # ── KROK 5: okno c=64 (SWE custom, 256-out) + liczniki dcgmi ───────────
-  sample_window "qwen_${tag}_c64" 300 & S=$!
-  docker compose -f "$COMPOSE" exec vllm bash -c '
-    export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
-    vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
-      --model Qwen3.6 --trust-remote-code --tokenizer Qwen/Qwen3.6-35B-A3B \
-      --dataset-name custom --dataset-path /tmp/swe_bench_vllm.jsonl \
-      --custom-output-len 256 --ignore-eos --num-prompts 600 --max-concurrency 64 \
-      --save-result --result-dir /tmp/qbench --result-filename '"${tag}"'_c64.json'
-  wait $S
+  if [ "$mode" = "full" ] && [ "$run_failed" -eq 0 ]; then
+    start_sample_window "qwen_${tag}_c64" 900
+    docker compose "${compose_args[@]}" exec vllm bash -c '
+      export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+      vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
+        --model Qwen3.6 --trust-remote-code --tokenizer Qwen/Qwen3.6-35B-A3B \
+        --dataset-name custom --dataset-path /tmp/swe_bench_vllm.jsonl \
+        --custom-output-len 256 --ignore-eos --num-prompts 600 --max-concurrency 64 \
+        --save-result --result-dir /tmp/qbench --result-filename '"${tag}"'_c64.json'
+    bench_status=$?
+    stop_sample_window || { echo "WARN: sampler c64 (${tag}) exit != 0"; run_failed=1; }
+    [ "$bench_status" -ne 0 ] && { echo "WARN: bench c64 (${tag}) failed"; run_failed=1; }
+  fi
 
-  # ── KROK 6: NATYCHMIAST zbiór artefaktów (zanim cokolwiek ruszysz) ─────
-  docker compose -f "$COMPOSE" cp vllm:/tmp/qbench "$P0OUT/bench_${tag}/"
-  ls "$P0OUT/bench_${tag}/" | grep -c json   # musi być 2 (c1 + c64) — inaczej powtórz cp
+  # ── KROK 6: ZAWSZE zbierz artefakty — także po porażce benchu (lekcja
+  #            06-10: brak `cp` od razu = bezpowrotna utrata JSON-ów) ─────
+  rm -rf "$P0OUT/bench_${tag}"
+  mkdir -p "$P0OUT/bench_${tag}"
+  docker compose "${compose_args[@]}" cp vllm:/tmp/qbench/. "$P0OUT/bench_${tag}/" || run_failed=1
+  expected_json=2; [ "$mode" = "c1-only" ] && expected_json=1
+  json_count=$(find "$P0OUT/bench_${tag}" -maxdepth 1 -name '*.json' | wc -l)
+  test "$json_count" -eq "$expected_json" || { echo "bench JSON count mismatch (${tag}): got $json_count expected $expected_json"; run_failed=1; }
 
   # ── KROK 7: log z WŁAŚCIWEGO kontenera + stan kart ─────────────────────
-  docker logs vllm --tail 400 > "$P0OUT/log_qwen_${tag}.txt" 2>&1
+  #            PEŁNY log, bez tail — kontener jest świeży per run, więc log
+  #            obejmuje tylko ten run; tail 400 ucinałby c=1 i WARNING-i
+  docker logs vllm > "$P0OUT/log_qwen_${tag}.txt" 2>&1
   nvidia-smi > "$P0OUT/nvidia_smi_${tag}.txt"
+  return "$run_failed"
 }
 
 run_qwen_tp 2     # A1 — re-run wybrakowanego TP=2
@@ -243,21 +293,16 @@ GPU{0,4} (różne sockety) zmienia wyłącznie klasę łącza — różnica TPOT
 czysty podatek UPI:
 
 ```bash
-cat > /tmp/qwen-cvd04.yml <<'EOF'
-services:
-  vllm:
-    environment:
-      CUDA_VISIBLE_DEVICES: "0,4"
-EOF
-EXTRA_OVR=/tmp/qwen-cvd04.yml run_qwen_tp 2 x04   # wystarczy KROK 1–4 + 6–7;
-                                                  # c=64 można pominąć (czas)
-unset EXTRA_OVR
+export QWEN_CUDA_VISIBLE_DEVICES=0,4
+run_qwen_tp 2 x04 c1-only
+grep '^CUDA_VISIBLE_DEVICES=0,4$' "$P0OUT/engine_env_tp2x04.txt" || echo "ZŁY PLACEMENT — wynik A4 nieważny"
+unset QWEN_CUDA_VISIBLE_DEVICES
 ```
 
 ## ⏸ CHECKPOINT 1 — commit A
 
 ```bash
-git add "$RUN_DIR" && git commit -m "bench: qwen TP-curve TP2/TP4 + TP2 recovery (bottleneck follow-up)" && git push origin main
+git add "$RUN_DIR" && git commit -m "bench: qwen TP-curve TP2/TP4/TP8 + TP2 recovery (bottleneck follow-up)" && git push origin main
 ```
 
 ---
@@ -272,24 +317,32 @@ services:
       NCCL_P2P_DISABLE: "1"
       NCCL_DEBUG: "INFO"
 EOF
-export QWEN_TP=2
-docker compose -f "$COMPOSE" -f /tmp/qwen-override.yml -f /tmp/qwen-nop2p.yml up -d --force-recreate vllm
-for _ in $(seq 1 120); do curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1 && break; sleep 5; done
-docker logs vllm 2>&1 | grep -iE "P2P (is )?disabled|P2P_DISABLE" | head -3 | tee "$P0OUT/verify_nop2p.txt"   # dowód dźwigni
+export QWEN_EXTRA_COMPOSE=/tmp/qwen-nop2p.yml
+run_qwen_tp 2 _nop2p
+docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' \
+  | grep -E '^NCCL_P2P_DISABLE=1$' | tee "$P0OUT/verify_nop2p_env.txt"
+docker logs vllm 2>&1 \
+  | grep -im3 -E "P2P (is )?disabled|P2P_DISABLE" | tee "$P0OUT/verify_nop2p_log.txt" || true
+# (pełny log, nie tail — NCCL_DEBUG=INFO wypycha linie initu daleko za 500)
+unset QWEN_EXTRA_COMPOSE
 ```
 
-Potem identyczny pair benchy jak w `run_qwen_tp` (tag `tp2_nop2p`, prereqs po
+`run_qwen_tp` wykonuje identyczny pair benchy (tag `tp2_nop2p`, prereqs po
 recreate, cp od razu). **Interpretacja:** TPOT(tp2_nop2p) ≫ TPOT(tp2) →
 komponenta komunikacyjna potwierdzona przyczynowo i zgrubnie zmierzona
 (różnica = koszt przejścia P2P→host na tych samych wiadomościach).
 
-Po C: `docker compose -f "$COMPOSE" stop vllm && docker compose -f "$COMPOSE" rm -f vllm` (czyste pole pod Kimi).
+Po C: `docker compose -f "$QWEN_COMPOSE" stop vllm && docker compose -f "$QWEN_COMPOSE" rm -f vllm && unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES QWEN_EXTRA_COMPOSE` (czyste pole pod Kimi).
 
 ---
 
 ## Cz. B — Kimi TP8 pod torch profilerem (60 min)
 
 ```bash
+docker compose -f "$QWEN_COMPOSE" stop vllm 2>/dev/null || true
+docker compose -f "$QWEN_COMPOSE" rm -f vllm 2>/dev/null || true
+unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES QWEN_EXTRA_COMPOSE
+
 cat > /tmp/kimi-profiler.yml <<'EOF'
 services:
   vllm:
@@ -297,7 +350,7 @@ services:
       VLLM_TORCH_PROFILER_DIR: /tmp/vllm_profile
 EOF
 docker compose -f "$COMPOSE" -f /tmp/kimi-profiler.yml up -d --force-recreate vllm
-for _ in $(seq 1 180); do curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1 && break; sleep 10; done
+wait_http_health http://127.0.0.1:8000/health 180 10
 docker inspect vllm --format '{{json .Config.Cmd}}' > "$PROF/engine_cmd.json"   # TP8 + Eagle3 bez zmian
 
 # PROFIL KRÓTKI: 1 request c=1 (kilka sekund decode — trace i tak będzie duży)
@@ -306,18 +359,28 @@ uv run python -m benchmarks.scripts.measure_ttft_once \
   --base-url http://127.0.0.1:8000 --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" \
   --max-tokens 256 --output "$PROF/profiled_request_c1.json"
 curl -fsS -X POST http://127.0.0.1:8000/stop_profile
-sleep 10
+# trace TP=8 flushuje się nawet kilka minut po stop_profile (8 ranków pisze
+# duże JSON-y) — czekaj aż pliki się pojawią, potem aż rozmiary przestaną rosnąć
+for _ in $(seq 1 60); do
+  n=$(docker compose -f "$COMPOSE" exec vllm bash -c 'ls /tmp/vllm_profile 2>/dev/null | wc -l' | tr -d '[:space:]')
+  [ "${n:-0}" -gt 0 ] && break
+  sleep 10
+done
 docker compose -f "$COMPOSE" exec vllm ls -la /tmp/vllm_profile/
+sleep 30
+docker compose -f "$COMPOSE" exec vllm ls -la /tmp/vllm_profile/   # rozmiary stabilne? dopiero wtedy kopiuj
 ```
 
 > ⚠️ **Traców NIE commitujemy** (polityka repo — duże profile jak Nsight).
-> Kopiuj poza repo: `docker compose -f "$COMPOSE" cp vllm:/tmp/vllm_profile ~/nanoserve-local/vllm_profile_$(date +%F)/`
+> Kopiuj poza repo: `mkdir -p ~/nanoserve-local && docker compose -f "$COMPOSE" cp vllm:/tmp/vllm_profile ~/nanoserve-local/vllm_profile_$(date +%F)/`
 > Do repo idzie tylko podsumowanie poniżej + ścieżka lokalna w session notes.
 
 Podsumowanie tracu (rank 0) na serwerze — udział NCCL vs compute vs przerwy:
 
 ```bash
-T=$(ls ~/nanoserve-local/vllm_profile_$(date +%F)/*.json* | head -1)
+TRACE_DIR=~/nanoserve-local/vllm_profile_$(date +%F)
+T=$(find "$TRACE_DIR" -maxdepth 1 -type f \( -name '*.json' -o -name '*.json.gz' \) | sort | head -n 1)
+test -n "$T" || { echo "no profiler trace found in $TRACE_DIR"; exit 1; }
 uv run python - "$T" <<'EOF' | tee "$PROF/trace_summary_rank0.txt"
 import json,gzip,sys,collections
 p=sys.argv[1]; op=gzip.open if p.endswith('.gz') else open
@@ -353,16 +416,20 @@ drugi profil pod c=8 (8× `measure_ttft_once &` w trakcie start/stop_profile).
 ## Cz. D — restore + close-out (40 min)
 
 ```bash
-docker compose -f "$COMPOSE" up -d vllm vllm-small litellm        # plain compose, prod config
-for _ in $(seq 1 180); do curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1 && break; sleep 10; done
+docker compose -f "$COMPOSE" up -d --force-recreate vllm vllm-small litellm open-webui        # plain compose, prod config
+wait_http_health http://127.0.0.1:8000/health 180 10
 docker inspect vllm --format '{{json .Config.Cmd}}' > "$RUN_DIR/session/restore_engine_cmd.json"
+if docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^VLLM_TORCH_PROFILER_DIR='; then
+  echo "profiler env still present after restore" >&2
+  exit 1
+fi
 uv run python -m benchmarks.scripts.measure_ttft_once --base-url http://127.0.0.1:8000 \
   --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" --max-tokens 1024 \
   --output "$RUN_DIR/session/restore_smoke.json"
 
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_end.txt"
 find "$RUN_DIR" -type f | sort > "$RUN_DIR/session/artifact_manifest.txt"
-$EDITOR "$RUN_DIR/session/session_notes.md"
+"${EDITOR:-nano}" "$RUN_DIR/session/session_notes.md"
 # notuj: ścieżkę lokalną traców, każdy verify_*, odchylenia; dopisz erratę do
 # 2026-06-10_extra (log_cap_qwen_tp2.txt = log kontenera TP1; brak bench TP2)
 
