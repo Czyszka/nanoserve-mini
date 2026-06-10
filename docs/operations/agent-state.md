@@ -8,9 +8,11 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `a7ce83f`
-- Last summarized at: 2026-05-20
-- 2026-05-20 sync: laptop follow-up - #31 Kimi parser fix merged, #32 benchmark artifact ignore cleanup closed, #33 server session summary added, #35 Grafana dashboard provisioning merged, `rg` installed on the laptop and wired into env checks.
+- Last summarized commit: `520d788`
+- Last summarized at: 2026-06-10
+- 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
+  compacted in place (period summaries + source SHA kept inline); full history
+  via `git show 520d788:docs/operations/agent-state.md`.
 
 ---
 
@@ -249,34 +251,6 @@ status, not a task list. Update when work moves.
 
 ## Immediate next steps
 
-Detailed tasks live in issues; `docs/plans/2026-05-19-post-server-laptop-plan.md`
-sequences them. This section only points at active work — it is not a task list.
-
-- **#37** — server evidence for T1/T6/T3 is **collected** (2026-06-05,
-  `d0bb634`); remaining work is the laptop write-up below, not another slot.
-- **#34** — after W1 evidence is coherent, validate Grafana panels against live
-  metric names under load; do not block W1 on DCGM/GPU hardware panels.
-
-**W1 write-up — COMPLETE (2026-06-05 laptop pass).** All eight threads in
-`docs/writeups/w1/` are written from committed evidence (`d0bb634`), each with
-a `## Evidence` provenance block; the index
-(`docs/writeups/w1-multi-model-serving-baseline.md`) has its baseline table,
-KV-budget synthesis, and status tables filled. Commits: T6 `bfe82bf`, T1
-`eaa3694`, T3 `77df2f5`, T4/T8 `023f691`, T5 `c2be652`, INDEX `5fc9648`.
-Honesty corrections folded in: T6 A/B has a 2-flag impurity and length-confound
-(lead repeated p50 2.0×, not single-shot 3.8×); T1+T3 unified as the same
-negative-KV-budget crash; T8 strip upgraded to a `completed:false` usability
-hazard. Structure kept modular per decision; no GPU slot needed to publish.
-
-**Next concrete step.** W1 article deepening
-(`docs/plans/2026-06-09-w1-article-deepening.md`): **Etap 3 (integracja P0+P2)
-DONE 2026-06-10** — article now carries the counters verdict and hop
-attribution. Remaining: **Etap 1** laptop-only layer (TL;DR, mermaid figures,
-methods + synthesis sections, statistics pass, primary references) and
-optionally propagating the 2026-06-10 evidence rows into T2/T5/T8. Other
-post-W1 work unchanged: #34 (full DCGM panels, comms-level lever for the
-all-reduce attribution), #44 (R2–R8 remainder), #48, DeepSeek real-generation
-workload.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -470,108 +444,13 @@ Docs-only: hardened the four published W1 threads against vLLM source + primary
 external sources (commits `9473660` T1, `887ebe7` T2, `6f3474d` T3, `0f635d9`
 T4). No `ruff` / `pytest` run.
 
-2026-06-05 server slot (T3 clean + T6 ON start + LiteLLM strip diagnosis):
-
-```text
-git diff --check    OK (artefakty + compose; no .py touched)
-```
-
-Commits: `6c9db1c` compose defaults (Kimi 0.65→0.6, +max-num-batched-tokens
-4096, speculative `max_model_len:8192`; DeepSeek 0.25→0.2, speculative
-`max_model_len:8192`); `208e072` T3 sweep (`results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/`:
-`log_cap015_FAILED.txt`, `log_cap0{20,25}.txt` + matching `verify_cap*.txt`
-+ `nvidia_smi_cap*.txt` + `ttft_cap0{20,25}.json`); `1ab8057` T6 ON
-(`t6_eagle3/engine_cmd_eagle3_on.json` + `kimi_log_eagle3_on.txt`);
-`277143b` + `cf160cf` Kimi K2.6 paired benches `run-01` (proxy :4000,
-max_tokens 64, TTFT null, 3 chunks, 0 reasoning_chars) vs `run-03` (direct
-:8000, max_tokens 64, TTFT_any 0.214 s, 26 chunks, 242 reasoning_chars).
-
-2026-06-02 W1 T4 wording pass:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: rewrote T4 in a more formal technical-note style. No `ruff`
-or `pytest` run.
-
-2026-06-02 W1 T4 LiteLLM Proxy write-up:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: updated the T4 W1 justification, W1 tracker, and this handoff
-state. No `ruff` or `pytest` run.
-
-2026-06-02 W1 close-out tracker:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: updated the W1 top-level draft tracker and this handoff state.
-No `ruff` or `pytest` run.
-
-2026-06-02 W1 T7 host-directories write-up:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: updated the T7 W1 justification and this handoff state. No
-`ruff` or `pytest` run.
-
-2026-05-27 session documentation cleanup:
-
-```text
-GitHub contents API writes only; no local validation run in this environment.
-```
-
-Added `session/session_notes.md`, `session/artifact_manifest.txt`, and this agent-state update. No executable code changed. The many-file run-directory rename remains deferred to a local git checkout.
-
-2026-05-26 documentation/config plan hardening:
-
-```text
-git diff --check    OK
-```
-
-Updated the 2026-05-27 server-session plan only, plus `.env.example`
-documentation for `DEEPSEEK_GPU_MEM_UTIL`; no executable code changed.
-
-2026-05-20 laptop validation (issue #31):
-
-```text
-uv run ruff check .     OK, all checks passed
-uv run pytest -q        OK, 121 passed
-```
-
-Parser also smoke-checked against the committed Kimi stream-debug artifacts:
-reasoning-only `stream_short_prompt` now reports `completed` with
-`ttft_any_token_seconds` set (was `TTFT: n/a`); `stream_exact_ok` and
-`stream_reasoning_prompt` report both content and any-token TTFT.
-
-2026-05-21 documentation review:
-
-```text
-git diff --check                                      OK
-uv run pytest benchmarks\scripts_tests\test_client.py benchmarks\scripts_tests\test_measure_ttft_once.py -q
-                                                       OK, 39 passed
-```
-
-W1 T2 was tightened against repository evidence: DeepSeek is named as the
-content-TTFT control, raw reasoning excerpts were redacted to structural
-placeholders, `nonstream_short_prompt.sse.json` is no longer treated as a
-behavioral control, and the additive schema wording now distinguishes field
-semantics from schema identifier stability.
-
-2026-05-19 server validation:
-
-- Kimi and DeepSeek endpoints responded directly.
-- OpenWebUI communicated with the running vLLM services.
-- LiteLLM Proxy responded to `/v1/models` and `/v1/chat/completions` for both upstream models.
-- `run_bench_suite.py` completed for both `kimi-k2.6` and `DeepSeek-V4-Flash` through LiteLLM Proxy.
-- Prometheus and Grafana containers were started. Target/dashboard quality still needs follow-up.
+> Pre-2026-06-06 validation entries compacted 2026-06-10. Source: `520d7883127452cc5ef50dca52fecfdb2e62fabf`.
+> Full history: `git show 520d7883127452cc5ef50dca52fecfdb2e62fabf:docs/operations/agent-state.md`.
+> Summary (2026-05-19 → 2026-06-05): docs/config-only changes validated with
+> `git diff --check`; `.py` changes (#31 parser fix, bench-suite launcher)
+> with `uv run ruff check .` + `uv run pytest` (113→121 passed); server
+> slots validated live (direct endpoints, LiteLLM proxy, bench suite for both
+> models, observability bootstrap, 2026-06-05 evidence commits).
 
 ---
 
@@ -778,214 +657,13 @@ Newest entry first.
   undecided.
 - Next: continue review with T5 (observability) or pick T6/T7/T8.
 
-### 2026-06-05 (laptop) - W1 session organization, audit, run-dir cleanup
-
-- Why: skrupulatnie podsumować i uporządkować dużą sesję serwerową przed
-  pisaniem write-upów W1.
-- Did:
-  - Audyt integralności wykrył, że końcowy commit `fc97700`
-    ("results od 202600605") **re-runował i nadpisał** w miejscu wyniki
-    `kimi run-05` (OFF) + `deepseek run-01/02`, rozjeżdżając repo z
-    `bench_off.log` i handoffem. Czyste (log==json): `run-04` ON,
-    `run-01/03` T8.
-  - **T6 OFF miał dwie generacje:** paired @09:17 (5 runs, single-shot
-    2489 ms, 143 chunks) i rerun @10:02 (10 runs, 1365 ms, 62 chunks).
-    Odzyskałem paired z `ec3df59` (`git checkout`) → osobny katalog;
-    rerun zachowany obok. Para 5×5 jest właściwym A/B do ON. Handoff PM
-    cytował poprawne (paired) liczby — pomyłka była tylko taka, że w
-    working tree leżał rerun.
-  - **Run-diry przemianowane** (`git mv`, run-id zostaje prefiksem):
-    `run-04_eagle3-on`, `run-05_eagle3-off-paired`,
-    `run-05_eagle3-off-rerun`, `run-01_t8-proxy`, `run-03_t8-direct`,
-    deepseek `run-0{1,2}_baseline`. Tylko `agent-state.md` referował
-    stare nazwy poza `results/`.
-  - **Nowe dokumenty:**
-    `results/runs/2026-06-05_w1_evidence/session/session_notes.md`
-    (audyt + tabele liczb + mapowanie), `session/artifact_manifest.txt`,
-    `results/summaries/w1-evidence-cross-session.md` (cross-session view
-    27.05 / 03.06 / 05.06 per wątek W1).
-  - SWE-bench dataset: decyzja **zostawić** (workload do #34), udokumentowany.
-- Validation: `git diff --check` (poniżej); brak `.py` touched (rename +
-  docs/bench). `first_ttft.json` zostawiony bez opisu (do dopytania).
-- Next: write-upy W1 — T6 → T1 → T3 → T8/T4 → T5.
-
-### 2026-06-05 (PM) - W1 server slot close-out: T6 OFF + T1 DEP + restore
-
-- Why: dokończyć blok Kimi z planu (Cz. C: T6 OFF + T1 DEP + restore) po
-  porannym T3 clean i T6 ON.
-- Did (commit `ec3df59` + `3b12fff` gitignore allowlist):
-  - **T6 Eagle3 OFF:** `engine_cmd_eagle3_off.json` (brak speculative,
-    TP=8 zachowany), `bench_off.log`, `kimi_log_eagle3_off.txt`, auto-id
-    `results/runs/2026-06-05_kimi-k2-6_run-05/` z pełnymi metrykami.
-  - **T6 paired numbers (single-shot latency):** ON TTFT(content) 652 ms,
-    TPOT(any) 6.92 ms/tok, 24 chunki; OFF 2489 ms, 16.55 ms/tok, 143
-    chunki. TTFT(any) ≈ 204 ms w obu (Eagle3 nie pomaga pierwszemu
-    tokenowi — zgodnie z teorią). Repeated p50 TTFT: ON 837 ms vs OFF
-    1675 ms. Eagle3 ≈ 3.8× E2E, ≈ 2.4× TPOT(any).
-  - **T1 DEP:** `dep_state.txt` = `exited 1` (czysty crash startu),
-    pełne `dep_full.log` + `dep_startup.log` + `dep_engine_cmd.json`.
-  - **C4 restore:** Kimi z powrotem w Eagle3-ON, `restore_engine_cmd.json`
-    potwierdza speculative-config, `restore_smoke.json` completed=True.
-  - **T5 (boczne):** 12×10s snapshoty `vllm:num_requests_*`,
-    `kv_cache_usage_perc`, `rate(vllm:generation_tokens_total[1m])` w
-    obu wariantach (`t5_metrics/eagle3-{on,off}/`).
-  - **.gitignore allowlist:** dorzucone `!t6_eagle3/bench_*.log` i
-    `!t1_dep/dep_*.log` żeby plan-named evidence logi weszły do repo bez
-    `git add -f`.
-- Validation: `git diff --check` OK; brak `.py` touched (manifest +
-  artefakty + plan tweaks).
-- Caveats:
-  - Auto-id run dirs wyszły jako `run-04` (ON) i `run-05` (OFF) zamiast
-    planowych `_eagle3-{on,off}` — `run_bench_suite.py` nie respektuje
-    `--run-id` albo użyto innej ścieżki. Nie blokujące; do laptop-side
-    follow-up: ewentualnie udoskonalić skrypt albo doczepić alias.
-  - Commit `ec3df59` zawiera **`results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl`** (300 SWE-bench promptów) — to nie jest z planu W1 ani z roadmap Phase 1; flaga scope-creep, do decyzji laptop-side (zostawić jako dataset do późniejszego workloadu albo wyrzucić z repo, dodać do `.gitignore`).
-- Next: laptop write-up W1 threads (T6 → T1 → T3 → T8/T4 → T5 dashboard).
-
-### 2026-06-05 - W1 server slot: compose defaults, T3 clean, T6 ON, LiteLLM strip
-
-- Why: domknąć T3 (po nieudanej próbie 2026-06-03), wystartować T6 Eagle3
-  ON/OFF, zweryfikować że parser TTFT/TPOT działa po stronie Kimi.
-- Did (5 commitów):
-  - `6c9db1c` — compose hardening: Kimi `--gpu-memory-utilization 0.6` (z
-    0.65), `--max-num-batched-tokens 4096`, speculative-config
-    `"max_model_len":8192`; DeepSeek default `0.2` (z 0.25), speculative
-    `"max_model_len":8192`.
-  - `208e072` — **T3 clean sweep**: 0.15 hard-fail (Engine core init
-    traceback), 0.20 i 0.25 OK z `verify_cap*.txt` zgodnymi z runtime +
-    `ttft_cap*.json` + `nvidia_smi_cap*.txt`. Nazwa↔runtime zgadza się
-    pierwszy raz.
-  - `1ab8057` — **T6 Eagle3 ON capture**: `engine_cmd_eagle3_on.json` +
-    `kimi_log_eagle3_on.txt` (1k linii) + drobny tweak planu.
-  - `277143b` + `cf160cf` — **paired Kimi K2.6 benches** ujawniające
-    LiteLLM `delta.reasoning` strip: `run-01` (proxy :4000, 3 chunki, 0
-    reasoning_chars, TTFT null) vs `run-03` (direct :8000, 26 chunków,
-    242 reasoning_chars, TTFT_any 0.214 s, TPOT_any 8.6 ms/tok).
-- Diagnoza LiteLLM: proxy w wersji `main-v1.66.0-stable` strippuje pole
-  `delta.reasoning` specyficzne dla Kimi K2.6 (DeepSeek `reasoning_content`
-  przepuszcza). Parser fix #31 nadal poprawny — direct :8000 daje czyste
-  metryki. Wniosek dla W1 T8/T4: proxy **nie nadaje się** jako jedyny
-  driver dla Kimi reasoning streams — konkretny, paired-evidence limit.
-- Workaround dla benchów: max_tokens=64 jest za małe dla Kimi (model nie
-  zdąży wyjść z reasoning); user podbił max_tokens i kontynuuje T6.
-- Skipped / open: T6 Eagle3 OFF (jeszcze do zrobienia w tym slocie), T1
-  DEP capture, T5 dashboard validation.
-- Validation: `git diff --check` OK; brak `.py` w tych commitach
-  (`pyproject.toml`/`uv.lock` w 1ab8057 — sprawdzić co przybyło przy
-  najbliższym pull-cycle).
-- Next: dokończyć T6 OFF (lustro ON minus `--speculative-config`, ten sam
-  max_tokens, direct :8000) + T1 DEP override (`--data-parallel-size 8`,
-  `restart:"no"`), restore Eagle3-ON. Laptop: write-up T3/T6/T8 z nowymi
-  liczbami.
-
-### 2026-06-02 - W1 T4 wording pass
-
-- Why: make T4 read less like tool advocacy and more like a scoped technical
-  justification.
-- Did: rewrote `docs/writeups/w1/t4-litellm-proxy.md` around the question,
-  configuration evidence, narrow claim, implementation limits, proxy-hop
-  trade-off, and rejected alternatives.
-- Validation: `git diff --check` OK.
-- Next: review T4 against the final W1 narrative, then continue the T1/T3/T6
-  evidence path.
-
-### 2026-06-02 - W1 T4 LiteLLM Proxy justification
-
-- Why: turn the T4 placeholder into a concrete justification for LiteLLM Proxy
-  as the Phase 1 multi-model access layer.
-- Did: updated `docs/writeups/w1/t4-litellm-proxy.md` with repo config
-  evidence, current-scope limits, the T8 overhead trade-off, rejected
-  alternatives, and future link #39. Updated the W1 tracker to mark T4 done.
-- Validation: `git diff --check` OK.
-- Next: continue the path A close-out with the 2026-06-03 server slot for T1,
-  T3, and T6, then fill the baseline table after evidence lands.
-
-### 2026-06-02 - W1 close-out tracker
-
-- Why: keep the remaining W1 work visible and grouped by what unblocks it.
-- Did: updated `docs/writeups/w1-multi-model-serving-baseline.md` Thread map,
-  evidence-quality tracker, path A close-out grouping, and follow-up list. T7 is
-  marked done; T8 full R1-R8 remains intentionally deferred under #44.
-- Validation: `git diff --check` OK.
-- Next: run the 2026-06-03 server slot for T1 DEP, T3 clean VRAM sweep, and T6
-  Eagle3 ON/OFF, then do the laptop write-up pass.
-
-### 2026-06-02 - W1 write-up update from 2026-05-27 evidence (laptop)
-
-- Why: turn the committed 2026-05-27 server artifacts into W1 write-up material per `docs/plans/2026-05-27-laptop-w1-writeup-update.md`.
-- Did: analyzed all 40 T8 paired JSON files (10/model, 0 errors); added `results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md`; migrated `w1/t8-litellm-overhead.md` from placeholder to post-evidence (routing overhead vs Kimi streaming-semantics change, T2 cross-ref); rewrote `w1/t3-deepseek-vram-budget.md` as a partial 0.25 baseline with the cap020 caveat; added status notes to `w1/t1-kimi-bringup.md`, `w1/t6-eagle3-speculative-decoding.md`, `w1/t5-observability.md`; updated index Thread map (T3/T8) and added "Evidence quality after 2026-05-27" + "Follow-up work".
-- Key numbers: Kimi final-answer TTFT delta median +17 ms, any-token TTFT +0.40 s (~3×, streaming-semantics, not latency), output tok/s −5.6 %; DeepSeek TTFT +26 ms, E2E +34 ms (throughput not meaningful, completion_tokens≈2).
-- Validation: `git diff --check` OK (docs-only; no `.py` touched).
-- Next: schedule a server slot for T3 clean sweep (0.15/0.20/0.25), T1 DEP capture, T6 Eagle3 ON/OFF, T5 dashboard validation + fix LiteLLM `prometheus_callback`. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
-
-### 2026-06-02 - W1 T7 host-directory justification
-
-- Why: turn the T7 placeholder into a short justification for storing
-  Prometheus/Grafana runtime data in explicit host bind mounts instead of Docker
-  named volumes.
-- Did: updated `docs/writeups/w1/t7-host-directories.md` with compose evidence,
-  project-context rationale, portability/permissions trade-offs, and the
-  rejected named-volume alternative.
-- Validation: `git diff --check` OK.
-- Next: continue #37 by scheduling the remaining T1/T3/T6 server evidence
-  capture and T5 dashboard validation.
-
-### 2026-05-27 - Server-session evidence triage and notes
-
-- Why: make the 2026-05-27 server commit usable for W1 by documenting what evidence exists, what is partial, and what is missing.
-- Did: added `session/session_notes.md`, added `session/artifact_manifest.txt`, and updated this handoff state. T8 evidence is usable for paired proxy-overhead analysis. T3 is partial and has a filename/runtime-cap mismatch (`cap020` file, runtime log shows `gpu_memory_utilization: 0.25`). T1 DEP and T6 Eagle3 ON/OFF are still missing.
-- Validation: GitHub contents API writes only; no local `git diff --check` available here.
-- Next: do the many-file run-directory rename from a local checkout, then analyze T8 deltas and schedule a follow-up server slot for T1/T3/T6.
-
-### 2026-05-26 - W1 server-session plan hardening
-
-- Why: reduce avoidable server-slot risk before the 2026-05-27 W1 evidence session.
-- Did: made `RUN_DIR` initialization explicit in Cz. 0, made LiteLLM key extraction fail fast, corrected T5 Prometheus snapshots to use `vllm:kv_cache_usage_perc`, replaced ad hoc Python URL quoting with `curl --data-urlencode`, added an artifact manifest step, and documented `DEEPSEEK_GPU_MEM_UTIL` in `.env.example`.
-- Validation: `git diff --check` OK.
-- Next: run `docs/plans/2026-05-27-server-session.md` on the GPU server and commit the resulting W1 evidence artifacts.
-
-### 2026-05-20 - Phase 1 laptop follow-up: #31 parser fix, Grafana provisioning, tooling
-
-- Why: clear the post-server laptop backlog and align laptop/server tooling.
-- Did: merged #31 Kimi reasoning TTFT/TPOT fix (PR #36), closed #32 benchmark artifact ignore cleanup, added #33 server session summary, and merged #35 Grafana dashboard provisioning; installed `rg` on the laptop and wired it into the env checks, with a queued task to install it on the server.
-- Range: `e3eaf0c..a7ce83f` plus the #33 summary doc update
-- Validation: OK (ruff clean, pytest 121 passed).
-- Next: validate the Grafana dashboard against live metrics, add DCGM/GPU hardware metrics under issue #34, then prepare W1.
-
-### 2026-05-19 - Phase 1 server close-out: compose, proxy, bench, observability bootstrap
-
-- Why: close the Phase 1 server/proxy minimum using the 8×H200 server slot.
-- Did:
-  - Recovered/pushed prior 2026-05-11 benchmark artifacts.
-  - Reconciled live server compose into `serving/compose/docker-compose.kimi-k2.6.yml`; corrected Kimi setup to tensor parallelism rather than the earlier DP mistake.
-  - Confirmed `vllm`, `vllm-small`, and OpenWebUI are running and communicating.
-  - Ran compose smoke results for Kimi and DeepSeek and pushed them.
-  - Collected raw Kimi stream-debug artifacts after `measure_ttft_once.py` showed `TTFT: n/a` / `TPOT: n/a`; created issue #31 for laptop-side parser fix.
-  - Created issue #32 for `.gitignore` / benchmark artifact tracking cleanup.
-  - Started LiteLLM Proxy, ran smoke through proxy, then ran `run_bench_suite.py` through LiteLLM Proxy for Kimi and DeepSeek; pushed results.
-  - Added Prometheus/Grafana compose/provisioning and started containers.
-  - Created issue #33 to write the session summary later on laptop.
-  - Updated `docs/plans/2026-05-19-server-work-plan.md` with completed/partial/remaining status.
-- Validation:
-  - Direct vLLM endpoints worked.
-  - LiteLLM Proxy worked for both upstream models.
-  - Bench suite completed for both upstream models through proxy.
-  - Observability containers started; dashboard still pending.
-- Next at session end:
-  - Laptop follow-ups were issue #31, issue #32, and issue #33; these are now closed/handled.
-  - Server/laptop: validate Grafana dashboard from real metric names and add GPU hardware metrics.
-  - Then W1 write-up.
-
-### 2026-05-17 - Bench suite launcher for LiteLLM proxy runs
-
-- Added `benchmarks/scripts/run_bench_suite.py` with `snapshot_pre -> request_once -> measure_ttft_once -> run_sequential_benchmark -> snapshot_post`, auto-generated run IDs, strict JSON suite summary, and `--api-key` support.
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 113 passed.
-- Outcome on 2026-05-19: validated live through LiteLLM Proxy for Kimi and DeepSeek.
-
-### 2026-05-17 - LiteLLM Proxy + image pinning (laptop prep)
-
-- Added `litellm` service, `litellm-config.yaml`, `.env.example` keys, image pinning, and compose docs.
-- Outcome on 2026-05-19: LiteLLM smoke and proxy benchmark suites passed on the server.
-
-> Pre-2026-05-17 handoff entries compacted. Source: `4d6fac7800047c8c54ee32e4235ab6ce62abcc5d`.
-> Full history: `git show 4d6fac7800047c8c54ee32e4235ab6ce62abcc5d:docs/operations/agent-state.md`.
+> Pre-2026-06-06 handoff entries compacted 2026-06-10. Source: `520d7883127452cc5ef50dca52fecfdb2e62fabf`.
+> Full history: `git show 520d7883127452cc5ef50dca52fecfdb2e62fabf:docs/operations/agent-state.md`.
+>
+> Period summary (2026-05-17 → 2026-06-05):
+> - 2026-05-17 (laptop): `run_bench_suite.py` one-command launcher; LiteLLM Proxy compose + image pinning prep.
+> - 2026-05-19 (server): Phase 1 close-out — canonical Kimi/DeepSeek compose reconciled (TP=8, not DP), proxy smoke + bench suite green for both models, Prometheus/Grafana bootstrap; issues #31–#33.
+> - 2026-05-20 (laptop): #31 Kimi reasoning-TTFT parser fix merged (PR #36, 121 tests), #35 Grafana dashboard provisioning, `rg` installed.
+> - 2026-05-26/27: server-session plan hardening + evidence triage — T8 paired proxy-overhead usable; T3 partial (filename↔runtime cap mismatch); T1 DEP / T6 Eagle3 still missing.
+> - 2026-06-02 (laptop): W1 write-up pass from the 05-27 evidence — T8 post-evidence (+17 ms median final-answer hop), T3 partial baseline, T4 + T7 justifications, index tracker refreshed.
+> - 2026-06-05 (server + laptop): the big W1 evidence slot — compose defaults `6c9db1c` (Kimi util 0.6 + max-num-batched-tokens 4096, DeepSeek 0.2), T3 clean sweep (0.15 hard-fail, 0.20/0.25 OK), T6 Eagle3 ON/OFF paired A/B (repeated p50 TTFT ~2×), T1 DEP clean startup crash captured, LiteLLM v1.66.0 `delta.reasoning` strip diagnosed (proxy unusable as the single Kimi reasoning driver); laptop audit recovered the paired OFF generation from `ec3df59` after the `fc97700` overwrite and renamed run dirs to semantic aliases.

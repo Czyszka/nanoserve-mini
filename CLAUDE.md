@@ -154,8 +154,10 @@ Procedure:
   recommended action, and any open blockers — before committing or
   handing work over.
 
-Keep `agent-state.md` concise — handoff document, not a diary. For
-periodic compaction use `docs/templates/tidy-docs-agent.md`.
+Keep `agent-state.md` concise — handoff document, not a diary. Use the
+`sync-state` skill to update it from commits (rules:
+`docs/templates/sync-state-agent.md`); for periodic compaction use
+`docs/templates/tidy-docs-agent.md`.
 
 ## Results and secrets policy
 
