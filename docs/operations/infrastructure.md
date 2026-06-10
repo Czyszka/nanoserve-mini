@@ -83,6 +83,23 @@ Służy do:
 - późniejszego profilowania,
 - późniejszych testów kernela Triton.
 
+### Topologia GPU/CPU (stan wiedzy 2026-06-10)
+
+- **Interconnect GPU↔GPU: wyłącznie PCIe** — brak NVLink i NVSwitch.
+  Potwierdzone z logów vLLM (custom all-reduce: *"not supported on more than
+  two PCIe-only GPUs"*; FlashInfer: *"expected on GPUs without NVSwitch"*).
+- **Płyta dwuprocesorowa (2× CPU)** — fakt podany przez właściciela serwera.
+- **Hipoteza (do weryfikacji):** linie PCIe podzielone między sockety, czyli
+  GPU wiszą pod dwoma root complexami; komunikacja par GPU z różnych socketów
+  przechodzi dodatkowo przez interconnect CPU (UPI) — ścieżka
+  `GPU → PCIe → CPU0 → UPI → CPU1 → PCIe → GPU`. Konsekwencje, jeśli prawda:
+  asymetryczny koszt all-reduce per para GPU, a ewentualne mostki NVLink 4-way
+  muszą być sparowane zgodnie z socketami (wyspy 4+4).
+- Weryfikacja zaplanowana w najbliższym slocie (`nvidia-smi topo -m`, `lscpu`,
+  `numactl --hardware`) — plan
+  `docs/plans/2026-06-10-bottleneck-followup-session.md`, cel w issue #50.
+  Po zebraniu faktów zaktualizować tę sekcję macierzą topologii.
+
 ### Dostępność
 
 ```text
