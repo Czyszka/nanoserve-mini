@@ -24,6 +24,96 @@ throughput curves, the W2 roadmap article) will *synthesize from* this thread,
 not re-run it. T9 ends when the two questions above have calibrated answers;
 everything beyond that belongs to W2.
 
+## Glossary (terms as used in this thread)
+
+**Parallelism and communication**
+
+- **rank** — one GPU's worker process in a distributed job. TP=8 means 8 ranks,
+  one per GPU, cooperating on every forward pass.
+- **TP (tensor parallelism)** — every weight matrix is split across all ranks;
+  each GPU computes a slice of every layer, so the slices must be merged after
+  (almost) every layer. That merging is communication.
+- **EP (expert parallelism)** — only the MoE experts are split across ranks;
+  tokens are *routed* to whichever rank owns the chosen expert and the results
+  routed back.
+- **comms** — shorthand for all inter-GPU communication (all-reduce,
+  all-to-all, …) as opposed to computation or memory reads.
+- **all-reduce** — the collective operation that merges TP partial results:
+  every rank contributes its piece and every rank ends up with the same summed
+  result. Runs after attention and after the FFN/MoE block → ~2 per layer per
+  forward pass. It is *synchronous*: no rank continues until it completes.
+- **all-to-all** — the collective behind EP routing: each rank sends a
+  different chunk to each other rank (token dispatch to experts, then combine
+  back).
+- **NCCL** — NVIDIA Collective Communications Library; the library vLLM/PyTorch
+  use to implement all-reduce/all-to-all on NVLink or PCIe. "NCCL kernels" in a
+  profiler trace = time spent communicating (or waiting for the slowest rank).
+- **P2P (peer-to-peer)** — GPUs exchanging data directly over PCIe without
+  bouncing through CPU RAM. `NCCL_P2P_DISABLE=1` forces the slower
+  through-host path — our dose-response lever.
+- **small-message regime** — at batch 1 an all-reduce carries only ~14 KB, so
+  its duration is set by fixed per-operation latency (launch + protocol +
+  link round-trips), not by link bandwidth. That is why a *latency*-bound link
+  can look idle in *throughput* counters.
+
+**Time accounting (the model's terms)**
+
+- **decode step** — one forward pass of the whole model during generation.
+  Without speculation 1 step = 1 token; with speculation (Eagle3/MTP) one
+  verify step can emit ~2–3 tokens.
+- **TPOT / ITL** — time per output token / inter-token latency. With
+  speculation, ITL ≈ time per *step* (tokens arrive in bursts), while TPOT
+  divides by all tokens.
+- **F_host, the per-step "floor" ("podłoga")** — the fixed cost every step
+  pays regardless of communication: the engine's scheduler iteration, sampler,
+  CPU↔GPU synchronization, kernel-launch gaps, speculative-draft bookkeeping.
+  We know it exists because Qwen at TP=1 — with *zero* comms — still takes
+  ~9 ms/step while the GPU idles half the time.
+- **N_rounds** — how many synchronous communication rounds one step performs
+  (~2 all-reduces × ~61 layers ≈ 122+ for Kimi).
+- **r(link, ranks)** — the latency of one such round; depends on the link type
+  (PCIe vs NVLink vs UPI path) and how many ranks participate.
+- **W_silicon** — time the GPU actually works per step: HBM weight/KV reads +
+  arithmetic. Measured to be small here (~1–2 ms for Kimi).
+- **X-bound (bandwidth-/latency-/compute-bound)** — "the step time is limited
+  by X": making X faster makes the step faster, making anything else faster
+  does not.
+
+**Hardware paths on this server**
+
+- **PCIe root complex / PCIe switch** — the root is the CPU's PCIe controller;
+  a switch fans one x16 link out to several devices. Here: 4 switches, 2 GPUs
+  each, 2 switches per CPU.
+- **UPI** — Ultra Path Interconnect, the link *between the two CPU sockets*.
+  A GPU0↔GPU4 transfer crosses it: GPU→switch→CPU0→UPI→CPU1→switch→GPU.
+- **NUMA / SNC** — memory locality domains; SNC-2 splits each socket into two
+  NUMA nodes (4 total here). Matters for CPU-side placement, secondary for
+  GPU↔GPU.
+- **NVLink bridge / island** — a physical connector joining 2 or 4 adjacent
+  GPUs with a direct GPU↔GPU link (~10× lower latency, ~10× higher bandwidth
+  than PCIe). 4-way bridges would create two 4-GPU "islands"; traffic *inside*
+  an island avoids PCIe entirely.
+- **hierarchical all-reduce** — how an 8-rank all-reduce runs on 2 islands:
+  reduce inside each island over NVLink, exchange between islands over PCIe,
+  broadcast back inside. The inter-island PCIe hop is why NVLink helps TP=8
+  only partially.
+
+**Measurement vocabulary**
+
+- **DCGM / `dcgmi`** — NVIDIA's datacenter GPU telemetry; our counters:
+  `SM_ACTIVE` (fraction of time the compute units have work resident),
+  `PIPE_TENSOR_ACTIVE` (tensor cores busy), `DRAM_ACTIVE` (HBM memory system
+  busy), `PCIE_TX/RX` (bytes/s on the PCIe link).
+- **kernel / gap** — a kernel is one GPU program execution; a gap is wall time
+  with *no* kernel resident (the GPU waits for the host or for a dependency).
+  The profiler trace splits a step into NCCL kernels / compute kernels / gaps.
+- **torch profiler trace** — a timeline of every kernel and host event,
+  captured via `VLLM_TORCH_PROFILER_DIR` + `/start_profile`; our direct
+  attribution tool.
+- **dose-response** — a causal test: deliberately worsen the suspected cause
+  (e.g. disable P2P so every comm round gets slower) and check the effect
+  moves proportionally.
+
 ## Established so far (evidence through 2026-06-10)
 
 **1. HBM-bandwidth-bound is refuted.** The 2026-06-10 DCGM capture (T5 / W1
