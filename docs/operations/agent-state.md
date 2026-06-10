@@ -43,6 +43,9 @@ Phase 1 deliverables still owed:
 - Local Windows laptop bootstrap is done; Python workflow uses `uv`; `ruff` + `pytest` configured; `.gitattributes` normalises line endings.
 - Local research PDFs and Claude/Codex worktrees stay outside Git (`docs/**/papers/`, `.claude/worktrees/`, `.uv-cache-codex/`).
 - **Server**: ubuntusrv2 (Ubuntu 24.04, 8×H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
+- **Hardware reference**: Supermicro SYS-521GE-TNRT datasheet is mirrored as
+  lightweight Markdown at `docs/operations/sys-521ge-tnrt.md`; source PDF kept
+  at `docs/operations/sys-521ge-tnrt.pdf`.
 - **Kimi + DeepSeek + OpenWebUI + LiteLLM compose**: canonical compose lives at `serving/compose/docker-compose.kimi-k2.6.yml`.
 - **Observability compose**: `serving/compose/docker-compose.observability.yml` plus:
   - `serving/compose/prometheus/prometheus.yml`
@@ -208,6 +211,17 @@ status, not a task list. Update when work moves.
   (2× CPU, user-reported); PCIe likely split across sockets → cross-socket
   GPU pairs traverse UPI. Recorded in `infrastructure.md` (hypothesis, to
   verify via `nvidia-smi topo -m` in the session plan).
+  **2026-06-10 (PM2): topology largely resolved from the datasheet**
+  (`docs/operations/sys-521ge-tnrt.md`: SYS-521GE-TNRT, "Dual-Root PCIe",
+  PCIe 5.0 x16 Switch per root, **NVLink Bridge officially optional** for the
+  chassis) + env snapshot (2× Xeon Gold 6530, NUMA=4/SNC-2; GPU bus-IDs pair
+  as 1D/1E, 40/41, AA/AB, BB/BC → 4 switch pairs, GPU0–3 CPU0 / GPU4–7 CPU1
+  presumed) — posted as a #50 comment; `infrastructure.md` updated (incl.
+  DCGM host tier-1 as a durable fact). **Session plan v2:** full Qwen re-run
+  TP=2 + new TP=8 (rank anchor for Kimi) + TP=4, step-by-step (KROK 1–7),
+  stretch A4 = TP=2 on GPU{0,4} via `CUDA_VISIBLE_DEVICES` (direct UPI-tax
+  measurement); Kimi stays TP=8-only and is profiled anyway (Cz. B); cut
+  order A4 → C → A3.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run

@@ -18,9 +18,15 @@ i tak tylko SMACT 0.47 i ~9 ms/krok → istnieje podłoga narzutu per-step
 niezależna od PCIe. Sesja domyka trzy klamry (decyzja usera 2026-06-10: A+B+C;
 D — DeepSeek TP sweep — odrzucone):
 
-- **A — Qwen TP-curve:** odzyskać TP2 z Prometheus TSDB + czysty bench TP2 i
-  TP4 → krzywa TPOT/throughput vs liczba ranków (jeden model, jedna dźwignia).
-  Bonus: materiał pod W2 (TP scaling).
+- **A — Qwen TP-curve:** **pełne powtórzenie badania dla TP=2** (capture z
+  2026-06-10 jest wybrakowany — zły log, brak bench JSON) **+ nowe TP=8 i
+  TP=4** → krzywa TPOT/throughput vs ranki 1/2/4/8 (TP=1 mamy czysty z
+  2026-06-10). Bonus: recovery starego okna TP2 z TSDB jako cross-check.
+  Materiał pod W2 (TP scaling). Uwaga topologiczna (datasheet SYS-521GE-TNRT,
+  dual-root + pary za switchami): domyślne placement daje TP=2 → GPU{0,1}
+  (wspólny switch), TP=4 → GPU{0–3} (wspólny socket), TP=8 → przez UPI —
+  krzywa mierzy więc nie tylko liczbę ranków, ale i klasę łącza; notować to
+  przy interpretacji.
 - **B — Kimi torch profiler:** `VLLM_TORCH_PROFILER_DIR` + `/start_profile` /
   `/stop_profile` → udział kernelów NCCL w kroku decode TP=8. Jedyna metoda
   domykająca atrybucję dla Kimi (L2).
@@ -44,17 +50,20 @@ potwierdzony 2026-06-10).
 
 | Cz. | Co | Czas | Restarty |
 |---|---|---:|---|
-| 0 | start, observability, **serving DOWN**, snapshot | 20 | — |
-| A1 | recovery TP2 z Prometheus TSDB (bez GPU) | 20 | — |
-| A2 | Qwen TP2: start + verify + bench c=1/c=64 + counters | 35 | qwen ×1 |
-| A3 | Qwen TP4: jw. | 35 | qwen ×1 |
+| 0 | start, observability, **serving DOWN**, topologia, snapshot | 25 | — |
+| A0 | okno idle (wspólne) + bonus: recovery starego TP2 z TSDB | 15 | — |
+| A1 | Qwen **TP=2** — pełne badanie (KROKI 1–7) | 40 | qwen ×1 |
+| A2 | Qwen **TP=8** — jw. (kotwica r_PCIe(8) dla Kimi) | 40 | qwen ×1 |
+| A3 | Qwen **TP=4** — jw. (dopełnienie krzywej) | 40 | qwen ×1 |
 | **CHECKPOINT 1 — commit A** | | 10 | |
-| C | Qwen TP2 + `NCCL_P2P_DISABLE=1`: bench c=1/c=64 | 30 | qwen ×1 |
-| B | Kimi TP8 + profiler env: load, profile c=1, podsumowanie traców | 60 | kimi ×1 |
+| C | Qwen TP=2 + `NCCL_P2P_DISABLE=1`: bench c=1/c=64 | 30 | qwen ×1 |
+| A4 (stretch) | Qwen TP=2 na parze cross-socket (GPU 0,4) — pomiar podatku UPI | 25 | qwen ×1 |
+| B | Kimi TP=8 + profiler env: load, profile c=1, podsumowanie traców | 60 | kimi ×1 |
 | D | restore Kimi (plain compose) + close-out + commit | 40 | kimi ×1 |
 
-Must-have: **0, A2, B, D** (A1 to bonus — A2 i tak daje czysty TP2; C i A3
-tnij w tej kolejności przy braku czasu: najpierw A3, potem C).
+Must-have: **0, A1 (TP2), A2 (TP8), B, D**. Kimi sprawdzamy mimo że tylko
+TP=8 jest możliwe (554 GiB / 4 > 140 GiB/GPU) — Cz. B właśnie to robi.
+Przy braku czasu tnij w kolejności: **A4 → C → A3 (TP4)**.
 
 ---
 
@@ -99,12 +108,20 @@ sample_window () {  # $1=label $2=sekundy
 
 ---
 
-## Cz. A1 — recovery TP2 z Prometheus TSDB (20 min, bez GPU)
+## Cz. A0 — okno idle (wspólne) + bonus: recovery starego TP2 (15 min)
 
-Okno TP2 z 2026-06-10: start epoch **1781096733**, sampler zebrał 253 próbki.
-Qwen TP2 leciał na `:8000` → był scrape'owany (label `model_name="Qwen3.6"`).
-Retencja Prometheusa default 15 d — działa, jeśli slot jest w ciągu ~2 tygodni
-od 2026-06-10; jak puste wyniki → trudno, A2 i tak daje czysty TP2.
+Jedno okno idle wystarczy dla całej krzywej (stan bezczynny nie zależy od TP;
+serving jest DOWN po Cz. 0, więc to baseline pustych GPU):
+
+```bash
+sample_window idle 120
+nvidia-smi > "$P0OUT/nvidia_smi_idle.txt"
+```
+
+**Bonus (opcjonalny cross-check — kanoniczny TP2 da i tak Cz. A1):** stare
+okno TP2 z 2026-06-10 (start epoch **1781096733**, 253 próbki) leciało na
+`:8000`, więc było scrape'owane (label `model_name="Qwen3.6"`). Retencja
+Prometheusa default 15 d; puste wyniki → pomiń bez żalu.
 
 ```bash
 START=1781096733; END=$((START+253)); P=http://127.0.0.1:9090/api/v1
@@ -128,7 +145,15 @@ jq -r '.data.result[0].value[1] // "EMPTY"' "$P0OUT"/recovery_tp2_inter_token_la
 
 ---
 
-## Cz. A2 / A3 — Qwen TP2 i TP4: czysty bench + counters (35 min każdy)
+## Cz. A1 / A2 / A3 — Qwen TP=2 / TP=8 / TP=4: pełne badanie, krok po kroku (40 min każde)
+
+To jest **pełne powtórzenie metodyki z `2026-06-10-server-session.md` Cz. B**
+per wartość TP: verify configu → prereqs → okno c=1 z licznikami → okno c=64 z
+licznikami → natychmiastowy zbiór artefaktów. TP=2 wykonujemy **w całości od
+nowa** (capture 2026-06-10 jest wybrakowany); TP=8 i TP=4 są nowe. Placement
+domyślny (kolejność urządzeń CUDA): TP=2 → GPU{0,1} = wspólny switch PCIe,
+TP=4 → GPU{0–3} = wspólny socket, TP=8 → wszystkie = przez UPI; zanotuj to w
+session notes przy każdym wyniku (klasa łącza ≠ tylko liczba ranków).
 
 Override parametryzowany `QWEN_TP` (komenda = 1:1 z `engine_cmd.json` runów
 2026-06-10, tylko TP zmienny):
@@ -147,24 +172,30 @@ services:
       --speculative-config '{"method":"mtp","num_speculative_tokens":3, "max_model_len":8192}'
 EOF
 
-run_qwen_tp () {  # $1 = TP (2|4)   — start, VERIFY, prereqs, bench c=1 + c=64, counters, logi
-  tp="$1"; tag="tp${tp}"
+run_qwen_tp () {  # $1 = TP (2|4|8), opcjonalnie $2 = sufiks tagu (np. x04)
+  tp="$1"; tag="tp${tp}${2:-}"
   export QWEN_TP="$tp"
-  docker compose -f "$COMPOSE" -f /tmp/qwen-override.yml up -d --force-recreate vllm
+
+  # ── KROK 1: start silnika z zadanym TP ──────────────────────────────
+  docker compose -f "$COMPOSE" -f /tmp/qwen-override.yml ${EXTRA_OVR:+-f $EXTRA_OVR} \
+    up -d --force-recreate vllm
   for _ in $(seq 1 120); do curl -fsS http://127.0.0.1:8000/health >/dev/null 2>&1 && break; sleep 5; done
 
-  # FAIL-FAST: runtime musi potwierdzić TP — inaczej STOP (lekcja z 06-10)
+  # ── KROK 2: FAIL-FAST verify — runtime musi potwierdzić TP (lekcja 06-10);
+  #            log i engine_cmd zawsze z kontenera `vllm`, nie ze starych ──
   docker inspect vllm --format '{{json .Config.Cmd}}' > "$P0OUT/engine_cmd_${tag}.json"
   docker logs vllm 2>&1 | grep -o "tensor_parallel_size=[0-9]*" | head -1 | tee "$P0OUT/verify_${tag}.txt"
   grep -q "tensor_parallel_size=${tp}" "$P0OUT/verify_${tag}.txt" || { echo "TP MISMATCH — przerwij"; return 1; }
 
-  # prereqs w świeżym kontenerze + dataset
+  # ── KROK 3: prereqs benchu w świeżym kontenerze + dataset (po każdym
+  #            recreate od zera — pip i /tmp nie przeżywają) ──────────────
   docker compose -f "$COMPOSE" cp \
     results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl
   docker compose -f "$COMPOSE" exec vllm bash -c \
     'export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python -c "import pandas,datasets;print(\"deps ok\")"'
 
-  # c=1 (random 64/512, jak 06-10)
+  # ── KROK 4: okno c=1 (random 64-in/512-out, ignore-eos) + liczniki dcgmi;
+  #            sampler MUSI skończyć przed kolejnym oknem (wait!) ─────────
   sample_window "qwen_${tag}_c1" 240 & S=$!
   docker compose -f "$COMPOSE" exec vllm bash -c '
     export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
@@ -175,7 +206,7 @@ run_qwen_tp () {  # $1 = TP (2|4)   — start, VERIFY, prereqs, bench c=1 + c=64
       --save-result --result-dir /tmp/qbench --result-filename '"${tag}"'_c1.json'
   wait $S
 
-  # c=64 (SWE custom 256-out, jak 06-10)
+  # ── KROK 5: okno c=64 (SWE custom, 256-out) + liczniki dcgmi ───────────
   sample_window "qwen_${tag}_c64" 300 & S=$!
   docker compose -f "$COMPOSE" exec vllm bash -c '
     export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
@@ -186,17 +217,42 @@ run_qwen_tp () {  # $1 = TP (2|4)   — start, VERIFY, prereqs, bench c=1 + c=64
       --save-result --result-dir /tmp/qbench --result-filename '"${tag}"'_c64.json'
   wait $S
 
-  # OD RAZU cp wyników + log z WŁAŚCIWEGO kontenera
+  # ── KROK 6: NATYCHMIAST zbiór artefaktów (zanim cokolwiek ruszysz) ─────
   docker compose -f "$COMPOSE" cp vllm:/tmp/qbench "$P0OUT/bench_${tag}/"
+  ls "$P0OUT/bench_${tag}/" | grep -c json   # musi być 2 (c1 + c64) — inaczej powtórz cp
+
+  # ── KROK 7: log z WŁAŚCIWEGO kontenera + stan kart ─────────────────────
   docker logs vllm --tail 400 > "$P0OUT/log_qwen_${tag}.txt" 2>&1
+  nvidia-smi > "$P0OUT/nvidia_smi_${tag}.txt"
 }
 
-run_qwen_tp 2     # A2
-run_qwen_tp 4     # A3
+run_qwen_tp 2     # A1 — re-run wybrakowanego TP=2
+run_qwen_tp 8     # A2 — kotwica r_PCIe(8): te same ranki co Kimi
+run_qwen_tp 4     # A3 — dopełnienie krzywej
 ```
 
-**Sanity na żywo:** TP2 c=1 `median_tpot_ms` z bench JSON vs TP1 3.68 ms —
-jeśli wyraźnie wyżej, podatek komunikacyjny widać już na poziomie klienta.
+**Sanity na żywo (po każdym TP):** `median_tpot_ms` z bench JSON c=1 vs
+TP1 = 3.68 ms (2026-06-10). Oczekiwanie przy hipotezie comms: monotoniczny
+wzrost TP1 → TP2 → TP4 → TP8; różnice TPOT/krok dzielone przez przyrost rund
+dają `r_PCIe(ranks)` do modelu #50.
+
+### Cz. A4 (stretch) — TP=2 na parze cross-socket: bezpośredni pomiar podatku UPI
+
+Domyślny TP=2 siedzi na GPU{0,1} (wspólny switch). Ta sama konfiguracja na
+GPU{0,4} (różne sockety) zmienia wyłącznie klasę łącza — różnica TPOT c=1 to
+czysty podatek UPI:
+
+```bash
+cat > /tmp/qwen-cvd04.yml <<'EOF'
+services:
+  vllm:
+    environment:
+      CUDA_VISIBLE_DEVICES: "0,4"
+EOF
+EXTRA_OVR=/tmp/qwen-cvd04.yml run_qwen_tp 2 x04   # wystarczy KROK 1–4 + 6–7;
+                                                  # c=64 można pominąć (czas)
+unset EXTRA_OVR
+```
 
 ## ⏸ CHECKPOINT 1 — commit A
 
@@ -321,8 +377,9 @@ Update `docs/operations/agent-state.md` (In flight, Last validation, Handoff).
 ## Kryteria rozstrzygnięcia (co mówią wyniki)
 
 Wyjścia sesji kalibrują model `T(tp, link) = F_host + N_rounds × r(link, ranks)
-+ W_silicon` z #50: `r_PCIe(2)` i `r_PCIe(4)` z różnic TPOT krzywej Qwen
-(ΔTPOT / Δrund na krok), `r` pod degradacją z wariantu nop2p, udział comms i
++ W_silicon` z #50: `r_PCIe(2/4/8)` z różnic TPOT krzywej Qwen
+(ΔTPOT / Δrund na krok, z adnotacją klasy łącza: switch-para / socket / UPI;
+A4 wycenia UPI wprost), `r` pod degradacją z wariantu nop2p, udział comms i
 `F_host` dla Kimi z podziału spanu w trace'u, `N_rounds` z liczby kerneli NCCL
 na krok w trace'ie. Po sesji: przeliczyć tabelę szacunków NVLink w #50 na
 wartości zmierzone (laptop-side) i dopiero wtedy formułować rekomendację
@@ -330,7 +387,7 @@ zakupową.
 
 | Wynik | Werdykt |
 |---|---|
-| TPOT rośnie z TP (TP1→TP2→TP4) przy stałym modelu; nop2p pogarsza dalej | podatek PCIe potwierdzony przyczynowo (L2); rozmiar = różnice TPOT |
+| TPOT rośnie z TP (TP1→TP2→TP4→TP8) przy stałym modelu; nop2p pogarsza dalej | podatek PCIe potwierdzony przyczynowo (L2); rozmiar = różnice TPOT; A4 rozdziela ranki od klasy łącza (UPI) |
 | Trace Kimi: comms ≥ ~40% span przy c=1 | Kimi TP8 decode comms-bound wprost (L2) |
 | Trace Kimi: gaps/other dominują, comms małe | podłoga per-step (launch/host/MTP) — hipoteza PCIe do rewizji, artykuł znowu do poprawki (uczciwie) |
 | TP2 ≈ TP1 TPOT i nop2p bez zmian | komunikacja tania — szukać w podłodze per-step |
