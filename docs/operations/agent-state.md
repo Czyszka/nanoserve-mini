@@ -200,6 +200,14 @@ status, not a task list. Update when work moves.
   `docs/plans/2026-06-10-bottleneck-followup-session.md` — Qwen TP2/TP4 curve
   + TSDB recovery, Kimi TP8 torch-profiler trace (NCCL share of decode step),
   Qwen TP2 `NCCL_P2P_DISABLE=1` dose-response.
+  **Goal formalized as issue #50** (bottleneck at L2 + NVLink 4-way purchase
+  decision: parametric model `T = F_host + N_rounds × r(link,ranks) +
+  W_silicon`, first-pass per-TP gain estimates — TP=1 none, TP=2/4 in-island
+  largest, Kimi capped at hierarchical TP=8 ~1.2–1.5× since TP=4 does not fit;
+  session outputs calibrate it). **New hardware fact:** server is dual-socket
+  (2× CPU, user-reported); PCIe likely split across sockets → cross-socket
+  GPU pairs traverse UPI. Recorded in `infrastructure.md` (hypothesis, to
+  verify via `nvidia-smi topo -m` in the session plan).
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run

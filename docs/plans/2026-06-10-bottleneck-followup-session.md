@@ -2,6 +2,13 @@
 
 ## Context
 
+**Cel nadrzędny: issue
+[#50](https://github.com/Czyszka/nanoserve-mini/issues/50)** — (1) nazwać
+aktualne wąskie gardło decode na poziomie L2, (2) skalibrować model decyzyjny
+zakupu NVLink 4-way: ile zyskają konfiguracje TP=1/2/4/8 (parametry do
+zmierzenia tutaj: `r_PCIe(ranks)`, udział comms w kroku Kimi, podłoga
+`F_host`). Wyniki sesji wypełniają tabelę szacunków w #50.
+
 P0 (2026-06-10) obaliło HBM-bound (`DRAM_ACTIVE` ≤9%), a dodatkowe runy Qwen3.6
 TP1/TP2 (`results/runs/2026-06-10_extra/`) pokazały sygnaturę podatku PCIe:
 TP1 c=64 → 443 W / SMACT 0.68 / DRAMA 0.39 na jednym GPU; TP2 c=64 → 265 W /
@@ -72,6 +79,15 @@ docker compose -f "$COMPOSE" stop litellm open-webui vllm vllm-small 2>/dev/null
 
 git rev-parse HEAD > "$RUN_DIR/session/start_commit.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
+
+# TOPOLOGIA CPU/PCIe (#50 — weryfikacja dual-socket/UPI; bez obciążenia, 1 min)
+nvidia-smi topo -m > "$RUN_DIR/session/nvidia_topo.txt"
+lscpu > "$RUN_DIR/session/lscpu.txt"
+numactl --hardware > "$RUN_DIR/session/numactl_hardware.txt" 2>&1 || true
+# czytanie: w topo macierzy 'SYS' = ścieżka przez UPI między socketami,
+# 'NODE'/'PHB' = wspólny root complex. Zanotuj w session_notes, które GPU
+# wiszą pod którym socketem — to ustala (a) asymetrię r_PCIe per para,
+# (b) jak NVLink 4-way wyspy muszą być sparowane (4+4 per socket).
 
 # sampler jak 2026-06-10 (tier-1 dcgmi)
 sample_window () {  # $1=label $2=sekundy
@@ -303,6 +319,14 @@ Update `docs/operations/agent-state.md` (In flight, Last validation, Handoff).
 ---
 
 ## Kryteria rozstrzygnięcia (co mówią wyniki)
+
+Wyjścia sesji kalibrują model `T(tp, link) = F_host + N_rounds × r(link, ranks)
++ W_silicon` z #50: `r_PCIe(2)` i `r_PCIe(4)` z różnic TPOT krzywej Qwen
+(ΔTPOT / Δrund na krok), `r` pod degradacją z wariantu nop2p, udział comms i
+`F_host` dla Kimi z podziału spanu w trace'u, `N_rounds` z liczby kerneli NCCL
+na krok w trace'ie. Po sesji: przeliczyć tabelę szacunków NVLink w #50 na
+wartości zmierzone (laptop-side) i dopiero wtedy formułować rekomendację
+zakupową.
 
 | Wynik | Werdykt |
 |---|---|
