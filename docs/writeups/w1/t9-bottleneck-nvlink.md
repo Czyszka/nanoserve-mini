@@ -167,8 +167,14 @@ Anchors: Kimi TP=8 T ≈ 16.5 ms, W_silicon ≈ 1–2 ms (from `DRAM_ACTIVE`),
 N_rounds ≥ 122; Qwen TP1 gives F_host + W ≈ 9 ms at zero comms (model-specific
 floor). Unknowns to measure: `r_PCIe(2/4/8)` annotated by link class, the
 comms share of Kimi's step, `F_host`, `N_rounds`. `r_NVL4 ≈ 20–30 µs` is a
-labeled assumption from NCCL/NVLink gen4 small-message figures (cannot be
-measured without the hardware).
+labeled assumption from NCCL/NVLink gen4 small-message figures — it cannot be
+measured without the hardware, and renting NVLink in the cloud was considered
+and **rejected** (decision 2026-06-10), so it stays an assumption. To keep the
+verdict honest despite that: the calibrated table is computed at **both ends
+of the range (20 µs and 30 µs)**, and the GO/NO-GO verdict counts only if it
+is identical across the whole range. If the verdict flips inside 20–30 µs, the
+output of this thread is "decision-sensitive to `r_NVL4` — obtain a vendor
+figure before buying", not a guess.
 
 First-pass estimates (BEFORE calibration; assumptions in #50):
 
