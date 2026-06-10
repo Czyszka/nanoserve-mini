@@ -221,7 +221,16 @@ status, not a task list. Update when work moves.
   TP=2 + new TP=8 (rank anchor for Kimi) + TP=4, step-by-step (KROK 1–7),
   stretch A4 = TP=2 on GPU{0,4} via `CUDA_VISIBLE_DEVICES` (direct UPI-tax
   measurement); Kimi stays TP=8-only and is profiled anyway (Cz. B); cut
-  order A4 → C → A3.
+  order A4 → C → A3. **Prep:** added
+  `serving/compose/docker-compose.qwen3.6.yml`, a dedicated Qwen compose that
+  keeps service/container/hostname `vllm` and port `8000:8000` so existing
+  Prometheus target `vllm:8000` continues to work while Kimi/DeepSeek are down.
+  **2026-06-10 (PM4):** session-plan commands hardened before the next server
+  slot: Qwen sections now use the dedicated compose instead of an ad-hoc command
+  override, health waits fail on timeout, Qwen sampler windows are joined before
+  config changes, `NCCL_P2P_DISABLE` is a compose overlay, Kimi profiler startup
+  stops Qwen first, and restore force-recreates plain Kimi/DeepSeek/LiteLLM/
+  OpenWebUI and checks profiler env removal.
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -376,6 +385,20 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-10 bottleneck follow-up plan + Qwen compose prep:
+
+```text
+git diff --check    OK (docs/config only; no .py touched)
+docker compose -f serving/compose/docker-compose.qwen3.6.yml config    OK
+docker compose -f serving/compose/docker-compose.qwen3.6.yml -f qwen-nop2p.yml config    OK
+docker compose -f serving/compose/docker-compose.kimi-k2.6.yml -f kimi-profiler.yml config    OK
+QWEN_TP=2 QWEN_CUDA_VISIBLE_DEVICES=0,4 compose interpolation    OK
+```
+
+Note: Kimi compose validation needs dummy `HF_TOKEN` and `LITELLM_MASTER_KEY`
+locally because the file intentionally requires them; no GPU commands were run
+on the laptop.
 
 2026-06-10 W1 article — 2026-06-10 evidence integrated (P0 + P2):
 
@@ -555,6 +578,51 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-10 (laptop, PM5) - plan review pass (Claude) on top of hardening
+
+- Why: pre-session review caught footguns that would cost slot time.
+- Did: in `docs/plans/2026-06-10-bottleneck-followup-session.md` — removed
+  `set -euo pipefail` (errexit kills the interactive SSH shell on first error;
+  fail-fast now explicit `|| return 1` in functions), TP verify greps the FULL
+  `docker logs` (tail-500 cuts the config line at TP=8 / NCCL_DEBUG=INFO),
+  KROK 6 artifact collection now runs even when a bench fails (06-10 lesson),
+  added `engine_env_<tag>.txt` dump + A4 placement check, Cz. 0 removes the
+  stopped Kimi `vllm` container (container_name collision), Qwen health wait
+  240×5 (TP=8 cudagraph capture), Kimi trace flush wait loop instead of
+  `sleep 10`, `${EDITOR:-nano}`, budget table reordered to match section order.
+- Validation: `git diff --check` OK; `bash -n` on all concatenated ```bash
+  blocks of the plan OK.
+- Next: execute on the server; cut order unchanged A4 -> C -> A3.
+
+### 2026-06-10 (laptop, PM) - bottleneck follow-up plan command hardening
+
+- Why: next server slot should execute Qwen TP-curve, NCCL dose-response, and
+  Kimi profiler without losing time to compose/health/sampler mistakes.
+- Did: updated `docs/plans/2026-06-10-bottleneck-followup-session.md` to use
+  `serving/compose/docker-compose.qwen3.6.yml`, fail-fast health helper, robust
+  Qwen sampler joins and JSON-count checks, `QWEN_EXTRA_COMPOSE` for no-P2P,
+  `QWEN_CUDA_VISIBLE_DEVICES=0,4` for A4, Kimi profiler pre-cleanup, trace-file
+  existence check, and force-recreate restore with profiler-env guard.
+- Validation: `git diff --check` OK; Docker Compose config OK for Qwen, Qwen
+  no-P2P overlay, Kimi profiler overlay, and Qwen TP/CUDA interpolation (dummy
+  secret env only; no GPU commands run locally).
+- Next: on the server, execute the plan from Cz. 0 using the root `.env`; if
+  time is short, keep the documented cut order A4 -> C -> A3.
+
+### 2026-06-10 (laptop, PM) - Qwen compose for bottleneck session
+
+- Why: bottleneck follow-up needs a repeatable Qwen3.6-35B-A3B serving config
+  without editing the canonical Kimi/DeepSeek compose; observability should keep
+  scraping `vllm:8000`.
+- Did: added `serving/compose/docker-compose.qwen3.6.yml` with service/container
+  `vllm`, host port `8000`, pinned vLLM image, same HF cache mount and
+  `nanoserve-net`, plus env-parametrized `QWEN_TP`, `QWEN_CUDA_VISIBLE_DEVICES`,
+  max-length/batching, GPU memory cap, and MTP speculative-token count.
+- Validation: YAML parsed with `uv run python`; whitespace check OK; `docker
+  compose config` OK via
+  `C:\Program Files\Docker\Docker\resources\bin\docker.exe` (Docker CLI is
+  installed but not currently on this PowerShell session's `PATH`).
 
 ### 2026-06-10 (laptop, PM) - analiza Qwen TP1/TP2 + plan sesji bottleneck
 
