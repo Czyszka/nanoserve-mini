@@ -1,0 +1,60 @@
+{
+  "schema": "nanoserve-mini.metrics-delta.v1",
+  "methodology": "mlperf_inspired_lite",
+  "timestamp": "2026-06-10T10:54:30.789503+00:00",
+  "pre_file": "results/runs/2026-06-10_w1_article_evidence/p2_hop_attribution/direct_mt1024_3_pre.json",
+  "post_file": "results/runs/2026-06-10_w1_article_evidence/p2_hop_attribution/direct_mt1024_3_post.json",
+  "pre_timestamp": "2026-06-10T10:54:28.586250+00:00",
+  "post_timestamp": "2026-06-10T10:54:30.665686+00:00",
+  "per_request": {
+    "vllm:time_to_first_token_seconds": {
+      "metric": "vllm:time_to_first_token_seconds",
+      "delta_sum": 0.08664846420288086,
+      "delta_count": 1.0,
+      "mean_seconds": 0.08664846420288086,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:e2e_request_latency_seconds": {
+      "metric": "vllm:e2e_request_latency_seconds",
+      "delta_sum": 1.3231923580169678,
+      "delta_count": 1.0,
+      "mean_seconds": 1.3231923580169678,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:request_queue_time_seconds": {
+      "metric": "vllm:request_queue_time_seconds",
+      "delta_sum": 2.8517097234725952e-05,
+      "delta_count": 1.0,
+      "mean_seconds": 2.8517097234725952e-05,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:request_prefill_time_seconds": {
+      "metric": "vllm:request_prefill_time_seconds",
+      "delta_sum": 0.07558235595934093,
+      "delta_count": 1.0,
+      "mean_seconds": 0.07558235595934093,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:request_decode_time_seconds": {
+      "metric": "vllm:request_decode_time_seconds",
+      "delta_sum": 1.2369656199589372,
+      "delta_count": 1.0,
+      "mean_seconds": 1.2369656199589372,
+      "count_unit": "request",
+      "note": null
+    },
+    "vllm:inter_token_latency_seconds": {
+      "metric": "vllm:inter_token_latency_seconds",
+      "delta_sum": 1.2369656199589372,
+      "delta_count": 54.0,
+      "mean_seconds": 0.022906770739980317,
+      "count_unit": "token-gap",
+      "note": null
+    }
+  },
+  "error": null
+}
