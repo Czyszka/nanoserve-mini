@@ -177,6 +177,14 @@ status, not a task list. Update when work moves.
   attribution**; P1 (Eagle3 n=20 clean A/B) and P3 (concurrency sweep)
   **rejected**. Server slot planned: `docs/plans/2026-06-10-server-session.md`
   (zero engine restarts — compose already runs `max-num-seqs 32`).
+  **2026-06-10: session executed** (tier-1 `dcgmi`; evidence commits `e8ce1d7`
+  P0 + `8b8d457` P2; all P2 deltas `d_count=1`, no repeats needed). **Article
+  updated with the results:** HBM-bandwidth-bound **refuted** (`DRAM_ACTIVE`
+  0.093 c=1 / 0.070 c=64 — Inv 5 rewritten, comms/serialization-bound is the
+  surviving L1), reasoning-strip promoted to **L2** + hop cost ~37 ms median
+  c=1 (Inv 3), client-vs-server TTFT isolation closed (server p50 93 ms vs
+  client 177 ms any / 1.82 s content — Inv 2), closing gaps list updated.
+  Threads T2/T5/T8 do **not** yet carry the new evidence rows.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -207,13 +215,14 @@ negative-KV-budget crash; T8 strip upgraded to a `completed:false` usability
 hazard. Structure kept modular per decision; no GPU slot needed to publish.
 
 **Next concrete step.** W1 article deepening
-(`docs/plans/2026-06-09-w1-article-deepening.md`): Etap 1 (laptop-only analysis
-layer — quantitative boxes, figures, TL;DR, synthesis) can start now; the
-2026-06-10 server slot runs P0 GPU counters + P2 hop attribution
-(`docs/plans/2026-06-10-server-session.md`); Etap 3 integrates results into the
-article. Other post-W1 work unchanged: #34 (full DCGM panels, LiteLLM exporter
-404, L2 causal checks), #44 (T8 R2–R8 remainder), #48 (T6 methodology
-reconciliation), DeepSeek real-generation workload.
+(`docs/plans/2026-06-09-w1-article-deepening.md`): **Etap 3 (integracja P0+P2)
+DONE 2026-06-10** — article now carries the counters verdict and hop
+attribution. Remaining: **Etap 1** laptop-only layer (TL;DR, mermaid figures,
+methods + synthesis sections, statistics pass, primary references) and
+optionally propagating the 2026-06-10 evidence rows into T2/T5/T8. Other
+post-W1 work unchanged: #34 (full DCGM panels, comms-level lever for the
+all-reduce attribution), #44 (R2–R8 remainder), #48, DeepSeek real-generation
+workload.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -322,6 +331,20 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-10 W1 article — 2026-06-10 evidence integrated (P0 + P2):
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+`docs/writeups/w1-article.md` updated from
+`results/runs/2026-06-10_w1_article_evidence/` (commits `e8ce1d7`/`8b8d457`):
+Inv 5 counters table + HBM-bound refutation, Inv 3 R1 attribution table + ~37 ms
+hop cost, Inv 2 client-vs-server isolation closed, Inv 4 rationale rephrased,
+closing gaps list + postscript. The commit also carries the previously
+uncommitted "five numbers" article rewrite (working tree since 2026-06-09).
+No `ruff` / `pytest` (docs-only).
 
 2026-06-09 W1 article deepening plan + 2026-06-10 server session plan:
 
@@ -487,6 +510,30 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-10 (laptop) - W1 article: integracja wyników sesji P0+P2
+
+- Why: sesja serwerowa 2026-06-10 (plan `2026-06-10-server-session.md`)
+  dostarczyła P0 (liczniki GPU, tier-1 `dcgmi`) i P2 (hop attribution, komplet
+  5 par × mt∈{64,1024}, wszystkie `d_count=1`); artykuł miał wpiąć wyniki
+  (Etap 3 planu deepening).
+- Did: analiza artefaktów ad hoc (agregacja dcgmi per okno + parowane delty
+  P2). Kluczowe liczby: **P0** — idle 99 W / wszystko 0.000; c=1 SMACT 0.21,
+  TENSO 0.012, **DRAMA 0.093**, PCIe 1.9/6.0 GB/s; c=64 (288 tok/s) SMACT
+  0.20, TENSO 0.064, **DRAMA 0.070**, PCIe 6.0/8.0 GB/s → hipoteza HBM-bound
+  **obalona**, comms/serialization-bound zostaje jako L1 (≈0.2 ms/rundę
+  all-reduce z arytmetyki TPOT). **P2** — server TTFT 93 (direct) vs 96 ms
+  (proxy), te same 64 tokeny, strip 5/5 → **L2** (delivery, not compute); hop
+  ~37 ms median (paired outside-vLLM, stabilny dla obu mt); LiteLLM header
+  24.4 ms; przez proxy first token +1.7 s przy mt=1024 (zależny od długości
+  reasoning). Artykuł zaktualizowany: Inv 2 (izolacja client-vs-server
+  zamknięta), Inv 3 (tabela R1 + koszt hopa + ledger L2), Inv 4 (uzasadnienie
+  spekulacji przeformułowane), Inv 5 (sekcja "counters came back", tabela,
+  refutacja, ledger), zamknięcie (lista luk + postscript "sixth number").
+- Validation: `git diff --check` OK (docs-only). Commit artykułu zawiera też
+  wcześniejszy, niecommitowany rewrite "five numbers" z working tree.
+- Next: Etap 1 deepening (TL;DR, figury, methods/synteza, statystyka, primary
+  refs); opcjonalnie evidence rows 2026-06-10 do T2/T5/T8.
 
 ### 2026-06-09 (laptop) - W1 article deepening plan + jutrzejsza sesja serwerowa
 
