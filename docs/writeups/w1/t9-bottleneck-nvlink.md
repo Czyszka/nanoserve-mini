@@ -201,12 +201,64 @@ Per `docs/plans/2026-06-10-bottleneck-followup-session.md`:
 
 ## Decision criteria
 
+### Reading the measurements
+
 | Result | Verdict |
 |---|---|
 | TPOT rises monotonically TP1→2→4→8; nop2p degrades it further | PCIe round-latency tax confirmed causally (L2); size = TPOT deltas |
 | Kimi trace: comms ≥ ~40% of step span at c=1 | Kimi TP=8 decode comms-bound directly (L2) |
 | Kimi trace: gaps/other dominate, comms small | per-step floor dominates — PCIe hypothesis revised, NVLink gain estimates cut accordingly |
 | TP2 ≈ TP1 TPOT and nop2p changes nothing | comms cheap — investigate the floor instead |
+
+### When NVLink makes sense — and when it does not
+
+The ceiling on any interconnect upgrade is an **Amdahl bound**: if comms is a
+share `s` of the step, then even an *infinitely fast* link caps the speedup at
+`1 / (1 − s)`. With `s = 0.3` the best possible gain is 1.43×; with `s = 0.6`
+it is 2.5×. The profiler gives `s` per config; NVLink then realizes *most* of
+that bound for traffic that stays inside an island (r drops ~5–10×) and only
+*part* of it for hierarchical TP=8 (the inter-island PCIe hop survives).
+
+**GO** (recommend the bridges) when both hold:
+
+1. the calibrated gain is **≥ ~1.5× for at least one config the node will
+   actually serve** — in practice: measured `s ≥ ~0.4` on a TP=2/TP=4
+   workload (in-island traffic realizes most of the Amdahl bound), or the
+   hierarchical-TP=8 estimate for Kimi clears 1.5× despite the PCIe hop;
+2. such TP≤4 workloads are actually planned (W2-class 70–200B models,
+   DeepSeek, Qwen) — not just hypothetical.
+
+**NO-GO** (keep PCIe, spend effort elsewhere) when any of:
+
+- the Kimi trace shows the **floor dominating** (`s < ~0.25`): the Amdahl
+  bound is then ≤ 1.33× even with perfect interconnect, and the floor work
+  below is the cheaper fix;
+- the node remains **Kimi-only** in practice: Kimi cannot use an island fully
+  (TP=4 does not fit), so it collects only the modest hierarchical gain;
+- the TP curve comes back flat (TP2 ≈ TP1) — comms was never the binding term.
+
+**Boundary of this thread:** T9 delivers the *performance* half of the
+cost-benefit — calibrated `s`, the per-config gain table, and the GO/NO-GO
+verdict against the thresholds above. The *money* half (bridge price,
+installation downtime, warranty) is a company-side input outside this repo;
+the thresholds are set so that the verdict composes with any price tag.
+
+### Addendum: if the floor dominates — investigating F_host
+
+Conditional follow-up (only triggered by the floor-dominant outcome), kept
+short because it is a different investigation:
+
+1. **Decompose the gaps** from the same trace: host-side Python/scheduler time
+   vs sampler CPU↔GPU syncs vs kernel-launch spacing — the trace already
+   contains this; no new capture needed.
+2. **Cheap levers to A/B** (one restart each): CUDA-graph mode (vLLM
+   `cudagraph_mode` full vs piecewise — fewer launch gaps), speculation OFF
+   (removes draft bookkeeping from the step), CPU/NUMA pinning of the engine
+   process (dual-socket node — scheduler threads bouncing across sockets
+   inflate sync latency).
+3. **Engine version**: vLLM v0.20 is the pinned baseline; release notes for
+   newer versions list scheduler/step-loop optimizations — an upgrade A/B is
+   the last cheap lever before accepting the floor as structural.
 
 ## Evidence
 
