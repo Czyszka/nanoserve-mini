@@ -644,8 +644,10 @@ two remain named counterfactuals:
 - **HBM-bound vs PCIe-comms-bound — measured, and the favorite lost.** The
   DCGM split came back with `DRAM_ACTIVE` ≤ 9% under load: HBM-bandwidth-bound
   is refuted; comms/serialization-bound stands as the surviving hypothesis,
-  awaiting a comms-level lever for the causal close
-  ([#34](https://github.com/Czyszka/nanoserve-mini/issues/34)).
+  awaiting a comms-level lever for the causal close. The attribution — and the
+  NVLink 4-way cost-benefit analysis it feeds — continues as
+  [T9](w1/t9-bottleneck-nvlink.md)
+  ([#50](https://github.com/Czyszka/nanoserve-mini/issues/50)).
 - **DeepSeek under real generation** — current baseline is a 2-token smoke.
 - **Speculation under load** — the A/B is single-stream; acceptance (0.493
   batched vs 59–72% single-stream) and the `max-num-batched-tokens` confound

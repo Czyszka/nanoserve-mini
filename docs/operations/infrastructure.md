@@ -109,6 +109,27 @@ Służy do:
   3. **cross-socket przez UPI** (`GPU → PCIe → CPU0 → UPI → CPU1 → PCIe →
      GPU`, najdrożej). TP=8 z konstrukcji przechodzi przez UPI; mostki NVLink
   4-way muszą być sparowane zgodnie z socketami (wyspy 4+4).
+- **Jak to się łączy (schemat presumed — bus-ID + datasheet; potwierdzić
+  `nvidia-smi topo -m`):**
+
+  ```text
+                    UPI (cross-socket)
+     CPU0 (Xeon 6530)  <==========>  CPU1 (Xeon 6530)
+     NUMA 0+1                        NUMA 2+3
+      |         |                     |         |
+    PCIe5     PCIe5                 PCIe5     PCIe5
+     x16       x16                   x16       x16
+      |         |                     |         |
+    [SW0]     [SW1]                 [SW2]     [SW3]
+     |  |      |  |                  |  |      |  |
+   GPU0 GPU1 GPU2 GPU3             GPU4 GPU5 GPU6 GPU7
+   1D   1E   40   41               AA   AB   BB   BC
+  ```
+
+  Przykłady klas ścieżek (oczekiwane oznaczenia w `topo -m`):
+  `GPU0↔GPU1` przez SW0 (`PIX`, klasa 1) · `GPU0↔GPU2` SW0 → root CPU0 → SW1
+  (`PXB`/`NODE`, klasa 2) · `GPU0↔GPU4` SW0 → CPU0 → **UPI** → CPU1 → SW2
+  (`SYS`, klasa 3).
 - **DCGM dostępny na hoście (tier-1):** `dcgmi` działa (potwierdzone
   2026-06-10) — w planach sesji nie trzeba fallbacków exporter/dmon. Wzorzec
   samplera: `dcgmi dmon -e 155,1002,1004,1005,1009,1010 -d 1000 -c <N>`

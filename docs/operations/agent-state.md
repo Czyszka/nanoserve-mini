@@ -222,6 +222,14 @@ status, not a task list. Update when work moves.
   stretch A4 = TP=2 on GPU{0,4} via `CUDA_VISIBLE_DEVICES` (direct UPI-tax
   measurement); Kimi stays TP=8-only and is profiled anyway (Cz. B); cut
   order A4 → C → A3.
+  **2026-06-10 (PM3): investigation promoted to W1 thread T9**
+  (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
+  engineering record of the bottleneck attribution + NVLink decision model;
+  scope boundary stated inside (T9 = record/decision, W2 = TP-scaling
+  synthesis). Wired into the W1 index (thread map, files, evidence-quality
+  table, follow-up item 5) and the article's gaps list. `infrastructure.md`
+  gained the full connection diagram (CPU0/1 ↔ UPI, 4 PCIe switches, GPU
+  pairs, link-class examples mapped to expected `topo -m` labels).
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
