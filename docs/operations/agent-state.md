@@ -185,6 +185,21 @@ status, not a task list. Update when work moves.
   c=1 (Inv 3), client-vs-server TTFT isolation closed (server p50 93 ms vs
   client 177 ms any / 1.82 s content — Inv 2), closing gaps list updated.
   Threads T2/T5/T8 do **not** yet carry the new evidence rows.
+- **Bottleneck follow-up (2026-06-10):** user's extra Qwen3.6-35B-A3B TP1/TP2
+  runs (`results/runs/2026-06-10_extra/`, commits `6a3cdbf`/`2d20b6a`) analyzed
+  laptop-side: TP1 c=64 hits 443 W / SMACT 0.68 / DRAMA 0.39 on one GPU (zero
+  comms), TP2 c=64 halves per-GPU activity (265 W / 0.40 / 0.18) with
+  5.8/6.7 GB/s on PCIe — strong comms-tax signature; TP1 c=1 still only SMACT
+  0.47 at ~9 ms/step → per-step overhead floor independent of PCIe.
+  **Errata 2026-06-10_extra:** `log_cap_qwen_tp2.txt` is the TP1 container's
+  log (wrong container; TP2 config proven only by `engine_cmd.json`); TP2
+  bench JSONs missing (recoverable from Prometheus TSDB, window epoch
+  1781096733+253 s, `model_name="Qwen3.6"`); TP2 `batched_c64_end_epoch`
+  missing; 133 all-idle samples appended to TP1's `batched_c64_dcgmi.txt`.
+  Next session planned (user picked A+B+C, D rejected):
+  `docs/plans/2026-06-10-bottleneck-followup-session.md` — Qwen TP2/TP4 curve
+  + TSDB recovery, Kimi TP8 torch-profiler trace (NCCL share of decode step),
+  Qwen TP2 `NCCL_P2P_DISABLE=1` dose-response.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -510,6 +525,24 @@ semantics from schema identifier stability.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-10 (laptop, PM) - analiza Qwen TP1/TP2 + plan sesji bottleneck
+
+- Why: P0 obaliło HBM-bound, ale "wszystko bezczynne" nie dowodzi jeszcze
+  PCIe; user chce domknąć pytanie o wąskie gardło (zakładał PCIe).
+- Did: agregacja liczników z `2026-06-10_extra` (per-GPU, active-filter,
+  bloby z commitów — plik TP1 batched ma doklejony ogon): TP1 c=64 443 W /
+  SMACT 0.68 / DRAMA 0.39 / PCIe ~0; TP2 c=64 265 W / 0.40 / 0.18 / PCIe
+  5.8/6.7 GB/s per GPU; TP1 c=1 TPOT 3.68 ms, ITL ~9 ms/krok przy zerowej
+  komunikacji → podatek PCIe widoczny + podłoga narzutu per-step. Errata
+  integralności capture'u spisana w "In flight". Decyzja usera: eksperymenty
+  A (Qwen TP-curve + TSDB recovery), B (Kimi torch profiler), C (NCCL
+  dose-response); D odrzucone. Plan:
+  `docs/plans/2026-06-10-bottleneck-followup-session.md` (fail-fast verify TP
+  w logu przed benchem, traców nie commitujemy — tylko podsumowanie).
+- Validation: `git diff --check` OK (docs-only).
+- Next: wykonać plan w najbliższym slocie; po wynikach — werdykt do artykułu
+  (Inv 5 / sekcja syntezy) wg tabeli "Kryteria rozstrzygnięcia" w planie.
 
 ### 2026-06-10 (laptop) - W1 article: integracja wyników sesji P0+P2
 
