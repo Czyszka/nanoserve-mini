@@ -1,0 +1,2 @@
+vllm:1026:1026 [0] NCCL INFO NCCL_P2P_DISABLE set by environment to 1
+vllm:1027:1027 [1] NCCL INFO NCCL_P2P_DISABLE set by environment to 1
