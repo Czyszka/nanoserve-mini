@@ -435,11 +435,15 @@ cat > /tmp/qwen-prof.yml <<'EOF'
 services:
   vllm:
     command:
-      --model Qwen/Qwen3.6-35B-A3B --served-model-name=${QWEN_SERVED_MODEL_NAME:-Qwen3.6} --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size ${QWEN_TP:-8} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --speculative-config='{"method":"mtp","num_speculative_tokens":${QWEN_NUM_SPECULATIVE_TOKENS:-3},"max_model_len":${QWEN_SPEC_MAX_MODEL_LEN:-8192}}' --mm-encoder-tp-mode data --max-model-len ${QWEN_MAX_MODEL_LEN:-65536} --max-num-seqs ${QWEN_MAX_NUM_SEQS:-32} --max-num-batched-tokens ${QWEN_MAX_NUM_BATCHED_TOKENS:-8192} --gpu-memory-utilization ${QWEN_GPU_MEM_UTIL:-0.9} --profiler-config='{"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
+      --model Qwen/Qwen3.6-35B-A3B --served-model-name=Qwen3.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 1 --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --speculative-config='{"method":"mtp","num_speculative_tokens":3,"max_model_len":8192}' --mm-encoder-tp-mode data --max-model-len 65536 --max-num-seqs 32 --max-num-batched-tokens 8192 --gpu-memory-utilization 0.9 --profiler-config='{"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
 EOF
+# TP1 HARD-CODED w overlayu — overlay zastępuje całą komendę, więc QWEN_TP
+# z shellu (np. =4 po restore Q4.7) nie ma już znaczenia
 docker compose -f "$QWEN_COMPOSE" -f /tmp/qwen-prof.yml up -d --force-recreate vllm
 wait_http_health http://127.0.0.1:8000/health 240 5
 docker inspect vllm --format '{{json .Config.Cmd}}' | grep -o 'profiler-config' || echo "BRAK profiler-config — przerwij"
+docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$FOUT/verify_tp1prof.txt"
+grep -q "tensor_parallel_size=1" "$FOUT/verify_tp1prof.txt" || echo "TP MISMATCH — ma być 1, nie startuj profilu"
 # prereqs, potem PROFIL KRÓTKI (1 request):
 curl -fsS -X POST http://127.0.0.1:8000/start_profile
 docker compose -f "$QWEN_COMPOSE" exec vllm bash -c '
