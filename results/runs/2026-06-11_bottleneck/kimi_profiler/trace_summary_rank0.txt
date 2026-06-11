@@ -1,0 +1,5 @@
+kategorie: {'user_annotation': 409, 'cpu_op': 69147, 'python_function': 2493784, 'overhead': 44, 'cuda_runtime': 19133, 'gpu_memcpy': 2757, 'kernel': 136231, 'cuda_driver': 1751, 'gpu_memset': 425, 'gpu_user_annotation': 686, 'Trace': 1}
+span 5.06s  kernel-time 1.88s  gaps 3.18s (63%)
+  comms                  1.14s   22.5% of span
+  compute                0.46s    9.1% of span
+  other                  0.28s    5.6% of span
