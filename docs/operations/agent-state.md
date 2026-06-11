@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `342ddf6`
-- Last summarized at: 2026-06-11 (PM)
+- Last summarized commit: `32763d7`
+- Last summarized at: 2026-06-11 (close-out)
 - Note: previous cursor `520d788` is dangling in the current history (laptop-side
   rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
@@ -262,6 +262,18 @@ status, not a task list. Update when work moves.
   causally). Bonus: 3 independent TP2 starts calibrate noise (c1 step
   ±0.4 ms) → TP4/TP8 deltas are 4×/13× the noise band. Remaining: Cz. B
   (Kimi profiler), Cz. D (restore).
+  **Cz. B + D (`e5f02a5`, analysis `32763d7` →
+  `results/summaries/2026-06-11-kimi-tp8-profile.md`): SESSION COMPLETE.**
+  Kimi TP8 c=1 trace (rank 0): **gaps 63% of span, NCCL 22.5%, compute 9%**
+  → floor-bound, not comms-bound (criteria row 3); control: profiled vs
+  unprofiled request differ ~5%, so gaps are real. Amdahl bound for NVLink
+  on interactive Kimi ≤1.3× → **NO-GO signal for the interactive-latency
+  motivation**; batched-Kimi case unmeasured (stretch c=8 cut). vLLM v0.20
+  gotcha recorded in the plan: `VLLM_TORCH_PROFILER_DIR` removed upstream,
+  profiler needs `--profiler-config` engine flag. Raw traces:
+  `/home/working/nanoserve-tracing` (ubuntusrv2, outside repo). Restore
+  verified clean. Next: recompute #50 estimate table from measured values
+  and write the recommendation; W2 synthesis material ready.
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -393,6 +405,14 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-11 (close-out) Kimi TP8 profile analysis + session wrap:
+
+```text
+git diff --check    OK (docs/md only; no .py touched)
+profiler control: profiled vs unprofiled request ~5% apart (gaps real)    OK
+restore check: no profiler-config in Cmd, smoke completed=True    OK
+```
+
 2026-06-11 (PM) Qwen TP-curve analysis (laptop-side, docs/results only):
 
 ```text
@@ -506,6 +526,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-11 (cloud, close-out) - Kimi TP8 profile: floor-bound, NVLink interactive NO-GO signal
+
+- Why: Cz. B trace was the last missing measurement for the #50 NVLink decision.
+- Did: rank-0 trace shows gaps 63% / NCCL 22.5% / compute 9% of span with a ~5% profiler-overhead control → Kimi TP8 c=1 is floor-bound, Amdahl bound for NVLink ≤1.3× interactive; summary in results/summaries/2026-06-11-kimi-tp8-profile.md; session restored and complete.
+- Range: `342ddf6..32763d7` (5 commits)
+- Validation: OK
+- Next: recompute the #50 estimate table from measured values and draft the purchase recommendation (laptop-side).
 
 ### 2026-06-11 (cloud, PM) - Qwen TP-curve analyzed (commit A of the bottleneck session)
 
