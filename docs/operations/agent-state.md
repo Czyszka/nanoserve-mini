@@ -8,8 +8,10 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `520d788`
-- Last summarized at: 2026-06-10
+- Last summarized commit: `3fdf08a`
+- Last summarized at: 2026-06-11
+- Note: previous cursor `520d788` is dangling in the current history (laptop-side
+  rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
   compacted in place (period summaries + source SHA kept inline); full history
   via `git show 520d788:docs/operations/agent-state.md`.
@@ -233,6 +235,17 @@ status, not a task list. Update when work moves.
   config changes, `NCCL_P2P_DISABLE` is a compose overlay, Kimi profiler startup
   stops Qwen first, and restore force-recreates plain Kimi/DeepSeek/LiteLLM/
   OpenWebUI and checks profiler env removal.
+  **2026-06-11: server run aborted on TP MISMATCH (A1/A2/A3)** — root cause:
+  the server executed an ad-hoc Qwen compose (`514b412`) with hard-coded
+  `--tensor-parallel-size 2` and no `${QWEN_TP}` interpolation, so the exported
+  `QWEN_TP` was silently ignored; partial artifacts in
+  `results/runs/2026-06-11_bottleneck/` (commit `8ab559b`). Fixed by merging
+  the parametrized compose into main (`309e803`); before re-running, pull on
+  the server and confirm TP via `docker inspect vllm` Cmd (beware `sudo`
+  stripping env). Plan hardened (`3fdf08a`): `engine_env_*` capture now redacts
+  secrets (raw dump leaked `HUGGING_FACE_HUB_TOKEN`; audit confirmed no token
+  was ever committed) and the TP-mismatch error prints the actual value from
+  the log.
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -360,6 +373,13 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-11 TP-mismatch diagnosis + plan secret redaction:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+secret audit: no engine_env_* file ever committed; no HF token in results/ or docs/    OK
+```
+
 2026-06-10 bottleneck follow-up plan + Qwen compose prep:
 
 ```text
@@ -457,6 +477,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-11 (cloud) - TP MISMATCH root cause + plan secret redaction
+
+- Why: the 2026-06-11 server run aborted at the TP verify for A1/A2/A3, and the HF token was landing in committed-bound engine_env artifacts.
+- Did: traced the mismatch to the server's ad-hoc compose hard-coding TP=2 (QWEN_TP ignored), merged the parametrized compose into main, redacted secrets in the env capture, and made the mismatch error print the actual TP.
+- Range: `e08f762..3fdf08a` (3 commits)
+- Validation: OK
+- Next: pull main on the server, confirm TP via docker inspect, re-run A1/A2/A3.
 
 ### 2026-06-10 (laptop, PM5) - plan review pass (Claude) on top of hardening
 
