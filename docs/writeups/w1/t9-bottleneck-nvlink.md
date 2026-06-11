@@ -5,6 +5,27 @@ through 2026-06-10; closing measurements planned in
 `docs/plans/2026-06-10-bottleneck-followup-session.md`, goal tracked in
 [#50](https://github.com/Czyszka/nanoserve-mini/issues/50).
 
+## Target structure of the final note
+
+The finished T9 should read in this order (restructure pass once the
+2026-06-11 session data is in; mapping to today's sections in parentheses):
+
+1. Problem (→ Question)
+2. Observation of the problem + the automotive analogy (→ delivery-run analogy)
+3. Glossary (→ Glossary)
+4. Hardware infrastructure (→ topology facts, now scattered; pull together)
+5. Mechanisms under investigation (→ The decision model, mechanism list)
+6. Methodology — step by step / scenarios (→ session plans, summarised here)
+7. Results (→ Established so far + 06-11 session results)
+8. Calculations + causal-path analysis (→ per-step comms tax, Amdahl bounds,
+   trace splits)
+9. Conclusions from the results
+10. Summary table: possible decisions per situation (→ When NVLink makes
+    sense — and when it does not)
+11. Justification per scenario
+12. Verdict
+13. Evidence references (→ Evidence)
+
 ## Question
 
 Two questions, both of which must end with numbers rather than adjectives:
