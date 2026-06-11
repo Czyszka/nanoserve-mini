@@ -216,6 +216,144 @@ Porównanie: `tp4x0145` vs `tp4` intra (krok c64 53.7 ms).
 `capture ≈ 1 − Δ_island/Δ_comms_total` — ile komunikacji NVLink 4-way
 realnie przejmuje, skoro UPI między wyspami zostaje.
 
+## Cz. Q4 — profil Qwen TP4 c=64 → udział NCCL przy batchu (35 min, qwen ×1)
+
+Domyka pytanie „model wymagający min. TP=4": TP4 c64 traci ~połowę pojemności
+per-GPU vs TP2 (680 vs 1404 tok/s), SMACT 0.06, RX 2.9 GB/s « sufit — nie
+wiemy, ile z tego to transfer (NVLink-removable, capture=1.0 w jednej wyspie),
+a ile sync/orchestracja. Trace rozstrzyga. **Blok samowystarczalny** — wklejasz
+po kolei, niczego nie dosztukowujesz.
+
+### Q4.1 — zmienne + helper (świeży terminal też zadziała)
+
+```bash
+cd ~/nanoserve-mini && git pull --ff-only origin main
+# BEZ set -e / exit (interaktywne SSH)
+RUN_DIR=results/runs/2026-06-11_nvlink_boundary   # faktyczny katalog tej sesji
+QOUT="$RUN_DIR/qwen"; mkdir -p "$QOUT/bench_ramp"
+QWEN_COMPOSE="serving/compose/docker-compose.qwen3.6.yml"
+set -a; source .env; set +a
+
+wait_http_health () {  # $1=url $2=attempts $3=sleep_seconds
+  url="$1"; attempts="$2"; pause="$3"
+  for _ in $(seq 1 "$attempts"); do
+    curl -fsS "$url" >/dev/null 2>&1 && return 0
+    sleep "$pause"
+  done
+  echo "health timeout: $url" >&2
+  return 1
+}
+```
+
+### Q4.2 — overlay profilera (pełna komenda Qwen + TP4 hard-coded)
+
+```bash
+cat > /tmp/qwen-tp4-profiler.yml <<'EOF'
+services:
+  vllm:
+    command:
+      --model Qwen/Qwen3.6-35B-A3B --served-model-name=Qwen3.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 4 --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --speculative-config='{"method":"mtp","num_speculative_tokens":3,"max_model_len":8192}' --mm-encoder-tp-mode data --max-model-len 65536 --max-num-seqs 32 --max-num-batched-tokens 8192 --gpu-memory-utilization 0.9 --profiler-config='{"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
+EOF
+# intra-island 0-3 jak oryginalny tp4 (porównanie 1:1 z bench_tp4/tp4_c64.json)
+export QWEN_CUDA_VISIBLE_DEVICES=0,1,2,3
+docker compose -f "$QWEN_COMPOSE" -f /tmp/qwen-tp4-profiler.yml up -d --force-recreate vllm
+unset QWEN_CUDA_VISIBLE_DEVICES
+wait_http_health http://127.0.0.1:8000/health 240 5
+
+docker inspect vllm --format '{{json .Config.Cmd}}' > "$QOUT/engine_cmd_tp4prof.json"
+grep -o 'profiler-config' "$QOUT/engine_cmd_tp4prof.json" || echo "BRAK profiler-config — nie startuj profilu"
+docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$QOUT/verify_tp4prof.txt"
+grep -q "tensor_parallel_size=4" "$QOUT/verify_tp4prof.txt" || echo "TP MISMATCH — nie benchuj"
+```
+
+### Q4.3 — prereqs (po recreate zawsze od zera)
+
+```bash
+docker compose -f "$QWEN_COMPOSE" cp results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl
+docker compose -f "$QWEN_COMPOSE" exec vllm bash -c \
+  'rm -rf /tmp/qbench /tmp/vllm_profile; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' || echo "PREREQS FAILED — nie leć dalej"
+```
+
+### Q4.4 — krótkie okno c=64 pod profilem (64 prompty ≈ 1 pełna fala)
+
+```bash
+curl -fsS -X POST http://127.0.0.1:8000/start_profile
+docker compose -f "$QWEN_COMPOSE" exec vllm bash -c '
+  export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+  vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
+    --model Qwen3.6 --trust-remote-code --tokenizer Qwen/Qwen3.6-35B-A3B \
+    --dataset-name custom --dataset-path /tmp/swe_bench_vllm.jsonl \
+    --custom-output-len 256 --ignore-eos --num-warmups 2 \
+    --num-prompts 64 --max-concurrency 64 \
+    --save-result --result-dir /tmp/qbench --result-filename qwen_tp4_c64p.json'
+curl -fsS -X POST http://127.0.0.1:8000/stop_profile
+docker compose -f "$QWEN_COMPOSE" cp vllm:/tmp/qbench/. "$QOUT/bench_ramp/" || echo "WARN: cp bench"
+# kontrola narzutu: median_itl_ms z qwen_tp4_c64p.json vs 53.7 (intra bez profilera)
+```
+
+### Q4.5 — flush-wait + kopia traców POZA repo
+
+```bash
+for _ in $(seq 1 60); do
+  n=$(docker compose -f "$QWEN_COMPOSE" exec vllm bash -c 'ls /tmp/vllm_profile 2>/dev/null | wc -l' | tr -d '[:space:]')
+  [ "${n:-0}" -gt 0 ] && break
+  sleep 10
+done
+docker compose -f "$QWEN_COMPOSE" exec vllm ls -la /tmp/vllm_profile/
+sleep 30
+docker compose -f "$QWEN_COMPOSE" exec vllm ls -la /tmp/vllm_profile/   # rozmiary stabilne? dopiero wtedy kopiuj
+
+TRACE_DIR=/home/working/nanoserve-tracing/qwen_tp4_c64_$(date +%F)
+mkdir -p "$TRACE_DIR" || echo "PERMISSION? sudo chown -R \$USER /home/working/nanoserve-tracing"
+docker compose -f "$QWEN_COMPOSE" cp vllm:/tmp/vllm_profile/. "$TRACE_DIR"/
+find "$TRACE_DIR" -type f \( -name '*.json' -o -name '*.json.gz' \) | sort
+```
+
+### Q4.6 — podsumowanie tracu rank0 (do repo idzie tylko to)
+
+```bash
+T=$(find "$TRACE_DIR" -type f \( -name '*.json' -o -name '*.json.gz' \) | sort | head -n 1)
+echo "trace: ${T:-NOT FOUND w $TRACE_DIR}"
+[ -n "$T" ] && uv run python - "$T" <<'EOF' | tee "$QOUT/trace_summary_tp4_c64_rank0.txt"
+import json,gzip,sys,collections
+p=sys.argv[1]; op=gzip.open if p.endswith('.gz') else open
+d=json.load(op(p,'rt'))
+ev=[e for e in d.get('traceEvents',[]) if e.get('ph')=='X' and 'dur' in e]
+cats=collections.Counter(e.get('cat','?') for e in ev)
+print("kategorie:",dict(cats))
+kern=[e for e in ev if e.get('cat','').lower() in ('kernel','gpu_op','cuda_runtime_kernel')]
+if not kern: kern=ev
+def bucket(name):
+    n=name.lower()
+    if 'nccl' in n or 'allreduce' in n or 'all_reduce' in n or 'allgather' in n or 'alltoall' in n: return 'comms'
+    if any(k in n for k in ('gemm','matmul','marlin','mla','attn','moe','silu','norm','quant')): return 'compute'
+    if 'graph' in n: return 'cudagraph_opaque'
+    return 'other'
+agg=collections.Counter()
+for e in kern: agg[bucket(e.get('name',''))]+=e['dur']
+span=max(e['ts']+e['dur'] for e in kern)-min(e['ts'] for e in kern)
+tot=sum(agg.values())
+print(f"span {span/1e6:.2f}s  kernel-time {tot/1e6:.2f}s  gaps {(span-tot)/1e6:.2f}s ({(span-tot)/span*100:.0f}%)")
+for k,v in agg.most_common(): print(f"  {k:18} {v/1e6:8.2f}s  {v/span*100:5.1f}% of span")
+EOF
+```
+
+### Q4.7 — restore Qwen bez profilera (lub przejście do innej części)
+
+```bash
+export QWEN_TP=4   # albo inne TP, jeśli następna część tego wymaga
+docker compose -f "$QWEN_COMPOSE" up -d --force-recreate vllm
+wait_http_health http://127.0.0.1:8000/health 240 5
+docker inspect vllm --format '{{json .Config.Cmd}}' | grep -o 'profiler-config' \
+  && echo "UWAGA: profiler-config nadal w Cmd — recreate nie zdjął overlaya" \
+  || echo "restore OK — bez profilera"
+```
+
+**Wyjście do werdyktu:** `share_TP4_batch` z Q4.6 →
+`gain_est(TP4) = 1/(1 − share×1.0)` (capture=1.0 — cała komunikacja w jednej
+wyspie NVLink 4-way). Kontrola narzutu z Q4.4 mówi, czy share jest
+reprezentatywny.
+
 ---
 
 ## Cz. F — atrybucja podłogi (dozy + profil; benche: c=1, random 64/512, 40 promptów)
