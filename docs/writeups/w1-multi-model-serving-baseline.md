@@ -45,6 +45,7 @@ Each thread is written in one mode:
 | **T6** | Why Eagle3 and what does it cost? SC on vs off. | justification + measurement | done — paired ON/OFF A/B | [`w1/t6-eagle3-speculative-decoding.md`](w1/t6-eagle3-speculative-decoding.md) |
 | **T7** | Why runtime data lives in host directories, not Docker volumes? | justification | done | [`w1/t7-host-directories.md`](w1/t7-host-directories.md) |
 | **T8** | Does LiteLLM Proxy add measurable overhead? | measurement | designed; full R1-R8 program intentionally deferred (#44) | [`w1/t8-litellm-overhead.md`](w1/t8-litellm-overhead.md) |
+| **T9** | What actually limits decode (HBM-bound refuted) — and would NVLink 4-way bridges pay off, for which TP? | investigation + decision analysis | **in progress** — comms-bound is the surviving L1; closing session planned (#50) | [`w1/t9-bottleneck-nvlink.md`](w1/t9-bottleneck-nvlink.md) |
 
 ---
 
@@ -60,6 +61,7 @@ The current source-of-truth for thread drafting is:
 - [`w1/t6-eagle3-speculative-decoding.md`](w1/t6-eagle3-speculative-decoding.md)
 - [`w1/t7-host-directories.md`](w1/t7-host-directories.md)
 - [`w1/t8-litellm-overhead.md`](w1/t8-litellm-overhead.md)
+- [`w1/t9-bottleneck-nvlink.md`](w1/t9-bottleneck-nvlink.md) *(in progress)*
 
 The final W1 publication draft should later inline or summarize these
 threads once the server-side evidence is complete.
@@ -133,7 +135,8 @@ positive KV budget. Both threads are, at root, the same arithmetic.
 | T5 observability | done for W1 | validated under load; fuller panels under #34 |
 | T6 Eagle3 | done | paired ON/OFF A/B (`run-04` vs `run-05_…-paired`) |
 | T7 host directories | done | - |
-| T8 proxy overhead | done for W1 | strip proven twice; full R1–R8 deferred (#44) |
+| T8 proxy overhead | done for W1 | strip proven twice; R1 hop attribution measured 2026-06-10 (~37 ms c=1); R2–R8 deferred (#44) |
+| T9 bottleneck + NVLink | **in progress** | HBM-bound refuted (2026-06-10 counters); Qwen TP lever analyzed; closing session + calibration pending (#50) |
 | INDEX | done | baseline table + KV-budget synthesis filled |
 
 Every thread now carries a per-file `## Evidence` block mapping each headline
@@ -166,6 +169,9 @@ provenance. No further GPU slot is required to publish W1.
    any cross-thread synthesis publication.
 4. DeepSeek real-generation workload so a throughput baseline becomes meaningful
    (currently ~3-token smoke only).
+5. T9 close-out: decode-bottleneck attribution at L2 + the calibrated NVLink
+   4-way decision table (#50; session plan
+   `docs/plans/2026-06-10-bottleneck-followup-session.md`).
 
 ---
 

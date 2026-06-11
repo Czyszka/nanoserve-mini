@@ -8,9 +8,11 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `a7ce83f`
-- Last summarized at: 2026-05-20
-- 2026-05-20 sync: laptop follow-up - #31 Kimi parser fix merged, #32 benchmark artifact ignore cleanup closed, #33 server session summary added, #35 Grafana dashboard provisioning merged, `rg` installed on the laptop and wired into env checks.
+- Last summarized commit: `520d788`
+- Last summarized at: 2026-06-10
+- 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
+  compacted in place (period summaries + source SHA kept inline); full history
+  via `git show 520d788:docs/operations/agent-state.md`.
 
 ---
 
@@ -43,6 +45,9 @@ Phase 1 deliverables still owed:
 - Local Windows laptop bootstrap is done; Python workflow uses `uv`; `ruff` + `pytest` configured; `.gitattributes` normalises line endings.
 - Local research PDFs and Claude/Codex worktrees stay outside Git (`docs/**/papers/`, `.claude/worktrees/`, `.uv-cache-codex/`).
 - **Server**: ubuntusrv2 (Ubuntu 24.04, 8×H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
+- **Hardware reference**: Supermicro SYS-521GE-TNRT datasheet is mirrored as
+  lightweight Markdown at `docs/operations/sys-521ge-tnrt.md`; source PDF kept
+  at `docs/operations/sys-521ge-tnrt.pdf`.
 - **Kimi + DeepSeek + OpenWebUI + LiteLLM compose**: canonical compose lives at `serving/compose/docker-compose.kimi-k2.6.yml`.
 - **Observability compose**: `serving/compose/docker-compose.observability.yml` plus:
   - `serving/compose/prometheus/prometheus.yml`
@@ -177,6 +182,65 @@ status, not a task list. Update when work moves.
   attribution**; P1 (Eagle3 n=20 clean A/B) and P3 (concurrency sweep)
   **rejected**. Server slot planned: `docs/plans/2026-06-10-server-session.md`
   (zero engine restarts — compose already runs `max-num-seqs 32`).
+  **2026-06-10: session executed** (tier-1 `dcgmi`; evidence commits `e8ce1d7`
+  P0 + `8b8d457` P2; all P2 deltas `d_count=1`, no repeats needed). **Article
+  updated with the results:** HBM-bandwidth-bound **refuted** (`DRAM_ACTIVE`
+  0.093 c=1 / 0.070 c=64 — Inv 5 rewritten, comms/serialization-bound is the
+  surviving L1), reasoning-strip promoted to **L2** + hop cost ~37 ms median
+  c=1 (Inv 3), client-vs-server TTFT isolation closed (server p50 93 ms vs
+  client 177 ms any / 1.82 s content — Inv 2), closing gaps list updated.
+  Threads T2/T5/T8 do **not** yet carry the new evidence rows.
+- **Bottleneck follow-up (2026-06-10):** user's extra Qwen3.6-35B-A3B TP1/TP2
+  runs (`results/runs/2026-06-10_extra/`, commits `6a3cdbf`/`2d20b6a`) analyzed
+  laptop-side: TP1 c=64 hits 443 W / SMACT 0.68 / DRAMA 0.39 on one GPU (zero
+  comms), TP2 c=64 halves per-GPU activity (265 W / 0.40 / 0.18) with
+  5.8/6.7 GB/s on PCIe — strong comms-tax signature; TP1 c=1 still only SMACT
+  0.47 at ~9 ms/step → per-step overhead floor independent of PCIe.
+  **Errata 2026-06-10_extra:** `log_cap_qwen_tp2.txt` is the TP1 container's
+  log (wrong container; TP2 config proven only by `engine_cmd.json`); TP2
+  bench JSONs missing (recoverable from Prometheus TSDB, window epoch
+  1781096733+253 s, `model_name="Qwen3.6"`); TP2 `batched_c64_end_epoch`
+  missing; 133 all-idle samples appended to TP1's `batched_c64_dcgmi.txt`.
+  Next session planned (user picked A+B+C, D rejected):
+  `docs/plans/2026-06-10-bottleneck-followup-session.md` — Qwen TP2/TP4 curve
+  + TSDB recovery, Kimi TP8 torch-profiler trace (NCCL share of decode step),
+  Qwen TP2 `NCCL_P2P_DISABLE=1` dose-response.
+  **Goal formalized as issue #50** (bottleneck at L2 + NVLink 4-way purchase
+  decision: parametric model `T = F_host + N_rounds × r(link,ranks) +
+  W_silicon`, first-pass per-TP gain estimates — TP=1 none, TP=2/4 in-island
+  largest, Kimi capped at hierarchical TP=8 ~1.2–1.5× since TP=4 does not fit;
+  session outputs calibrate it). **New hardware fact:** server is dual-socket
+  (2× CPU, user-reported); PCIe likely split across sockets → cross-socket
+  GPU pairs traverse UPI. Recorded in `infrastructure.md` (hypothesis, to
+  verify via `nvidia-smi topo -m` in the session plan).
+  **2026-06-10 (PM2): topology largely resolved from the datasheet**
+  (`docs/operations/sys-521ge-tnrt.md`: SYS-521GE-TNRT, "Dual-Root PCIe",
+  PCIe 5.0 x16 Switch per root, **NVLink Bridge officially optional** for the
+  chassis) + env snapshot (2× Xeon Gold 6530, NUMA=4/SNC-2; GPU bus-IDs pair
+  as 1D/1E, 40/41, AA/AB, BB/BC → 4 switch pairs, GPU0–3 CPU0 / GPU4–7 CPU1
+  presumed) — posted as a #50 comment; `infrastructure.md` updated (incl.
+  DCGM host tier-1 as a durable fact). **Session plan v2:** full Qwen re-run
+  TP=2 + new TP=8 (rank anchor for Kimi) + TP=4, step-by-step (KROK 1–7),
+  stretch A4 = TP=2 on GPU{0,4} via `CUDA_VISIBLE_DEVICES` (direct UPI-tax
+  measurement); Kimi stays TP=8-only and is profiled anyway (Cz. B); cut
+  order A4 → C → A3. **Prep:** added
+  `serving/compose/docker-compose.qwen3.6.yml`, a dedicated Qwen compose that
+  keeps service/container/hostname `vllm` and port `8000:8000` so existing
+  Prometheus target `vllm:8000` continues to work while Kimi/DeepSeek are down.
+  **2026-06-10 (PM4):** session-plan commands hardened before the next server
+  slot: Qwen sections now use the dedicated compose instead of an ad-hoc command
+  override, health waits fail on timeout, Qwen sampler windows are joined before
+  config changes, `NCCL_P2P_DISABLE` is a compose overlay, Kimi profiler startup
+  stops Qwen first, and restore force-recreates plain Kimi/DeepSeek/LiteLLM/
+  OpenWebUI and checks profiler env removal.
+  **2026-06-10 (PM3): investigation promoted to W1 thread T9**
+  (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
+  engineering record of the bottleneck attribution + NVLink decision model;
+  scope boundary stated inside (T9 = record/decision, W2 = TP-scaling
+  synthesis). Wired into the W1 index (thread map, files, evidence-quality
+  table, follow-up item 5) and the article's gaps list. `infrastructure.md`
+  gained the full connection diagram (CPU0/1 ↔ UPI, 4 PCIe switches, GPU
+  pairs, link-class examples mapped to expected `topo -m` labels).
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -187,33 +251,6 @@ status, not a task list. Update when work moves.
 
 ## Immediate next steps
 
-Detailed tasks live in issues; `docs/plans/2026-05-19-post-server-laptop-plan.md`
-sequences them. This section only points at active work — it is not a task list.
-
-- **#37** — server evidence for T1/T6/T3 is **collected** (2026-06-05,
-  `d0bb634`); remaining work is the laptop write-up below, not another slot.
-- **#34** — after W1 evidence is coherent, validate Grafana panels against live
-  metric names under load; do not block W1 on DCGM/GPU hardware panels.
-
-**W1 write-up — COMPLETE (2026-06-05 laptop pass).** All eight threads in
-`docs/writeups/w1/` are written from committed evidence (`d0bb634`), each with
-a `## Evidence` provenance block; the index
-(`docs/writeups/w1-multi-model-serving-baseline.md`) has its baseline table,
-KV-budget synthesis, and status tables filled. Commits: T6 `bfe82bf`, T1
-`eaa3694`, T3 `77df2f5`, T4/T8 `023f691`, T5 `c2be652`, INDEX `5fc9648`.
-Honesty corrections folded in: T6 A/B has a 2-flag impurity and length-confound
-(lead repeated p50 2.0×, not single-shot 3.8×); T1+T3 unified as the same
-negative-KV-budget crash; T8 strip upgraded to a `completed:false` usability
-hazard. Structure kept modular per decision; no GPU slot needed to publish.
-
-**Next concrete step.** W1 article deepening
-(`docs/plans/2026-06-09-w1-article-deepening.md`): Etap 1 (laptop-only analysis
-layer — quantitative boxes, figures, TL;DR, synthesis) can start now; the
-2026-06-10 server slot runs P0 GPU counters + P2 hop attribution
-(`docs/plans/2026-06-10-server-session.md`); Etap 3 integrates results into the
-article. Other post-W1 work unchanged: #34 (full DCGM panels, LiteLLM exporter
-404, L2 causal checks), #44 (T8 R2–R8 remainder), #48 (T6 methodology
-reconciliation), DeepSeek real-generation workload.
 
 Deferred items (GPU sampling in `run_bench_suite.py`, `aggregate_runs.py` Wave C)
 are tracked under "Open questions / blockers" below.
@@ -323,6 +360,34 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-10 bottleneck follow-up plan + Qwen compose prep:
+
+```text
+git diff --check    OK (docs/config only; no .py touched)
+docker compose -f serving/compose/docker-compose.qwen3.6.yml config    OK
+docker compose -f serving/compose/docker-compose.qwen3.6.yml -f qwen-nop2p.yml config    OK
+docker compose -f serving/compose/docker-compose.kimi-k2.6.yml -f kimi-profiler.yml config    OK
+QWEN_TP=2 QWEN_CUDA_VISIBLE_DEVICES=0,4 compose interpolation    OK
+```
+
+Note: Kimi compose validation needs dummy `HF_TOKEN` and `LITELLM_MASTER_KEY`
+locally because the file intentionally requires them; no GPU commands were run
+on the laptop.
+
+2026-06-10 W1 article — 2026-06-10 evidence integrated (P0 + P2):
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
+`docs/writeups/w1-article.md` updated from
+`results/runs/2026-06-10_w1_article_evidence/` (commits `e8ce1d7`/`8b8d457`):
+Inv 5 counters table + HBM-bound refutation, Inv 3 R1 attribution table + ~37 ms
+hop cost, Inv 2 client-vs-server isolation closed, Inv 4 rationale rephrased,
+closing gaps list + postscript. The commit also carries the previously
+uncommitted "five numbers" article rewrite (working tree since 2026-06-09).
+No `ruff` / `pytest` (docs-only).
+
 2026-06-09 W1 article deepening plan + 2026-06-10 server session plan:
 
 ```text
@@ -379,114 +444,106 @@ Docs-only: hardened the four published W1 threads against vLLM source + primary
 external sources (commits `9473660` T1, `887ebe7` T2, `6f3474d` T3, `0f635d9`
 T4). No `ruff` / `pytest` run.
 
-2026-06-05 server slot (T3 clean + T6 ON start + LiteLLM strip diagnosis):
-
-```text
-git diff --check    OK (artefakty + compose; no .py touched)
-```
-
-Commits: `6c9db1c` compose defaults (Kimi 0.65→0.6, +max-num-batched-tokens
-4096, speculative `max_model_len:8192`; DeepSeek 0.25→0.2, speculative
-`max_model_len:8192`); `208e072` T3 sweep (`results/runs/2026-06-05_w1_evidence/t3_deepseek_vram/`:
-`log_cap015_FAILED.txt`, `log_cap0{20,25}.txt` + matching `verify_cap*.txt`
-+ `nvidia_smi_cap*.txt` + `ttft_cap0{20,25}.json`); `1ab8057` T6 ON
-(`t6_eagle3/engine_cmd_eagle3_on.json` + `kimi_log_eagle3_on.txt`);
-`277143b` + `cf160cf` Kimi K2.6 paired benches `run-01` (proxy :4000,
-max_tokens 64, TTFT null, 3 chunks, 0 reasoning_chars) vs `run-03` (direct
-:8000, max_tokens 64, TTFT_any 0.214 s, 26 chunks, 242 reasoning_chars).
-
-2026-06-02 W1 T4 wording pass:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: rewrote T4 in a more formal technical-note style. No `ruff`
-or `pytest` run.
-
-2026-06-02 W1 T4 LiteLLM Proxy write-up:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: updated the T4 W1 justification, W1 tracker, and this handoff
-state. No `ruff` or `pytest` run.
-
-2026-06-02 W1 close-out tracker:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: updated the W1 top-level draft tracker and this handoff state.
-No `ruff` or `pytest` run.
-
-2026-06-02 W1 T7 host-directories write-up:
-
-```text
-git diff --check    OK
-```
-
-Docs-only change: updated the T7 W1 justification and this handoff state. No
-`ruff` or `pytest` run.
-
-2026-05-27 session documentation cleanup:
-
-```text
-GitHub contents API writes only; no local validation run in this environment.
-```
-
-Added `session/session_notes.md`, `session/artifact_manifest.txt`, and this agent-state update. No executable code changed. The many-file run-directory rename remains deferred to a local git checkout.
-
-2026-05-26 documentation/config plan hardening:
-
-```text
-git diff --check    OK
-```
-
-Updated the 2026-05-27 server-session plan only, plus `.env.example`
-documentation for `DEEPSEEK_GPU_MEM_UTIL`; no executable code changed.
-
-2026-05-20 laptop validation (issue #31):
-
-```text
-uv run ruff check .     OK, all checks passed
-uv run pytest -q        OK, 121 passed
-```
-
-Parser also smoke-checked against the committed Kimi stream-debug artifacts:
-reasoning-only `stream_short_prompt` now reports `completed` with
-`ttft_any_token_seconds` set (was `TTFT: n/a`); `stream_exact_ok` and
-`stream_reasoning_prompt` report both content and any-token TTFT.
-
-2026-05-21 documentation review:
-
-```text
-git diff --check                                      OK
-uv run pytest benchmarks\scripts_tests\test_client.py benchmarks\scripts_tests\test_measure_ttft_once.py -q
-                                                       OK, 39 passed
-```
-
-W1 T2 was tightened against repository evidence: DeepSeek is named as the
-content-TTFT control, raw reasoning excerpts were redacted to structural
-placeholders, `nonstream_short_prompt.sse.json` is no longer treated as a
-behavioral control, and the additive schema wording now distinguishes field
-semantics from schema identifier stability.
-
-2026-05-19 server validation:
-
-- Kimi and DeepSeek endpoints responded directly.
-- OpenWebUI communicated with the running vLLM services.
-- LiteLLM Proxy responded to `/v1/models` and `/v1/chat/completions` for both upstream models.
-- `run_bench_suite.py` completed for both `kimi-k2.6` and `DeepSeek-V4-Flash` through LiteLLM Proxy.
-- Prometheus and Grafana containers were started. Target/dashboard quality still needs follow-up.
+> Pre-2026-06-06 validation entries compacted 2026-06-10. Source: `520d7883127452cc5ef50dca52fecfdb2e62fabf`.
+> Full history: `git show 520d7883127452cc5ef50dca52fecfdb2e62fabf:docs/operations/agent-state.md`.
+> Summary (2026-05-19 → 2026-06-05): docs/config-only changes validated with
+> `git diff --check`; `.py` changes (#31 parser fix, bench-suite launcher)
+> with `uv run ruff check .` + `uv run pytest` (113→121 passed); server
+> slots validated live (direct endpoints, LiteLLM proxy, bench suite for both
+> models, observability bootstrap, 2026-06-05 evidence commits).
 
 ---
 
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-10 (laptop, PM5) - plan review pass (Claude) on top of hardening
+
+- Why: pre-session review caught footguns that would cost slot time.
+- Did: in `docs/plans/2026-06-10-bottleneck-followup-session.md` — removed
+  `set -euo pipefail` (errexit kills the interactive SSH shell on first error;
+  fail-fast now explicit `|| return 1` in functions), TP verify greps the FULL
+  `docker logs` (tail-500 cuts the config line at TP=8 / NCCL_DEBUG=INFO),
+  KROK 6 artifact collection now runs even when a bench fails (06-10 lesson),
+  added `engine_env_<tag>.txt` dump + A4 placement check, Cz. 0 removes the
+  stopped Kimi `vllm` container (container_name collision), Qwen health wait
+  240×5 (TP=8 cudagraph capture), Kimi trace flush wait loop instead of
+  `sleep 10`, `${EDITOR:-nano}`, budget table reordered to match section order.
+- Validation: `git diff --check` OK; `bash -n` on all concatenated ```bash
+  blocks of the plan OK.
+- Next: execute on the server; cut order unchanged A4 -> C -> A3.
+
+### 2026-06-10 (laptop, PM) - bottleneck follow-up plan command hardening
+
+- Why: next server slot should execute Qwen TP-curve, NCCL dose-response, and
+  Kimi profiler without losing time to compose/health/sampler mistakes.
+- Did: updated `docs/plans/2026-06-10-bottleneck-followup-session.md` to use
+  `serving/compose/docker-compose.qwen3.6.yml`, fail-fast health helper, robust
+  Qwen sampler joins and JSON-count checks, `QWEN_EXTRA_COMPOSE` for no-P2P,
+  `QWEN_CUDA_VISIBLE_DEVICES=0,4` for A4, Kimi profiler pre-cleanup, trace-file
+  existence check, and force-recreate restore with profiler-env guard.
+- Validation: `git diff --check` OK; Docker Compose config OK for Qwen, Qwen
+  no-P2P overlay, Kimi profiler overlay, and Qwen TP/CUDA interpolation (dummy
+  secret env only; no GPU commands run locally).
+- Next: on the server, execute the plan from Cz. 0 using the root `.env`; if
+  time is short, keep the documented cut order A4 -> C -> A3.
+
+### 2026-06-10 (laptop, PM) - Qwen compose for bottleneck session
+
+- Why: bottleneck follow-up needs a repeatable Qwen3.6-35B-A3B serving config
+  without editing the canonical Kimi/DeepSeek compose; observability should keep
+  scraping `vllm:8000`.
+- Did: added `serving/compose/docker-compose.qwen3.6.yml` with service/container
+  `vllm`, host port `8000`, pinned vLLM image, same HF cache mount and
+  `nanoserve-net`, plus env-parametrized `QWEN_TP`, `QWEN_CUDA_VISIBLE_DEVICES`,
+  max-length/batching, GPU memory cap, and MTP speculative-token count.
+- Validation: YAML parsed with `uv run python`; whitespace check OK; `docker
+  compose config` OK via
+  `C:\Program Files\Docker\Docker\resources\bin\docker.exe` (Docker CLI is
+  installed but not currently on this PowerShell session's `PATH`).
+
+### 2026-06-10 (laptop, PM) - analiza Qwen TP1/TP2 + plan sesji bottleneck
+
+- Why: P0 obaliło HBM-bound, ale "wszystko bezczynne" nie dowodzi jeszcze
+  PCIe; user chce domknąć pytanie o wąskie gardło (zakładał PCIe).
+- Did: agregacja liczników z `2026-06-10_extra` (per-GPU, active-filter,
+  bloby z commitów — plik TP1 batched ma doklejony ogon): TP1 c=64 443 W /
+  SMACT 0.68 / DRAMA 0.39 / PCIe ~0; TP2 c=64 265 W / 0.40 / 0.18 / PCIe
+  5.8/6.7 GB/s per GPU; TP1 c=1 TPOT 3.68 ms, ITL ~9 ms/krok przy zerowej
+  komunikacji → podatek PCIe widoczny + podłoga narzutu per-step. Errata
+  integralności capture'u spisana w "In flight". Decyzja usera: eksperymenty
+  A (Qwen TP-curve + TSDB recovery), B (Kimi torch profiler), C (NCCL
+  dose-response); D odrzucone. Plan:
+  `docs/plans/2026-06-10-bottleneck-followup-session.md` (fail-fast verify TP
+  w logu przed benchem, traców nie commitujemy — tylko podsumowanie).
+- Validation: `git diff --check` OK (docs-only).
+- Next: wykonać plan w najbliższym slocie; po wynikach — werdykt do artykułu
+  (Inv 5 / sekcja syntezy) wg tabeli "Kryteria rozstrzygnięcia" w planie.
+
+### 2026-06-10 (laptop) - W1 article: integracja wyników sesji P0+P2
+
+- Why: sesja serwerowa 2026-06-10 (plan `2026-06-10-server-session.md`)
+  dostarczyła P0 (liczniki GPU, tier-1 `dcgmi`) i P2 (hop attribution, komplet
+  5 par × mt∈{64,1024}, wszystkie `d_count=1`); artykuł miał wpiąć wyniki
+  (Etap 3 planu deepening).
+- Did: analiza artefaktów ad hoc (agregacja dcgmi per okno + parowane delty
+  P2). Kluczowe liczby: **P0** — idle 99 W / wszystko 0.000; c=1 SMACT 0.21,
+  TENSO 0.012, **DRAMA 0.093**, PCIe 1.9/6.0 GB/s; c=64 (288 tok/s) SMACT
+  0.20, TENSO 0.064, **DRAMA 0.070**, PCIe 6.0/8.0 GB/s → hipoteza HBM-bound
+  **obalona**, comms/serialization-bound zostaje jako L1 (≈0.2 ms/rundę
+  all-reduce z arytmetyki TPOT). **P2** — server TTFT 93 (direct) vs 96 ms
+  (proxy), te same 64 tokeny, strip 5/5 → **L2** (delivery, not compute); hop
+  ~37 ms median (paired outside-vLLM, stabilny dla obu mt); LiteLLM header
+  24.4 ms; przez proxy first token +1.7 s przy mt=1024 (zależny od długości
+  reasoning). Artykuł zaktualizowany: Inv 2 (izolacja client-vs-server
+  zamknięta), Inv 3 (tabela R1 + koszt hopa + ledger L2), Inv 4 (uzasadnienie
+  spekulacji przeformułowane), Inv 5 (sekcja "counters came back", tabela,
+  refutacja, ledger), zamknięcie (lista luk + postscript "sixth number").
+- Validation: `git diff --check` OK (docs-only). Commit artykułu zawiera też
+  wcześniejszy, niecommitowany rewrite "five numbers" z working tree.
+- Next: Etap 1 deepening (TL;DR, figury, methods/synteza, statystyka, primary
+  refs); opcjonalnie evidence rows 2026-06-10 do T2/T5/T8.
 
 ### 2026-06-09 (laptop) - W1 article deepening plan + jutrzejsza sesja serwerowa
 
@@ -600,214 +657,13 @@ Newest entry first.
   undecided.
 - Next: continue review with T5 (observability) or pick T6/T7/T8.
 
-### 2026-06-05 (laptop) - W1 session organization, audit, run-dir cleanup
-
-- Why: skrupulatnie podsumować i uporządkować dużą sesję serwerową przed
-  pisaniem write-upów W1.
-- Did:
-  - Audyt integralności wykrył, że końcowy commit `fc97700`
-    ("results od 202600605") **re-runował i nadpisał** w miejscu wyniki
-    `kimi run-05` (OFF) + `deepseek run-01/02`, rozjeżdżając repo z
-    `bench_off.log` i handoffem. Czyste (log==json): `run-04` ON,
-    `run-01/03` T8.
-  - **T6 OFF miał dwie generacje:** paired @09:17 (5 runs, single-shot
-    2489 ms, 143 chunks) i rerun @10:02 (10 runs, 1365 ms, 62 chunks).
-    Odzyskałem paired z `ec3df59` (`git checkout`) → osobny katalog;
-    rerun zachowany obok. Para 5×5 jest właściwym A/B do ON. Handoff PM
-    cytował poprawne (paired) liczby — pomyłka była tylko taka, że w
-    working tree leżał rerun.
-  - **Run-diry przemianowane** (`git mv`, run-id zostaje prefiksem):
-    `run-04_eagle3-on`, `run-05_eagle3-off-paired`,
-    `run-05_eagle3-off-rerun`, `run-01_t8-proxy`, `run-03_t8-direct`,
-    deepseek `run-0{1,2}_baseline`. Tylko `agent-state.md` referował
-    stare nazwy poza `results/`.
-  - **Nowe dokumenty:**
-    `results/runs/2026-06-05_w1_evidence/session/session_notes.md`
-    (audyt + tabele liczb + mapowanie), `session/artifact_manifest.txt`,
-    `results/summaries/w1-evidence-cross-session.md` (cross-session view
-    27.05 / 03.06 / 05.06 per wątek W1).
-  - SWE-bench dataset: decyzja **zostawić** (workload do #34), udokumentowany.
-- Validation: `git diff --check` (poniżej); brak `.py` touched (rename +
-  docs/bench). `first_ttft.json` zostawiony bez opisu (do dopytania).
-- Next: write-upy W1 — T6 → T1 → T3 → T8/T4 → T5.
-
-### 2026-06-05 (PM) - W1 server slot close-out: T6 OFF + T1 DEP + restore
-
-- Why: dokończyć blok Kimi z planu (Cz. C: T6 OFF + T1 DEP + restore) po
-  porannym T3 clean i T6 ON.
-- Did (commit `ec3df59` + `3b12fff` gitignore allowlist):
-  - **T6 Eagle3 OFF:** `engine_cmd_eagle3_off.json` (brak speculative,
-    TP=8 zachowany), `bench_off.log`, `kimi_log_eagle3_off.txt`, auto-id
-    `results/runs/2026-06-05_kimi-k2-6_run-05/` z pełnymi metrykami.
-  - **T6 paired numbers (single-shot latency):** ON TTFT(content) 652 ms,
-    TPOT(any) 6.92 ms/tok, 24 chunki; OFF 2489 ms, 16.55 ms/tok, 143
-    chunki. TTFT(any) ≈ 204 ms w obu (Eagle3 nie pomaga pierwszemu
-    tokenowi — zgodnie z teorią). Repeated p50 TTFT: ON 837 ms vs OFF
-    1675 ms. Eagle3 ≈ 3.8× E2E, ≈ 2.4× TPOT(any).
-  - **T1 DEP:** `dep_state.txt` = `exited 1` (czysty crash startu),
-    pełne `dep_full.log` + `dep_startup.log` + `dep_engine_cmd.json`.
-  - **C4 restore:** Kimi z powrotem w Eagle3-ON, `restore_engine_cmd.json`
-    potwierdza speculative-config, `restore_smoke.json` completed=True.
-  - **T5 (boczne):** 12×10s snapshoty `vllm:num_requests_*`,
-    `kv_cache_usage_perc`, `rate(vllm:generation_tokens_total[1m])` w
-    obu wariantach (`t5_metrics/eagle3-{on,off}/`).
-  - **.gitignore allowlist:** dorzucone `!t6_eagle3/bench_*.log` i
-    `!t1_dep/dep_*.log` żeby plan-named evidence logi weszły do repo bez
-    `git add -f`.
-- Validation: `git diff --check` OK; brak `.py` touched (manifest +
-  artefakty + plan tweaks).
-- Caveats:
-  - Auto-id run dirs wyszły jako `run-04` (ON) i `run-05` (OFF) zamiast
-    planowych `_eagle3-{on,off}` — `run_bench_suite.py` nie respektuje
-    `--run-id` albo użyto innej ścieżki. Nie blokujące; do laptop-side
-    follow-up: ewentualnie udoskonalić skrypt albo doczepić alias.
-  - Commit `ec3df59` zawiera **`results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl`** (300 SWE-bench promptów) — to nie jest z planu W1 ani z roadmap Phase 1; flaga scope-creep, do decyzji laptop-side (zostawić jako dataset do późniejszego workloadu albo wyrzucić z repo, dodać do `.gitignore`).
-- Next: laptop write-up W1 threads (T6 → T1 → T3 → T8/T4 → T5 dashboard).
-
-### 2026-06-05 - W1 server slot: compose defaults, T3 clean, T6 ON, LiteLLM strip
-
-- Why: domknąć T3 (po nieudanej próbie 2026-06-03), wystartować T6 Eagle3
-  ON/OFF, zweryfikować że parser TTFT/TPOT działa po stronie Kimi.
-- Did (5 commitów):
-  - `6c9db1c` — compose hardening: Kimi `--gpu-memory-utilization 0.6` (z
-    0.65), `--max-num-batched-tokens 4096`, speculative-config
-    `"max_model_len":8192`; DeepSeek default `0.2` (z 0.25), speculative
-    `"max_model_len":8192`.
-  - `208e072` — **T3 clean sweep**: 0.15 hard-fail (Engine core init
-    traceback), 0.20 i 0.25 OK z `verify_cap*.txt` zgodnymi z runtime +
-    `ttft_cap*.json` + `nvidia_smi_cap*.txt`. Nazwa↔runtime zgadza się
-    pierwszy raz.
-  - `1ab8057` — **T6 Eagle3 ON capture**: `engine_cmd_eagle3_on.json` +
-    `kimi_log_eagle3_on.txt` (1k linii) + drobny tweak planu.
-  - `277143b` + `cf160cf` — **paired Kimi K2.6 benches** ujawniające
-    LiteLLM `delta.reasoning` strip: `run-01` (proxy :4000, 3 chunki, 0
-    reasoning_chars, TTFT null) vs `run-03` (direct :8000, 26 chunków,
-    242 reasoning_chars, TTFT_any 0.214 s, TPOT_any 8.6 ms/tok).
-- Diagnoza LiteLLM: proxy w wersji `main-v1.66.0-stable` strippuje pole
-  `delta.reasoning` specyficzne dla Kimi K2.6 (DeepSeek `reasoning_content`
-  przepuszcza). Parser fix #31 nadal poprawny — direct :8000 daje czyste
-  metryki. Wniosek dla W1 T8/T4: proxy **nie nadaje się** jako jedyny
-  driver dla Kimi reasoning streams — konkretny, paired-evidence limit.
-- Workaround dla benchów: max_tokens=64 jest za małe dla Kimi (model nie
-  zdąży wyjść z reasoning); user podbił max_tokens i kontynuuje T6.
-- Skipped / open: T6 Eagle3 OFF (jeszcze do zrobienia w tym slocie), T1
-  DEP capture, T5 dashboard validation.
-- Validation: `git diff --check` OK; brak `.py` w tych commitach
-  (`pyproject.toml`/`uv.lock` w 1ab8057 — sprawdzić co przybyło przy
-  najbliższym pull-cycle).
-- Next: dokończyć T6 OFF (lustro ON minus `--speculative-config`, ten sam
-  max_tokens, direct :8000) + T1 DEP override (`--data-parallel-size 8`,
-  `restart:"no"`), restore Eagle3-ON. Laptop: write-up T3/T6/T8 z nowymi
-  liczbami.
-
-### 2026-06-02 - W1 T4 wording pass
-
-- Why: make T4 read less like tool advocacy and more like a scoped technical
-  justification.
-- Did: rewrote `docs/writeups/w1/t4-litellm-proxy.md` around the question,
-  configuration evidence, narrow claim, implementation limits, proxy-hop
-  trade-off, and rejected alternatives.
-- Validation: `git diff --check` OK.
-- Next: review T4 against the final W1 narrative, then continue the T1/T3/T6
-  evidence path.
-
-### 2026-06-02 - W1 T4 LiteLLM Proxy justification
-
-- Why: turn the T4 placeholder into a concrete justification for LiteLLM Proxy
-  as the Phase 1 multi-model access layer.
-- Did: updated `docs/writeups/w1/t4-litellm-proxy.md` with repo config
-  evidence, current-scope limits, the T8 overhead trade-off, rejected
-  alternatives, and future link #39. Updated the W1 tracker to mark T4 done.
-- Validation: `git diff --check` OK.
-- Next: continue the path A close-out with the 2026-06-03 server slot for T1,
-  T3, and T6, then fill the baseline table after evidence lands.
-
-### 2026-06-02 - W1 close-out tracker
-
-- Why: keep the remaining W1 work visible and grouped by what unblocks it.
-- Did: updated `docs/writeups/w1-multi-model-serving-baseline.md` Thread map,
-  evidence-quality tracker, path A close-out grouping, and follow-up list. T7 is
-  marked done; T8 full R1-R8 remains intentionally deferred under #44.
-- Validation: `git diff --check` OK.
-- Next: run the 2026-06-03 server slot for T1 DEP, T3 clean VRAM sweep, and T6
-  Eagle3 ON/OFF, then do the laptop write-up pass.
-
-### 2026-06-02 - W1 write-up update from 2026-05-27 evidence (laptop)
-
-- Why: turn the committed 2026-05-27 server artifacts into W1 write-up material per `docs/plans/2026-05-27-laptop-w1-writeup-update.md`.
-- Did: analyzed all 40 T8 paired JSON files (10/model, 0 errors); added `results/runs/2026-05-27_w1_evidence/t8_proxy_overhead/summary.md`; migrated `w1/t8-litellm-overhead.md` from placeholder to post-evidence (routing overhead vs Kimi streaming-semantics change, T2 cross-ref); rewrote `w1/t3-deepseek-vram-budget.md` as a partial 0.25 baseline with the cap020 caveat; added status notes to `w1/t1-kimi-bringup.md`, `w1/t6-eagle3-speculative-decoding.md`, `w1/t5-observability.md`; updated index Thread map (T3/T8) and added "Evidence quality after 2026-05-27" + "Follow-up work".
-- Key numbers: Kimi final-answer TTFT delta median +17 ms, any-token TTFT +0.40 s (~3×, streaming-semantics, not latency), output tok/s −5.6 %; DeepSeek TTFT +26 ms, E2E +34 ms (throughput not meaningful, completion_tokens≈2).
-- Validation: `git diff --check` OK (docs-only; no `.py` touched).
-- Next: schedule a server slot for T3 clean sweep (0.15/0.20/0.25), T1 DEP capture, T6 Eagle3 ON/OFF, T5 dashboard validation + fix LiteLLM `prometheus_callback`. Appended by the `sync-state` routine (`docs/templates/sync-state-agent.md`); compacted in place by the `tidy-docs` routine (`docs/templates/tidy-docs-agent.md`). Git is the archive.
-
-### 2026-06-02 - W1 T7 host-directory justification
-
-- Why: turn the T7 placeholder into a short justification for storing
-  Prometheus/Grafana runtime data in explicit host bind mounts instead of Docker
-  named volumes.
-- Did: updated `docs/writeups/w1/t7-host-directories.md` with compose evidence,
-  project-context rationale, portability/permissions trade-offs, and the
-  rejected named-volume alternative.
-- Validation: `git diff --check` OK.
-- Next: continue #37 by scheduling the remaining T1/T3/T6 server evidence
-  capture and T5 dashboard validation.
-
-### 2026-05-27 - Server-session evidence triage and notes
-
-- Why: make the 2026-05-27 server commit usable for W1 by documenting what evidence exists, what is partial, and what is missing.
-- Did: added `session/session_notes.md`, added `session/artifact_manifest.txt`, and updated this handoff state. T8 evidence is usable for paired proxy-overhead analysis. T3 is partial and has a filename/runtime-cap mismatch (`cap020` file, runtime log shows `gpu_memory_utilization: 0.25`). T1 DEP and T6 Eagle3 ON/OFF are still missing.
-- Validation: GitHub contents API writes only; no local `git diff --check` available here.
-- Next: do the many-file run-directory rename from a local checkout, then analyze T8 deltas and schedule a follow-up server slot for T1/T3/T6.
-
-### 2026-05-26 - W1 server-session plan hardening
-
-- Why: reduce avoidable server-slot risk before the 2026-05-27 W1 evidence session.
-- Did: made `RUN_DIR` initialization explicit in Cz. 0, made LiteLLM key extraction fail fast, corrected T5 Prometheus snapshots to use `vllm:kv_cache_usage_perc`, replaced ad hoc Python URL quoting with `curl --data-urlencode`, added an artifact manifest step, and documented `DEEPSEEK_GPU_MEM_UTIL` in `.env.example`.
-- Validation: `git diff --check` OK.
-- Next: run `docs/plans/2026-05-27-server-session.md` on the GPU server and commit the resulting W1 evidence artifacts.
-
-### 2026-05-20 - Phase 1 laptop follow-up: #31 parser fix, Grafana provisioning, tooling
-
-- Why: clear the post-server laptop backlog and align laptop/server tooling.
-- Did: merged #31 Kimi reasoning TTFT/TPOT fix (PR #36), closed #32 benchmark artifact ignore cleanup, added #33 server session summary, and merged #35 Grafana dashboard provisioning; installed `rg` on the laptop and wired it into the env checks, with a queued task to install it on the server.
-- Range: `e3eaf0c..a7ce83f` plus the #33 summary doc update
-- Validation: OK (ruff clean, pytest 121 passed).
-- Next: validate the Grafana dashboard against live metrics, add DCGM/GPU hardware metrics under issue #34, then prepare W1.
-
-### 2026-05-19 - Phase 1 server close-out: compose, proxy, bench, observability bootstrap
-
-- Why: close the Phase 1 server/proxy minimum using the 8×H200 server slot.
-- Did:
-  - Recovered/pushed prior 2026-05-11 benchmark artifacts.
-  - Reconciled live server compose into `serving/compose/docker-compose.kimi-k2.6.yml`; corrected Kimi setup to tensor parallelism rather than the earlier DP mistake.
-  - Confirmed `vllm`, `vllm-small`, and OpenWebUI are running and communicating.
-  - Ran compose smoke results for Kimi and DeepSeek and pushed them.
-  - Collected raw Kimi stream-debug artifacts after `measure_ttft_once.py` showed `TTFT: n/a` / `TPOT: n/a`; created issue #31 for laptop-side parser fix.
-  - Created issue #32 for `.gitignore` / benchmark artifact tracking cleanup.
-  - Started LiteLLM Proxy, ran smoke through proxy, then ran `run_bench_suite.py` through LiteLLM Proxy for Kimi and DeepSeek; pushed results.
-  - Added Prometheus/Grafana compose/provisioning and started containers.
-  - Created issue #33 to write the session summary later on laptop.
-  - Updated `docs/plans/2026-05-19-server-work-plan.md` with completed/partial/remaining status.
-- Validation:
-  - Direct vLLM endpoints worked.
-  - LiteLLM Proxy worked for both upstream models.
-  - Bench suite completed for both upstream models through proxy.
-  - Observability containers started; dashboard still pending.
-- Next at session end:
-  - Laptop follow-ups were issue #31, issue #32, and issue #33; these are now closed/handled.
-  - Server/laptop: validate Grafana dashboard from real metric names and add GPU hardware metrics.
-  - Then W1 write-up.
-
-### 2026-05-17 - Bench suite launcher for LiteLLM proxy runs
-
-- Added `benchmarks/scripts/run_bench_suite.py` with `snapshot_pre -> request_once -> measure_ttft_once -> run_sequential_benchmark -> snapshot_post`, auto-generated run IDs, strict JSON suite summary, and `--api-key` support.
-- Validation: `uv run ruff check .` clean; `uv run pytest -q` = 113 passed.
-- Outcome on 2026-05-19: validated live through LiteLLM Proxy for Kimi and DeepSeek.
-
-### 2026-05-17 - LiteLLM Proxy + image pinning (laptop prep)
-
-- Added `litellm` service, `litellm-config.yaml`, `.env.example` keys, image pinning, and compose docs.
-- Outcome on 2026-05-19: LiteLLM smoke and proxy benchmark suites passed on the server.
-
-> Pre-2026-05-17 handoff entries compacted. Source: `4d6fac7800047c8c54ee32e4235ab6ce62abcc5d`.
-> Full history: `git show 4d6fac7800047c8c54ee32e4235ab6ce62abcc5d:docs/operations/agent-state.md`.
+> Pre-2026-06-06 handoff entries compacted 2026-06-10. Source: `520d7883127452cc5ef50dca52fecfdb2e62fabf`.
+> Full history: `git show 520d7883127452cc5ef50dca52fecfdb2e62fabf:docs/operations/agent-state.md`.
+>
+> Period summary (2026-05-17 → 2026-06-05):
+> - 2026-05-17 (laptop): `run_bench_suite.py` one-command launcher; LiteLLM Proxy compose + image pinning prep.
+> - 2026-05-19 (server): Phase 1 close-out — canonical Kimi/DeepSeek compose reconciled (TP=8, not DP), proxy smoke + bench suite green for both models, Prometheus/Grafana bootstrap; issues #31–#33.
+> - 2026-05-20 (laptop): #31 Kimi reasoning-TTFT parser fix merged (PR #36, 121 tests), #35 Grafana dashboard provisioning, `rg` installed.
+> - 2026-05-26/27: server-session plan hardening + evidence triage — T8 paired proxy-overhead usable; T3 partial (filename↔runtime cap mismatch); T1 DEP / T6 Eagle3 still missing.
+> - 2026-06-02 (laptop): W1 write-up pass from the 05-27 evidence — T8 post-evidence (+17 ms median final-answer hop), T3 partial baseline, T4 + T7 justifications, index tracker refreshed.
+> - 2026-06-05 (server + laptop): the big W1 evidence slot — compose defaults `6c9db1c` (Kimi util 0.6 + max-num-batched-tokens 4096, DeepSeek 0.2), T3 clean sweep (0.15 hard-fail, 0.20/0.25 OK), T6 Eagle3 ON/OFF paired A/B (repeated p50 TTFT ~2×), T1 DEP clean startup crash captured, LiteLLM v1.66.0 `delta.reasoning` strip diagnosed (proxy unusable as the single Kimi reasoning driver); laptop audit recovered the paired OFF generation from `ec3df59` after the `fc97700` overwrite and renamed run dirs to semantic aliases.
