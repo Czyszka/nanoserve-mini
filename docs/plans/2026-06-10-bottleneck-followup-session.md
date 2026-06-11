@@ -382,16 +382,20 @@ docker compose -f "$COMPOSE" exec vllm ls -la /tmp/vllm_profile/   # rozmiary st
 ```
 
 > ⚠️ **Traców NIE commitujemy** (polityka repo — duże profile jak Nsight).
-> Kopiuj poza repo: `mkdir -p ~/nanoserve-local && docker compose -f "$COMPOSE" cp vllm:/tmp/vllm_profile ~/nanoserve-local/vllm_profile_$(date +%F)/`
+> Kopiuj poza repo (najpierw ustaw `TRACE_DIR`, `cp` z `/.` kopiuje pliki
+> wprost do celu, bez zagnieżdżania podkatalogu):
+> `TRACE_DIR=~/nanoserve-local/vllm_profile_$(date +%F); mkdir -p "$TRACE_DIR" && docker compose -f "$COMPOSE" cp vllm:/tmp/vllm_profile/. "$TRACE_DIR"/`
 > Do repo idzie tylko podsumowanie poniżej + ścieżka lokalna w session notes.
 
 Podsumowanie tracu (rank 0) na serwerze — udział NCCL vs compute vs przerwy:
 
 ```bash
-TRACE_DIR=~/nanoserve-local/vllm_profile_$(date +%F)
-T=$(find "$TRACE_DIR" -maxdepth 1 -type f \( -name '*.json' -o -name '*.json.gz' \) | sort | head -n 1)
-test -n "$T" || { echo "no profiler trace found in $TRACE_DIR"; exit 1; }
-uv run python - "$T" <<'EOF' | tee "$PROF/trace_summary_rank0.txt"
+# TRACE_DIR jak przy kopiowaniu wyżej (albo własna ścieżka); find rekursywny —
+# działa też gdy cp zagnieździł podkatalog. BEZ `exit` (w interaktywnym SSH
+# exit zamyka sesję i kasuje zmienne) — przy NOT FOUND popraw TRACE_DIR i powtórz.
+T=$(find "$TRACE_DIR" -type f \( -name '*.json' -o -name '*.json.gz' \) | sort | head -n 1)
+echo "trace: ${T:-NOT FOUND w $TRACE_DIR}"
+[ -n "$T" ] && uv run python - "$T" <<'EOF' | tee "$PROF/trace_summary_rank0.txt"
 import json,gzip,sys,collections
 p=sys.argv[1]; op=gzip.open if p.endswith('.gz') else open
 d=json.load(op(p,'rt'))
