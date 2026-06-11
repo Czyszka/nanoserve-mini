@@ -348,15 +348,20 @@ docker compose -f "$QWEN_COMPOSE" stop vllm 2>/dev/null || true
 docker compose -f "$QWEN_COMPOSE" rm -f vllm 2>/dev/null || true
 unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES QWEN_EXTRA_COMPOSE
 
+# vLLM v0.20 nie czyta VLLM_TORCH_PROFILER_DIR (env usunięty z envs.py);
+# profiler włącza flaga --profiler-config, a /start_profile rejestruje się
+# tylko gdy jest obecna → overlay nadpisuje CAŁĄ komendę (kopia kanonicznej
+# z docker-compose.kimi-k2.6.yml + flaga na końcu; trzymać w synchronizacji)
 cat > /tmp/kimi-profiler.yml <<'EOF'
 services:
   vllm:
-    environment:
-      VLLM_TORCH_PROFILER_DIR: /tmp/vllm_profile
+    command:
+      --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 8 --gpu-memory-utilization 0.6 --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2 --enable-auto-tool-choice --language-model-only --max-num-seqs 32 --max-model-len 131072 --max-num-batched-tokens 4096 --speculative-config='{"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3,"max_model_len":8192}' --profiler-config='{"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
 EOF
 docker compose -f "$COMPOSE" -f /tmp/kimi-profiler.yml up -d --force-recreate vllm
 wait_http_health http://127.0.0.1:8000/health 180 10
-docker inspect vllm --format '{{json .Config.Cmd}}' > "$PROF/engine_cmd.json"   # TP8 + Eagle3 bez zmian
+docker inspect vllm --format '{{json .Config.Cmd}}' > "$PROF/engine_cmd.json"   # TP8 + Eagle3 + profiler-config
+grep -o 'profiler-config' "$PROF/engine_cmd.json" || { echo "BRAK profiler-config w Cmd — przerwij"; }
 
 # PROFIL KRÓTKI: 1 request c=1 (kilka sekund decode — trace i tak będzie duży)
 curl -fsS -X POST http://127.0.0.1:8000/start_profile
@@ -424,8 +429,8 @@ drugi profil pod c=8 (8× `measure_ttft_once &` w trakcie start/stop_profile).
 docker compose -f "$COMPOSE" up -d --force-recreate vllm vllm-small litellm open-webui        # plain compose, prod config
 wait_http_health http://127.0.0.1:8000/health 180 10
 docker inspect vllm --format '{{json .Config.Cmd}}' > "$RUN_DIR/session/restore_engine_cmd.json"
-if docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^VLLM_TORCH_PROFILER_DIR='; then
-  echo "profiler env still present after restore" >&2
+if docker inspect vllm --format '{{json .Config.Cmd}}' | grep -q 'profiler-config'; then
+  echo "profiler flag still present in Cmd after restore" >&2
   exit 1
 fi
 uv run python -m benchmarks.scripts.measure_ttft_once --base-url http://127.0.0.1:8000 \
