@@ -132,8 +132,38 @@ silicon split outweighs comms at 2 ranks), TP4 **+30.6 ms**, TP8 **+175 ms**.
 - Single run per configuration; the A4-vs-TP2 difference (0.8 ms) should be
   read as "no detectable penalty", not "UPI is faster".
 
+## Cz. C addendum — `NCCL_P2P_DISABLE=1` dose-response at TP2: NEGATIVE
+
+Data: `bench_tp2_nop2p/` + `qwen_tp2_nop2p_*_dcgmi.txt` (commit `fab5e0b`).
+Verified: `NCCL_P2P_DISABLE=1` in container env **and** acknowledged by NCCL
+in the engine log (`verify_nop2p_env.txt`, `verify_nop2p_log.txt`);
+`tensor_parallel_size=2` confirmed.
+
+| metric | TP2 (P2P on) | TP2 nop2p | Δ |
+|---|---:|---:|---:|
+| c1 step (ITL med) ms | 9.91 | 9.54 | −0.4 (noise) |
+| c1 TPOT med ms | 3.65 | 3.70 | +0.05 |
+| c64 TPOT med ms | 18.09 | 17.09 | −1.0 (noise) |
+| c64 out tok/s | 1404 | 1396 | −0.6% |
+| c64 power/GPU W / SMACT | 255 / 0.359 | 249 / 0.340 | ≈ |
+| accept len c1 / c64 | 2.64 / 2.34 | 2.62 / 2.42 | ≈ |
+
+Forcing the worst comms path (host staging instead of P2P through the shared
+PCIe switch) changes **nothing measurable** at TP2, in either regime. This is
+the plan's criteria row 4: *at 2 ranks communication is cheap — the limiter is
+the per-step floor*, now shown causally (degrading the link doesn't hurt →
+upgrading it won't help: **NVLink gain at TP2 ≈ 0, causally supported**). The
+TP4/TP8 collapse is therefore about rank-count scaling of collectives (fan-out
+hops, EP all-to-all width), not the P2P-vs-host path of a pair.
+
+**Bonus — noise calibration:** three independent TP2 engine starts (tp2,
+tp2x04, tp2_nop2p) give run-to-run spread: c1 step ±0.4 ms, c1 TPOT ±0.1 ms,
+c64 TPOT ±0.5 ms. On this band: the A4 "SYS faster than PIX" difference is
+firmly noise (as assumed), while the TP4 (+1.6 ms) and TP8 (+5.2 ms) c1 step
+deltas are ~4× and ~13× the noise band — solidly real.
+
 ## Still owed (rest of the session plan)
 
-Cz. C (`NCCL_P2P_DISABLE=1` dose-response at TP2), Cz. B (Kimi TP8 torch
-profiler → NCCL share + `N_rounds`), Cz. D (restore + close-out). After B:
-recompute the #50 NVLink table with measured `r` and `F_host`.
+Cz. B (Kimi TP8 torch profiler → NCCL share + `N_rounds`), Cz. D (restore +
+close-out). After B: recompute the #50 NVLink table with measured `r` and
+`F_host`.

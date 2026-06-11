@@ -8,7 +8,7 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `f7c3573`
+- Last summarized commit: `342ddf6`
 - Last summarized at: 2026-06-11 (PM)
 - Note: previous cursor `520d788` is dangling in the current history (laptop-side
   rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
@@ -256,6 +256,12 @@ status, not a task list. Update when work moves.
   cliff is rank-count-driven, not link-class alone; per-step floor `F_host`
   ~5–9 ms confirmed at TP1 c=1 (SMACT 0.46). #50 inputs recorded in the
   summary; per-round `r` deferred to the Kimi trace (Cz. B fixes `N_rounds`).
+  **Cz. C (nop2p, `fab5e0b`): dose-response NEGATIVE** — `NCCL_P2P_DISABLE=1`
+  at TP2 changes nothing measurable (c64 1396 vs 1404 tok/s; criteria row 4:
+  comms cheap at 2 ranks, limiter = per-step floor; NVLink gain at TP2 ≈ 0
+  causally). Bonus: 3 independent TP2 starts calibrate noise (c1 step
+  ±0.4 ms) → TP4/TP8 deltas are 4×/13× the noise band. Remaining: Cz. B
+  (Kimi profiler), Cz. D (restore).
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -503,11 +509,11 @@ Newest entry first.
 
 ### 2026-06-11 (cloud, PM) - Qwen TP-curve analyzed (commit A of the bottleneck session)
 
-- Why: checkpoint 1 delivered the full TP2/TP4/TP8 + A4 dataset; #50 needs the measured curve before the NVLink verdict.
-- Did: TP2 is the optimum (c64 +17% vs TP1), TP4/TP8 collapse to 14%/2.7% scaling efficiency with GPUs at near-idle power (comms-bound proven causally), A4 shows no UPI tax at 2 ranks; analysis in results/summaries/2026-06-11-qwen-tp-curve.md.
-- Range: `917ee17..f7c3573` (2 commits)
+- Why: checkpoint 1 + Cz. C delivered TP2/TP4/TP8 + A4 + nop2p data; #50 needs the measured curve before the NVLink verdict.
+- Did: TP2 is the optimum (c64 +17% vs TP1), TP4/TP8 collapse to 14%/2.7% scaling efficiency with GPUs at near-idle power (comms-bound proven causally), A4 shows no UPI tax at 2 ranks, and the nop2p dose-response is negative (comms cheap at TP2; limiter = per-step floor); analysis in results/summaries/2026-06-11-qwen-tp-curve.md.
+- Range: `917ee17..342ddf6` (4 commits + merge)
 - Validation: OK
-- Next: server continues Cz. C (nop2p dose-response), B (Kimi profiler trace), D (restore); then recompute the #50 NVLink table.
+- Next: server continues Cz. B (Kimi profiler trace) and D (restore); then recompute the #50 NVLink table.
 
 ### 2026-06-11 (cloud) - TP MISMATCH root cause + plan secret redaction
 
