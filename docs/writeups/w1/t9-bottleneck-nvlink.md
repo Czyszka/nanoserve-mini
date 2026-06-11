@@ -206,11 +206,36 @@ Three candidate mechanisms, each with its own falsifiable signature:
    to comms levers; gaps dominate the trace; decomposable by doses
    (speculation off, eager mode, CPU governor).
 
-NVLink-relevant derived quantities: the comms share `s` per scenario
-(Amdahl bound `1/(1−s)`), and `capture` per topology fit (TP≤4 in one
-island = 1.0; TP=8 hierarchical ≈ 0.75). `r_NVL4 ≈ 20–30 µs` remains a
-labeled assumption (cloud NVLink rental rejected 2026-06-10); the verdict
-below does not depend on its exact value inside that range.
+Model anchors available before the closing sessions: Kimi TP=8 step
+≈16.55 ms spec-OFF (T6), `W_silicon` ≈ 1–2 ms (from `DRAM_ACTIVE`),
+`N_rounds` ≥ 122 (2 all-reduces × ~61 layers); Qwen TP1 gives
+`F_host + W ≈ 9 ms` at zero comms (model-specific floor).
+
+NVLink-relevant derived quantities: the comms share `s` per scenario, and
+`capture` per topology fit (TP≤4 in one island = 1.0; TP=8 hierarchical
+≈ 0.75). The ceiling on any interconnect upgrade is an **Amdahl bound**: if
+comms is a share `s` of the step, even an *infinitely fast* link caps the
+speedup at `1/(1−s)` — with `s = 0.3` the best possible gain is 1.43×, with
+`s = 0.6` it is 2.5×. NVLink then realizes *most* of that bound for traffic
+inside an island (r drops ~5–10×) and only `capture` of it for hierarchical
+TP=8. `r_NVL4 ≈ 20–30 µs` remains a labeled assumption (cloud NVLink rental
+was considered and rejected 2026-06-10); the verdict below does not depend
+on its exact value inside that range.
+
+**First-pass estimates (pre-registered BEFORE calibration, #50):** kept here
+verbatim as the predict→measure record — see §8 for how they fared:
+
+| Config after 2× NVL4 islands (4+4) | Comms path | Predicted gain |
+|---|---|---|
+| TP=1 | none | 1.0× (none) |
+| TP=2 in-island | all NVLink | ~1.3–2× |
+| TP=4 in-island (70–200B class) | all NVLink | ~1.6–2.5× |
+| TP=8 hierarchical (Kimi's only option) | NVLink intra + PCIe inter | ~1.2–1.5× (modest) |
+
+The prediction's main blind spot, visible already in the table: it carried
+**no workload-shape axis** — one number per TP config, no c=1 vs batched
+split. The measurements forced that axis in (it turned out to be the
+decisive one).
 
 ## 6. Methodology — sessions and scenarios
 
@@ -233,13 +258,40 @@ verifies, artifact layout):
    (c=64), F-series floor doses (base / spec-off / eager / governor + TP1
    trace). Artifacts: `results/runs/2026-06-11_nvlink_boundary/`.
 
-Method notes: client metrics from `vllm bench serve` (SWE-bench custom
-dataset, 256-out, ignore-eos; random 64/512 for c=1 floor benches); DCGM
-windows tagged per bench with epoch files; traces via `--profiler-config`
-overlay, copied outside the repo (`/home/working/nanoserve-tracing`), only
-rank-0 summaries committed; profiler-overhead controls on every trace; noise
-band calibrated from 3 independent TP2 starts (c=1 step ±0.4 ms, c=64 TPOT
-±0.5 ms).
+Method notes (the controls that make the numbers trustworthy):
+
+- **Client metrics** from `vllm bench serve` (SWE-bench custom dataset,
+  256-out, `--ignore-eos`, 2 warmups; `random` 64-in/512-out for c=1 floor
+  benches). Bench JSONs report median/mean TTFT, TPOT, ITL, output
+  throughput, completion counts.
+- **DCGM windows** (`dcgmi dmon -e 155,1002,1004,1005,1009,1010`, 1 s
+  cadence) tagged per bench with start/end epoch files; per-GPU means
+  computed only over the window; **activity filter** (power > 110 W) used
+  where idle tails contaminated a window (TP1 errata of 2026-06-10).
+- **Fail-fast verifies before every bench**: requested TP grepped from the
+  *full* engine log (`tensor_parallel_size=N`), placement from the
+  container env (`CUDA_VISIBLE_DEVICES`), profiler arming from
+  `docker inspect … .Config.Cmd` — three real mismatches were caught this
+  way during the sessions instead of contaminating results.
+- **Traces** via the `--profiler-config` engine flag in a compose command
+  override (vLLM v0.20 removed the old env mechanism), short windows
+  (1–64 prompts) to keep 4–8-rank traces digestible, copied outside the
+  repo (`/home/working/nanoserve-tracing`); only rank-0 text summaries are
+  committed. Bucketing: kernel names → `comms` (nccl/all-reduce/all-gather/
+  all-to-all) / `compute` (gemm/attn/moe/norm/quant…) / `other`; `gaps` =
+  span minus kernel time.
+- **Profiler-overhead control on every trace**: the same bench/request with
+  and without the profiler — overheads came out ~5% (Kimi c=1), ~2% (Kimi
+  c=16), ~8% on ITL (Qwen TP4 c=64), so the timelines reflect real behavior.
+- **Reproducibility**: the anomalous Kimi c=16 point was re-run end-to-end
+  (fresh engine recreate) before profiling it — ITL med 512 → 525 ms (±3%).
+- **Speculation accounting**: Eagle3/MTP acceptance parsed from engine
+  `SpecDecoding metrics` log lines, token-weighted, matched to bench epoch
+  windows (engine log timestamps are **UTC** — an off-by-timezone bug was
+  caught and fixed during analysis). Kimi acceptance ~2.67 in *every* K1
+  window → the c=16 anomaly is not speculation-related.
+- **Noise band** calibrated from 3 independent TP2 engine starts: c=1 step
+  ±0.4 ms, c=64 TPOT ±0.5 ms. TP4/TP8 effects are 4×/13× that band.
 
 ## 7. Results
 
@@ -254,50 +306,96 @@ band calibrated from 3 independent TP2 starts (c=1 step ±0.4 ms, c=64 TPOT
 | 4 | 4.00 | +1.56 ms |
 | 8 | 5.12 | +5.18 ms |
 
-| TP (c=64) | out tok/s | per-GPU power / SMACT | PCIe RX |
-|---|---:|---|---:|
-| 1 | 1202 | 436 W / 0.665 | ~0 |
-| 2 | **1404** | 265 W / 0.40 | 5.8–6.7 GB/s |
-| 4 | 680 | ~108 W / 0.06 | 2.9 GB/s |
-| 8 | 257 | 111 W / 0.053 | 7.18 GB/s |
+| TP (c=64) | out tok/s | scaling eff. vs TP1 | per-GPU power / SMACT | PCIe RX |
+|---|---:|---:|---|---:|
+| 1 | 1202 | — | 436 W / 0.665 | ~0 |
+| 2 | **1404** | +17% (58%/GPU) | 265 W / 0.40 | 5.8–6.7 GB/s |
+| 4 | 680 | 14% | ~108 W / 0.06 | 2.9 GB/s |
+| 8 | 257 | 2.7% | 111 W / 0.053 | 7.18 GB/s |
+
+(Scaling efficiency = throughput gain per added GPU; TP4/TP8 collapse to
+14%/2.7% while per-GPU power falls toward the ~70–99 W idle floor — the
+GPUs are not working harder, they are waiting more. TP1 counters
+re-aggregated with the activity filter after the idle-tail errata.)
 
 **Qwen TP8 ramp (Q1):** c=4 → 365 tok/s (RX 4.39), c=16 → 437 (RX 6.83),
 c=64 → 257 (RX 7.18): peak at c≈16, collapse exactly when RX hits the
-ceiling; SMACT flat 0.05–0.07 throughout.
+ceiling; SMACT flat 0.05–0.07 throughout; TTFT med grows 177 → 342 ms
+(c=4 → c=16) before queueing dominates at c=64.
 
-**nop2p dose (TP2, c=64):** 1396 vs 1404 tok/s — null effect.
+**nop2p dose (TP2, c=64):** `NCCL_P2P_DISABLE=1` forces every transfer
+through host memory — if per-round link latency priced the step, this had
+to hurt. Measured: 1396 vs 1404 tok/s, c=1 step unchanged — **null effect**,
+comms at 2 ranks is not even latency-sensitive. (Bonus: the three engine
+restarts this required calibrated the noise band in §6.)
 
 **Kimi TP8 ramp (K1)** + traces (K2 and the 06-11 c=1 trace; summaries:
 `2026-06-11-kimi-tp8-profile.md`, `2026-06-11-nvlink-boundary-verdict.md`):
 
-| c | ITL med (ms) | out tok/s | power / SMACT | PCIe RX |
-|---:|---:|---:|---|---:|
-| 1 | — (step ~50 ms profiled) | 75 | — | — |
-| 8 | 191 | 86 | 135 W / 0.093 | 7.20 GB/s |
-| 16 | 512 (repeat: 525) | 73 | 123 W / 0.068 | 7.85 GB/s |
-| 32 | 127 | 285 | 185 W / 0.179 | 7.79 GB/s |
+| c | TPOT med (ms) | ITL med (ms) | out tok/s | power / SMACT | PCIe RX |
+|---:|---:|---:|---:|---|---:|
+| 1 | 8.7 | — (step ~50 ms profiled) | 75 | — | — |
+| 8 | 78.5 | 191 | 86 | 135 W / 0.093 | 7.20 GB/s |
+| 16 | 190.5 | 512 | 73 | 123 W / 0.068 | 7.85 GB/s |
+| 16 (repeat) | 197.3 | 525 | 67 | 126 W / 0.074 | 7.66 GB/s |
+| 32 | 94.1 | 127 | 285 | 185 W / 0.179 | 7.79 GB/s |
 
-| trace (rank 0) | gaps | NCCL | compute |
-|---|---:|---:|---:|
-| Kimi TP8 **c=1** | **63%** | 22.5% | 9.1% |
-| Kimi TP8 **c=16** | 10% | **83.9%** | 4.6% |
-| Qwen TP4 **c=64** | 33% | **53.3%** | 5.6% |
+Eagle3 acceptance is ~2.67 in every window (token-weighted from engine
+logs) — the c=16 anomaly is not a speculation effect. Note c=16 draws *less*
+power at *lower* SMACT than c=8 while delivering worse latency and
+throughput: the engine does less per second, yet the transport stays pinned.
 
-**Cross-island placement (Q3, TP4 on 0,1,4,5 vs 0–3):** c=1 TPOT 3.99 vs
-4.00; c=64 ITL 48.3 vs 53.7, throughput 716 vs 680 tok/s — **zero island/UPI
-penalty** (cross is ~5% better, likely NUMA spread of host work).
+| trace (rank 0) | gaps | NCCL | compute | window |
+|---|---:|---:|---:|---|
+| Kimi TP8 **c=1** | **63%** | 22.5% | 9.1% | 1 request, span 5.06 s, overhead control ~5% |
+| Kimi TP8 **c=16** | 10% | **83.9%** | 4.6% | 16 prompts, span 67 s, ITL 535 vs 525 unprofiled (~2%) |
+| Qwen TP4 **c=64** | 33% | **53.3%** | 5.6% | 64 prompts, span 55 s, ITL 49.6 vs 53.7 unprofiled |
+
+Trace caveats, stated once: NCCL kernel time includes in-kernel peer-wait
+(an *upper* bound on pure transfer); rank 0 carries extra driver work but is
+representative for symmetric collectives; the batched windows include the
+prefill burst (Q4: TTFT med 21.8 s of a 45 s bench), so the *pure-decode*
+comms share is likely higher than the quoted span share.
+
+**Cross-island placement (Q3, TP4 on 0,1,4,5 vs 0–3):** the dose that
+isolates link class — same rank count, same model, only the topology of the
+4 GPUs moves (two PIX pairs on *different* sockets vs all four under one
+socket):
+
+| | intra (0–3) | cross-island (0,1,4,5) |
+|---|---:|---:|
+| c=1 TPOT / ITL med (ms) | 4.00 / 10.54 | 3.99 / 10.37 |
+| c=64 ITL med (ms) / out tok/s | 53.7 / 680 | 48.3 / **716** |
+
+**Zero island/UPI penalty** — cross is ~5% *better* at c=64 (plausibly NUMA
+spread of host work across both sockets). Together with A4 (cross-socket
+TP2 ≈ same-switch TP2) this kills the link-class hypothesis at both rank
+counts where it could be tested.
 
 **Floor doses (F-series, Qwen TP1 c=1, random 64/512):**
 
-| dose | step/ITL med (ms) | TPOT med (ms) | SMACT |
-|---|---:|---:|---:|
-| base (MTP + cudagraphs) | 8.93 | 3.39 | 0.052 |
-| spec OFF | 5.36 | 5.36 | 0.053 |
-| enforce-eager | 55.1 | 19.6 | **0.009** |
+| dose | step/ITL med (ms) | TPOT med (ms) | power / SMACT |
+|---|---:|---:|---|
+| base (MTP + cudagraphs) | 8.93 | 3.39 | 94 W / 0.052 |
+| spec OFF | 5.36 | 5.36 | 92 W / 0.053 |
+| enforce-eager (spec ON) | 55.1 | 19.6 | 78 W / **0.009** |
 | governor `performance` | 9.86 | 3.70 | — |
 
-(TP1 c=1 trace exists but is contaminated by first-request torch.compile —
-no warmups; qualitative only: zero NCCL at TP1, host/dispatch dominates.)
+Reading the doses: with spec OFF every step emits exactly 1 token, so
+ITL = step time — the *step* gets 3.57 ms cheaper without MTP, yet MTP still
+wins on TPOT (3.39 vs 5.36) because acceptance ~2.6 amortizes the costlier
+step across ~2.6 tokens. The eager dose removes cudagraphs only: the step
+explodes 8.93 → 55.1 ms with SMACT collapsing to 0.009 — pure kernel-launch
+overhead, normally hidden by graph replay. The governor dose came out
+*worse* than base (9.86 vs 8.93, outside the ±0.4 ms band) — `schedutil`
+exonerated, restored and documented after the test.
+
+(The TP1 c=1 trace exists — `floor/trace_summary_tp1_c1.txt` — but is
+contaminated by first-request torch.compile: the bench ran without warmups,
+so dynamo/inductor compile chains ~0.77 s dominate the cpu_op ranking and
+gaps 73% include one-time compilation. Used qualitatively only: zero NCCL
+at TP1, host Python/dispatch fills the pauses. The quantitative floor
+attribution rests on the doses above, which are clean.)
 
 ## 8. Calculations and the causal path
 
@@ -309,10 +407,25 @@ launch overhead — the floor is host/launch by nature; governor exonerated
 (9.86 ≥ 8.93). Adding ranks adds a comms tax on top (+0.15/+1.56/+5.18 ms
 for 2/4/8 ranks), but A4 + Q3 show **link class does not matter** (no UPI
 tax at either c) and nop2p shows the 2-rank tax is not even
-latency-sensitive. Kimi TP8 c=1 trace confirms the same structure at the
-8-rank end: gaps 63%, NCCL 22.5% → Amdahl bound for a perfect interconnect
-`1/(1−0.225) ≈ 1.3×`, and part of NCCL time is peer-wait a faster link does
-not remove.
+latency-sensitive.
+
+Kimi TP8 c=1 closes the chain at the 8-rank end, with the step arithmetic
+made explicit: 189 output tokens / ~2.6 accepted per verify ≈ **73 decode
+steps over the 5.06 s trace span → ~50 ms/step**, of which ~32 ms is GPU
+idle (gaps), ~11 ms NCCL kernels, ~2.4 ms compute. Amdahl bound for a
+perfect interconnect: `1/(1−0.225) ≈ 1.3×` — and part of the NCCL time is
+peer-wait a faster link does not remove, so the realistic interactive gain
+is below even that.
+
+**A wrong hypothesis, kept on the record:** mid-investigation the TP4→TP8
+cliff was attributed to the *link class* — TP=8 is forced to cross UPI,
+TP4 is not, so UPI looked like the culprit. Two placement doses falsified
+it: A4 (TP2 on GPU{0,4}, pure cross-socket: 3.51 ms ≈ same-switch 3.65 ms)
+and Q3 (TP4 split 2+2 across sockets: *better* than intra at c=64). The
+dose is the **rank count and the shared transport ceiling**, not where the
+traffic flows. This matters for the purchase: it says NVLink's value is in
+replacing PCIe as transport (bandwidth/contention), not in shortening any
+particular unlucky path.
 
 **Batched chain:** payloads grow with batch → comms flips from latency-priced
 to transport-priced. PCIe RX pins at **7.2–7.9 GB/s for every Kimi c≥8 and
@@ -337,6 +450,20 @@ scheduler-shaped software suspect. The s=0.839 measurement lives inside that
 pathology; the c=32 share is extrapolated from identical counter signatures
 (RX ceiling, SMACT 0.18), not traced.
 
+**Predictions vs measurements** (closing the loop on the §5 table):
+
+| Config | Predicted | Measured | Where the prediction failed |
+|---|---|---|---|
+| TP=1 | 1.0× | 1.0× | — |
+| TP=2 in-island | ~1.3–2× | **≈ 0 gain** (any c) | comms at 2 ranks is ~free on PCIe; nothing to remove |
+| TP=4 in-island | ~1.6–2.5× | ≈0 at c=1; **~2.1× batched** | missing workload-shape axis; range right for batched only |
+| TP=8 hierarchical | ~1.2–1.5× | ~1.2× at c=1; **~2.7× batched** | *under*-predicted batched: payload growth at batch was not modeled |
+
+The pre-calibration model over-valued NVLink at low rank counts (where the
+floor rules) and under-valued it in exactly the regime it is built for
+(batched transport saturation). Calibration changed the *shape* of the
+answer, not just the numbers — which is the argument for having measured.
+
 ## 9. Conclusions from the results
 
 - The node has **two different bottlenecks depending on workload shape**,
@@ -356,8 +483,26 @@ pathology; the c=32 share is extrapolated from identical counter signatures
   partial fit for TP8.
 - Some of the batched pain is **recoverable in software first** (the c=16
   scheduling pathology disappears at c=32 for free).
+- The floor itself has named, addressable components, in cheapness order:
+  (a) the Kimi c=16-style scheduler pathology — operating-point/config fix;
+  (b) MTP/Eagle3 orchestration (40% of the TP1 floor) — engine-version A/B,
+  draft-length tuning; (c) cudagraph mode (full vs piecewise) and CPU/NUMA
+  pinning of the engine process on this dual-socket node; (d) vLLM upgrade —
+  v0.20 is the pinned baseline and newer releases list scheduler/step-loop
+  optimizations. None of these costs hardware money.
 
 ## 10. Decision table — what to do in which situation
+
+The reading criteria were **pre-registered in the session plans before the
+measurements ran** (so the verdict could not be fitted to the data):
+
+| Pre-registered result pattern | Pre-registered verdict | What happened |
+|---|---|---|
+| TPOT rises TP1→2→4→8 and nop2p degrades it further | PCIe round-latency tax confirmed causally | half-confirmed: TPOT rises, but nop2p was **null** → latency tax rejected at 2 ranks |
+| Kimi trace: comms ≥ ~40% of span at c=1 | Kimi TP8 comms-bound directly | **not met** (22.5%) → floor-bound at c=1 |
+| Kimi trace: gaps dominate, comms small | floor dominates; NVLink estimates cut | **met at c=1** (63% gaps) |
+| TP2 ≈ TP1 and nop2p null | comms cheap — investigate the floor | **met** → F-series executed |
+| comms-signature at batch (power low, SMACT low, RX high, TPOT degrades) | profile at batch before verdict | **met** → K2/Q4 traces added the batched axis |
 
 | Scenario | NVLink 4-way verdict | Estimated gain | Evidence level |
 |---|---|---|---|
@@ -409,6 +554,17 @@ Before any purchase, exhaust the free software levers this investigation
 exposed: the Kimi c=16 scheduling pathology (4× recoverable by operating
 point alone) and the MTP orchestration share of the floor.
 
+**Boundary of this thread:** T9 delivers the *performance* half of the
+cost-benefit — calibrated shares, the per-scenario gain table, and the
+GO/NO-GO verdict. The *money* half (bridge price, installation downtime,
+warranty) is a company-side input outside this repo; the thresholds are set
+so the verdict composes with any price tag.
+
+**Open residuals** (would sharpen, not change, the verdict): a Kimi c=32
+trace (the GO estimate's share is traced at c=16, extrapolated to c=32 from
+counters); the root cause of the c=16 scheduler pathology; a clean
+(warmed-up) TP1 CPU-timeline to itemize the remaining 5.36 ms of floor.
+
 ## 13. Evidence
 
 | Claim | Source |
@@ -422,3 +578,40 @@ point alone) and the MTP orchestration share of the floor.
 | Kimi TP=8 step 16.55 ms (spec OFF), 6.92 ms/tok TPOT-any (ON) | T6, `results/runs/2026-06-05_kimi-k2-6_run-05_eagle3-off-paired/`, `…run-04_eagle3-on/` |
 | Goal, parametric model, first-pass NVLink table | [#50](https://github.com/Czyszka/nanoserve-mini/issues/50) |
 | Executed session plans (methodology of record) | `docs/plans/2026-06-10-server-session.md`, `docs/plans/2026-06-10-bottleneck-followup-session.md`, `docs/plans/2026-06-11-nvlink-boundary-session.md` |
+
+## Appendix: operational lessons (paid for in session time)
+
+Engineering-record items that cost real debugging during the three sessions
+and are now codified in the plans:
+
+- **vLLM v0.20 removed `VLLM_TORCH_PROFILER_DIR`** silently (log:
+  "unknown vllm env"); `/start_profile` 404s unless the engine starts with
+  `--profiler-config='{"profiler":"torch","torch_profiler_dir":…}'`.
+- **A compose overlay replaces the whole `command`** — you cannot append one
+  flag; the overlay must carry the full canonical command. Corollary: env
+  interpolation inside an overlay inherits whatever the shell has exported —
+  a leftover `QWEN_TP=4` silently started the "TP1" profile at TP4 once.
+  Hard-code the parameters that define the experiment; verify from
+  `docker inspect … .Config.Cmd` + the engine log, never from the overlay
+  file.
+- **`sudo docker compose` strips the exported env** (use `sudo -E`) — the
+  original cause of a whole aborted session (TP MISMATCH).
+- **`docker compose cp <dir>` nests a subdirectory**; copy `dir/.` and use a
+  recursive `find` when verifying.
+- **No `set -e` / no bare `exit` in interactive SSH sessions** — one `exit 1`
+  in a pasted block logs the operator out and destroys session variables and
+  history. Echo warnings + conditional execution instead.
+- The vLLM container ships **`python3` only** (no `python` alias); benches
+  need `pip install pandas datasets` after every recreate (`/tmp` and pip
+  state do not survive).
+- **Engine log timestamps are UTC**; bench windows must be matched via
+  epoch files, not local-time assumptions.
+- **TP≥4 traces flush minutes after `/stop_profile`** (8 ranks writing
+  large gzipped JSONs) — wait for file count > 0 *and* stable sizes before
+  copying.
+- **Raw env dumps leak secrets** (`HUGGING_FACE_HUB_TOKEN`) — capture
+  container env through a redaction filter; raw traces stay outside the
+  repo (size + policy).
+- **Profile after warmup** — the F3 trace burned its window on torch.compile
+  because the bench ran cold (the one methodology slip of the series, left
+  visible in §7 as a worked example of why warmups matter).
