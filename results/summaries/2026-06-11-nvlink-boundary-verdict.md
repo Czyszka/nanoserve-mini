@@ -87,13 +87,24 @@ TP2→TP4 (702→170 tok/s/GPU). Caveat: okno zawiera prefill-burst 64 promptów
 | base (MTP + cudagraphs) | 8.93 | 3.39 | 94 W / 0.052 |
 | nospec (MTP off) | 5.36 | 5.36 | 92 W / 0.053 |
 | eager (cudagraphs off) | 55.1 | 19.6 | 78 W / 0.009 |
+| perfgov (governor performance) | 9.86 | 3.70 | — |
 
 - **Orkiestracja MTP: 3.57 ms/krok = 40% podłogi** (dose-izolowane). Spec
   i tak wygrywa na TPOT (3.39 vs 5.36) dzięki akceptacji ~2.6.
 - **Cudagraphs maskują ~46 ms/krok launch-overheadu** (eager: SMACT 0.009 —
   czysty launch-bound). Podłoga jest hostowo-launchowa z natury.
-- Pozostałość 5.36 ms = forward + host scheduling/sampling. Governor =
-  `schedutil` (128 CPU) — nieprzetestowany podejrzany (F6 nie weszło).
+- Pozostałość 5.36 ms = forward + host scheduling/sampling. **Governor
+  uniewinniony (F6):** `performance` daje 9.86 ms vs 8.93 base — zero zysku
+  (różnica powyżej pasma szumu w złą stronę; `schedutil` nie jest składnikiem
+  podłogi). Restore governora udokumentowany.
+- **F3 (profil TP1 c=1, `floor/trace_summary_tp1_c1.txt`):** trace skażony
+  zimnym startem — bench bez warmupów złapał kompilację torch.compile
+  (TOP cpu_op: dynamo/inductor ~0.77 s; gaps 73% spanu zawierają one-time
+  compile). Jakościowo spójny (zero NCCL przy TP1, compute 8.6%); ilościowa
+  atrybucja podłogi stoi na dawkach, nie na tym trace.
+
+Sesja zamknięta częścią D': restore plain compose, smoke OK, manifest
+artefaktów w `session/artifact_manifest.txt` (91 plików).
 
 ## TABELA WERDYKTU — kiedy NVLink 4-way ma sens (#50)
 

@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `3c11f70`
-- Last summarized at: 2026-06-11 (NVLink verdict)
+- Last summarized commit: `5cab895`
+- Last summarized at: 2026-06-12 (T9 complete)
 - Note: previous cursor `520d788` is dangling in the current history (laptop-side
   rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
@@ -561,6 +561,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-12 (cloud) - session closed (D'), F3/F6 analyzed, T9 restructured to final form
+
+- Why: the user delivered the last artifacts (F3 trace, F6 governor dose, D' restore + manifest `5cab895`) — the research set for the technical note was complete.
+- Did: F6 exonerates the governor (`performance` 9.86 vs 8.93 ms base — no gain); F3 trace flagged as cold-start-contaminated (no warmups → torch.compile chains dominate cpu_op; qualitative use only); verdict summary updated with both + D' close-out; **T9 rewritten into the 13-point technical-note structure** (problem → observation+analogy → glossary → hardware → mechanisms → methodology → results → causal analysis → conclusions → decision table → per-scenario justification → verdict → evidence), status COMPLETE.
+- Range: `3c11f70..5cab895` (user close-out commit) + cloud docs commits
+- Validation: OK (docs-only, `git diff --check`)
+- Next: post the verdict table as a #50 comment and close #50; W2 synthesizes from T9; optional future slot: Kimi c=32 profile + scheduler-pathology investigation (the two open caveats).
 
 ### 2026-06-11/12 (cloud) - NVLink boundary session: full verdict table for #50
 
