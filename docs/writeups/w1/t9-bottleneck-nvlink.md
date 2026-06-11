@@ -298,25 +298,59 @@ Method notes (the controls that make the numbers trustworthy):
 **Qwen TP-curve** (full tables:
 `results/summaries/2026-06-11-qwen-tp-curve.md`):
 
-| TP (c=1) | TPOT med (ms) | step comms tax vs TP1 |
-|---|---:|---:|
-| 1 | 3.68 | — |
-| 2 | 3.65 | +0.15 ms (≈ noise) |
-| 2 cross-socket (0,4) | 3.51 | no UPI tax |
-| 4 | 4.00 | +1.56 ms |
-| 8 | 5.12 | +5.18 ms |
+The experiment: Qwen3.6-35B-A3B **fits on a single GPU**, so it can run the
+same engine command at TP=1/2/4/8 with *nothing changing except the number
+of ranks*. Every millisecond TP adds versus TP1 is therefore pure
+parallelization overhead — dominated by the all-reduce ladder — measured on
+real serving, not a microbenchmark. TP1 is the comms-free anchor; this
+lever is impossible for Kimi (must run TP=8), which is why Qwen carries the
+curve and Kimi is profiled directly.
 
-| TP (c=64) | out tok/s | scaling eff. vs TP1 | per-GPU power / SMACT | PCIe RX |
+*Interactive (c=1):* one request at a time, so each decode step is laid
+bare — no batching to hide latency. With MTP speculation a step emits ~2.6
+tokens, so **ITL ≈ time per step** while TPOT = step ÷ accepted tokens. The
+comms tax is read off the *step* column (TPOT shrinks it by the acceptance
+factor, which is why the tax is not visible as TPOT differences):
+
+| TP (c=1) | step / ITL med (ms) | TPOT med (ms) | step comms tax vs TP1 |
+|---|---:|---:|---:|
+| 1 | 8.98 | 3.68 | — (comms-free anchor) |
+| 2 | 9.91 | 3.65 | +0.93 ms |
+| 2 cross-socket (0,4) | 9.13 | 3.51 | +0.15 ms → no UPI tax (cross ≤ same-switch) |
+| 4 | 10.54 | 4.00 | +1.56 ms (4× noise band ±0.4) |
+| 8 | 14.16 | 5.12 | +5.18 ms (13× noise) |
+
+At c=1 an all-reduce carries only ~KB-scale payloads, so this tax is the
+*per-round fixed cost × number of rounds* — and it grows superlinearly with
+rank count (2→4 ranks: +0.6 ms; 4→8 ranks: +3.6 ms), because every round
+must synchronize more participants. Note the cross-socket TP2 run came out
+*cheaper* than same-switch TP2 (9.13 vs 9.91) — both within ~2× the noise
+band of each other, which is precisely the "no UPI tax" finding: if link
+class mattered, cross-socket had to be the expensive one.
+
+*Batched (c=64):* 64 concurrent requests amortize the per-step floor and
+grow the collective payloads — this is the throughput regime. **Scaling
+efficiency** here = measured throughput ÷ (TP1 throughput × GPU count),
+i.e. "what fraction of the added silicon turns into output":
+
+| TP (c=64) | out tok/s | scaling eff. | per-GPU power / SMACT | PCIe RX |
 |---|---:|---:|---|---:|
-| 1 | 1202 | — | 436 W / 0.665 | ~0 |
-| 2 | **1404** | +17% (58%/GPU) | 265 W / 0.40 | 5.8–6.7 GB/s |
-| 4 | 680 | 14% | ~108 W / 0.06 | 2.9 GB/s |
-| 8 | 257 | 2.7% | 111 W / 0.053 | 7.18 GB/s |
+| 1 | 1202 | 100% (def.) | 436 W / 0.665 | ~0 |
+| 2 | **1404** | 1404/(1202×2) = **58%** | 265 W / 0.40 | 5.8–6.7 GB/s |
+| 4 | 680 | 680/(1202×4) = **14%** | ~108 W / 0.06 | 2.9 GB/s |
+| 8 | 257 | 257/(1202×8) = **2.7%** | 111 W / 0.053 | 7.18 GB/s |
 
-(Scaling efficiency = throughput gain per added GPU; TP4/TP8 collapse to
-14%/2.7% while per-GPU power falls toward the ~70–99 W idle floor — the
-GPUs are not working harder, they are waiting more. TP1 counters
-re-aggregated with the activity filter after the idle-tail errata.)
+How to read it: TP2 still *wins absolutely* (+17% total throughput, the
+serving optimum), but already burns 42% of the second GPU on coordination.
+TP4 and TP8 are **absolutely slower than a single GPU** — 8 GPUs deliver
+0.21× of what 1 GPU does. The counters say why: per-GPU power falls from
+436 W toward the ~70–99 W idle floor and SMACT collapses 0.665 → 0.053 as
+ranks are added — the GPUs are not working harder on smaller slices, they
+are *waiting* (in synchronous collectives) for most of every step. Note
+also TP4's RX (2.9 GB/s) sits well below TP8's (7.18): TP4 c=64 is hurt by
+sync/coordination before the transport ceiling even comes into play,
+whereas TP8 slams into the ceiling outright. (TP1 counters re-aggregated
+with the activity filter after the idle-tail errata.)
 
 **Qwen TP8 ramp (Q1):** c=4 → 365 tok/s (RX 4.39), c=16 → 437 (RX 6.83),
 c=64 → 257 (RX 7.18): peak at c≈16, collapse exactly when RX hits the
