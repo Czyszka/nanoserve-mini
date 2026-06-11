@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `32763d7`
-- Last summarized at: 2026-06-11 (close-out)
+- Last summarized commit: `3c11f70`
+- Last summarized at: 2026-06-11 (NVLink verdict)
 - Note: previous cursor `520d788` is dangling in the current history (laptop-side
   rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
@@ -274,6 +274,29 @@ status, not a task list. Update when work moves.
   `/home/working/nanoserve-tracing` (ubuntusrv2, outside repo). Restore
   verified clean. Next: recompute #50 estimate table from measured values
   and write the recommendation; W2 synthesis material ready.
+  **2026-06-11/12: NVLink boundary session COMPLETE — verdict delivered**
+  (plan `docs/plans/2026-06-11-nvlink-boundary-session.md`, data commits
+  `e13c30d`…`3c11f70`, analysis →
+  `results/summaries/2026-06-11-nvlink-boundary-verdict.md`). K1: Kimi TP8
+  PCIe RX pinned at 7.2–7.9 GB/s for every c≥8 (model-independent transport
+  ceiling); c=16 anomaly REAL (repeat ±3%, ITL 512→525 ms; Eagle3 acceptance
+  stable — scheduler-suspect, software). K2 (trace @c16): **NCCL 83.9% of
+  span / compute 4.6%** — batched Kimi flips from floor-bound to comms-bound.
+  Q1: Qwen TP8 peaks at c≈16 (437 tok/s = 1/3 of TP2) and collapses at the
+  RX ceiling. Q3: cross-island TP4 (0,1,4,5) shows **zero UPI tax** (cross
+  ~5% better at c64) → capture 1.0 for TP4-in-one-island, ≈0.75 for TP8.
+  Q4 (trace TP4 intra @c64): **NCCL 53.3%** — converges with the 52%
+  TP2→TP4 per-GPU efficiency loss (two methods, one number). F doses (TP1
+  c=1, step 8.93 ms): MTP orchestration 3.57 ms = 40% of the floor (spec
+  still wins TPOT 3.39 vs 5.36); eager dose shows cudagraphs mask ~46 ms/step
+  launch overhead (SMACT 0.009) — the floor is host/launch by nature; F6
+  (governor `schedutil`) untested. **#50 verdict table:** NVLink GO only for
+  batched serving of models requiring TP≥4 (TP4 ~2.1×, Kimi TP8 ~2.7×, ceiling
+  6.2×); NO-GO for interactive latency (≤1.3×), TP≤2 (≈0 causally), and
+  anything that fits on fewer GPUs. Caveats in the summary (c32 share
+  extrapolated, NCCL includes peer-wait, c16 penalty may be software-fixable).
+  Next: T9 restructure per its 13-point target outline + #50 comment with the
+  verdict table; optional F6 + Kimi c=32 profile if another slot opens.
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -385,10 +408,12 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
   is on PCIe today; the earlier "4-way NVLink = 2 islands of 4" is a *hypothetical
   upgrade*, not the current node. Posted a #34 correction comment; T5 hardware
   layer updated.
-- [ ] **Why is TP4 (intra-socket, NODE links) already catastrophic at c=64**
-  (eff. 14%) when TP2 still wins? Candidates: collective fan-out growth, EP
-  all-to-all width, host-bridge bandwidth ceiling. The Kimi Cz. B trace +
-  Qwen nop2p (Cz. C) should narrow this.
+- [x] **Why is TP4 (intra-socket, NODE links) already catastrophic at c=64**
+  (eff. 14%) when TP2 still wins? **RESOLVED 2026-06-11/12:** rank-count dose
+  + shared transport ceiling, not link class. Q4 trace: NCCL 53.3% of span at
+  TP4 c64 (matches the 52% efficiency loss); Q3: zero UPI/island tax; K1/Q1:
+  PCIe RX saturates at ~7.2–7.9 GB/s regardless of model. See
+  `results/summaries/2026-06-11-nvlink-boundary-verdict.md`.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
@@ -404,6 +429,16 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-11/12 (NVLink boundary session analysis + verdict):
+
+```text
+git diff --check    OK (docs/md only; no .py touched)
+K2/Q4 profiler overhead controls: ITL within ~2-8% of unprofiled    OK
+c16 anomaly repeat: 512 vs 525 ms (±3%) — reproducible    OK
+Q3 placement check: CUDA_VISIBLE_DEVICES=0,1,4,5 in engine env    OK
+cross-method convergence: Q4 NCCL share 53.3% vs 52% efficiency loss    OK
+```
 
 2026-06-11 (close-out) Kimi TP8 profile analysis + session wrap:
 
@@ -526,6 +561,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-11/12 (cloud) - NVLink boundary session: full verdict table for #50
+
+- Why: #50 needed the boundary conditions — when NVLink 4-way pays and when it does not, in the latency/throughput frame.
+- Did: analyzed K1/K2/Q1/Q3/Q4/F as they landed (live debugging of the plan along the way: K2 moved to c=16 after the anomaly reproduced, Q1 prereqs made standalone, self-contained Q4 section added); wrote `results/summaries/2026-06-11-nvlink-boundary-verdict.md` with the verdict matrix (GO only for batched TP≥4 serving: TP4 ~2.1×, Kimi TP8 ~2.7×; NO-GO interactive/TP≤2/fits-on-fewer) and the floor ledger (MTP 40% of the TP1 step, cudagraphs already masking ~46 ms launch overhead); T9 gained the target 13-point outline, editorial rules, the executed-plans index, and the delivery-run analogy mapping.
+- Range: `32763d7..3c11f70` (mixed: user bench commits + cloud docs commits)
+- Validation: OK (docs-only; overhead controls and cross-method convergence in the summary)
+- Next: restructure T9 to its target outline with the new numbers; post the verdict table as a #50 comment; optional next slot: F6 governor dose + Kimi c=32 profile to close the two caveats.
 
 ### 2026-06-11 (cloud, close-out) - Kimi TP8 profile: floor-bound, NVLink interactive NO-GO signal
 
