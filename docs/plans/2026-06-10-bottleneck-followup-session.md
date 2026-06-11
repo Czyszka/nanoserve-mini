@@ -216,17 +216,22 @@ run_qwen_tp () {  # $1 = TP (2|4|8), optional $2=tag suffix, optional $3=c1-only
   #            verify grepem po PEŁNYM logu (tail 500 utnie linię configu
   #            przy TP=8 i przy NCCL_DEBUG=INFO); artefakty z kontenera `vllm` ──
   docker inspect vllm --format '{{json .Config.Cmd}}' > "$P0OUT/engine_cmd_${tag}.json"
-  docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' > "$P0OUT/engine_env_${tag}.txt"
+  # env z redakcją sekretów — surowy dump zawiera HUGGING_FACE_HUB_TOKEN,
+  # a $P0OUT idzie do repo na CHECKPOINT 1 (polityka: tokeny nigdy do gita)
+  docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' \
+    | sed -E 's/^(HUGGING_FACE_HUB_TOKEN|HF_TOKEN|[A-Z_]*API_KEY|[A-Z_]*SECRET[A-Z_]*)=.*/\1=REDACTED/' \
+    > "$P0OUT/engine_env_${tag}.txt"
   docker logs vllm --tail 500 > "$P0OUT/log_start_qwen_${tag}.txt" 2>&1
   docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$P0OUT/verify_${tag}.txt"
-  grep -q "tensor_parallel_size=${tp}" "$P0OUT/verify_${tag}.txt" || { echo "TP MISMATCH — przerwij"; return 1; }
+  grep -q "tensor_parallel_size=${tp}" "$P0OUT/verify_${tag}.txt" \
+    || { echo "TP MISMATCH — oczekiwane tensor_parallel_size=${tp}, w logu: '$(cat "$P0OUT/verify_${tag}.txt")' — przerwij"; return 1; }
 
   # ── KROK 3: prereqs benchu w świeżym kontenerze + dataset (po każdym
   #            recreate od zera — pip i /tmp nie przeżywają) ──────────────
   docker compose "${compose_args[@]}" cp \
     results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl || return 1
   docker compose "${compose_args[@]}" exec vllm bash -c \
-    'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python -c "import pandas,datasets;print(\"deps ok\")"' || return 1
+    'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' || return 1
 
   run_failed=0
 
@@ -343,15 +348,20 @@ docker compose -f "$QWEN_COMPOSE" stop vllm 2>/dev/null || true
 docker compose -f "$QWEN_COMPOSE" rm -f vllm 2>/dev/null || true
 unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES QWEN_EXTRA_COMPOSE
 
+# vLLM v0.20 nie czyta VLLM_TORCH_PROFILER_DIR (env usunięty z envs.py);
+# profiler włącza flaga --profiler-config, a /start_profile rejestruje się
+# tylko gdy jest obecna → overlay nadpisuje CAŁĄ komendę (kopia kanonicznej
+# z docker-compose.kimi-k2.6.yml + flaga na końcu; trzymać w synchronizacji)
 cat > /tmp/kimi-profiler.yml <<'EOF'
 services:
   vllm:
-    environment:
-      VLLM_TORCH_PROFILER_DIR: /tmp/vllm_profile
+    command:
+      --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 8 --gpu-memory-utilization 0.6 --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2 --enable-auto-tool-choice --language-model-only --max-num-seqs 32 --max-model-len 131072 --max-num-batched-tokens 4096 --speculative-config='{"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3,"max_model_len":8192}' --profiler-config='{"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
 EOF
 docker compose -f "$COMPOSE" -f /tmp/kimi-profiler.yml up -d --force-recreate vllm
 wait_http_health http://127.0.0.1:8000/health 180 10
-docker inspect vllm --format '{{json .Config.Cmd}}' > "$PROF/engine_cmd.json"   # TP8 + Eagle3 bez zmian
+docker inspect vllm --format '{{json .Config.Cmd}}' > "$PROF/engine_cmd.json"   # TP8 + Eagle3 + profiler-config
+grep -o 'profiler-config' "$PROF/engine_cmd.json" || { echo "BRAK profiler-config w Cmd — przerwij"; }
 
 # PROFIL KRÓTKI: 1 request c=1 (kilka sekund decode — trace i tak będzie duży)
 curl -fsS -X POST http://127.0.0.1:8000/start_profile
@@ -372,16 +382,20 @@ docker compose -f "$COMPOSE" exec vllm ls -la /tmp/vllm_profile/   # rozmiary st
 ```
 
 > ⚠️ **Traców NIE commitujemy** (polityka repo — duże profile jak Nsight).
-> Kopiuj poza repo: `mkdir -p ~/nanoserve-local && docker compose -f "$COMPOSE" cp vllm:/tmp/vllm_profile ~/nanoserve-local/vllm_profile_$(date +%F)/`
+> Kopiuj poza repo (najpierw ustaw `TRACE_DIR`, `cp` z `/.` kopiuje pliki
+> wprost do celu, bez zagnieżdżania podkatalogu):
+> `TRACE_DIR=~/nanoserve-local/vllm_profile_$(date +%F); mkdir -p "$TRACE_DIR" && docker compose -f "$COMPOSE" cp vllm:/tmp/vllm_profile/. "$TRACE_DIR"/`
 > Do repo idzie tylko podsumowanie poniżej + ścieżka lokalna w session notes.
 
 Podsumowanie tracu (rank 0) na serwerze — udział NCCL vs compute vs przerwy:
 
 ```bash
-TRACE_DIR=~/nanoserve-local/vllm_profile_$(date +%F)
-T=$(find "$TRACE_DIR" -maxdepth 1 -type f \( -name '*.json' -o -name '*.json.gz' \) | sort | head -n 1)
-test -n "$T" || { echo "no profiler trace found in $TRACE_DIR"; exit 1; }
-uv run python - "$T" <<'EOF' | tee "$PROF/trace_summary_rank0.txt"
+# TRACE_DIR jak przy kopiowaniu wyżej (albo własna ścieżka); find rekursywny —
+# działa też gdy cp zagnieździł podkatalog. BEZ `exit` (w interaktywnym SSH
+# exit zamyka sesję i kasuje zmienne) — przy NOT FOUND popraw TRACE_DIR i powtórz.
+T=$(find "$TRACE_DIR" -type f \( -name '*.json' -o -name '*.json.gz' \) | sort | head -n 1)
+echo "trace: ${T:-NOT FOUND w $TRACE_DIR}"
+[ -n "$T" ] && uv run python - "$T" <<'EOF' | tee "$PROF/trace_summary_rank0.txt"
 import json,gzip,sys,collections
 p=sys.argv[1]; op=gzip.open if p.endswith('.gz') else open
 d=json.load(op(p,'rt'))
@@ -419,9 +433,10 @@ drugi profil pod c=8 (8× `measure_ttft_once &` w trakcie start/stop_profile).
 docker compose -f "$COMPOSE" up -d --force-recreate vllm vllm-small litellm open-webui        # plain compose, prod config
 wait_http_health http://127.0.0.1:8000/health 180 10
 docker inspect vllm --format '{{json .Config.Cmd}}' > "$RUN_DIR/session/restore_engine_cmd.json"
-if docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -q '^VLLM_TORCH_PROFILER_DIR='; then
-  echo "profiler env still present after restore" >&2
-  exit 1
+if docker inspect vllm --format '{{json .Config.Cmd}}' | grep -q 'profiler-config'; then
+  # BEZ exit (interaktywny SSH!) — napraw ręcznie: up -d --force-recreate vllm
+  # z SAMYM plain compose i powtórz check
+  echo "UWAGA: profiler flag still present in Cmd after restore" >&2
 fi
 uv run python -m benchmarks.scripts.measure_ttft_once --base-url http://127.0.0.1:8000 \
   --model kimi-k2.6 --api-key "$LITELLM_MASTER_KEY" --max-tokens 1024 \

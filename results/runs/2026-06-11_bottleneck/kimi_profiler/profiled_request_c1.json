@@ -1,0 +1,70 @@
+{
+  "schema": "nanoserve-mini.ttft-once.v2",
+  "methodology": "mlperf_inspired_lite",
+  "benchmark_mode": "singlestream_lite_latency",
+  "timestamp": "2026-06-11T08:13:02.731550+00:00",
+  "controls": {
+    "model": "kimi-k2.6",
+    "base_url": "http://127.0.0.1:8000",
+    "dtype": null,
+    "quantization": null,
+    "gpu_model": null,
+    "vllm_version": null,
+    "max_model_len": null,
+    "max_num_seqs": null,
+    "max_num_batched_tokens": null,
+    "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 256
+    },
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "workload": "single-prompt-smoke",
+    "workload_spec": {
+      "name": "single-prompt-smoke",
+      "prompt_source": "literal",
+      "prompt_chars": 29,
+      "max_tokens": 256,
+      "decoding": {
+        "temperature": 0.0,
+        "max_tokens": 256
+      },
+      "concurrency": 1,
+      "arrival_process": "single",
+      "shared_prefixes": false
+    },
+    "notes": null,
+    "run_id": null,
+    "run_uuid": "2087f7110d5341b4ac5d1646a82c2322",
+    "script_name": "measure_ttft_once.py",
+    "git_commit": "100777deb5a2c105af37a9a3e1b9112ac42db06a"
+  },
+  "request": {
+    "prompt": "Say hi in one short sentence.",
+    "max_tokens": 256,
+    "temperature": 0.0
+  },
+  "metrics": {
+    "ttft_seconds": 5.183306670980528,
+    "ttft_any_token_seconds": 1.4362084700260311,
+    "e2e_seconds": 5.208255495876074,
+    "tpot_seconds": 0.00013270651540183957,
+    "tpot_any_token_seconds": 0.02006407992473427,
+    "output_tokens_per_second": 36.288542324709546,
+    "chunks_received": 72,
+    "output_chars": 10,
+    "reasoning_chars": 738,
+    "prompt_tokens": 15,
+    "completion_tokens": 189,
+    "total_tokens": 204,
+    "completed": true
+  },
+  "server_metrics": {
+    "gpu_memory_used_gb": null,
+    "kv_cache_usage": null,
+    "prefix_cache_hit_rate": null
+  },
+  "output_text": " Hi there!",
+  "error": null
+}

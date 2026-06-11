@@ -8,8 +8,10 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `520d788`
-- Last summarized at: 2026-06-10
+- Last summarized commit: `3fd150b`
+- Last summarized at: 2026-06-12 (T9 detail + clarity passes, #50 comment posted)
+- Note: previous cursor `520d788` is dangling in the current history (laptop-side
+  rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
   compacted in place (period summaries + source SHA kept inline); full history
   via `git show 520d788:docs/operations/agent-state.md`.
@@ -233,6 +235,68 @@ status, not a task list. Update when work moves.
   config changes, `NCCL_P2P_DISABLE` is a compose overlay, Kimi profiler startup
   stops Qwen first, and restore force-recreates plain Kimi/DeepSeek/LiteLLM/
   OpenWebUI and checks profiler env removal.
+  **2026-06-11: server run aborted on TP MISMATCH (A1/A2/A3)** — root cause:
+  the server executed an ad-hoc Qwen compose (`514b412`) with hard-coded
+  `--tensor-parallel-size 2` and no `${QWEN_TP}` interpolation, so the exported
+  `QWEN_TP` was silently ignored; partial artifacts in
+  `results/runs/2026-06-11_bottleneck/` (commit `8ab559b`). Fixed by merging
+  the parametrized compose into main (`309e803`); before re-running, pull on
+  the server and confirm TP via `docker inspect vllm` Cmd (beware `sudo`
+  stripping env). Plan hardened (`3fdf08a`): `engine_env_*` capture now redacts
+  secrets (raw dump leaked `HUGGING_FACE_HUB_TOKEN`; audit confirmed no token
+  was ever committed) and the TP-mismatch error prints the actual value from
+  the log.
+  **2026-06-11 (PM): commit A landed and analyzed** (`363b965` data,
+  `f7c3573` analysis → `results/summaries/2026-06-11-qwen-tp-curve.md`).
+  Verdict: **TP2 is the serving optimum** (c64 1404 tok/s, +17% vs TP1);
+  **TP≥4 decode is comms-bound, proven causally** — TP4/TP8 scaling
+  efficiency 14%/2.7%, per-GPU power collapses to near-idle (TP8 c64: 111 W,
+  SMACT 0.053) with sustained PCIe RX 5.7–7.2 GB/s; **A4: no measurable UPI
+  tax at 2 ranks** (cross-socket TP2 ≈ same-switch TP2 at c=1) → the TP4→TP8
+  cliff is rank-count-driven, not link-class alone; per-step floor `F_host`
+  ~5–9 ms confirmed at TP1 c=1 (SMACT 0.46). #50 inputs recorded in the
+  summary; per-round `r` deferred to the Kimi trace (Cz. B fixes `N_rounds`).
+  **Cz. C (nop2p, `fab5e0b`): dose-response NEGATIVE** — `NCCL_P2P_DISABLE=1`
+  at TP2 changes nothing measurable (c64 1396 vs 1404 tok/s; criteria row 4:
+  comms cheap at 2 ranks, limiter = per-step floor; NVLink gain at TP2 ≈ 0
+  causally). Bonus: 3 independent TP2 starts calibrate noise (c1 step
+  ±0.4 ms) → TP4/TP8 deltas are 4×/13× the noise band. Remaining: Cz. B
+  (Kimi profiler), Cz. D (restore).
+  **Cz. B + D (`e5f02a5`, analysis `32763d7` →
+  `results/summaries/2026-06-11-kimi-tp8-profile.md`): SESSION COMPLETE.**
+  Kimi TP8 c=1 trace (rank 0): **gaps 63% of span, NCCL 22.5%, compute 9%**
+  → floor-bound, not comms-bound (criteria row 3); control: profiled vs
+  unprofiled request differ ~5%, so gaps are real. Amdahl bound for NVLink
+  on interactive Kimi ≤1.3× → **NO-GO signal for the interactive-latency
+  motivation**; batched-Kimi case unmeasured (stretch c=8 cut). vLLM v0.20
+  gotcha recorded in the plan: `VLLM_TORCH_PROFILER_DIR` removed upstream,
+  profiler needs `--profiler-config` engine flag. Raw traces:
+  `/home/working/nanoserve-tracing` (ubuntusrv2, outside repo). Restore
+  verified clean. Next: recompute #50 estimate table from measured values
+  and write the recommendation; W2 synthesis material ready.
+  **2026-06-11/12: NVLink boundary session COMPLETE — verdict delivered**
+  (plan `docs/plans/2026-06-11-nvlink-boundary-session.md`, data commits
+  `e13c30d`…`3c11f70`, analysis →
+  `results/summaries/2026-06-11-nvlink-boundary-verdict.md`). K1: Kimi TP8
+  PCIe RX pinned at 7.2–7.9 GB/s for every c≥8 (model-independent transport
+  ceiling); c=16 anomaly REAL (repeat ±3%, ITL 512→525 ms; Eagle3 acceptance
+  stable — scheduler-suspect, software). K2 (trace @c16): **NCCL 83.9% of
+  span / compute 4.6%** — batched Kimi flips from floor-bound to comms-bound.
+  Q1: Qwen TP8 peaks at c≈16 (437 tok/s = 1/3 of TP2) and collapses at the
+  RX ceiling. Q3: cross-island TP4 (0,1,4,5) shows **zero UPI tax** (cross
+  ~5% better at c64) → capture 1.0 for TP4-in-one-island, ≈0.75 for TP8.
+  Q4 (trace TP4 intra @c64): **NCCL 53.3%** — converges with the 52%
+  TP2→TP4 per-GPU efficiency loss (two methods, one number). F doses (TP1
+  c=1, step 8.93 ms): MTP orchestration 3.57 ms = 40% of the floor (spec
+  still wins TPOT 3.39 vs 5.36); eager dose shows cudagraphs mask ~46 ms/step
+  launch overhead (SMACT 0.009) — the floor is host/launch by nature; F6
+  (governor `schedutil`) untested. **#50 verdict table:** NVLink GO only for
+  batched serving of models requiring TP≥4 (TP4 ~2.1×, Kimi TP8 ~2.7×, ceiling
+  6.2×); NO-GO for interactive latency (≤1.3×), TP≤2 (≈0 causally), and
+  anything that fits on fewer GPUs. Caveats in the summary (c32 share
+  extrapolated, NCCL includes peer-wait, c16 penalty may be software-fixable).
+  Next: T9 restructure per its 13-point target outline + #50 comment with the
+  verdict table; optional F6 + Kimi c=32 profile if another slot opens.
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -344,6 +408,12 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
   is on PCIe today; the earlier "4-way NVLink = 2 islands of 4" is a *hypothetical
   upgrade*, not the current node. Posted a #34 correction comment; T5 hardware
   layer updated.
+- [x] **Why is TP4 (intra-socket, NODE links) already catastrophic at c=64**
+  (eff. 14%) when TP2 still wins? **RESOLVED 2026-06-11/12:** rank-count dose
+  + shared transport ceiling, not link class. Q4 trace: NCCL 53.3% of span at
+  TP4 c64 (matches the 52% efficiency loss); Q3: zero UPI/island tax; K1/Q1:
+  PCIe RX saturates at ~7.2–7.9 GB/s regardless of model. See
+  `results/summaries/2026-06-11-nvlink-boundary-verdict.md`.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
@@ -359,6 +429,47 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-12 (T9 detail + clarity passes):
+
+```text
+git diff --check    OK (docs/md only; no .py touched)
+T9 TP-curve step values cross-checked against raw bench JSONs (TP2/A4 swap corrected)    OK
+```
+
+2026-06-11/12 (NVLink boundary session analysis + verdict):
+
+```text
+git diff --check    OK (docs/md only; no .py touched)
+K2/Q4 profiler overhead controls: ITL within ~2-8% of unprofiled    OK
+c16 anomaly repeat: 512 vs 525 ms (±3%) — reproducible    OK
+Q3 placement check: CUDA_VISIBLE_DEVICES=0,1,4,5 in engine env    OK
+cross-method convergence: Q4 NCCL share 53.3% vs 52% efficiency loss    OK
+```
+
+2026-06-11 (close-out) Kimi TP8 profile analysis + session wrap:
+
+```text
+git diff --check    OK (docs/md only; no .py touched)
+profiler control: profiled vs unprofiled request ~5% apart (gaps real)    OK
+restore check: no profiler-config in Cmd, smoke completed=True    OK
+```
+
+2026-06-11 (PM) Qwen TP-curve analysis (laptop-side, docs/results only):
+
+```text
+git diff --check    OK (md only; no .py touched)
+runtime verifies: verify_tp{2,4,8,2x04}.txt all match requested TP    OK
+placement check: non-participant GPUs at idle power in every window    OK
+bench completion: 40/40 (c1) and 600/600 (c64) in every run    OK
+```
+
+2026-06-11 TP-mismatch diagnosis + plan secret redaction:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+secret audit: no engine_env_* file ever committed; no HF token in results/ or docs/    OK
+```
 
 2026-06-10 bottleneck follow-up plan + Qwen compose prep:
 
@@ -457,6 +568,54 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-12 (cloud) - T9 detail + clarity passes; #50 verdict comment posted
+
+- Why: the user wanted T9 substantially more detailed and the Qwen TP-curve section fully explained; the #50 verdict still had to land on the issue itself.
+- Did: T9 detail pass (pre-registered predictions vs measured, method controls, causal step arithmetic, UPI-hypothesis record, ops-lessons appendix) + TP-curve section rewritten for clarity with step values corrected against raw bench JSONs; verdict table posted as a #50 comment; conversational synthesis recorded DP-replicas-over-TP as the Qwen-class recommendation and the NVLink-justified case list (TP4-required batched ~2.1×, Kimi TP8 batched ~2.7×, TP2-required NO with a heavy-dense caveat).
+- Range: `5cab895..3fd150b` (3 commits)
+- Validation: OK (docs-only)
+- Next: user decides on closing #50; W2 synthesizes from T9; optional slot: Kimi c=32 profile, c=16 root cause, 2×TP1-replica co-run to upgrade the DP claim to L2.
+
+### 2026-06-12 (cloud) - session closed (D'), F3/F6 analyzed, T9 restructured to final form
+
+- Why: the user delivered the last artifacts (F3 trace, F6 governor dose, D' restore + manifest `5cab895`) — the research set for the technical note was complete.
+- Did: F6 exonerates the governor (`performance` 9.86 vs 8.93 ms base — no gain); F3 trace flagged as cold-start-contaminated (no warmups → torch.compile chains dominate cpu_op; qualitative use only); verdict summary updated with both + D' close-out; **T9 rewritten into the 13-point technical-note structure** (problem → observation+analogy → glossary → hardware → mechanisms → methodology → results → causal analysis → conclusions → decision table → per-scenario justification → verdict → evidence), status COMPLETE.
+- Range: `3c11f70..5cab895` (user close-out commit) + cloud docs commits
+- Validation: OK (docs-only, `git diff --check`)
+- Next: post the verdict table as a #50 comment and close #50; W2 synthesizes from T9; optional future slot: Kimi c=32 profile + scheduler-pathology investigation (the two open caveats).
+
+### 2026-06-11/12 (cloud) - NVLink boundary session: full verdict table for #50
+
+- Why: #50 needed the boundary conditions — when NVLink 4-way pays and when it does not, in the latency/throughput frame.
+- Did: analyzed K1/K2/Q1/Q3/Q4/F as they landed (live debugging of the plan along the way: K2 moved to c=16 after the anomaly reproduced, Q1 prereqs made standalone, self-contained Q4 section added); wrote `results/summaries/2026-06-11-nvlink-boundary-verdict.md` with the verdict matrix (GO only for batched TP≥4 serving: TP4 ~2.1×, Kimi TP8 ~2.7×; NO-GO interactive/TP≤2/fits-on-fewer) and the floor ledger (MTP 40% of the TP1 step, cudagraphs already masking ~46 ms launch overhead); T9 gained the target 13-point outline, editorial rules, the executed-plans index, and the delivery-run analogy mapping.
+- Range: `32763d7..3c11f70` (mixed: user bench commits + cloud docs commits)
+- Validation: OK (docs-only; overhead controls and cross-method convergence in the summary)
+- Next: restructure T9 to its target outline with the new numbers; post the verdict table as a #50 comment; optional next slot: F6 governor dose + Kimi c=32 profile to close the two caveats.
+
+### 2026-06-11 (cloud, close-out) - Kimi TP8 profile: floor-bound, NVLink interactive NO-GO signal
+
+- Why: Cz. B trace was the last missing measurement for the #50 NVLink decision.
+- Did: rank-0 trace shows gaps 63% / NCCL 22.5% / compute 9% of span with a ~5% profiler-overhead control → Kimi TP8 c=1 is floor-bound, Amdahl bound for NVLink ≤1.3× interactive; summary in results/summaries/2026-06-11-kimi-tp8-profile.md; session restored and complete.
+- Range: `342ddf6..32763d7` (5 commits)
+- Validation: OK
+- Next: recompute the #50 estimate table from measured values and draft the purchase recommendation (laptop-side).
+
+### 2026-06-11 (cloud, PM) - Qwen TP-curve analyzed (commit A of the bottleneck session)
+
+- Why: checkpoint 1 + Cz. C delivered TP2/TP4/TP8 + A4 + nop2p data; #50 needs the measured curve before the NVLink verdict.
+- Did: TP2 is the optimum (c64 +17% vs TP1), TP4/TP8 collapse to 14%/2.7% scaling efficiency with GPUs at near-idle power (comms-bound proven causally), A4 shows no UPI tax at 2 ranks, and the nop2p dose-response is negative (comms cheap at TP2; limiter = per-step floor); analysis in results/summaries/2026-06-11-qwen-tp-curve.md.
+- Range: `917ee17..342ddf6` (4 commits + merge)
+- Validation: OK
+- Next: server continues Cz. B (Kimi profiler trace) and D (restore); then recompute the #50 NVLink table.
+
+### 2026-06-11 (cloud) - TP MISMATCH root cause + plan secret redaction
+
+- Why: the 2026-06-11 server run aborted at the TP verify for A1/A2/A3, and the HF token was landing in committed-bound engine_env artifacts.
+- Did: traced the mismatch to the server's ad-hoc compose hard-coding TP=2 (QWEN_TP ignored), merged the parametrized compose into main, redacted secrets in the env capture, and made the mismatch error print the actual TP.
+- Range: `e08f762..3fdf08a` (3 commits)
+- Validation: OK
+- Next: pull main on the server, confirm TP via docker inspect, re-run A1/A2/A3.
 
 ### 2026-06-10 (laptop, PM5) - plan review pass (Claude) on top of hardening
 
