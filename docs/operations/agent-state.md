@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `3fdf08a`
-- Last summarized at: 2026-06-11
+- Last summarized commit: `f7c3573`
+- Last summarized at: 2026-06-11 (PM)
 - Note: previous cursor `520d788` is dangling in the current history (laptop-side
   rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
@@ -246,6 +246,16 @@ status, not a task list. Update when work moves.
   secrets (raw dump leaked `HUGGING_FACE_HUB_TOKEN`; audit confirmed no token
   was ever committed) and the TP-mismatch error prints the actual value from
   the log.
+  **2026-06-11 (PM): commit A landed and analyzed** (`363b965` data,
+  `f7c3573` analysis → `results/summaries/2026-06-11-qwen-tp-curve.md`).
+  Verdict: **TP2 is the serving optimum** (c64 1404 tok/s, +17% vs TP1);
+  **TP≥4 decode is comms-bound, proven causally** — TP4/TP8 scaling
+  efficiency 14%/2.7%, per-GPU power collapses to near-idle (TP8 c64: 111 W,
+  SMACT 0.053) with sustained PCIe RX 5.7–7.2 GB/s; **A4: no measurable UPI
+  tax at 2 ranks** (cross-socket TP2 ≈ same-switch TP2 at c=1) → the TP4→TP8
+  cliff is rank-count-driven, not link-class alone; per-step floor `F_host`
+  ~5–9 ms confirmed at TP1 c=1 (SMACT 0.46). #50 inputs recorded in the
+  summary; per-round `r` deferred to the Kimi trace (Cz. B fixes `N_rounds`).
   **2026-06-10 (PM3): investigation promoted to W1 thread T9**
   (`docs/writeups/w1/t9-bottleneck-nvlink.md`, status *in progress*) — the
   engineering record of the bottleneck attribution + NVLink decision model;
@@ -357,6 +367,10 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
   is on PCIe today; the earlier "4-way NVLink = 2 islands of 4" is a *hypothetical
   upgrade*, not the current node. Posted a #34 correction comment; T5 hardware
   layer updated.
+- [ ] **Why is TP4 (intra-socket, NODE links) already catastrophic at c=64**
+  (eff. 14%) when TP2 still wins? Candidates: collective fan-out growth, EP
+  all-to-all width, host-bridge bandwidth ceiling. The Kimi Cz. B trace +
+  Qwen nop2p (Cz. C) should narrow this.
 - [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
@@ -372,6 +386,15 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-06-11 (PM) Qwen TP-curve analysis (laptop-side, docs/results only):
+
+```text
+git diff --check    OK (md only; no .py touched)
+runtime verifies: verify_tp{2,4,8,2x04}.txt all match requested TP    OK
+placement check: non-participant GPUs at idle power in every window    OK
+bench completion: 40/40 (c1) and 600/600 (c64) in every run    OK
+```
 
 2026-06-11 TP-mismatch diagnosis + plan secret redaction:
 
@@ -477,6 +500,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-11 (cloud, PM) - Qwen TP-curve analyzed (commit A of the bottleneck session)
+
+- Why: checkpoint 1 delivered the full TP2/TP4/TP8 + A4 dataset; #50 needs the measured curve before the NVLink verdict.
+- Did: TP2 is the optimum (c64 +17% vs TP1), TP4/TP8 collapse to 14%/2.7% scaling efficiency with GPUs at near-idle power (comms-bound proven causally), A4 shows no UPI tax at 2 ranks; analysis in results/summaries/2026-06-11-qwen-tp-curve.md.
+- Range: `917ee17..f7c3573` (2 commits)
+- Validation: OK
+- Next: server continues Cz. C (nop2p dose-response), B (Kimi profiler trace), D (restore); then recompute the #50 NVLink table.
 
 ### 2026-06-11 (cloud) - TP MISMATCH root cause + plan secret redaction
 
