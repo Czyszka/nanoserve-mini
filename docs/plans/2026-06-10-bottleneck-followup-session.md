@@ -231,7 +231,7 @@ run_qwen_tp () {  # $1 = TP (2|4|8), optional $2=tag suffix, optional $3=c1-only
   docker compose "${compose_args[@]}" cp \
     results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl || return 1
   docker compose "${compose_args[@]}" exec vllm bash -c \
-    'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python -c "import pandas,datasets;print(\"deps ok\")"' || return 1
+    'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' || return 1
 
   run_failed=0
 
