@@ -108,11 +108,56 @@ everything beyond that belongs to W2.
   with *no* kernel resident (the GPU waits for the host or for a dependency).
   The profiler trace splits a step into NCCL kernels / compute kernels / gaps.
 - **torch profiler trace** — a timeline of every kernel and host event,
-  captured via `VLLM_TORCH_PROFILER_DIR` + `/start_profile`; our direct
-  attribution tool.
+  captured via the `--profiler-config` engine flag + `/start_profile`
+  (vLLM ≥0.20; the older `VLLM_TORCH_PROFILER_DIR` env was removed upstream —
+  lesson from 2026-06-11); our direct attribution tool.
 - **dose-response** — a causal test: deliberately worsen the suspected cause
   (e.g. disable P2P so every comm round gets slower) and check the effect
   moves proportionally.
+
+## Working mental model: the delivery-run analogy
+
+*(Deliberately informal — a learning aid for reading every number in this
+thread. Each claim maps to a measurement.)*
+
+One decode step = **one delivery run** of a courier van.
+
+1. **Driving** = the GPU doing math (compute kernels, `SM_ACTIVE`).
+2. **Cargo swaps at roundabouts** = inter-GPU communication. Under TP the
+   vans drive in convoy and *must* stop together at ~2 roundabouts per layer
+   (all-reduce) to merge partial loads; with MoE/EP they also re-sort parcels
+   between vans (all-to-all). Roads = PCIe today; NVLink = a private highway.
+3. **Paperwork before the wheels turn** = the **per-step floor** (`F_host`):
+   taking the order, the dispatcher deciding what goes into this run
+   (scheduler step, Python), starting the engine for each leg (kernel
+   launches), the speculative-decoding ritual (draft parcels, then check
+   which ones the customer accepts), signing the receipt (sampling,
+   detokenize, stream out). This cost is paid **once per run, regardless of
+   engine power or road quality**.
+
+How the measurements read in this language:
+
+- **Kimi TP8, one user (c=1):** the run takes ~50 ms; the engine works ~9%
+  of it, roundabouts ~22%, and **63% is standing with the engine off**,
+  waiting for paperwork (trace 2026-06-11: gaps 63 / NCCL 22.5 / compute 9).
+  That is "floor-bound".
+- **Why NVLink barely helps here:** a highway only shortens the roundabout
+  part (~22%). Even a teleporter caps the gain at ~1.3× when most of the run
+  is paperwork.
+- **Why more GPUs made one user *slower* (TP1→TP8 c=1):** add vans to the
+  convoy and each carries a smaller parcel (driving shrinks), but the
+  waybill is still issued once per run at the same speed — and you added
+  roundabouts. Measured: step 9.0 → 14.2 ms.
+- **Why heavy traffic (c=64) flips the story:** pack 64 parcels into one run
+  and the paperwork cost is split 64 ways — the floor stops mattering. But
+  the roundabouts now jam (collective payloads grow with batch), so comms
+  dominates: TP8 c=64 spends ≥85% of the step in the jam, vans at near-idle
+  power (111 W vs 70 W parked).
+- **The floor investigation (F-series)** asks *what exactly* the driver
+  waits on: the waybill ritual (speculative orchestration — spec-off dose),
+  restarting the engine per leg (launch overhead — eager dose), or a
+  dispatcher stuck in power-saving mode (CPU governor dose); the TP1 CPU
+  trace is the dashboard camera showing what the driver does in the pauses.
 
 ## Established so far (evidence through 2026-06-10)
 
