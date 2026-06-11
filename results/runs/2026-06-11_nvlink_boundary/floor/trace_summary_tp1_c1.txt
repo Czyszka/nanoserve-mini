@@ -1,0 +1,47 @@
+span 4.11s kernel 1.11s gaps 3.00s (73%)
+  other         0.75s  18.3%
+  compute       0.36s   8.6%
+
+TOP-25 cpu_op (suma ms):
+      770.8 ms  dynamo
+      767.0 ms  entire_frame_compile
+      766.8 ms  _compile.compile_inner (dynamo_timed)
+      736.3 ms  compile_attempt_0
+      736.2 ms  compile_attempt_0 (dynamo_timed)
+      607.6 ms  backend_compile
+      607.4 ms  OutputGraph.call_user_compiler (dynamo_timed)
+      557.3 ms  create_aot_dispatcher_function
+      557.1 ms  create_aot_dispatcher_function (dynamo_timed)
+      408.1 ms  compile_fx.<locals>.fw_compiler_base
+      407.1 ms  compile_fx.<locals>.fw_compiler_base (dynamo_timed)
+      391.0 ms  inductor_compile
+      390.9 ms  compile_fx_inner (dynamo_timed)
+      389.1 ms  fx_codegen_and_compile
+      389.0 ms  fx_codegen_and_compile (dynamo_timed)
+      265.1 ms  PythonDispatchMode
+      256.7 ms  GraphLowering.compile_to_fn
+      256.5 ms  GraphLowering.compile_to_fn (dynamo_timed)
+      256.4 ms  code_gen
+      256.3 ms  GraphLowering.compile_to_module (dynamo_timed)
+      150.2 ms  aten::copy_
+      131.4 ms  PyCodeCache.load_by_key_path
+      131.3 ms  PyCodeCache.load_by_key_path (dynamo_timed)
+      129.8 ms  async_compile.precompile
+      129.5 ms  async_compile.precompile (dynamo_timed)
+
+annotations (suma ms):
+     4263.2 ms  execute_context_0(0)_generation_1(4)
+     1622.0 ms  execute_context_1(64)_generation_0(0)
+        0.9 ms  execute_context_0(0)_generation_0(0)
+        0.4 ms  aot_collect_metadata_data: compile_id=3/0
+        0.4 ms  pass.joint_graph_passes.pass_pattern_0_data: compile_id=3/0
+        0.3 ms  pass.joint_graph_passes.pass_pattern_1_data: compile_id=3/0
+        0.3 ms  pass.joint_graph_passes.constant_fold_uniform_value_data: compile_id=3/0
+        0.3 ms  compile_fx.<locals>.fw_compiler_base_data: compile_id=3/0
+        0.3 ms  pass.joint_graph_passes.remove_noop_ops_data: compile_id=3/0
+        0.3 ms  _recursive_joint_graph_passes_data: compile_id=3/0
+        0.1 ms  _recursive_pre_grad_passes_data: compile_id=3/0
+        0.1 ms  async_compile.precompile_data: compile_id=3/0
+        0.1 ms  _recursive_post_grad_passes_data: compile_id=3/0
+        0.1 ms  Scheduler.codegen_data: compile_id=3/0
+        0.1 ms  additional_fake_tensor_prop_data: compile_id=3/0
