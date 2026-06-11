@@ -5,6 +5,23 @@ through 2026-06-10; closing measurements planned in
 `docs/plans/2026-06-10-bottleneck-followup-session.md`, goal tracked in
 [#50](https://github.com/Czyszka/nanoserve-mini/issues/50).
 
+## Session plans that delivered the evidence
+
+Executed plans (chronologically) that produced the measurements this note
+analyses:
+
+1. `docs/plans/2026-06-10-server-session.md` — P0 GPU counters (idle / c=1 /
+   c=64 windows, DCGM) — the first "silicon mostly idle" signal that opened
+   the bottleneck question.
+2. `docs/plans/2026-06-10-bottleneck-followup-session.md` — executed
+   2026-06-11: Qwen TP-curve TP1/2/4/8 + cross-socket A4, nop2p dose-response,
+   Kimi TP8 c=1 torch profile. Artifacts:
+   `results/runs/2026-06-11_bottleneck/`.
+3. `docs/plans/2026-06-11-nvlink-boundary-session.md` — executed 2026-06-11/12:
+   Kimi batched ramp (K1) + profil c=16 (K2), Qwen TP8 ramp (Q1), TP4
+   cross-island (Q3), TP4 c=64 profile (Q4), floor series (F). Artifacts:
+   `results/runs/2026-06-11_nvlink_boundary/`.
+
 ## Target structure of the final note
 
 The finished T9 should read in this order (restructure pass once the
