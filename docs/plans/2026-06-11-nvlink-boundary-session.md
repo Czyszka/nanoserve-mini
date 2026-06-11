@@ -175,7 +175,11 @@ docker compose -f "$QWEN_COMPOSE" up -d --force-recreate vllm   # BEZ overlayów
 wait_http_health http://127.0.0.1:8000/health 240 5
 docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$QOUT/verify_tp8.txt"
 grep -q "tensor_parallel_size=8" "$QOUT/verify_tp8.txt" || echo "TP MISMATCH — nie benchuj"
-# prereqs (python3, KROK 3 planu 06-10), potem:
+# prereqs standalone (KROK 3 z 06-10 jest wewnątrz run_qwen_tp i używa
+# lokalnego compose_args — poza funkcją trzeba podać -f wprost):
+docker compose -f "$QWEN_COMPOSE" cp results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl vllm:/tmp/swe_bench_vllm.jsonl
+docker compose -f "$QWEN_COMPOSE" exec vllm bash -c \
+  'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' || echo "PREREQS FAILED — nie leć dalej"
 qwen_bench_c () {  # $1=c $2=np $3=cap
   c="$1"; np="$2"; tag="qwen_tp8_c${c}"
   start_sample_window "$tag" "$3"
