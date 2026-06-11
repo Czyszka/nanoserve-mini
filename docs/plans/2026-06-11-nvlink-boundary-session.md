@@ -35,7 +35,7 @@ profiler w v0.20 przez flagę `--profiler-config` (env usunięty upstream).
 |---|---|---:|---|
 | 0' | vars, helpery, serving-side DOWN, idle, **F0** | 20 | — |
 | K1 | Kimi ramp c=1/8/16/32 + liczniki (Kimi już UP) | 50 | — |
-| K2 | profil Kimi c=8 — **tylko gałąź comms** | 50 | kimi ×1 |
+| K2 | profil Kimi c=16 — **tylko gałąź comms** | 50 | kimi ×1 |
 | Q1 | Qwen TP8: c=4 i c=16 (próg c\*) | 40 | qwen ×1 |
 | Q3 | Qwen TP4 cross-island 2+2 (pełny pair) | 30 | qwen ×1 |
 | F-base | Qwen TP1 plain — kotwica doz | 15 | qwen ×1 |
@@ -103,8 +103,8 @@ docker compose -f "$COMPOSE" cp results/runs/2026-06-05_w1_evidence/benchmarking
 docker compose -f "$COMPOSE" exec vllm bash -c \
   'rm -rf /tmp/kbench; mkdir -p /tmp/kbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' || echo "PREREQS FAILED — nie leć dalej"
 
-kimi_bench_c () {  # $1=c  $2=num_prompts  $3=sampler_cap_s
-  c="$1"; np="$2"; tag="kimi_c${c}"
+kimi_bench_c () {  # $1=c  $2=num_prompts  $3=sampler_cap_s  $4=sufiks tagu (opcjonalny)
+  c="$1"; np="$2"; tag="kimi_c${c}${4:-}"
   start_sample_window "$tag" "$3"
   docker compose -f "$COMPOSE" exec vllm bash -c '
     export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
@@ -136,7 +136,12 @@ nvidia-smi > "$KOUT/nvidia_smi_ramp.txt"
   pomiń K2, po Q1/Q3 całą resztę czasu daj serii F**.
 - niejednoznaczne → traktuj jak comms (K2 rozstrzygnie wprost).
 
-## Cz. K2 — profil Kimi c=8 (50 min, kimi ×1) — gałąź comms
+**ROZSTRZYGNIĘTE w trakcie sesji (po K1 + powtórce c16r):** sygnatura comms
+(moc ≤185 W, SMACT ≤0.18, PCIe RX 7.2–7.9 GB/s na suficie przy każdym c≥8).
+Anomalia c=16 odtworzona (ITL med 512→525 ms, ±3%) → realna patologia, nie
+szum. **K2 wykonujemy przy c=16**, tam gdzie patologia żyje.
+
+## Cz. K2 — profil Kimi c=16 (50 min, kimi ×1) — gałąź comms
 
 ```bash
 # heredoc /tmp/kimi-profiler.yml — skopiuj 1:1 z Cz. B planu 2026-06-10
@@ -147,11 +152,11 @@ docker inspect vllm --format '{{json .Config.Cmd}}' > "$KOUT/engine_cmd_profiled
 grep -o 'profiler-config' "$KOUT/engine_cmd_profiled.json" || echo "BRAK profiler-config — nie startuj profilu"
 # prereqs ponownie (force-recreate!) — blok jak w K1
 curl -fsS -X POST http://127.0.0.1:8000/start_profile
-kimi_bench_c 8 16 300            # KRÓTKIE okno = strawny trace
+kimi_bench_c 16 16 300 p         # tag kimi_c16p — KRÓTKIE okno = strawny trace
 curl -fsS -X POST http://127.0.0.1:8000/stop_profile
-# flush-wait, kopia POZA repo (TRACE_DIR=/home/working/nanoserve-tracing/kimi_c8_$(date +%F)),
+# flush-wait, kopia POZA repo (TRACE_DIR=/home/working/nanoserve-tracing/kimi_c16_$(date +%F)),
 # podsumowanie rank0 + rank_last — bloki 1:1 z poprawionego Cz. B planu 06-10;
-# tee do "$KOUT/trace_summary_c8_rank0.txt" / "..._rank_last.txt"
+# tee do "$KOUT/trace_summary_c16_rank0.txt" / "..._rank_last.txt"
 ```
 
 **Wyjście do werdyktu:** udział NCCL w spanie przy batchu →
