@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `5cab895`
-- Last summarized at: 2026-06-12 (T9 complete)
+- Last summarized commit: `3fd150b`
+- Last summarized at: 2026-06-12 (T9 detail + clarity passes, #50 comment posted)
 - Note: previous cursor `520d788` is dangling in the current history (laptop-side
   rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
@@ -430,6 +430,13 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-12 (T9 detail + clarity passes):
+
+```text
+git diff --check    OK (docs/md only; no .py touched)
+T9 TP-curve step values cross-checked against raw bench JSONs (TP2/A4 swap corrected)    OK
+```
+
 2026-06-11/12 (NVLink boundary session analysis + verdict):
 
 ```text
@@ -561,6 +568,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-12 (cloud) - T9 detail + clarity passes; #50 verdict comment posted
+
+- Why: the user wanted T9 substantially more detailed and the Qwen TP-curve section fully explained; the #50 verdict still had to land on the issue itself.
+- Did: T9 detail pass (pre-registered predictions vs measured, method controls, causal step arithmetic, UPI-hypothesis record, ops-lessons appendix) + TP-curve section rewritten for clarity with step values corrected against raw bench JSONs; verdict table posted as a #50 comment; conversational synthesis recorded DP-replicas-over-TP as the Qwen-class recommendation and the NVLink-justified case list (TP4-required batched ~2.1×, Kimi TP8 batched ~2.7×, TP2-required NO with a heavy-dense caveat).
+- Range: `5cab895..3fd150b` (3 commits)
+- Validation: OK (docs-only)
+- Next: user decides on closing #50; W2 synthesizes from T9; optional slot: Kimi c=32 profile, c=16 root cause, 2×TP1-replica co-run to upgrade the DP claim to L2.
 
 ### 2026-06-12 (cloud) - session closed (D'), F3/F6 analyzed, T9 restructured to final form
 
