@@ -216,10 +216,15 @@ run_qwen_tp () {  # $1 = TP (2|4|8), optional $2=tag suffix, optional $3=c1-only
   #            verify grepem po PEŁNYM logu (tail 500 utnie linię configu
   #            przy TP=8 i przy NCCL_DEBUG=INFO); artefakty z kontenera `vllm` ──
   docker inspect vllm --format '{{json .Config.Cmd}}' > "$P0OUT/engine_cmd_${tag}.json"
-  docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' > "$P0OUT/engine_env_${tag}.txt"
+  # env z redakcją sekretów — surowy dump zawiera HUGGING_FACE_HUB_TOKEN,
+  # a $P0OUT idzie do repo na CHECKPOINT 1 (polityka: tokeny nigdy do gita)
+  docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' \
+    | sed -E 's/^(HUGGING_FACE_HUB_TOKEN|HF_TOKEN|[A-Z_]*API_KEY|[A-Z_]*SECRET[A-Z_]*)=.*/\1=REDACTED/' \
+    > "$P0OUT/engine_env_${tag}.txt"
   docker logs vllm --tail 500 > "$P0OUT/log_start_qwen_${tag}.txt" 2>&1
   docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$P0OUT/verify_${tag}.txt"
-  grep -q "tensor_parallel_size=${tp}" "$P0OUT/verify_${tag}.txt" || { echo "TP MISMATCH — przerwij"; return 1; }
+  grep -q "tensor_parallel_size=${tp}" "$P0OUT/verify_${tag}.txt" \
+    || { echo "TP MISMATCH — oczekiwane tensor_parallel_size=${tp}, w logu: '$(cat "$P0OUT/verify_${tag}.txt")' — przerwij"; return 1; }
 
   # ── KROK 3: prereqs benchu w świeżym kontenerze + dataset (po każdym
   #            recreate od zera — pip i /tmp nie przeżywają) ──────────────
