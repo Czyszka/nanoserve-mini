@@ -26,6 +26,15 @@ The finished T9 should read in this order (restructure pass once the
 12. Verdict
 13. Evidence references (→ Evidence)
 
+Editorial rules for the restructure:
+
+- In point 7, keep only result *tables* with links to `results/runs/...` —
+  raw numbers live in the repo; duplicating them here will drift (point 13
+  closes the loop).
+- Keep points 8 and 9 from blending: 8 = the causal chain with numbers
+  (e.g. "PCIe RX ceiling 7.7 GB/s → NCCL 84% of span → Amdahl ≤6.2×"),
+  9 = what that means in plain language, no new numbers.
+
 ## Question
 
 Two questions, both of which must end with numbers rather than adjectives:
