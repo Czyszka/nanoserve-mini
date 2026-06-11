@@ -569,6 +569,15 @@ T4). No `ruff` / `pytest` run.
 
 Newest entry first.
 
+### 2026-06-11 (laptop) - T9 verified against raw artifacts; counter/arithmetic corrections
+
+- Why: user asked to verify every T9 number and calculation against the project's measurements.
+- Did: re-aggregated all cited DCGM windows and bench JSONs from raw artifacts — all client metrics, trace shares, Kimi-ramp/P0 counters, and Amdahl/efficiency arithmetic confirmed. Fixed certain errors only: T9 §7 TP4 c=64 counters (was ~108 W / 0.06 / RX 2.9 GB/s; raw window gives 142 W / 0.118 / RX 5.65), TP2 c=64 row aligned to the cited 06-11 window (255 W / 0.359 / RX 6.25; previous values were from 2026-06-10_extra), §8 Kimi c=1 step arithmetic made consistent (~50 ms/step = decode wall ~3.8 s ÷ 73 steps, not span 5.06 s ÷ 73; compute ~4.6 ms/step share-based, 2.4 was per-token), §8 convergence relabeled (52% = absolute throughput drop 1404→680 tok/s; 702→170 per-GPU is −76%) — same relabel in `2026-06-11-nvlink-boundary-verdict.md`. Left untouched as not provably wrong: "≤ −28% TPOT" (TP4 interactive row) — reconstructable as Δstep 1.56 ms (lower bound) + ~¾·W_silicon ≈ 3 ms of a 10.54 ms step, but T9 carries no derivation.
+- Follow-up: T9 now labels `~14 KiB` and `N_rounds≈122` as external config/literature estimates (Hugging Face Kimi K2 config + Megatron TP paper + vLLM source), not local measurements; `W_silicon` text now uses trace-derived ~4.6 ms/step instead of the unsupported 1–2 ms shortcut.
+- Follow-up: `results/summaries/2026-06-11-kimi-tp8-profile.md` clarified the restore-smoke source path, the profiled-vs-restore `max_tokens` mismatch, chunk/token arithmetic, and the `~52 ms/step` derivation from `e2e - TTFT(any)`.
+- Validation: `git diff --check` OK (docs-only; no `.py` touched).
+- Next: optionally add the −28% derivation to T9 §10 for traceability; the #50 verdict comment repeats the old "52% per-GPU" phrasing if anyone re-reads it. Untracked Polish NVLink decision note remains local unless explicitly added.
+
 ### 2026-06-12 (cloud) - T9 detail + clarity passes; #50 verdict comment posted
 
 - Why: the user wanted T9 substantially more detailed and the Qwen TP-curve section fully explained; the #50 verdict still had to land on the issue itself.

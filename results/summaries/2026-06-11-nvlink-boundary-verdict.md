@@ -76,8 +76,9 @@ narzutu: ITL med 49.6 profilowany vs 53.7 bez — reprezentatywny.
 | gaps | 33% |
 | compute | 5.6% |
 
-Zbieżność dwóch metod: share 0.53 z trace ≈ 52% utraty per-GPU efficiency
-TP2→TP4 (702→170 tok/s/GPU). Caveat: okno zawiera prefill-burst 64 promptów
+Zbieżność dwóch metod: share 0.53 z trace ≈ 52% spadku przepustowości
+TP2→TP4 (1404→680 tok/s; usunięcie share 0.533 podnosi 680 → ~1456 ≈ 1404
+z TP2). Caveat: okno zawiera prefill-burst 64 promptów
 (TTFT med 21.8 s) — share czystego decode raczej wyższy.
 
 ## F — ledger podłogi (TP1, c=1, random 64/512; dawki)

@@ -91,8 +91,11 @@ How the measurements read in this language:
   all-to-all, …) as opposed to computation or memory reads.
 - **all-reduce** — the collective operation that merges TP partial results:
   every rank contributes its piece and every rank ends up with the same summed
-  result. Runs after attention and after the FFN/MoE block → ~2 per layer per
-  forward pass. It is *synchronous*: no rank continues until it completes.
+  result. In the Megatron-style TP model this creates ~2 forward reduction
+  points per decoder layer (attention output + FFN/MoE output). For Kimi this
+  is an architecture estimate, not a counted NCCL-op measurement: MoE/EP can
+  add all-to-all traffic, and runtime fusion can change the exact operation
+  count. It is *synchronous*: no rank continues until it completes.
 - **all-to-all** — the collective behind EP routing: each rank sends a
   different chunk to each other rank (token dispatch to experts, then combine
   back).
@@ -102,10 +105,13 @@ How the measurements read in this language:
 - **P2P (peer-to-peer)** — GPUs exchanging data directly over PCIe without
   bouncing through CPU RAM. `NCCL_P2P_DISABLE=1` forces the slower
   through-host path — our dose-response lever.
-- **small-message regime** — at batch 1 an all-reduce carries only ~14 KB, so
-  its duration is set by fixed per-operation latency (launch + protocol +
-  link round-trips), not by link bandwidth. That is why a *latency*-bound link
-  can look idle in *throughput* counters.
+- **small-message regime** — at batch 1 the payload used in this model is only
+  ~14 KiB for one hidden-state vector (`hidden_size 7168 × BF16 2 B =
+  14,336 B`), before protocol overhead and any fusion. This is a
+  public-config-derived estimate, not a local measurement, so its duration is
+  set by fixed per-operation latency (launch + protocol + link round-trips),
+  not by link bandwidth. That is why a *latency*-bound link can look idle in
+  *throughput* counters.
 
 **Time accounting (the model's terms)**
 
@@ -120,12 +126,17 @@ How the measurements read in this language:
   CPU↔GPU synchronization, kernel-launch gaps, speculative-draft bookkeeping.
   We know it exists because Qwen at TP=1 — with *zero* comms — still takes
   ~9 ms/step while the GPU idles half the time.
-- **N_rounds** — how many synchronous communication rounds one step performs
-  (~2 all-reduces × ~61 layers ≈ 122+ for Kimi).
+- **N_rounds** — how many synchronous communication rounds one step performs.
+  For Kimi this is a config/literature-derived estimate: public Kimi K2 config
+  has 61 decoder layers, and Megatron-style TP has ~2 forward all-reduce
+  points per layer → ~122 TP reduction points before MoE/EP collectives and
+  runtime fusions. It is not a measured NCCL operation count.
 - **r(link, ranks)** — the latency of one such round; depends on the link type
   (PCIe vs NVLink vs UPI path) and how many ranks participate.
 - **W_silicon** — time the GPU actually works per step: HBM weight/KV reads +
-  arithmetic. Measured to be small here (~1–2 ms for Kimi).
+  arithmetic. Measured small as a share of the traces (Kimi c=1 compute 9.1%,
+  ~4.6 ms/step; Kimi c=16 compute 4.6% of span), not the earlier rough
+  1–2 ms shortcut.
 - **X-bound (bandwidth-/latency-/compute-bound)** — "the step time is limited
   by X": making X faster makes the step faster, making anything else faster
   does not.
@@ -206,10 +217,13 @@ Three candidate mechanisms, each with its own falsifiable signature:
    to comms levers; gaps dominate the trace; decomposable by doses
    (speculation off, eager mode, CPU governor).
 
-Model anchors available before the closing sessions: Kimi TP=8 step
-≈16.55 ms spec-OFF (T6), `W_silicon` ≈ 1–2 ms (from `DRAM_ACTIVE`),
-`N_rounds` ≥ 122 (2 all-reduces × ~61 layers); Qwen TP1 gives
-`F_host + W ≈ 9 ms` at zero comms (model-specific floor).
+Model anchors available before the closing sessions, with post-audit labels
+for estimates: Kimi TP=8 step ≈16.55 ms spec-OFF (T6), `W_silicon`
+constrained by traces rather than `DRAM_ACTIVE` alone (~4.6 ms/step compute at
+Kimi c=1; 4.6% span at batched c16), `N_rounds` ≥ 122 as a
+config/literature-derived estimate (61 layers × ~2 TP reduction points, not a
+local NCCL count); Qwen TP1 gives `F_host + W ≈ 9 ms` at zero comms
+(model-specific floor).
 
 NVLink-relevant derived quantities: the comms share `s` per scenario, and
 `capture` per topology fit (TP≤4 in one island = 1.0; TP=8 hierarchical
@@ -320,10 +334,11 @@ factor, which is why the tax is not visible as TPOT differences):
 | 4 | 10.54 | 4.00 | +1.56 ms (4× noise band ±0.4) |
 | 8 | 14.16 | 5.12 | +5.18 ms (13× noise) |
 
-At c=1 an all-reduce carries only ~KB-scale payloads, so this tax is the
-*per-round fixed cost × number of rounds* — and it grows superlinearly with
-rank count (2→4 ranks: +0.6 ms; 4→8 ranks: +3.6 ms), because every round
-must synchronize more participants. Note the cross-socket TP2 run came out
+At c=1 an all-reduce carries only KB-scale payloads (Kimi estimate: ~14 KiB
+per hidden-state vector before overhead/fusion), so this tax is the *per-round
+fixed cost × number of rounds* — and it grows superlinearly with rank count
+(2→4 ranks: +0.6 ms; 4→8 ranks: +3.6 ms), because every round must
+synchronize more participants. Note the cross-socket TP2 run came out
 *cheaper* than same-switch TP2 (9.13 vs 9.91) — both within ~2× the noise
 band of each other, which is precisely the "no UPI tax" finding: if link
 class mattered, cross-socket had to be the expensive one.
@@ -336,8 +351,8 @@ i.e. "what fraction of the added silicon turns into output":
 | TP (c=64) | out tok/s | scaling eff. | per-GPU power / SMACT | PCIe RX |
 |---|---:|---:|---|---:|
 | 1 | 1202 | 100% (def.) | 436 W / 0.665 | ~0 |
-| 2 | **1404** | 1404/(1202×2) = **58%** | 265 W / 0.40 | 5.8–6.7 GB/s |
-| 4 | 680 | 680/(1202×4) = **14%** | ~108 W / 0.06 | 2.9 GB/s |
+| 2 | **1404** | 1404/(1202×2) = **58%** | 255 W / 0.359 | 6.25 GB/s |
+| 4 | 680 | 680/(1202×4) = **14%** | 142 W / 0.118 | 5.65 GB/s |
 | 8 | 257 | 257/(1202×8) = **2.7%** | 111 W / 0.053 | 7.18 GB/s |
 
 How to read it: TP2 still *wins absolutely* (+17% total throughput, the
@@ -347,7 +362,7 @@ TP4 and TP8 are **absolutely slower than a single GPU** — 8 GPUs deliver
 436 W toward the ~70–99 W idle floor and SMACT collapses 0.665 → 0.053 as
 ranks are added — the GPUs are not working harder on smaller slices, they
 are *waiting* (in synchronous collectives) for most of every step. Note
-also TP4's RX (2.9 GB/s) sits well below TP8's (7.18): TP4 c=64 is hurt by
+also TP4's RX (5.65 GB/s) still sits below TP8's (7.18): TP4 c=64 is hurt by
 sync/coordination before the transport ceiling even comes into play,
 whereas TP8 slams into the ceiling outright. (TP1 counters re-aggregated
 with the activity filter after the idle-tail errata.)
@@ -445,8 +460,9 @@ latency-sensitive.
 
 Kimi TP8 c=1 closes the chain at the 8-rank end, with the step arithmetic
 made explicit: 189 output tokens / ~2.6 accepted per verify ≈ **73 decode
-steps over the 5.06 s trace span → ~50 ms/step**, of which ~32 ms is GPU
-idle (gaps), ~11 ms NCCL kernels, ~2.4 ms compute. Amdahl bound for a
+steps**; the profiled request spends ~3.8 s in decode (e2e 5.21 s minus
+TTFT 1.44 s) → **~50 ms/step**. Applying the trace's span shares, a step is
+roughly ~32 ms GPU idle (gaps), ~11 ms NCCL kernels, ~4.6 ms compute. Amdahl bound for a
 perfect interconnect: `1/(1−0.225) ≈ 1.3×` — and part of the NCCL time is
 peer-wait a faster link does not remove, so the realistic interactive gain
 is below even that.
@@ -466,8 +482,9 @@ to transport-priced. PCIe RX pins at **7.2–7.9 GB/s for every Kimi c≥8 and
 for Qwen TP8 c≥16** — a model-independent ceiling; throughput collapses
 exactly when a config hits it (Qwen TP8: 437 → 257 tok/s). Traces quantify
 the share: Kimi TP8 @c16 **s = 0.839**, Qwen TP4 @c64 **s = 0.533** — the
-latter independently confirmed by the per-GPU efficiency loss TP2→TP4
-(702 → 170 tok/s/GPU ≈ 52% lost; two methods, one number). Q3 fixes
+latter independently confirmed by the TP2→TP4 throughput drop
+(1404 → 680 tok/s ≈ 52% lost: removing the 53.3% comms share would lift
+680 back to ≈1456 ≈ TP2's 1404; two methods, one number). Q3 fixes
 `capture`: 1.0 for TP≤4 (one island), ≈0.75 for TP=8 (6 of 8 ring legs
 intra-island). Gains:
 
@@ -610,6 +627,7 @@ counters); the root cause of the c=16 scheduler pathology; a clean
 | Raw profiler traces (not committed — repo policy) | `/home/working/nanoserve-tracing` on ubuntusrv2 |
 | Dual-root PCIe, switch pairs, NVLink Bridge optional, Kimi TP4 does-not-fit arithmetic | `docs/operations/sys-521ge-tnrt.md`; `docs/operations/infrastructure.md`; T1 |
 | Kimi TP=8 step 16.55 ms (spec OFF), 6.92 ms/tok TPOT-any (ON) | T6, `results/runs/2026-06-05_kimi-k2-6_run-05_eagle3-off-paired/`, `…run-04_eagle3-on/` |
+| External support for architecture estimates only: `~14 KiB` payload (`hidden_size=7168`, BF16), 61 decoder layers, and ~2 Megatron-style forward TP reductions/layer | [Hugging Face Kimi K2 config](https://huggingface.co/moonshotai/Kimi-K2-Instruct-0905/resolve/main/config.json); [Megatron-LM TP paper](https://ar5iv.labs.arxiv.org/html/1909.08053); [vLLM DeepSeek/Kimi-style source](https://github.com/vllm-project/vllm/blob/v0.20.0/vllm/model_executor/models/deepseek_v2.py) |
 | Goal, parametric model, first-pass NVLink table | [#50](https://github.com/Czyszka/nanoserve-mini/issues/50) |
 | Executed session plans (methodology of record) | `docs/plans/2026-06-10-server-session.md`, `docs/plans/2026-06-10-bottleneck-followup-session.md`, `docs/plans/2026-06-11-nvlink-boundary-session.md` |
 

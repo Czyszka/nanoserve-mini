@@ -1,9 +1,11 @@
 # Kimi-K2.6 TP8 decode under torch profiler — 2026-06-11 (Cz. B)
 
-Issue #50: NCCL share of the Kimi decode step, measured directly. Source:
-`results/runs/2026-06-11_bottleneck/kimi_profiler/` (commit `e5f02a5`); raw
-traces (8 ranks, `.json.gz`) stay outside the repo at
-`/home/working/nanoserve-tracing` on ubuntusrv2 (repo policy).
+Issue #50: NCCL share of the Kimi decode step, measured directly. Primary
+source: `results/runs/2026-06-11_bottleneck/kimi_profiler/` (commit
+`e5f02a5`). The overhead control and restore check are in
+`results/runs/2026-06-11_bottleneck/session/restore_smoke.json` and
+`restore_engine_cmd.json`. Raw traces (8 ranks, `.json.gz`) stay outside the
+repo at `/home/working/nanoserve-tracing` on ubuntusrv2 (repo policy).
 
 ## Setup
 
@@ -21,14 +23,18 @@ Eagle3, `--gpu-memory-utilization 0.6`.
 |---|---:|---:|
 | e2e s | 5.21 | 4.93 |
 | completion tokens | 189 | 190 |
+| request max_tokens | 256 | 1024 |
 | TPOT(any) ms/tok | 20.1 | 19.0 |
 | TTFT(any) s | 1.44 | 1.35 |
 
-Same prompt, same day, ~5% overhead → the trace timeline reflects real
-behavior. (Both runs: ~73–78 chunks at ~2.6 tok/chunk — Eagle3 acceptance
-consistent with T6.)
+Same prompt, same day; the restore smoke used a larger `max_tokens` cap, but
+both requests naturally stopped at the same output length (189/190 completion
+tokens). E2E overhead is 5.6% and TPOT(any) overhead is 5.8%, so the trace
+timeline is close enough to real behavior for a coarse attribution. The two
+runs produced 72/78 chunks, or ~2.4–2.6 tokens per chunk, consistent with
+Eagle3 acceptance from T6.
 
-## Trace split (rank 0, span 5.06 s ≈ the whole request)
+## Trace split (rank 0, span 5.06 s ≈ the request window)
 
 | bucket | time | share of span | per output token |
 |---|---:|---:|---:|
@@ -37,8 +43,12 @@ consistent with T6.)
 | compute kernels | 0.46 s | 9.1% | 2.4 ms |
 | other kernels | 0.28 s | 5.6% | 1.5 ms |
 
-Step framing: 189 tokens / ~2.6 accept ≈ ~73 decode steps → ~50 ms/step, of
-which ~11 ms is NCCL kernel time and ~32 ms is GPU idle.
+Step framing: the profiled request's decode interval is `e2e - TTFT(any) =
+5.208 - 1.436 = 3.77 s`. With 189 output tokens and ~2.6 tokens accepted per
+verify, that is ~73 decode steps and **~52 ms/step** (rounded to ~50 ms).
+Mapping the rank-0 span shares onto that step frame gives a coarse per-step
+reading of ~32 ms GPU idle, ~11 ms NCCL kernel time, and ~4.7 ms compute; this
+is a share-based estimate, not a separately isolated per-step slice.
 
 ## Verdict (plan's criteria table, row 3)
 
