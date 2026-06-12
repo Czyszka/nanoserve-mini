@@ -8,8 +8,11 @@
 > objaśniamy jedną spójną analogią motoryzacyjną (firma kurierska). Każda
 > liczba w tekście ma źródło w artefaktach repozytorium (sekcja 10).
 
-## 1. Streszczenie decyzyjne
+## 1. Podsumowanie
 
+//todo propozycja: W wyniku przeprowadzonych badań oraz obliczeń wynika, że mostki NVLink 4-way warto kupić jeśli rozmiar modelu LLM wymaga rozłożenie wag na conajmniej 4 katy GPU oraz jeśli model LLM obsługuje wiele równoległych zapytań jednocześnie.
+W tym przypadku zmierzony oczekiwany zysk to 2-3x przepustowości //todo jakiej przepustowości// (teoretyczne maksimum to około zysk 6-krotny). Dla przetwarzania pojedynczych zapytań prze model mieszczący się min. na 4 GPU (np. jeden czat "na żywo") zysk jest pomijalny 
+(<= 1,3x), a dla modeli mieszczących się na 1-2 kargach GPU - zysk jest żaden (0x). //todo poprawić skałdnie i stylistyke zgodnie z naukowym jezykiem polskim
 **Werdykt:** mostki NVLink 4-way warto kupić tylko wtedy, gdy zadaniem
 serwera jest **równoległa obsługa wielu klientów na modelach, które
 naprawdę wymagają co najmniej 4 kart GPU**. W tym reżimie zmierzony
@@ -17,6 +20,21 @@ oczekiwany zysk to **2–3× przepustowości** (teoretyczne maksimum ~6×). Dla
 pojedynczego użytkownika (jeden czat „na żywo") zysk jest pomijalny (≤1,3×),
 a dla modeli mieszczących się na 1–2 kartach GPU — żaden (~0).
 
+
+//todo poprawic zgodnie ze stylistyką
+Jako kryterium decyzji przyjmuje się prawo Amdahla. Jest ono często używane w przypadku prowadzenia obliczeń równoległych do przewidzenia teoretycznego maksymalnego wzrostu szybkości obliczeń przy użyciu wielu procesorów. Inwestycja przyspiesza tylko tę
+część pracy, której fizycznie dotyczy. W tym przypadku NVLink to szybsze niż linia PCIe łącze między kartami GPU, więc skraca wyłącznie czas komunikacji. Jeżeli komunikacja zajmuje ułamek `s` całego czasu //todo jakiego całego czasu, skrót myślowy//, to nawet nieskończenie szybkie łącze przyspieszy całość najwyżej `1/(1−s)` razy (obiczenia w sekcji X//todo dodać) Oznacza to, że decyzja o zakupie mostków NVLink związana jest z pomiarem czasu jaki serwer spędza na komunikacji. //todo poprawi stylistykę zdania// Dokładny pomiar tej zależności jest przedmiotem tej notatki, a odpowiedz zależy od trybu pracy:
+
+- równoległa osbługa wielu zapytań przez model zajmujący 8 kart: komunikacja zajmuje 84% czasu pracy //todo dodać sekcje gdzie to jest
+- równoległa osbługa wielu zapytań przez model zajmujący 4 karty: komunikacja zajmuje 53% czasu prac
+- obsługa jednego zapytania na raz przez model zajmujący 8 kart: komunikacja to 22% czasu pracy //todo sekcja
+- obsługa jednego zapytania na raz przez model zajmujący 4 karty: komunikacja to X% czasu pracy //todo sekcja
+- obsługa dowolnego rozkładu zapytań //todo uzyc poprawnego słowa przez model zajmujący 1-2 karty: komunikacja kosztuje ≤1 ms na ~10 ms kroku (sekcja 6b), a nawet celowe jej pogorszenie (eksperyment z sekcji 6c) zmienia przepustowość o <1% — *nie ma czego skracać*.
+
+Cała decyzja sprowadza się więc
+do pomiaru: *ile czasu serwer spędza na komunikacji?*
+Odpowiedź — co jest głównym odkryciem badania — zależy od trybu pracy: 
+dotyczące  które twierdzi, że inwestycja przyspiesza tylko
 **Kryterium decyzji — prawo Amdahla.** Inwestycja przyspiesza tylko tę
 część pracy, której fizycznie dotyczy. NVLink to szybsze łącze *między
 kartami*, więc skraca wyłącznie komunikację. Jeżeli komunikacja
@@ -38,14 +56,11 @@ Odpowiedź — co jest głównym odkryciem badania — zależy od trybu pracy:
   z objazdem całego ruchu między kartami przez pamięć procesora,
   sekcja 6c) zmienia przepustowość o <1% — *nie ma czego skracać*.
 
-W tabeli scenariuszy poniżej: **TP** mówi, na ile kart podzielony jest model
-(wyjaśnienie w sekcjach 3–4), a **c (współbieżność)** — ilu klientów serwer
-obsługuje jednocześnie: c=1 to jedna rozmowa na żywo, c=64 — pełna sala
+
+Poniżej przedstawiono tabelę testowanych w ramach badania sceneriuszy. TP mówi, na ile kart podzielony jest model
+(wyjaśnienie w sekcjach 3–4), a c (współbieżność) ilu klientów serwer obsługuje jednocześnie: c=1 to jedna rozmowa na żywo, c=64 — pełna sala
 równoległych zapytań (np. kilka czatów na żywo plus dziesiątki równoległych
-zapytań od agentów programistycznych). Zyski podane w tabeli wynikają
-z prawa Amdahla zasilonego pomiarami:
-udział komunikacji w czasie kroku zmierzono profilerem (sekcja 6d),
-a `capture` — testami rozmieszczenia kart (sekcje 6c i 7).
+zapytań od agentów programistycznych). Zyski podane w tabeli wynikają z prawa Amdahla (sekcja 6d), a `capture` rozmieszczenie kart (sekcje 6c i 7).
 
 | Scenariusz | TP | Ruch | Werdykt | Zysk | Podstawa pomiarowa |
 |---|---|---|---|---|---|
