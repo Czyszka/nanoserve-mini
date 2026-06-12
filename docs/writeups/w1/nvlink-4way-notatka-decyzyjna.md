@@ -10,59 +10,54 @@
 
 ## 1. Podsumowanie
 
-//todo propozycja: W wyniku przeprowadzonych badań oraz obliczeń wynika, że mostki NVLink 4-way warto kupić jeśli rozmiar modelu LLM wymaga rozłożenie wag na conajmniej 4 katy GPU oraz jeśli model LLM obsługuje wiele równoległych zapytań jednocześnie.
-W tym przypadku zmierzony oczekiwany zysk to 2-3x przepustowości //todo jakiej przepustowości// (teoretyczne maksimum to około zysk 6-krotny). Dla przetwarzania pojedynczych zapytań prze model mieszczący się min. na 4 GPU (np. jeden czat "na żywo") zysk jest pomijalny 
-(<= 1,3x), a dla modeli mieszczących się na 1-2 kargach GPU - zysk jest żaden (0x). //todo poprawić skałdnie i stylistyke zgodnie z naukowym jezykiem polskim
-**Werdykt:** mostki NVLink 4-way warto kupić tylko wtedy, gdy zadaniem
-serwera jest **równoległa obsługa wielu klientów na modelach, które
-naprawdę wymagają co najmniej 4 kart GPU**. W tym reżimie zmierzony
-oczekiwany zysk to **2–3× przepustowości** (teoretyczne maksimum ~6×). Dla
-pojedynczego użytkownika (jeden czat „na żywo") zysk jest pomijalny (≤1,3×),
-a dla modeli mieszczących się na 1–2 kartach GPU — żaden (~0).
+Z przeprowadzonych pomiarów i obliczeń wynika, że zakup mostków NVLink
+4-way jest zasadny tylko wtedy, gdy serwer ma równolegle obsługiwać wiele
+zapytań na modelu, którego wagi wymagają rozłożenia na co najmniej 4 karty
+GPU. W tym trybie pracy zmierzony oczekiwany zysk wynosi **2–3×
+przepustowości generowania** — łącznej liczby tokenów produkowanych na
+sekundę dla wszystkich klientów (teoretyczne maksimum to zysk około
+6-krotny). Przy obsłudze pojedynczych zapytań (jeden czat „na żywo"),
+nawet na modelu zajmującym 4–8 kart, zysk jest pomijalny (≤1,3×), a dla
+modeli mieszczących się na 1–2 kartach GPU zysku nie ma wcale (~0).
 
+Jako kryterium decyzji przyjęto prawo Amdahla, stosowane w obliczeniach
+równoległych do wyznaczania teoretycznej górnej granicy przyspieszenia.
+Mówi ono, że inwestycja przyspiesza tylko tę część pracy, której fizycznie
+dotyczy. NVLink jest szybszym od PCIe łączem między kartami GPU, skraca
+więc wyłącznie czas komunikacji między nimi. Jeżeli komunikacja zajmuje
+ułamek `s` czasu pojedynczego kroku generowania (czym jest krok — sekcja
+4), to nawet nieskończenie szybkie łącze przyspieszy całość najwyżej
+`1/(1−s)` razy (obliczenia: sekcja 7). Decyzja o zakupie sprowadza się
+zatem do pomiaru, jaką część czasu kroku serwer spędza na komunikacji.
+Pomiar tej wielkości jest przedmiotem niniejszej notatki, a odpowiedź
+zależy od trybu pracy serwera:
 
-//todo poprawic zgodnie ze stylistyką
-Jako kryterium decyzji przyjmuje się prawo Amdahla. Jest ono często używane w przypadku prowadzenia obliczeń równoległych do przewidzenia teoretycznego maksymalnego wzrostu szybkości obliczeń przy użyciu wielu procesorów. Inwestycja przyspiesza tylko tę
-część pracy, której fizycznie dotyczy. W tym przypadku NVLink to szybsze niż linia PCIe łącze między kartami GPU, więc skraca wyłącznie czas komunikacji. Jeżeli komunikacja zajmuje ułamek `s` całego czasu //todo jakiego całego czasu, skrót myślowy//, to nawet nieskończenie szybkie łącze przyspieszy całość najwyżej `1/(1−s)` razy (obiczenia w sekcji X//todo dodać) Oznacza to, że decyzja o zakupie mostków NVLink związana jest z pomiarem czasu jaki serwer spędza na komunikacji. //todo poprawi stylistykę zdania// Dokładny pomiar tej zależności jest przedmiotem tej notatki, a odpowiedz zależy od trybu pracy:
+- równoległa obsługa wielu zapytań przez model zajmujący 8 kart:
+  komunikacja zajmuje **84%** czasu kroku (sekcja 6d);
+- równoległa obsługa wielu zapytań przez model zajmujący 4 karty: **53%**
+  (sekcja 6d);
+- obsługa jednego zapytania na raz przez model zajmujący 8 kart: **22%**
+  (sekcja 6d) — resztę pochłania stały narzut silnika serwującego, więc
+  nawet idealne łącze dałoby ≤1,3×;
+- obsługa jednego zapytania na raz przez model zajmujący 4 karty: **~15%**
+  (1,56 ms na kroku 10,54 ms; sekcja 6b) — zysk ≤1,2×;
+- model zajmujący 1–2 karty, niezależnie od liczby równoległych zapytań:
+  komunikacja kosztuje ≤1 ms na kroku ~10 ms (sekcja 6b), a nawet jej
+  celowe pogorszenie (eksperyment z objazdem ruchu między kartami przez
+  pamięć procesora; sekcja 6c) zmienia przepustowość o mniej niż 1% —
+  nie ma czego skracać.
 
-- równoległa osbługa wielu zapytań przez model zajmujący 8 kart: komunikacja zajmuje 84% czasu pracy //todo dodać sekcje gdzie to jest
-- równoległa osbługa wielu zapytań przez model zajmujący 4 karty: komunikacja zajmuje 53% czasu prac
-- obsługa jednego zapytania na raz przez model zajmujący 8 kart: komunikacja to 22% czasu pracy //todo sekcja
-- obsługa jednego zapytania na raz przez model zajmujący 4 karty: komunikacja to X% czasu pracy //todo sekcja
-- obsługa dowolnego rozkładu zapytań //todo uzyc poprawnego słowa przez model zajmujący 1-2 karty: komunikacja kosztuje ≤1 ms na ~10 ms kroku (sekcja 6b), a nawet celowe jej pogorszenie (eksperyment z sekcji 6c) zmienia przepustowość o <1% — *nie ma czego skracać*.
+Poniżej zestawiono zbadane scenariusze. Kolumna **TP** podaje, na ile kart
+podzielony jest model (wyjaśnienie w sekcjach 3–4), a **c (współbieżność)**
+— ilu klientów serwer obsługuje jednocześnie: c=1 to jedna rozmowa na
+żywo, c=64 — dziesiątki równoległych zapytań (np. kilka czatów na żywo
+plus agenci programistyczni utrzymujący po kilka zapytań naraz). Zyski
+wynikają z prawa Amdahla zasilonego pomiarami: udział komunikacji w czasie
+kroku zmierzono profilerem (sekcja 6d), a współczynnik `capture` — jaka
+część komunikacji faktycznie trafi na NVLink — testami rozmieszczenia kart
+(sekcje 6c i 7).
 
-Cała decyzja sprowadza się więc
-do pomiaru: *ile czasu serwer spędza na komunikacji?*
-Odpowiedź — co jest głównym odkryciem badania — zależy od trybu pracy: 
-dotyczące  które twierdzi, że inwestycja przyspiesza tylko
-**Kryterium decyzji — prawo Amdahla.** Inwestycja przyspiesza tylko tę
-część pracy, której fizycznie dotyczy. NVLink to szybsze łącze *między
-kartami*, więc skraca wyłącznie komunikację. Jeżeli komunikacja
-zajmuje ułamek `s` całego czasu, to nawet **nieskończenie szybkie** łącze
-przyspieszy całość najwyżej `1/(1−s)` razy. Cała decyzja sprowadza się więc
-do pomiaru: *ile czasu serwer spędza na komunikacji?*
-Odpowiedź — co jest głównym odkryciem badania — zależy od trybu pracy:
-
-- **masowa obsługa na 8 kartach** — komunikacja zjada **84%** czasu
-- **pojedynczy klient, model wciąż na 8 kartach** — komunikacja to **22%**
-  czasu, resztę zjada stały narzut silnika → nawet łącze bez strat
-  i opóźnień dałoby ≤1,3×
-- **modele na 4 kartach** — przy pełnej sali (c=64) komunikacja to **53%**
-  czasu kroku (jest co skracać → zysk ~2,1×), ale przy pojedynczym
-  kliencie podatek komunikacyjny to ledwie 1,56 ms na kroku ~10,5 ms
-  (≤1,2×)
-- **modele na 1–2 kartach** — komunikacja kosztuje ≤1 ms na ~10 ms kroku
-  (pomiar: sekcja 6b), a nawet celowe jej pogorszenie (eksperyment
-  z objazdem całego ruchu między kartami przez pamięć procesora,
-  sekcja 6c) zmienia przepustowość o <1% — *nie ma czego skracać*.
-
-
-Poniżej przedstawiono tabelę testowanych w ramach badania sceneriuszy. TP mówi, na ile kart podzielony jest model
-(wyjaśnienie w sekcjach 3–4), a c (współbieżność) ilu klientów serwer obsługuje jednocześnie: c=1 to jedna rozmowa na żywo, c=64 — pełna sala
-równoległych zapytań (np. kilka czatów na żywo plus dziesiątki równoległych
-zapytań od agentów programistycznych). Zyski podane w tabeli wynikają z prawa Amdahla (sekcja 6d), a `capture` rozmieszczenie kart (sekcje 6c i 7).
-
-| Scenariusz | TP | Ruch | Werdykt | Zysk | Podstawa pomiarowa |
+| Scenariusz | TP | Ruch | Decyzja | Zysk | Podstawa pomiarowa |
 |---|---|---|---|---|---|
 | model mieści się na 1–2 kartach (klasa ~35B) | 1–2 | dowolny | nie kupuj | ≈ 0 | podatek komunikacyjny TP2 na granicy szumu pomiaru; celowe pogorszenie łącza bez efektu (6b, 6c) |
 | model krojony na ≥4 karty, choć mieści się na mniej | 4–8 | dowolny | nie kupuj — popraw konfigurację | — | TP8 w szczycie 437 tok/s vs 1404 na TP2 (6b) |
