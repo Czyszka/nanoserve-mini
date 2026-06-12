@@ -51,9 +51,9 @@ część komunikacji faktycznie trafi na NVLink — testami rozmieszczenia kart
 
 | Scenariusz | TP | Ruch | Decyzja | Zysk | Podstawa pomiarowa |
 |---|---|---|---|---|---|
-| model mieści się na 1–2 kartach (klasa ~35B) | 1–2 | dowolny | nie kupuj | ≈ 0 | podatek komunikacyjny TP2 na granicy szumu pomiaru; celowe pogorszenie łącza bez efektu (6b, 6c) |
+| model mieści się na 1–2 kartach (klasa ~35B) | 1–2 | dowolny | nie kupuj | ≈ 0 | narzut komunikacyjny TP2 na granicy szumu pomiaru; celowe pogorszenie łącza bez efektu (6b, 6c) |
 | model krojony na ≥4 karty, choć mieści się na mniej | 4–8 | dowolny | nie kupuj — popraw konfigurację | — | TP8 w szczycie 437 tok/s vs 1404 na TP2 (6b) |
-| model wymaga 4 kart (klasa ~70–200 mld parametrów), czat na żywo | 4 | c=1 | nie kupuj | znikomy | podatek komunikacyjny 1,56 ms na kroku 10,54 ms (6b) |
+| model wymaga 4 kart (klasa ~70–200 mld parametrów), czat na żywo | 4 | c=1 | nie kupuj | znikomy | narzut komunikacyjny 1,56 ms na kroku 10,54 ms (6b) |
 | model wymaga 4 kart, wielu klientów | 4 | c=64 | kupuj | ~2,1× | komunikacja = 53,3% czasu kroku (profil Qwen TP4), capture 1,0 (6d, 7) |
 | model wymaga 8 kart (Kimi, ~554 GB wag), czat na żywo | 8 | c=1 | nie kupuj | ≤1,2–1,3× | komunikacja = 22,5% czasu kroku (profil Kimi) (6d, 7) |
 | model wymaga 8 kart (Kimi), wielu klientów | 8 | c≥8 | kupuj | ~2,7× (maks. 6,2×) | komunikacja = 83,9% czasu kroku (profil Kimi przy c=16), capture 0,75 (6d, 7) |
@@ -391,60 +391,63 @@ na podstawie pomiarów:
 
 ## 5. Metodologia pomiarowa
 
-**Zmienna kontrolowana: liczba kart (krzywa TP).** Qwen3.6-35B-A3B mieści
-się w całości na jednej karcie, można go więc uruchamiać w konfiguracjach
-TP=1/2/4/8 przy identycznych pozostałych parametrach silnika.
-Konfiguracja TP=1 nie wykonuje żadnej komunikacji między kartami
-i stanowi punkt odniesienia; każda dodatkowa milisekunda czasu kroku przy
-TP=2/4/8 jest więc w całości kosztem równoległości (zdominowanym przez
-operacje all-reduce). W przypadku Kimi-K2.6 takie porównanie nie jest
-możliwe — model wymaga TP=8 — dlatego podział jego czasu kroku ustalono
-bezpośrednio z profilu czasowego, a krzywą TP dostarcza model kontrolny
-Qwen.
+**Zmienna kontrolowana: liczba kart (krzywa TP).** Wagi modelu
+Qwen3.6-35B-A3B mieszczą się w całości na jednej karcie, co pozwala
+uruchamiać go w konfiguracjach TP=1/2/4/8 przy identycznych pozostałych
+parametrach silnika. Konfiguracja TP=1 nie wykonuje żadnej komunikacji
+między kartami i stanowi punkt odniesienia; każda dodatkowa milisekunda
+czasu kroku przy TP=2/4/8 jest zatem w całości kosztem zrównoleglenia,
+zdominowanym przez operacje all-reduce. W przypadku Kimi-K2.6 takie
+porównanie nie jest możliwe, ponieważ model wymaga TP=8; strukturę jego
+czasu kroku wyznaczono więc bezpośrednio z profilu czasowego, a krzywą
+TP dostarcza model kontrolny Qwen.
 
-**Interwencje kontrolowane.** Każdą hipotezę testowano, celowo degradując
-jeden podejrzany element przy niezmienionej reszcie układu:
+**Interwencje kontrolowane.** Każdą hipotezę weryfikowano przez celowe
+pogorszenie jednego elementu układu przy niezmienionych pozostałych
+parametrach:
 
-- `NCCL_P2P_DISABLE=1` — przekierowanie każdego transferu między kartami
-  przez pamięć hosta, czyli degradacja ścieżki P2P (wyniki: sekcja 6c);
-- testy rozmieszczenia kart — ten sam zespół kart rozdzielony na dwie
-  połówki maszyny (`CUDA_VISIBLE_DEVICES=0,4` dla TP2 oraz `0,1,4,5`
-  dla TP4), czyli zmiana klasy łącza bez zmiany liczby kart (wyniki:
-  sekcja 6c);
-- wyłączanie składników stałego narzutu — spekulacja wyłączona,
-  CUDA Graphs wyłączone (tryb eager), governor CPU przełączony w tryb
-  `performance` (wyniki: sekcja 6e).
+- degradacja ścieżki P2P — `NCCL_P2P_DISABLE=1` wymusza przesyłanie
+  wszystkich transferów GPU↔GPU przez pamięć hosta (wyniki: sekcja 6c);
+- zmiana rozmieszczenia kart — ten sam zespół TP rozmieszczony na
+  kartach obu gniazd procesorów (`CUDA_VISIBLE_DEVICES=0,4` dla TP2;
+  `0,1,4,5` dla TP4), co zmienia klasę łącza (switch PCIe wobec trasy
+  przez UPI) bez zmiany liczby kart (wyniki: sekcja 6c);
+- redukcja stałego narzutu kroku — kolejno wyłączane: dekodowanie
+  spekulacyjne, CUDA Graphs (tryb eager) oraz oszczędzanie energii
+  procesora (governor `performance`; wyniki: sekcja 6e).
 
-Kryterium przyczynowości: jeśli podejrzany mechanizm rzeczywiście
-odpowiada za czas kroku, jego kontrolowana degradacja musi mierzalnie ten
-krok wydłużyć; brak efektu wyklucza mechanizm — niezależnie od tego, jak
-dobrze pasował do objawów.
+Kryterium przyczynowości: jeżeli badany mechanizm rzeczywiście odpowiada
+za czas kroku, jego kontrolowana degradacja musi ten krok mierzalnie
+wydłużyć. Brak efektu wyklucza mechanizm jako przyczynę, niezależnie od
+tego, jak dobrze koreluje z obserwacjami.
 
-**Trzy instrumenty pomiarowe:**
+**Źródła danych pomiarowych:**
 
 - metryki po stronie klienta — `vllm bench serve`: czas do pierwszego
   tokenu, TPOT/ITL, przepustowość; każdy pomiar poprzedzono rozgrzewką;
 - liczniki sprzętowe — DCGM (`dcgmi dmon`, próbkowanie co 1 s),
-  uśredniane wyłącznie wewnątrz okna benchmarku wyznaczanego znacznikami
-  czasu;
+  uśredniane wyłącznie w oknie czasowym benchmarku wyznaczanym
+  znacznikami czasu;
 - profil czasowy — torch profiler: pełna oś czasu operacji GPU, z której
-  liczone są udziały komunikacji, obliczeń i przerw.
+  wyznaczane są udziały komunikacji, obliczeń i przerw w czasie kroku.
 
-**Kontrole rzetelności:**
+**Kontrole rzetelności pomiaru:**
 
-- pasmo szumu pomiaru: ±0,4 ms na kroku, skalibrowane na trzech
-  niezależnych startach silnika w identycznej konfiguracji; mierzone
-  dalej efekty są wielokrotnie większe — podatek komunikacyjny TP4
-  (+1,56 ms) to ~4-krotność pasma szumu, TP8 (+5,18 ms) — ~13-krotność;
+- pasmo szumu: ±0,4 ms na kroku, wyznaczone z trzech niezależnych
+  uruchomień silnika w identycznej konfiguracji; mierzone efekty są
+  wielokrotnie większe — narzut komunikacyjny TP4 (+1,56 ms) przekracza
+  pasmo szumu około 4-krotnie, TP8 (+5,18 ms) około 13-krotnie;
 - kontrola narzutu profilera: dla każdego profilu wykonano pomiar
-  porównawczy bez profilera; różnice wyniosły 2–8%, więc oś czasu
-  odzwierciedla rzeczywiste zachowanie silnika;
+  porównawczy bez profilera; różnice wyniosły 2–8%, oś czasu
+  odzwierciedla więc rzeczywiste zachowanie silnika;
 - odtwarzalność anomalii: pomiary anomalne powtórzono od zera, łącznie
-  z ponownym utworzeniem kontenera silnika (zgodność w granicach ±3%);
-- weryfikacja konfiguracji: przed każdym pomiarem sprawdzano faktyczne
-  TP w logu silnika, rozmieszczenie kart w zmiennych środowiskowych
-  kontenera i włączenie profilera w konfiguracji procesu; wykryto tą
-  drogą trzy pomyłki konfiguracyjne, zanim zdążyły zniekształcić wyniki.
+  z ponownym utworzeniem kontenera silnika; wyniki zgodne w granicach
+  ±3%;
+- weryfikacja konfiguracji: przed każdym pomiarem sprawdzano faktyczną
+  wartość TP w logu silnika, rozmieszczenie kart w zmiennych
+  środowiskowych kontenera oraz aktywność profilera w konfiguracji
+  procesu; w ten sposób wykryto trzy błędy konfiguracji, zanim wpłynęły
+  na wyniki.
 
 ## 6. Wyniki pomiarów
 
@@ -483,7 +486,7 @@ przed każdym biegiem. Surowe dane:
 
 Najpierw pojedynczy klient (c=1) — każdy kurs widać jak na dłoni:
 
-| karty (TP) | czas kroku (ms) | TPOT (ms) | podatek komunikacyjny vs 1 karta |
+| karty (TP) | czas kroku (ms) | TPOT (ms) | narzut komunikacyjny vs 1 karta |
 |---|---:|---:|---:|
 | 1 | 8,98 | 3,68 | — (punkt odniesienia: zero komunikacji) |
 | 2 | 9,91 | 3,65 | +0,93 ms |
@@ -727,7 +730,7 @@ wyspami dalej jadą po PCIe).
 8 kart,  obsługa masowa:  1 / (1 − 0,839 × 0,75) ≈ 2,7×   (sufit przy capture=1: 6,2×)
 ```
 
-Skąd wartości `s`: dla 2 kart — podatek komunikacyjny w paśmie szumu
+Skąd wartości `s`: dla 2 kart — narzut komunikacyjny w paśmie szumu
 i zerowy efekt dawki P2P (sekcja 6c; dane:
 [`qwen_tp_curve`](../../../results/runs/2026-06-11_bottleneck/qwen_tp_curve/));
 dla 4 kart przy c=1 — podatek 1,56 ms na kroku 10,54 ms (sekcja 6b, te
@@ -779,7 +782,7 @@ w sekcjach 6a–6e oraz zbiorczo w sekcji 10.*
 Uzasadnienia po kolei:
 
 - **Mieści się na 1–2 kartach:** TP2 to zmierzone optimum serwowania
-  (1404 tok/s, +17% względem jednej karty); podatek komunikacyjny
+  (1404 tok/s, +17% względem jednej karty); narzut komunikacyjny
   +0,93 ms/krok ledwo wystaje z pasma szumu ±0,4 ms, a celowa degradacja
   ścieżki P2P nie zmienia przepustowości (1396 vs 1404 tok/s). Nie
   istnieje koszt, który lepsze łącze mogłoby usunąć — zysk ≈ 0 niezależnie
