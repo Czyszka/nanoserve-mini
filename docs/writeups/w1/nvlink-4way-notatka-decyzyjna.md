@@ -281,124 +281,107 @@ Pojęcia zebrano w grupy tematyczne.
   pogarsza się proporcjonalnie; brak efektu wyklucza dany mechanizm jako
   przyczynę.
 
-## 4. Jak model generuje tekst — i skąd w ogóle problem
+## 4. Mechanizm generowania tekstu i składniki czasu kroku
 
-Model językowy nie pisze odpowiedzi „od razu". Działa w pętli: czyta
-wszystko, co dotąd powstało, wykonuje jeden pełny przebieg przez wszystkie
-swoje warstwy i na końcu wybiera **jeden** następny token (w przybliżeniu:
-kawałek słowa). Dokleja go do tekstu i zaczyna od nowa. Odpowiedź długości
+Model językowy generuje odpowiedź w pętli. W każdym obiegu czyta
+wszystko, co dotąd powstało (zapytanie i dotychczas wygenerowany tekst),
+wykonuje jeden pełny przebieg przez wszystkie swoje warstwy i wybiera
+**jeden** następny token — w przybliżeniu fragment słowa. Token zostaje
+doklejony do tekstu i pętla rusza od nowa; odpowiedź o długości
 500 tokenów to ~500 takich przebiegów. Jeden przebieg nazywamy **krokiem
-dekodowania** — i to czas kroku, powtórzony setki razy, decyduje o tym, jak
-szybko „pisze" czat.
+dekodowania** — czas kroku, powtórzony setki razy, decyduje o szybkości
+generowania odpowiedzi.
 
 ```mermaid
 flowchart TD
     P["Prompt użytkownika"] --> R["Model czyta prompt + wszystko, co już wygenerował"]
     R --> S["Jeden przebieg przez wszystkie warstwy modelu<br/>= jeden krok dekodowania"]
-    S --> T["Wybór następnego tokenu (kawałka słowa)"]
+    S --> T["Wybór następnego tokenu (fragmentu słowa)"]
     T --> A["Token doklejony do odpowiedzi"]
     A --> K{"Koniec odpowiedzi?"}
-    K -- "nie — kolejny kurs" --> R
+    K -- "nie — kolejny krok" --> R
     K -- "tak" --> O["Odpowiedź gotowa"]
 ```
-Jedno rozszerzenie tej pętli jest istotne dla dalszych liczb: serwer używa
-**dekodowania spekulacyjnego** (na Kimi: algorytm **Eagle3**). Obok dużego
-modelu pracuje mały, tani model-szkicownik, który proponuje kilka kolejnych
-tokenów naprzód; duży model w jednym kroku weryfikuje cały szkic naraz
-i akceptuje tyle tokenów, ile pokrywa się z jego własnym wyborem. W naszych
-pomiarach Kimi akceptuje średnio **~2,6–2,7 tokenu na krok** (odczyt
-z logów silnika, stabilny we wszystkich oknach pomiarowych). W analogii:
-praktykant pakuje kilka paczek na zapas, a kierowca dowozi je jednym
-kursem i sprawdza, które klient przyjmie — kurs jest droższy o weryfikację,
-ale wozi ~2,6 paczki zamiast jednej. Spekulacja zmienia więc arytmetykę
-(jeden krok ≈ 2,6 tokenu), ale nie naturę pętli.
 
-Drugi fakt: największe modele **nie mieszczą się na jednej karcie**.
-Kimi-K2.6 to ~554 GB wag przy ~140 GB użytkowej pamięci karty — nawet po
-pokrojeniu na 4 karty same wagi zajęłyby ~138,6 GB na kartę i nie
-zostałoby miejsca na nic innego. Dlatego Kimi może pracować wyłącznie na
-8 kartach naraz. Technika krojenia nazywa się **tensor parallelism (TP)**:
-każda karta przechowuje i liczy wycinek każdej warstwy. Ma to cenę — po
-(prawie) każdej warstwie karty muszą **scalić wyniki częściowe** (operacja
-all-reduce). Scalenie jest synchroniczne: nikt nie rusza dalej, dopóki nie
-dotrze ostatni. Kimi-K2.6 ma ~61 warstw (z konfiguracji architektury
-modelu), a scaleń są ~2 na warstwę, bo tak TP kroi obliczenia
-w transformerze: jedno scalenie po bloku uwagi (attention), drugie po
-bloku FFN/MoE. Jeden krok Kimi to zatem **~122 obowiązkowe przystanki**
-(2 ronda × 61 warstw).
+Dla dalszych obliczeń istotne jest jedno rozszerzenie tej pętli: serwer
+używa **dekodowania spekulacyjnego** (na Kimi: algorytm **Eagle3**).
+Obok dużego modelu pracuje mały model pomocniczy, który proponuje kilka
+kolejnych tokenów naprzód; duży model w jednym kroku weryfikuje cały
+szkic i akceptuje te tokeny, które pokrywają się z jego własnym wyborem.
+W pomiarach Kimi akceptuje średnio **~2,6–2,7 tokenu na krok** (odczyt
+z logów silnika, stabilny we wszystkich oknach pomiarowych). Spekulacja
+zmienia więc arytmetykę — krok jest droższy o weryfikację, ale daje
+średnio ~2,6 tokenu zamiast jednego — nie zmienia jednak natury pętli.
 
-Budowa jednej warstwy pod TP — i skąd biorą się jej dwa ronda:
+Druga istotna własność: największe modele **nie mieszczą się na jednej
+karcie**. Kimi-K2.6 to ~554 GB wag przy ~140 GB użytkowej pamięci karty —
+nawet po podziale na 4 karty same wagi zajęłyby ~138,6 GB na kartę i nie
+zostałoby miejsca na nic innego; dlatego model musi pracować na
+wszystkich ośmiu kartach jednocześnie. Technika podziału nazywa się
+**tensor parallelism (TP)**: każda karta przechowuje i liczy wycinek
+każdej warstwy. Ceną podziału jest komunikacja — po bloku uwagi i po
+bloku FFN/MoE każdej warstwy karty muszą **scalić wyniki częściowe**
+(operacja all-reduce), a scalenie jest synchroniczne: żadna karta nie
+kontynuuje obliczeń, dopóki nie skończy ostatnia. Kimi-K2.6 ma ~61
+warstw (z konfiguracji architektury modelu), co daje **~122 obowiązkowe
+scalenia w każdym kroku** (2 × 61).
+
+Budowa jednej warstwy pod TP i miejsca obu scaleń:
 
 ```mermaid
 flowchart TD
     IN["wejście warstwy k<br/>(każda karta trzyma swój wycinek wag)"] --> ATT["blok uwagi (attention)<br/>każda karta liczy swoją część"]
-    ATT --> AR1{{"RONDO 1: all-reduce<br/>scalenie wyników uwagi"}}
+    ATT --> AR1{{"SCALENIE 1 (all-reduce):<br/>wyniki bloku uwagi"}}
     AR1 --> FFN["blok FFN/MoE<br/>każda karta liczy swoją część"]
-    FFN --> AR2{{"RONDO 2: all-reduce<br/>scalenie wyników FFN/MoE"}}
+    FFN --> AR2{{"SCALENIE 2 (all-reduce):<br/>wyniki bloku FFN/MoE"}}
     AR2 --> OUT["wyjście warstwy k = wejście warstwy k+1"]
-    OUT -.-> REP["…i tak 61 razy ≈ 122 ronda w jednym kroku"]
+    OUT -.-> REP["…i tak 61 razy ≈ 122 scalenia w jednym kroku"]
 ```
 
-A samo rondo z bliska — synchronizacja całego konwoju:
+Samo scalenie z bliska — synchronizacja wszystkich kart:
 
 ```mermaid
 flowchart TD
-    subgraph W1["Warstwa k — każda karta liczy swój wycinek (jazda)"]
+    subgraph W1["Warstwa k — każda karta liczy swój wycinek (obliczenia)"]
         G0["GPU 0"]
         G1["GPU 1"]
         G2["GPU 2"]
         G3["GPU 3"]
     end
-    G0 --> AR{{"RONDO (all-reduce):<br/>scalenie wyników częściowych —<br/>wszyscy czekają na ostatniego"}}
+    G0 --> AR{{"ALL-REDUCE: scalenie wyników częściowych —<br/>wszystkie karty czekają na ostatnią"}}
     G1 --> AR
     G2 --> AR
     G3 --> AR
-    AR --> W2["Warstwa k+1 — znowu jazda…"]
-    W2 -.-> N["…i tak ~2 ronda na warstwę ×<br/>~61 warstw ≈ 122 ronda w jednym kroku (Kimi)"]
+    AR --> W2["Warstwa k+1 — kolejne obliczenia…"]
+    W2 -.-> N["…i tak ~2 scalenia na warstwę ×<br/>~61 warstw ≈ 122 scalenia w jednym kroku (Kimi)"]
 ```
 
-Analogia kurierska, sygnalizowana już w słowniczku, w pełnej postaci:
-**jeden krok dekodowania = jeden kurs firmy kurierskiej.** Posługujemy się
-nią do końca notatki:
-
-1. **Jazda** — karta wykonuje obliczenia (czyta wagi z ładowni, liczy).
-2. **Ronda** — komunikacja między kartami. Gdy model jest pokrojony na
-   N kart (TP), furgonetki jadą w konwoju i *muszą* zatrzymywać się razem
-   na każdym rondzie (all-reduce),
-   żeby przeładować częściowe wyniki. Drogi to dziś PCIe; NVLink byłby
-   prywatną autostradą.
-3. **Papierologia** — stały koszt każdego kursu, płacony zanim koła w ogóle
-   się zakręcą: przyjęcie zlecenia, decyzja dyspozytora co jedzie w tym
-   kursie, odpalanie silnika na każdy odcinek, rytuał spekulacji,
-   pokwitowanie. Ten koszt jest taki sam **niezależnie od mocy silnika
-   i jakości dróg**.
-
-Czas kursu = papierologia + ronda + jazda. Formalnie:
+Czas kroku rozkłada się zatem na trzy składniki:
 
 ```text
 T(krok) = F_host + N_rounds × r(łącze, liczba kart) + W_silicon
 ```
 
-gdzie: `F_host` — stały narzut hosta na każdy krok (planowanie wsadu,
-próbkowanie, obsługa spekulacji, synchronizacje CPU↔GPU); `N_rounds` —
-liczba synchronicznych rund komunikacji w kroku (~122 dla Kimi, jak
-wyżej); `r(łącze, liczba kart)` — czas jednej rundy, zależny od
-transportu (dziś PCIe, po zakupie NVLink) i rosnący z liczbą uczestników;
-`W_silicon` — czas faktycznej pracy krzemu: odczyty wag z pamięci HBM
-i arytmetyka.
+gdzie: `F_host` — stały narzut kroku (sekcja 3); `N_rounds` — liczba
+synchronicznych rund komunikacji w kroku (~122 dla Kimi, jak wyżej);
+`r(łącze, liczba kart)` — czas jednej rundy, zależny od transportu (dziś
+PCIe, po zakupie NVLink) i rosnący z liczbą uczestników; `W_silicon` —
+czas właściwych obliczeń: odczyty wag z pamięci HBM i arytmetyka.
 
-Mamy więc trzech podejrzanych o spowolnienie serwera — i każdy z nich
-zostawia **inne ślady w pomiarach**, co pozwala rozstrzygnąć sprawę
-liczbami, a nie opinią:
+Każdy z trzech składników może być wąskim gardłem i każdy zostawia
+**inny ślad w pomiarach**, co pozwala rozstrzygnąć przyczynę spowolnień
+pomiarem, a nie opinią:
 
-1. **Za wolna ładownia** (`W_silicon`) — karta czeka na odczyt wag z
-   pamięci HBM. Ślad: licznik `DRAM_ACTIVE` wysoko.
-2. **Za drogie ronda** (`N_rounds × r`) — czas zjadają scalenia. Ślady:
-   krok wydłuża się z liczbą kart; w filmie poklatkowym dominuje
-   komunikacja; łącze PCIe przybite do sufitu, choć rdzenie stoją.
-3. **Za dużo papierologii** (`F_host`) — stały narzut silnika serwującego.
-   Ślady: krok jest drogi nawet na *jednej* karcie (zero komunikacji);
-   w filmie dominują przerwy, w których GPU nie robi nic.
+1. **Zbyt wolna pamięć** (`W_silicon`) — karta czeka na odczyt wag
+   z HBM. Ślad: wysoki `DRAM_ACTIVE`.
+2. **Zbyt kosztowna komunikacja** (`N_rounds × r`) — czas pochłaniają
+   scalenia. Ślady: czas kroku rośnie z liczbą kart; w profilu czasowym
+   dominuje komunikacja; łącze PCIe osiąga granicę przepustowości, choć
+   rdzenie są bezczynne.
+3. **Zbyt duży stały narzut** (`F_host`) — silnik serwujący kosztuje
+   niezależnie od sprzętu. Ślady: krok jest kosztowny nawet na jednej
+   karcie (zero komunikacji); w profilu dominują przerwy, w których GPU
+   nie wykonuje żadnej operacji.
 
 ## 5. Metodologia pomiarowa
 
