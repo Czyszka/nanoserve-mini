@@ -88,9 +88,9 @@ niezależnie od liczby kart i jakości łącz. Ten narzut to druga możliwa
 przyczyna spowolnień: jeśli to ona dominuje, dodanie szybszego łącza nie
 przyspieszy serwera.
 
-Głównym serwowanym modelem jest Kimi-K2.6 — model otwarty (open-weight),
-który w benchmarku zadań programistycznych SWE-bench Verified gra w lidze
-czołowych modeli komercyjnych, a przy ~554 GB samych wag musi pracować na wszystkich ośmiu jednocześnie:
+Głównym serwowanym modelem jest Kimi-K2.6 — model otwarty (open-weight) o około bilionie parametrów (1T), który w publicznym benchmarku zadań programistycznych SWE-bench Verified osiąga wyniki porównywalne z czołowymi modelami komercyjnymi. Rozmiar modelu — około 554 GB samych wag — wymusza pracę na wszystkich ośmiu kartach GPU jednocześnie (obliczenia: sekcja 4).
+
+Pozycję modelu w stawce ilustruje poniższe zestawienie:
 
 | Model | SWE-bench Verified | Źródło |
 |---|---:|---|
