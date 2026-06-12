@@ -102,29 +102,31 @@ Pozycję modelu w stawce ilustruje poniższe zestawienie:
 *(Wyniki z publicznych zestawień, stan: czerwiec 2026; służą wyłącznie
 umiejscowieniu modelu w stawce — nie były mierzone w tym projekcie.)*
 
-Punktem wyjścia była następująca obserwacja:
-
-Pod pełnym obciążeniem (GPU-Util 100%) żaden zasób węzła 8×H200 nie zbliża
-się do nasycenia: pamięć HBM aktywna przez 7–9% czasu, jednostki
-obliczeniowe ~20%, PCIe ~10% przepustowości, pobór mocy ~30% limitu
-(pomiary: sekcja 6a; surowe liczniki:
+Punktem wyjścia badania była obserwacja, że pod pełnym obciążeniem — gdy
+licznik GPU-Util z popularnego narzędzia `nvidia-smi` wskazuje 100%
+(pomiar: sekcja 6a) — żaden zasób serwera nie zbliża się do nasycenia:
+pamięć HBM jest aktywna przez 7–9% czasu, jednostki obliczeniowe przez
+~20%, łącze PCIe przenosi ~10% swojej przepustowości, a pobór mocy sięga
+~30% limitu (surowe liczniki:
 [`p0_gpu_counters`](../../../results/runs/2026-06-10_w1_article_evidence/p0_gpu_counters/)).
 Mimo to opóźnienie między generowanymi tokenami rośnie wraz z liczbą
-równolegle obsługiwanych klientów (choć żaden zasób się nie zapełnia),
-a dołożenie kolejnych GPU dodatkowo je pogarsza. Standardowa diagnostyka
-„znajdź nasycony zasób" nie ma tu czego szukać.
+równolegle obsługiwanych klientów, a dołożenie kolejnych kart dodatkowo
+je pogarsza. Standardowa diagnostyka, polegająca na wskazaniu nasyconego
+zasobu, nie wskazuje tu więc żadnej przyczyny.
 
-Skąd sprzeczność między „100% zajętości" a „wszystko stoi"? Licznik
-GPU-Util z popularnego narzędzia `nvidia-smi` mierzy tylko, czy na karcie
-*cokolwiek przebywa* — to czujnik „kierowca siedzi w aucie", który nie
-odróżnia jazdy od postoju. Dopiero telemetria sprzętowa DCGM (sekcja 3)
-pokazuje stan faktyczny: rdzenie obliczeniowe pracują przez ~20% czasu,
-pamięć przez 7–9%, a karty pobierają jedną trzecią mocy, którą potrafią
-pobrać. Serwer nie jest zajęty — serwer na coś **czeka**.
+Pozorna sprzeczność między wskazaniem „100% zajętości" a niskim
+wykorzystaniem zasobów wynika ze sposobu pomiaru. Licznik GPU-Util
+informuje jedynie, że karta ma w danej chwili przydzielone zadanie — nie
+mówi nic o tym, czy zadanie to wykonuje obliczenia, czy czeka na dane.
+Stan faktyczny pokazuje dopiero telemetria sprzętowa DCGM (sekcja 3):
+rdzenie obliczeniowe pracują przez ~20% czasu, pamięć przez 7–9%, a karty
+pobierają około jednej trzeciej mocy maksymalnej. Karty przez większość
+czasu nie wykonują więc obliczeń, lecz na coś czekają — ustalenie, na co,
+jest przedmiotem dalszej części notatki.
 
-Producent platformy przewiduje dla tej maszyny opcjonalne rozszerzenie:
+Producent serwera przewiduje dla tej maszyny opcjonalne rozszerzenie:
 mostki NVLink (w karcie katalogowej: *„GPU-GPU interconnect: NVIDIA NVLink
-Bridge, optional"*). Mostek 4-way spina cztery sąsiednie karty w „wyspę"
+Bridge, optional"*). Mostek 4-way łączy cztery sąsiednie karty w „wyspę"
 z bezpośrednim łączem GPU↔GPU:
 
 | parametr | PCIe Gen5 x16 (stan obecny) | NVLink Bridge (H200 NVL) |
@@ -133,17 +135,17 @@ z bezpośrednim łączem GPU↔GPU:
 | opóźnienie pojedynczej wymiany GPU↔GPU | ~20 µs | ~2 µs (**~10×**) |
 | droga sygnału | GPU → switch PCIe (czasem → CPU → UPI) → GPU | bezpośrednio GPU↔GPU wewnątrz wyspy; między wyspami nadal PCIe/UPI |
 
-Przepustowości za [kartą katalogową NVIDIA H200 NVL](https://www.pny.com/file%20library/company/support/linecards/data-center-gpus/h200-nvl-datasheet.pdf)
-— NVIDIA opisuje tam NVLink wprost jako „7× szybszy niż PCIe Gen5".
-Opóźnień NVIDIA oficjalnie nie publikuje; wiersz drugi to rząd wielkości
-z [pomiarów publicznych](https://intuitionlabs.ai/articles/nvidia-nvlink-gpu-interconnect)
-(kopie P2P na A100: ~2 µs po NVLink vs ~20 µs po PCIe 4.0) — fizyczne
-źródło różnicy jest takie, że sygnał NVLink omija switch PCIe i procesor.
-Naturalny odruch: skoro serwer na coś czeka, może szybsze łącza rozwiążą
-problem?
+Przepustowości podano zgodnie z [kartą katalogową NVIDIA H200 NVL](https://www.pny.com/file%20library/company/support/linecards/data-center-gpus/h200-nvl-datasheet.pdf);
+stosunek ~7× na korzyść NVLink pochodzi wprost od producenta. Opóźnienia
+nie są publikowane oficjalnie — wartości w drugim wierszu oszacowano na
+podstawie [pomiarów publicznych](https://intuitionlabs.ai/articles/nvidia-nvlink-gpu-interconnect)
+(transfery P2P na kartach A100: ~2 µs przez NVLink wobec ~20 µs przez
+PCIe 4.0). Różnica bierze się stąd, że sygnał NVLink omija switch PCIe
+i procesor. Nasuwa się zatem przypuszczenie, że serwer czeka na
+komunikację między kartami i że problem rozwiąże szybsze łącze.
 
-Ta notatka odpowiada na pytanie, **czy taki zakup jest zasadny** —
-przeglądem opłacalności scenariusz po scenariuszu.
+Celem niniejszej notatki jest ocena, czy taki zakup jest zasadny —
+osobno dla każdego z typowych scenariuszy użycia serwera.
 
 ```mermaid
 graph TB
