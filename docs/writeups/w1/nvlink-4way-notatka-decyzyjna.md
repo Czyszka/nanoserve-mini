@@ -259,10 +259,15 @@ Pojęcia zebrano w grupy tematyczne.
   całość przyspieszymy najwyżej `1/(1−s)` razy, choćby ta część stała się
   nieskończenie szybka.
 - **capture** — udział komunikacji, który po zakupie mostków faktycznie
-  odbywałby się przez NVLink. Dla TP≤4 cały zespół mieści się w jednej
-  wyspie, więc capture = 1,0. Dla TP=8 all-reduce biegnie pierścieniem
-  o 8 odcinkach przez dwie wyspy: 6 odcinków leży wewnątrz wysp, a 2
-  łączą wyspy i pozostają na PCIe/UPI — stąd capture ≈ 6/8 = 0,75.
+  odbywałby się przez NVLink. NCCL wykonuje all-reduce algorytmem
+  pierścienia: karty tworzą logiczny okrąg (0→1→…→7→0), każda wysyła
+  dane wyłącznie do następnej, a pełne scalenie wymaga przejścia danych
+  przez wszystkie odcinki okręgu — przy 8 kartach jest ich 8, z ruchem
+  rozłożonym na nie równomiernie. Po podziale na wyspy 0–3 i 4–7 sześć
+  odcinków leży wewnątrz wysp i przejmie je NVLink, a dwa (3→4 i 7→0)
+  przekraczają granicę wysp i pozostają na PCIe/UPI — stąd dla TP=8
+  capture = 6/8 = 0,75. Dla TP≤4 cały pierścień mieści się w jednej
+  wyspie: capture = 1,0.
 
 **Pomiar**
 
