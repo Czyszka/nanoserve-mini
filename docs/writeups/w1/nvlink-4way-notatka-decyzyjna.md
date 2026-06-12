@@ -1,13 +1,5 @@
 # Zasadność zakupu mostków NVLink 4-way dla węzła 8×H200: przegląd opłacalności w wybranych scenariuszach
 
-> Notatka decyzyjna na podstawie wątku badawczego
-> [T9](t9-bottleneck-nvlink.md) i issue
-> [#50](https://github.com/Czyszka/nanoserve-mini/issues/50)
-> (pomiary: 10–12.06.2026). Pisana dla czytelnika technicznego **bez
-> przygotowania ML**: wszystkie pojęcia tłumaczymy od zera, a mechanizmy
-> objaśniamy jedną spójną analogią motoryzacyjną (firma kurierska). Każda
-> liczba w tekście ma źródło w artefaktach repozytorium (sekcja 10).
-
 ## 1. Podsumowanie
 
 Z przeprowadzonych pomiarów i obliczeń wynika, że zakup mostków NVLink
@@ -189,115 +181,105 @@ i wyspa NVLink wyjaśnia słowniczek w sekcji 3.
 
 ## 3. Słowniczek
 
-Pojęcia w grupach; każde najpierw technicznie, potem odpowiednik w analogii
-kurierskiej (jej pełne rozwinięcie — jeden krok generowania = jeden kurs
-furgonetki — w sekcji 4). Sekcję można czytać wybiórczo i wracać do niej
-z dalszych części notatki.
+Pojęcia zebrano w grupy tematyczne.
 
 **Sprzęt i połączenia**
 
 - **GPU (karta)** — procesor o tysiącach rdzeni wykonujący obliczenia
   modelu; w tym serwerze 8 kart H200 po 143 GB pamięci.
-  *W analogii:* furgonetka.
 - **HBM** — szybka pamięć umieszczona na karcie; z niej GPU czyta wagi
-  modelu w każdym kroku. Licznik `DRAM_ACTIVE` mówi, przez jaki ułamek
-  czasu ta pamięć faktycznie pracuje.
-  *W analogii:* ładownia furgonetki.
-- **PCIe** — wspólna magistrala, którą karty rozmawiają z procesorami
-  i między sobą; w tej maszynie to dziś jedyna droga między kartami.
-  *W analogii:* zwykłe drogi miejskie, wspólne dla wszystkich.
-- **switch PCIe** — rozdzielacz: jedno łącze od procesora rozgałęzia się na
-  dwie karty; tu są 4 switche po 2 GPU.
-  *W analogii:* lokalny węzeł drogowy.
-- **UPI** — łącze między dwoma procesorami serwera; ruch z kart „lewej"
-  połówki maszyny do „prawej" musi przez nie przejść.
-  *W analogii:* most między dwiema dzielnicami.
-- **NVLink / wyspa** — dedykowane łącze GPU↔GPU o ~7× większej
-  przepustowości i ~10× mniejszych opóźnieniach niż PCIe (parametry
-  i źródła: sekcja 2); mostek 4-way spina 4 sąsiednie karty w „wyspę",
-  wewnątrz której ruch omija PCIe całkowicie.
-  *W analogii:* prywatna autostrada dla czterech furgonetek; wyjazd poza
-  wyspę to powrót na drogi miejskie.
+  modelu w każdym kroku. Licznik `DRAM_ACTIVE` podaje ułamek czasu,
+  w którym interfejs tej pamięci faktycznie przesyła dane (miara
+  wykorzystania przepustowości, nie zapełnienia pojemności).
+- **PCIe** — magistrala łącząca karty GPU z procesorami oraz karty między
+  sobą; w badanym serwerze cała komunikacja między kartami odbywa się
+  przez PCIe.
+- **switch PCIe** — układ rozdzielający jedno łącze PCIe procesora na
+  kilka urządzeń; w tym serwerze pracują cztery switche, po dwie karty
+  GPU na każdym.
+- **UPI (Ultra Path Interconnect)** — łącze między dwoma gniazdami
+  procesorów w serwerach dwuprocesorowych Intela. Komunikacja między
+  kartami podłączonymi do różnych procesorów przebiega trasą:
+  switch PCIe → procesor 1 → UPI → procesor 2 → switch PCIe.
+- **NVLink / wyspa** — opracowane przez NVIDIA bezpośrednie łącze
+  GPU↔GPU. Mostek (bridge) 4-way łączy cztery sąsiednie karty w „wyspę",
+  wewnątrz której komunikacja odbywa się bezpośrednio między kartami,
+  z pominięciem switchy PCIe i procesorów (parametry: sekcja 2).
 
 **Równoległość i komunikacja**
 
-- **TP (tensor parallelism)** — pokrojenie każdej macierzy wag między
-  N kart; każda karta liczy wycinek każdej warstwy, więc po (prawie) każdej
-  warstwie wyniki trzeba scalić.
-  *W analogii:* konwój N furgonetek — każda wiezie część ładunku i żadna
-  nie zrobi kursu sama.
+- **TP (tensor parallelism)** — podział każdej macierzy wag modelu między
+  N kart; każda karta liczy wycinek każdej warstwy. Wyniki częściowe
+  trzeba scalać dwukrotnie w każdej warstwie: po bloku uwagi (attention)
+  i po bloku FFN/MoE; operacje działające na każdym elemencie niezależnie
+  (np. normalizacje) scalania nie wymagają.
 - **rank** — jedna karta w zespole TP (TP=8 → 8 ranków).
-  *W analogii:* jedna furgonetka konwoju.
 - **all-reduce** — operacja scalająca wyniki częściowe: każda karta wnosi
-  swój kawałek i każda kończy z pełną sumą; jest *synchroniczna* — nikt nie
-  jedzie dalej, dopóki nie skończy ostatni; ~2 razy na warstwę.
-  *W analogii:* rondo, na którym cały konwój przeładowuje paczki i czeka na
-  maruderów.
-- **NCCL** — biblioteka NVIDII wykonująca all-reduce na PCIe lub NVLink;
-  „czas w NCCL" w pomiarach = czas komunikacji (lub czekania na najwolniejszą
-  kartę).
-  *W analogii:* firmowa procedura obsługi rond.
-- **P2P** — bezpośrednia wymiana danych kart po PCIe, z pominięciem pamięci
-  procesora; wyłączenie (`NCCL_P2P_DISABLE=1`) wymusza objazd przez hosta.
-  *W analogii:* zamknięcie skrótu — wszystko jedzie przez centrum.
+  swój fragment i każda kończy z pełną sumą. Operacja jest synchroniczna
+  — żadna karta nie kontynuuje obliczeń, dopóki nie skończy ostatnia.
+- **NCCL (NVIDIA Collective Communications Library)** — biblioteka
+  operacji zbiorowych (all-reduce, all-gather i in.) dla grup GPU; sama
+  dobiera trasę transferu (P2P po PCIe, NVLink, przez pamięć hosta)
+  i algorytm scalania (np. pierścień). W profilach „czas w NCCL" obejmuje
+  transfer danych oraz oczekiwanie na karty, które dotarły do scalenia
+  później.
+- **P2P (peer-to-peer)** — bezpośrednia wymiana danych między dwiema
+  kartami po PCIe, z pominięciem pamięci procesora; jej wyłączenie
+  (`NCCL_P2P_DISABLE=1`) wymusza przesyłanie wszystkich danych przez
+  pamięć hosta.
 
 **Rozliczanie czasu**
 
-- **token** — najmniejsza porcja tekstu (zwykle kawałek słowa), jaką model
-  produkuje naraz.
-  *W analogii:* jedna paczka.
+- **token** — najmniejsza porcja tekstu (zwykle fragment słowa), jaką
+  model produkuje naraz.
 - **krok dekodowania** — jeden pełny przebieg modelu dający kolejny token
   (ze spekulacją: ~2–3 tokeny).
-  *W analogii:* jeden kurs konwoju.
-- **TPOT / ITL** — średni czas na token / odstęp między kolejnymi porcjami
-  tokenów. Ze spekulacją ITL ≈ czas *kroku* (tokeny przychodzą seriami),
-  a TPOT dzieli czas przez wszystkie tokeny.
-  *W analogii:* jak często paczki faktycznie trafiają do klienta.
-- **c (współbieżność)** — liczba klientów obsługiwanych jednocześnie;
-  c=1 to czat z jedną osobą, c=64 — pełna sala.
-  *W analogii:* ile paczek zabiera się w jeden kurs.
-- **spekulacja (MTP / Eagle3)** — mały, tani model szkicuje kilka tokenów
-  naprzód, a duży model w jednym kroku je weryfikuje; przy akceptacji ~2,6
-  każdy krok daje średnio ~2,6 tokenu.
-  *W analogii:* praktykant pakuje paczki na zapas, kierowca sprawdza, które
-  klient przyjmie.
-- **cudagraphs** — nagrana raz sekwencja operacji GPU, odtwarzana potem bez
-  udziału procesora; ukrywa koszt startowania tysięcy drobnych operacji.
-  *W analogii:* trasa zapisana w nawigacji — silnik nie gaśnie między
-  przystankami.
-- **podłoga (`F_host`)** — stały koszt każdego kroku, niezależny od liczby
-  kart i jakości łącz: planowanie kroku, próbkowanie, księgowość
+- **TPOT / ITL** — średni czas przypadający na token / odstęp między
+  kolejnymi porcjami tokenów. Ze spekulacją ITL ≈ czas kroku (tokeny
+  przychodzą seriami), a TPOT dzieli czas kroku przez wszystkie
+  wygenerowane tokeny.
+- **c (współbieżność)** — liczba zapytań obsługiwanych równolegle; c=1
+  odpowiada jednej rozmowie na żywo, c=64 — sześćdziesięciu czterem
+  równoległym zapytaniom.
+- **spekulacja (MTP / Eagle3)** — mały, tani model proponuje kilka
+  kolejnych tokenów naprzód, a duży model weryfikuje je wszystkie
+  w jednym kroku; przy średniej akceptacji ~2,6 każdy krok daje
+  ~2,6 tokenu.
+- **CUDA Graphs (cudagraphs)** — mechanizm CUDA pozwalający jednorazowo
+  nagrać sekwencję operacji GPU składających się na krok, a następnie
+  uruchamiać całą sekwencję jednym poleceniem. Bez niego procesor zleca
+  każdą z tysięcy operacji kroku osobno, a samo zlecenie kosztuje
+  pojedyncze mikrosekundy — przy nagranym grafie ten koszt znika z czasu
+  kroku (pomiar wpływu: sekcja 6e).
+- **stały narzut kroku (`F_host`)** — koszt płacony przy każdym kroku
+  niezależnie od liczby kart i jakości łącz: ustalenie składu kroku
+  (które zapytania do niego wejdą), wybór kolejnego tokenu, obsługa
   spekulacji, synchronizacje CPU↔GPU.
-  *W analogii:* papierologia przed każdym kursem.
 - **prawo Amdahla** — przyspieszając część stanowiącą ułamek `s` całości,
-  całość przyspieszysz najwyżej `1/(1−s)` razy, choćby ta część stała się
+  całość przyspieszymy najwyżej `1/(1−s)` razy, choćby ta część stała się
   nieskończenie szybka.
-  *W analogii:* autostrada skraca tylko autostradowy odcinek trasy.
-- **capture** — jaka część komunikacji faktycznie trafi na NVLink: 1,0 gdy
-  cały zespół mieści się w jednej wyspie (TP≤4), ~0,75 dla TP=8 na dwóch
-  wyspach (scalenia między wyspami zostają na PCIe).
-  *W analogii:* ile rond trasy leży przy autostradzie.
+- **capture** — udział komunikacji, który po zakupie mostków faktycznie
+  odbywałby się przez NVLink. Dla TP≤4 cały zespół mieści się w jednej
+  wyspie, więc capture = 1,0. Dla TP=8 all-reduce biegnie pierścieniem
+  o 8 odcinkach przez dwie wyspy: 6 odcinków leży wewnątrz wysp, a 2
+  łączą wyspy i pozostają na PCIe/UPI — stąd capture ≈ 6/8 = 0,75.
 
 **Pomiar**
 
 - **liczniki DCGM** — telemetria sprzętowa NVIDII: `SM_ACTIVE` (ułamek
-  czasu, przez który rdzenie mają pracę), `DRAM_ACTIVE` (zajętość pamięci
-  HBM), `PCIE_RX/TX` (bajty na sekundę na łączu).
-  *W analogii:* tachograf i komputer pokładowy.
-- **GPU-Util (`nvidia-smi`)** — mylący licznik „zajętości": pokazuje 100%,
-  gdy na karcie *cokolwiek* rezyduje, nawet jeśli rdzenie czekają.
-  *W analogii:* czujnik „kierowca siedzi w aucie" — niekoniecznie jedzie.
-- **profiler / trace (film poklatkowy)** — zapis każdej operacji GPU na osi
-  czasu; pozwala podzielić krok na komunikację / obliczenia / przerwy.
-  *W analogii:* nagranie z kamery pokładowej, klatka po klatce.
-- **gap (przerwa)** — czas, w którym GPU nie wykonuje żadnej operacji —
-  czeka na decyzje hosta.
-  *W analogii:* postój z wyłączonym silnikiem.
-- **dawka (dose-response)** — test przyczynowy: celowo pogarszamy podejrzany
-  element i sprawdzamy, czy wynik pogarsza się proporcjonalnie; jeśli nie —
-  podejrzany jest niewinny.
-  *W analogii:* zamknij skrót albo rozdziel konwój po dwóch dzielnicach
-  i zobacz, czy kursy się wydłużą.
+  czasu, w którym rdzenie wykonują pracę), `DRAM_ACTIVE` (jak wyżej),
+  `PCIE_RX/TX` (bajty na sekundę na łączu).
+- **GPU-Util (`nvidia-smi`)** — licznik zajętości pokazujący 100%, gdy
+  karta ma przydzielone jakiekolwiek zadanie — niezależnie od tego, czy
+  wykonuje ono obliczenia, czy czeka na dane.
+- **profiler / trace** — zapis każdej operacji GPU na osi czasu; pozwala
+  podzielić czas kroku na komunikację, obliczenia i przerwy.
+- **gap (przerwa)** — odcinek czasu, w którym GPU nie wykonuje żadnej
+  operacji, oczekując na decyzje hosta.
+- **interwencja kontrolowana (dose–response)** — test przyczynowy: celowe
+  pogorszenie podejrzanego elementu układu i sprawdzenie, czy wynik
+  pogarsza się proporcjonalnie; brak efektu wyklucza dany mechanizm jako
+  przyczynę.
 
 ## 4. Jak model generuje tekst — i skąd w ogóle problem
 
