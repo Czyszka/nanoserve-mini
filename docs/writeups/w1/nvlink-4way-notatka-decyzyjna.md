@@ -283,12 +283,12 @@ Pojęcia zebrano w grupy tematyczne.
 
 ## 4. Mechanizm generowania tekstu i składniki czasu kroku
 
-Model językowy generuje odpowiedź w pętli. W każdym obiegu czyta
+Model językowy generuje odpowiedź w pętli. W każdej iteracji czyta
 wszystko, co dotąd powstało (zapytanie i dotychczas wygenerowany tekst),
 wykonuje jeden pełny przebieg przez wszystkie swoje warstwy i wybiera
 **jeden** następny token — w przybliżeniu fragment słowa. Token zostaje
-doklejony do tekstu i pętla rusza od nowa; odpowiedź o długości
-500 tokenów to ~500 takich przebiegów. Jeden przebieg nazywamy **krokiem
+dodany do tekstu i pętla zaczyna się od nowa; odpowiedź o długości
+500 tokenów to ~500 takich przebiegów. Jeden przebieg nazywa się **krokiem
 dekodowania** — czas kroku, powtórzony setki razy, decyduje o szybkości
 generowania odpowiedzi.
 
@@ -306,10 +306,11 @@ flowchart TD
 Dla dalszych obliczeń istotne jest jedno rozszerzenie tej pętli: serwer
 używa **dekodowania spekulacyjnego** (na Kimi: algorytm **Eagle3**).
 Obok dużego modelu pracuje mały model pomocniczy, który proponuje kilka
-kolejnych tokenów naprzód; duży model w jednym kroku weryfikuje cały
+kolejnych tokenów z wyprzedzeniem; duży model w jednym kroku weryfikuje cały
 szkic i akceptuje te tokeny, które pokrywają się z jego własnym wyborem.
 W pomiarach Kimi akceptuje średnio **~2,6–2,7 tokenu na krok** (odczyt
-z logów silnika, stabilny we wszystkich oknach pomiarowych). Spekulacja
+z logów silnika, stabilny we wszystkich oknach pomiarowych —
+sekcja 6d). Spekulacja
 zmienia więc arytmetykę — krok jest droższy o weryfikację, ale daje
 średnio ~2,6 tokenu zamiast jednego — nie zmienia jednak natury pętli.
 
@@ -369,8 +370,8 @@ PCIe, po zakupie NVLink) i rosnący z liczbą uczestników; `W_silicon` —
 czas właściwych obliczeń: odczyty wag z pamięci HBM i arytmetyka.
 
 Każdy z trzech składników może być wąskim gardłem i każdy zostawia
-**inny ślad w pomiarach**, co pozwala rozstrzygnąć przyczynę spowolnień
-pomiarem, a nie opinią:
+**inny ślad w pomiarach**, co pozwala ustalić przyczynę spowolnień
+na podstawie pomiarów:
 
 1. **Zbyt wolna pamięć** (`W_silicon`) — karta czeka na odczyt wag
    z HBM. Ślad: wysoki `DRAM_ACTIVE`.
