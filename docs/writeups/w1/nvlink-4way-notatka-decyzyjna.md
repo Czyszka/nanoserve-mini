@@ -174,12 +174,18 @@ graph TB
     style I2 stroke-dasharray: 5 5
 ```
 
-*Jak czytać diagram:* dwa procesory spięte łączem UPI, pod każdym dwa switche PCIe,
-pod każdym switchem dwie karty. Przerywane ramki to wyspy, które powstałyby
-po zakupie mostków. Istotny szczegół na później: gdy jeden zespół obejmuje
-wszystkie 8 kart, mostki obsłużą ruch *wewnątrz* wysp, ale wymiana *między*
-wyspami nadal pojedzie po PCIe. (Trudniejsze pojęcia z tego diagramu —
-UPI, switch PCIe, wyspa NVLink — wyjaśnia słowniczek w sekcji 3.)
+Diagram przedstawia topologię połączeń serwera według karty katalogowej
+Supermicro SYS-521GE-TNRT, potwierdzonej zrzutem konfiguracji z działającej
+maszyny (źródła: sekcja 10). Dwa procesory komunikują się ze sobą przez
+łącze UPI; do każdego z nich podłączone są dwa switche PCIe, a do każdego
+switcha — dwie karty GPU. Przerywane ramki oznaczają wyspy NVLink, które
+powstałyby po zakupie mostków. Jak wspomniano wcześniej, rozmiar wag
+modelu Kimi-K2.6 wymusza pracę na wszystkich ośmiu kartach jednocześnie.
+W takiej konfiguracji komunikacja staje się hierarchiczna: mostki przejmą
+scalanie wyników wewnątrz każdej z wysp, natomiast wymiana między wyspami
+nadal będzie odbywać się przez PCIe i łącze UPI (operację scalania
+wyników — all-reduce — opisuje sekcja 4). Pojęcia UPI, switch PCIe
+i wyspa NVLink wyjaśnia słowniczek w sekcji 3.
 
 ## 3. Słowniczek
 
