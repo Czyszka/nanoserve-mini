@@ -451,28 +451,30 @@ tego, jak dobrze koreluje z obserwacjami.
 
 ## 6. Wyniki pomiarów
 
-### 6a. Ładownia niewinna — pierwszy podejrzany odpada od razu
+### 6a. Pamięć HBM nie jest wąskim gardłem
 
-Konfiguracja pomiaru: produkcyjny stack Kimi-K2.6 (TP=8, spekulacja
-Eagle3 włączona, vLLM v0.20), trzy okna pomiarowe — bieg jałowy, 1 klient
-(c=1) i 64 klientów (c=64); liczniki DCGM próbkowane co 1 s i uśredniane
-wyłącznie wewnątrz okna danego benchmarku, wartości per karta.
+Konfiguracja pomiaru: produkcyjna konfiguracja Kimi-K2.6 (TP=8,
+spekulacja Eagle3 włączona, vLLM v0.20); trzy okna pomiarowe — stan
+spoczynkowy, 1 klient (c=1) i 64 klientów (c=64); liczniki DCGM
+próbkowane co 1 s i uśredniane wyłącznie w oknie danego benchmarku;
+wartości w przeliczeniu na kartę.
 
-Gdyby krok był ograniczony czytaniem wag z pamięci, licznik `DRAM_ACTIVE`
-siedziałby przy 70–90%. Zmierzone wartości pod obciążeniem:
+Gdyby czas kroku ograniczał odczyt wag z pamięci, licznik `DRAM_ACTIVE`
+utrzymywałby się na poziomie 70–90%. Zmierzone wartości:
 
-| okno pomiaru | pobór mocy / kartę | SM_ACTIVE | DRAM_ACTIVE | PCIe (GB/s) |
+| okno pomiaru | pobór mocy na kartę | SM_ACTIVE | DRAM_ACTIVE | PCIe (GB/s) |
 |---|---:|---:|---:|---:|
-| bieg jałowy | ~99 W | 0,000 | 0,000 | ~0 |
+| stan spoczynkowy | ~99 W | 0,000 | 0,000 | ~0 |
 | 1 klient (c=1) | ~170 W | 0,21 | 0,093 | 1,9 / 6,0 |
 | 64 klientów (c=64) | ~199 W | 0,20 | 0,070 | 6,0 / 8,0 |
 
 *Surowe dane:
 [`p0_gpu_counters`](../../../results/runs/2026-06-10_w1_article_evidence/p0_gpu_counters/).*
 
-*Jak czytać:* pamięć pracuje przez 7–9% czasu — hipoteza „za wolna
-ładownia" jest obalona pierwszym pomiarem. Zostaje pytanie: ronda czy
-papierologia?
+*Interpretacja:* interfejs pamięci pracuje przez 7–9% czasu, co wyklucza
+ograniczenie kroku przez przepustowość HBM (składnik `W_silicon`
+z sekcji 4). Do rozstrzygnięcia pozostają dwa składniki: komunikacja
+(`N_rounds × r`) i stały narzut kroku (`F_host`).
 
 ### 6b. Krzywa TP: więcej kart = wolniej
 
