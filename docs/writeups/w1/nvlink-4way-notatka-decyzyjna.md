@@ -67,19 +67,26 @@ część komunikacji faktycznie trafi na NVLink — testami rozmieszczenia kart
 | model wymaga 8 kart (Kimi), wielu klientów | 8 | c≥8 | kupuj | ~2,7× (maks. 6,2×) | komunikacja = 83,9% czasu kroku (profil Kimi przy c=16), capture 0,75 (6d, 7) |
 
 
-## 2. Problem i kontekst
+## 2. Przedmiot i cel badania
 
-Przedmiotem badania jest serwer Supermicro SYS-521GE-TNRT w konfiguracji:
-2× Intel Xeon Gold 6530 (dwa gniazda CPU), 8× NVIDIA H200 NVL (143 GB
-pamięci HBM3e na kartę), a wszystkie połączenia między kartami wyłącznie po
-PCIe Gen5 — cztery switche po 2 GPU, bez NVLink i bez NVSwitch (pełna
-topologia na diagramie niżej). Modele językowe serwuje silnik vLLM v0.20
-w kontenerach Docker, udostępniając je użytkownikom przez API.
+Przedmiotem badania jest serwer Supermicro SYS-521GE-TNRT wyposażony w dwa
+procesory Intel Xeon Gold 6530 oraz osiem kart NVIDIA H200 NVL (143 GB
+pamięci HBM3e na kartę). Karty komunikują się wyłącznie przez magistralę
+PCIe Gen5 — w topologii czterech przełączników po dwie karty, bez NVLink
+i bez NVSwitch (pełny schemat na diagramie niżej). Modele językowe serwuje
+na nim silnik vLLM v0.20 uruchomiony w kontenerach Docker i udostępnia je
+użytkownikom przez API.
 
-Badaniu podlegają trzy elementy tego układu: **czas pojedynczego kroku
-generowania** (to on decyduje o szybkości odpowiedzi), **komunikacja
-między kartami po PCIe** (jedyne, co zmieniłby zakup NVLink) oraz **stały
-narzut silnika serwującego** (konkurencyjny podejrzany o spowolnienia).
+Badaniu podlegają trzy składniki procesu generowania odpowiedzi na tym
+serwerze: **czas pojedynczego kroku generowania** (to on decyduje
+o szybkości odpowiedzi), **komunikacja między kartami po PCIe** (jedyne,
+co zmieniłby zakup NVLink) oraz **stały narzut silnika serwującego** —
+czas, który silnik zużywa przy każdym kroku na czynności organizacyjne
+(ustalenie, które zapytania wejdą do bieżącego kroku, wybór kolejnego
+fragmentu tekstu, wymiana poleceń między procesorem a kartami),
+niezależnie od liczby kart i jakości łącz. Ten narzut to druga możliwa
+przyczyna spowolnień: jeśli to ona dominuje, dodanie szybszego łącza nie
+przyspieszy serwera.
 
 Głównym serwowanym modelem jest Kimi-K2.6 — model otwarty (open-weight),
 który w benchmarku zadań programistycznych SWE-bench Verified gra w lidze
