@@ -394,58 +394,57 @@ na podstawie pomiarów:
 **Zmienna kontrolowana: liczba kart (krzywa TP).** Qwen3.6-35B-A3B mieści
 się w całości na jednej karcie, można go więc uruchamiać w konfiguracjach
 TP=1/2/4/8 przy identycznych pozostałych parametrach silnika.
-Konfiguracja TP=1 nie wykonuje żadnej komunikacji między kartami i stanowi
-punkt odniesienia; każda dodatkowa milisekunda czasu kroku przy TP=2/4/8
-jest więc w całości kosztem równoległości (zdominowanym przez drabinkę
-all-reduce). Kimi-K2.6 tej dźwigni nie ma — wymaga TP=8 — dlatego dla
-niego źródłem atrybucji jest bezpośredni profil czasowy, a krzywą TP
-dostarcza sonda Qwen.
+Konfiguracja TP=1 nie wykonuje żadnej komunikacji między kartami
+i stanowi punkt odniesienia; każda dodatkowa milisekunda czasu kroku przy
+TP=2/4/8 jest więc w całości kosztem równoległości (zdominowanym przez
+operacje all-reduce). W przypadku Kimi-K2.6 takie porównanie nie jest
+możliwe — model wymaga TP=8 — dlatego podział jego czasu kroku ustalono
+bezpośrednio z profilu czasowego, a krzywą TP dostarcza model kontrolny
+Qwen.
 
-**Interwencje kontrolowane (dawki).** Każdą hipotezę testowaliśmy, celowo
-degradując jeden podejrzany element przy stałej reszcie układu:
+**Interwencje kontrolowane.** Każdą hipotezę testowano, celowo degradując
+jeden podejrzany element przy niezmienionej reszcie układu:
 
-- `NCCL_P2P_DISABLE=1` — wymuszenie objazdu każdego transferu między
-  kartami przez pamięć hosta, czyli degradacja ścieżki P2P (wyniki:
-  sekcja 6c);
-- testy rozmieszczenia (placement) — ten sam zespół kart rozsadzony na
-  dwie połówki maszyny (`CUDA_VISIBLE_DEVICES=0,4` dla TP2 oraz `0,1,4,5`
+- `NCCL_P2P_DISABLE=1` — przekierowanie każdego transferu między kartami
+  przez pamięć hosta, czyli degradacja ścieżki P2P (wyniki: sekcja 6c);
+- testy rozmieszczenia kart — ten sam zespół kart rozdzielony na dwie
+  połówki maszyny (`CUDA_VISIBLE_DEVICES=0,4` dla TP2 oraz `0,1,4,5`
   dla TP4), czyli zmiana klasy łącza bez zmiany liczby kart (wyniki:
   sekcja 6c);
-- wyłączanie składników podłogi — spekulacja OFF, cudagraphs OFF
-  (tryb eager), governor CPU przełączony na `performance` (wyniki:
-  sekcja 6e).
+- wyłączanie składników stałego narzutu — spekulacja wyłączona,
+  CUDA Graphs wyłączone (tryb eager), governor CPU przełączony w tryb
+  `performance` (wyniki: sekcja 6e).
 
-Kryterium przyczynowości: jeśli podejrzany mechanizm rzeczywiście wycenia
-krok, jego kontrolowana degradacja musi mierzalnie wydłużyć krok; brak
-efektu wyklucza mechanizm — niezależnie od tego, jak dobrze pasował do
-objawów.
+Kryterium przyczynowości: jeśli podejrzany mechanizm rzeczywiście
+odpowiada za czas kroku, jego kontrolowana degradacja musi mierzalnie ten
+krok wydłużyć; brak efektu wyklucza mechanizm — niezależnie od tego, jak
+dobrze pasował do objawów.
 
 **Trzy instrumenty pomiarowe:**
 
-- metryki klienckie — `vllm bench serve`: czas do pierwszego tokenu,
-  TPOT/ITL, przepustowość; każdy bieg poprzedzony rozgrzewką;
+- metryki po stronie klienta — `vllm bench serve`: czas do pierwszego
+  tokenu, TPOT/ITL, przepustowość; każdy pomiar poprzedzono rozgrzewką;
 - liczniki sprzętowe — DCGM (`dcgmi dmon`, próbkowanie co 1 s),
   uśredniane wyłącznie wewnątrz okna benchmarku wyznaczanego znacznikami
   czasu;
 - profil czasowy — torch profiler: pełna oś czasu operacji GPU, z której
-  liczone są udziały komunikacja / obliczenia / przerwy (w analogii: film
-  poklatkowy z kursu).
+  liczone są udziały komunikacji, obliczeń i przerw.
 
 **Kontrole rzetelności:**
 
-- pasmo szumu pomiaru: ±0,4 ms na kroku, skalibrowane z trzech
-  niezależnych startów silnika w identycznej konfiguracji; mierzone dalej
-  efekty są wielokrotnie większe — podatek komunikacyjny TP4 (+1,56 ms)
-  to ~4× pasma szumu, TP8 (+5,18 ms) to ~13×;
-- kontrola narzutu profilera: każdy profil ma bieg porównawczy bez
-  profilera — różnice 2–8%, więc oś czasu odzwierciedla rzeczywiste
-  zachowanie silnika;
-- odtwarzalność anomalii: punkty anomalne powtarzane od zera, łącznie
-  z odtworzeniem kontenera silnika (zgodność w granicach ±3%);
-- weryfikacja konfiguracji przed każdym biegiem: faktyczne TP z logu
-  silnika, rozmieszczenie kart z env kontenera, uzbrojenie profilera
-  z konfiguracji procesu — trzy realne pomyłki konfiguracyjne wykryte tą
-  drogą, zanim skaziły wyniki.
+- pasmo szumu pomiaru: ±0,4 ms na kroku, skalibrowane na trzech
+  niezależnych startach silnika w identycznej konfiguracji; mierzone
+  dalej efekty są wielokrotnie większe — podatek komunikacyjny TP4
+  (+1,56 ms) to ~4-krotność pasma szumu, TP8 (+5,18 ms) — ~13-krotność;
+- kontrola narzutu profilera: dla każdego profilu wykonano pomiar
+  porównawczy bez profilera; różnice wyniosły 2–8%, więc oś czasu
+  odzwierciedla rzeczywiste zachowanie silnika;
+- odtwarzalność anomalii: pomiary anomalne powtórzono od zera, łącznie
+  z ponownym utworzeniem kontenera silnika (zgodność w granicach ±3%);
+- weryfikacja konfiguracji: przed każdym pomiarem sprawdzano faktyczne
+  TP w logu silnika, rozmieszczenie kart w zmiennych środowiskowych
+  kontenera i włączenie profilera w konfiguracji procesu; wykryto tą
+  drogą trzy pomyłki konfiguracyjne, zanim zdążyły zniekształcić wyniki.
 
 ## 6. Wyniki pomiarów
 
