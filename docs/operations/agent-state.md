@@ -8,10 +8,11 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `3fd150b`
-- Last summarized at: 2026-06-12 (T9 detail + clarity passes, #50 comment posted)
-- Note: previous cursor `520d788` is dangling in the current history (laptop-side
-  rewrite); fallback used the 2026-06-10 tidy commit `e08f762` as the sync point.
+- Last summarized commit: `6472d06`
+- Last summarized at: 2026-06-14 (NVLink decision note finalized in Polish + source audit)
+- Note: prior cursor `3fd150b` sits on a pre-rewrite lineage, so `3fd150b..HEAD`
+  over-reports commits (SHA divergence); this sync used the clean tree delta
+  (7 files), not the commit list.
 - 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
   compacted in place (period summaries + source SHA kept inline); full history
   via `git show 520d788:docs/operations/agent-state.md`.
@@ -417,6 +418,19 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
+2026-06-14 (laptop) NVLink decision note finalized + source audit:
+
+```text
+git diff --check    OK (docs-only; one trailing space fixed pre-commit)
+source audit (5 subagents, S6/S7): every client/DCGM/trace number reconciles with raw    OK
+```
+
+2026-06-13 (laptop) paper note - GPU interconnect:
+
+```text
+git diff --check    OK (docs-only; no .py touched)
+```
+
 2026-06-12 (T9 detail + clarity passes):
 
 ```text
@@ -555,6 +569,30 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-06-14 (laptop) - NVLink decision note finalized (Polish redaction + source audit)
+
+- Why: close the W1 NVLink 4-way note as the canonical Polish decision deliverable.
+- Did: section-by-section Polish redaction (S1-S8); file-level source audit in S8 via 5 subagents (every S6/S7 number reconciles with raw bench/DCGM/trace); renumbered 6a-6d to 6.1-6.4; promoted v2 to the canonical filename and removed the old note; committed a GPU-interconnect paper note alongside.
+- Range: `bee9438..6472d06` (note add -> finalize)
+- Validation: OK (docs-only; git diff --check clean)
+- Next: T9/#50 unaffected; W2 synthesis can cite the finalized note.
+
+### 2026-06-13 (laptop) - GPU interconnect paper note
+
+- Why: user asked for a paper note from
+  `docs/learning/papers/Evaluating Modern GPU Interconnect.pdf` following
+  `docs/learning/paper-reading-guide.md`.
+- Did: added `docs/learning/paper-notes/evaluating-modern-gpu-interconnect.md`
+  using the lite template; mapped PCIe/NVLink/NVSwitch/GPUDirect findings to the
+  W1 NVLink decision and future W2 TP-scaling measurements; added a focused
+  PCIe-vs-NVLink measurement table with reported latency, collective bandwidth,
+  message-size saturation, NCCL participant-count, and application-level caveats;
+  follow-up edit added approximate PCIe startup latency and a separate bandwidth
+  table for P2P and NCCL collective measurements.
+- Validation: `git diff --check` OK (docs-only; no `.py` touched).
+- Next: use the note as background evidence when explaining topology, NCCL share,
+  rank count, placement, and message-size caveats in NVLink/TP-scaling write-ups.
 
 ### 2026-06-11 (laptop) - T9 verified against raw artifacts; counter/arithmetic corrections
 
