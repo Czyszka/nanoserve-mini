@@ -570,6 +570,14 @@ T4). No `ruff` / `pytest` run.
 
 Newest entry first.
 
+### 2026-07-06 (remote session) - W1 scientific note (English synthesis)
+
+- Why: user asked for an extended English scientific note consolidating Phase 1 (writeup1) from `docs/writeups/`.
+- Did: added `docs/writeups/w1-scientific-note.md` (800 lines, IMRaD-style): metadata block, abstract, system under test, methods, T1-T9 results with quantitative tables, discussion, limitations, Phase 2 outlook, references/evidence. Synthesized via multi-agent workflow (13 per-source extractions, draft, 14 fact-checkers, revision pass — 16 confirmed corrections applied); numbers copied verbatim from thread files; no existing files modified.
+- Branch: `claude/phase-1-scientific-writeup-837v70`
+- Validation: OK (docs-only; git diff --check clean; all relative links resolve)
+- Next: optional human review of the note; W2 synthesis can cite it alongside `w1-article.md`.
+
 ### 2026-06-14 (laptop) - NVLink decision note finalized (Polish redaction + source audit)
 
 - Why: close the W1 NVLink 4-way note as the canonical Polish decision deliverable.
