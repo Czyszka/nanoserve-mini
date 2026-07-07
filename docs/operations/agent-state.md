@@ -570,6 +570,14 @@ T4). No `ruff` / `pytest` run.
 
 Newest entry first.
 
+### 2026-07-07 (remote session) - W1 scientific note: NVLink rigor pass
+
+- Why: user flagged inaccuracies from the NVLink note-writing period and asked for a scientific-rigor pass on `w1-scientific-note.md`.
+- Did: verified §4.9 line-by-line against `t9-bottleneck-nvlink.md` and the canonical Polish decision note (2 fact-check subagents + own read). Main fix: verdict table now carries the two-stage Amdahl model explicitly — `S_ideal` ceilings (2.14×/2.70×) separated from realistic finite-bandwidth `S_nvlink` gains (1.84×/2.18×, factor 1−128/900=0.858); previously the ceiling was presented as "expected gain" with one row inconsistently on the other basis. Also: restored t9 verdict wording (", not hardware", "L2 causal", converging-efficiency-calc + counters evidence labels), added pre-registration of reading criteria, trace caveats (NCCL peer-wait upper bound, prefill dilution), c=16-pathology flag at the verdict, TP1-trace contamination note, 61-layer/~122-round + ~14 KiB estimates labeled as config-derived, `r_NVL4` (per-round assumption) disambiguated from P2P latency (2–9 µs), abstract/§7 headline retightened to ≈1.8–2.2× realistic.
+- Branch: `claude/phase-1-scientific-writeup-837v70`
+- Validation: OK (docs-only; git diff --check clean)
+- Next: note ready for re-review; verdict numbers now match the Polish decision note verbatim.
+
 ### 2026-07-06 (remote session) - W1 scientific note (English synthesis)
 
 - Why: user asked for an extended English scientific note consolidating Phase 1 (writeup1) from `docs/writeups/`.

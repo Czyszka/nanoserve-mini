@@ -34,9 +34,12 @@ with EAGLE-3 enabled, versus p50 1675 ms / p95 4426 ms at 58.7 tok/s disabled
 (both at identical 97-token median completion), i.e. ≈2.0× TTFT and ≈1.9×
 throughput from speculative decoding rather than the 3.8× first observed.
 Hardware-counter follow-up refuted an HBM-bandwidth-bound decode hypothesis
-(DRAM_ACTIVE ≤ 9% under load) and isolated two workload-dependent bottlenecks —
-a host-side per-step floor at low concurrency and a PCIe-transport ceiling under
-batch — grounding a calibrated GO/NO-GO verdict on NVLink 4-way bridges.
+(DRAM_ACTIVE 9.3% single-stream, 7.0% batched) and isolated two
+workload-dependent bottlenecks — a host-side per-step floor at low concurrency
+and a PCIe-transport ceiling under batch — grounding a calibrated GO/NO-GO
+verdict on NVLink 4-way bridges: buy only for batched serving of models that
+genuinely require TP≥4, with a realistic finite-bandwidth projection of
+≈1.8–2.2× against ideal-link ceilings of 2.1–2.7×.
 
 ---
 
@@ -439,9 +442,11 @@ nothing is saturated: SMs resident ~20% of the time, tensor pipes 1–6%, HBM
 ≤9%, PCIe links at 6–8 GB/s (~10–13% of a Gen5 x16's ~63 GB/s per direction) —
 the signature of **latency-bound, serialized execution**, with the per-layer
 PCIe all-reduce as the standing suspect. A coarse consistency check attributes
-the c=1 window's TPOT (~22.5 ms/token) to a ~60-layer × 2-all-reduce ladder,
-pricing each synchronization round at ≈0.2 ms — a plausible small-message PCIe
-all-reduce cost on eight GPUs. (One caveat: the c=1 window used random 64-token
+the c=1 window's per-token step time (~22.5 ms, in the poorly-drafting
+~46 tok/s window) to the TP all-reduce ladder — 61 decoder layers × ~2
+reduction points ≈ 122 synchronous rounds per step, a config-derived estimate
+rather than a counted NCCL total — pricing each round at ≈0.2 ms, a plausible
+small-message PCIe all-reduce cost on eight GPUs. (One caveat: the c=1 window used random 64-token
 `--ignore-eos` prompts that draft poorly under Eagle3, decoding at ~46 tok/s vs
 a 112 tok/s natural-prompt baseline; this does not change the DRAM_ACTIVE
 verdict.)
@@ -587,7 +592,15 @@ synchronous collectives rather than computing:
 
 Torch-profiler traces quantify the comms share: Kimi TP8 c=1 is 63% gaps /
 22.5% NCCL / 9.1% compute, while Kimi TP8 c=16 flips to 10% gaps / 83.9% NCCL /
-4.6% compute, and Qwen TP4 c=64 is 33% / 53.3% / 5.6%. Every batched TP=8 config
+4.6% compute, and Qwen TP4 c=64 is 33% / 53.3% / 5.6%. Two caveats attach to
+these span shares and propagate into every projection below: NCCL kernel time
+includes in-kernel peer-wait, so it is an *upper* bound on pure transfer
+(interactive projections are optimistic); and the batched trace windows include
+the prefill burst, so the pure-decode comms share is likely *higher* than the
+span share (batched projections are conservative in that respect). The 53.3%
+share is additionally corroborated by a converging efficiency calculation:
+removing it would lift TP4's 680 tok/s to ≈1456, matching TP2's measured
+1404 tok/s — two methods, one number. Every batched TP=8 config
 eventually pins PCIe RX at a **~7.2–7.9 GB/s ceiling** regardless of model (Kimi
 c≥8, Qwen TP8 c≥16); Qwen TP4 batched instead tops out lower (RX 5.65 GB/s),
 bottlenecked by rank-coordination overhead before the transport ceiling comes
@@ -601,33 +614,62 @@ produced a null effect (1396 vs 1404 tok/s), showing 2-rank comms is not
 latency-sensitive. Floor decomposition (Qwen TP1 c=1) found MTP speculative
 orchestration is the single largest named component (3.57 ms of an 8.93 ms
 floor, 40%), CUDA graphs already mask ~46 ms/step of launch overhead (eager dose
-8.93 → 55.1 ms), and the CPU governor was exonerated.
+8.93 → 55.1 ms), and the CPU governor was exonerated. (The TP1 c=1 profiler
+trace itself is contaminated by first-request `torch.compile` and was used only
+qualitatively; the quantitative floor attribution rests on the clean dose
+series.)
 
-Feeding measured comms shares `s` and an NVLink-island capture fraction (1.0 for
-TP≤4, 0.75 for TP=8) into Amdahl's law
-(`S = 1/(1 − s·capture)`, the infinitely-fast-link ceiling) yields the final
-per-scenario verdict:
+The projection to NVLink 4-way bridges is a two-stage Amdahl calculation whose
+reading criteria were **pre-registered in the session plans before the
+measurements ran**, so the verdict could not be fitted to the data. Stage one
+bounds the gain of an infinitely fast link that removes all covered
+communication, `S_ideal = 1/(1 − s·capture)`. Stage two prices a real bridge:
+with PCIe Gen5 x16 at 128 GB/s and the H200 NVL bridge at 900 GB/s
+bidirectional, `S_nvlink = 1/(1 − s·capture·(1 − B_PCIe/B_NVL))`, where
+`1 − 128/900 = 0.858` — the covered communication term is shortened by ~86%,
+not removed. The comms share `s` is measured per scenario (TP4 c=1:
+14.8% = 1.56 ms tax / 10.54 ms step; TP4 c=64: 53.3%; TP8 c=1: 22.5%; TP8
+c=16: 83.9% — trace span shares, subject to the two caveats above). The
+`capture` fraction — how much of the communication a 4-GPU island intercepts —
+follows the ring all-reduce topology: 1.0 for TP≤4 (the whole group fits one
+island), ≈0.75 for TP=8 (6 of 8 ring legs are intra-island):
 
-| Scenario | Verdict | Expected gain | Level |
-|---|---|---|---|
-| Model fits 1–2 GPUs (Qwen-class), any c | **NO-GO** | ≈ 0 | L2 (nop2p null, tax ≈ noise) |
-| Running TP≥4 for a model that fits on fewer | **NO-GO** (config error) | TP8 peak 437 vs TP2 1404 tok/s | L2 |
-| Model requires TP=4, interactive c=1 | **NO-GO** | ≈ 1.15× (comms 14.8% of step) | L2 (tax measured) |
-| Model requires TP=4, **batched** | **conditional GO** | **~2.1×** (s=0.533, capture 1.0) | L2 |
-| Kimi-class TP=8, interactive c=1 | **NO-GO** | ≤ 1.2–1.3× | L2 (trace) |
-| Kimi-class TP=8, **batched** | **GO** | **~2.7×** (s=0.839 @c16, capture 0.75; ceiling 6.2×) | L2 |
+| Scenario | Verdict | `S_ideal` (ceiling) | `S_nvlink` (realistic) | Evidence level |
+|---|---|---:|---:|---|
+| Model fits 1–2 GPUs (Qwen-class), any c | **NO-GO** | 1.00× | 1.00× | L2 causal (nop2p null, tax ≈ noise) |
+| Running TP≥4 for a model that fits on fewer | **NO-GO** (config error, not hardware) | — | — | L2 (throughput: TP8 ramp peak 437 vs TP2 1404 tok/s) |
+| Model requires TP=4, interactive c=1 | **NO-GO** | 1.17× | 1.15× | L2 (tax measured; placement dose realized ≈ 0 at c=1) |
+| Model requires TP=4, **batched** | **GO** | 2.14× | **1.84×** | L2 (trace + converging efficiency calc) |
+| Kimi-class TP=8, interactive c=1 | **NO-GO** | 1.20× (1.29× at capture 1) | ≤ 1.17× | L2 (trace) |
+| Kimi-class TP=8, **batched** | **GO** | 2.70× (6.2× at capture 1) | **2.18×** | L2 (trace) + counters for c≥8 |
 
-The verdict: buy NVLink 4-way bridges only for batched/throughput serving of
-models that genuinely require TP≥4; do not buy for interactive latency or for
-anything fitting on 1–2 GPUs. The decision is thus about the workload roadmap,
-not the hardware; T9 delivers only the performance half of the cost-benefit
-(price and logistics are a company-side input). Free software levers should be
-exhausted first: the reproducible Kimi c=16 scheduler pathology (ITL 512 ms,
-reproduced 525 ms; ~4× recoverable at c=32) and the MTP orchestration share of
-the floor. A standalone decision note
+The config-error row is the only one measured by throughput rather than comms
+share: the TP8 concurrency-ramp peak (437 tok/s at c=16) reaches 31% of the
+TP2 optimum (1404 tok/s), so the cure is configuration, not hardware. Three
+qualifications bound the remaining projections. First, the strongest row's
+s=0.839 was traced inside the reproducible c=16 scheduler pathology (ITL
+512 ms, reproduced at 525 ms; c=32 is ~4× better on the same hardware) and is
+explicitly not representative of every high-concurrency operating point — the
+c=32 share is extrapolated from identical counter signatures (RX ceiling,
+SMACT), not traced. Second, the peer-wait and prefill-dilution trace caveats
+push in opposite directions: interactive projections are optimistic upper
+bounds, batched projections conservative in the pure-decode share. Third, the
+TP=4-batched GO is conditional on TP4-class models actually entering the
+serving roadmap (a W2 question).
+
+The verdict: buy NVLink 4-way bridges only if the node's mission is
+batched/throughput serving of models that genuinely require TP≥4 — realistic
+projected gain ≈1.8–2.2× (`S_nvlink`), against ideal-link ceilings of
+2.1–2.7× — and do not buy for interactive latency or for anything fitting on
+1–2 GPUs. The decision is thus about the workload roadmap, not the hardware;
+T9 delivers only the performance half of the cost-benefit (price and logistics
+are a company-side input), and the free software levers — the c=16 scheduler
+pathology and the MTP orchestration share of the per-step floor (40%) — must
+be exhausted before attributing the batched pain to the link. The standalone
+decision note
 ([w1/nvlink-4way-notatka-decyzyjna.md](w1/nvlink-4way-notatka-decyzyjna.md))
-records the same analysis in Polish, distinguishing `S_ideal` (infinitely fast
-link) from `S_nvlink` (finite 900 vs 128 GB/s bandwidth).
+records the full two-stage calculation in Polish; this section reproduces its
+`S_ideal`/`S_nvlink` columns and its measured `s`/`capture` inputs verbatim.
 
 **Status.** COMPLETE, measurements closed 2026-06-12 (#50). HBM-bandwidth-bound
 is refuted; the two-bottleneck attribution (host floor at c=1, PCIe transport at
@@ -710,10 +752,17 @@ serving performance.
   reading rather than a clean one-lever test.
 - **T9 residuals.** The Kimi c=16 comms share (s=0.839) sits inside an
   acknowledged scheduler pathology and the c=32 share is extrapolated from
-  counter signatures, not directly traced; NCCL ring-vs-tree selection was not
-  logged (`NCCL_DEBUG=INFO` off), so the all-reduce round-count model is a stated
-  assumption; and `r_NVL4 ≈ 20–30 µs` is a labeled (unmeasured) assumption after
-  cloud NVLink rental was rejected.
+  counter signatures, not directly traced. NCCL ring-vs-tree selection was not
+  logged (`NCCL_DEBUG=INFO` off), so the round-count model — 61 decoder layers
+  × ~2 TP reduction points ≈ 122 synchronous rounds per step — and the ~14 KiB
+  c=1 hidden-state payload are config/literature-derived estimates, not counted
+  NCCL operations. The per-round NVLink-island cost `r_NVL4 ≈ 20–30 µs` is a
+  labeled, unmeasured assumption (cloud NVLink rental was considered and
+  rejected 2026-06-10); it is a *per-all-reduce-round* figure, distinct from the
+  public single-hop P2P latencies the decision note cites (NVLink 2–9 µs vs
+  PCIe ~20 µs), and the decision note's `S_nvlink` projection uses the 128/900
+  bandwidth ratio instead, so the verdict does not depend on `r_NVL4`'s exact
+  value.
 
 ---
 
@@ -736,10 +785,11 @@ calibrated NVLink 4-way verdict.
 The results imply the following for the roadmap:
 
 - **NVLink 4-way bridges** are worth buying only for batched/throughput serving
-  of TP≥4 models (expected 2–3× serving throughput, ceiling ~6×), and not for
-  interactive latency or 1–2-GPU models — but free software levers (the c=16
-  scheduler pathology, MTP orchestration share of the per-step floor, and a
-  newer vLLM step-loop) should be exhausted first (#50).
+  of TP≥4 models — realistically ≈1.8–2.2× serving throughput for a 900 GB/s
+  bridge (`S_nvlink`), with ideal-link ceilings of 2.1–2.7× and an absolute
+  ceiling of ~6.2× — and not for interactive latency or 1–2-GPU models; free
+  software levers (the c=16 scheduler pathology, MTP orchestration share of the
+  per-step floor, and a newer vLLM step-loop) should be exhausted first (#50).
 - **Proxy productionization** (per-user keys via PostgreSQL, structured logging)
   and the full R1–R8 overhead program under concurrency remain open (#39, #44).
 - **DeepSeek under a real generation workload** and **speculation under
