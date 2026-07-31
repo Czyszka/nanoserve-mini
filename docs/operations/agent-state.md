@@ -323,10 +323,26 @@ status, not a task list. Update when work moves.
   `wait_http_health`, `kimi_bench_c`, …) is written out inline rather than referenced,
   after the 06-11 session died on a variable that never got pasted across.
   Pre-registered predictions table is in §1 — do not edit it after the run.
-  Known confound recorded: bridges
-  also unblock vLLM custom all-reduce (was disabled by *"not supported on more
-  than two PCIe-only GPUs"*), so today's gain is a bundled dose; the
-  `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` separation is deferred. After the session:
+  **Custom all-reduce clarified (2026-07-31):** it is *not* disabled by a compose
+  flag — `serving/` has no `--disable-custom-all-reduce` and the engine config
+  logs `disable_custom_all_reduce=False`. vLLM auto-disables it at runtime
+  (`custom_all_reduce.py:153`, 8× worker in `kimi_log_eagle3_on.txt:67`) purely
+  because the topology was PCIe-only, so bridges should re-enable it with no
+  config change. **Refined the same day:** the check is `is_full_nvlink` — a **full
+  mesh** over the TP group, verified per GPU pair. With 4+4 bridges, TP=4 inside an
+  island is a full mesh (warning should clear) but **TP=8 is not** (GPU0↔GPU4 has
+  no link), so Kimi is expected to keep the warning even when the bridges work
+  perfectly. The gate is therefore the **pair** Qwen-TP4 vs Kimi-TP8:
+  clears/persists = healthy 4+4; persists/persists = vLLM never saw the bridges.
+  This makes the Qwen engine start non-cuttable, and it means Kimi TP8 likely never
+  gets the custom-AR kernel on this topology — all its gain must come from NCCL
+  using NVLink on intra-island segments, so the ~2,7× estimate is an upper bound.
+  Companion prediction: the FlashInfer multicast WARNING must **remain**, since
+  vLLM names "NVLink bridge-only" as a non-multicast topology — which also makes
+  `NCCL_NVLS_ENABLE=1` in the Qwen compose a probably-dead setting. Gain measured
+  today is therefore a bundled dose (link + re-enabled custom AR); separating it
+  needs an explicit `--disable-custom-all-reduce` run with bridges in (CLI flag,
+  not an env var — the earlier note said otherwise). After the session:
   `infrastructure.md` §2.2 still claims *"Interconnect GPU↔GPU: wyłącznie PCIe"*
   and must be rewritten with the real `topo -m` matrix.
 - **#48 — speculative decoding methodology:** new research issue tracking a

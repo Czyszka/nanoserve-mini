@@ -73,7 +73,7 @@ Jeśli TP4+NVLink dobije do ~1400, TP4 przestaje być karą.
 
 | pomiar | baseline PCIe (K1, 06-11) | predykcja #50 | falsyfikacja |
 |---|---:|---|---|
-| c=32, out tok/s | **285** | **~770** (share 0,839 × capture 0,75 ⇒ 2,7×) | < 400 → `capture 0,75` zawyżony |
+| c=32, out tok/s | **285** | **~770** (share 0,839 × capture 0,75 ⇒ 2,7×) — traktuj jako **górne** oszacowanie, patrz niżej | < 400 → `capture 0,75` zawyżony |
 | c=32, ITL med | **127 ms** | **~47 ms** | > 100 ms → jw. |
 | c=1, TPOT med | **8,7 ms** | **≥ 6,7 ms** (≤1,3×, gaps 63%) | < 5 ms → teza „floor-bound przy c=1" upada |
 | c=16, ITL med | **512 ms** (anomalia) | **anomalia zostaje** | zniknie → anomalia była transportowa, nie schedulerowa |
@@ -82,12 +82,55 @@ Jeśli TP4+NVLink dobije do ~1400, TP4 przestaje być karą.
 Ostatni wiersz jest niezależnym sygnałem z liczników dcgmi — nie wymaga wiary w
 log NCCL ani w benchmark.
 
-**Uwaga o czystości dawki:** włożenie mostków zmienia dwie rzeczy naraz —
-(a) klasę linku, (b) **kwalifikowalność custom all-reduce w vLLM**, wyłączanego
-na PCIe komunikatem *„not supported on more than two PCIe-only GPUs"*
-(`kimi_log_eagle3_on.txt:67`). Dzisiejszy zysk to zysk **pakietu**. Rozdzielenie
-wymaga osobnej dawki (`VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
-mostkach) — poza tym slotem, zanotowane w wątkach otwartych.
+### Warstwa vLLM — co ma się zmienić w logu silnika
+
+Custom all-reduce **nie jest wyłączony flagą w compose** — engine config raportuje
+`disable_custom_all_reduce=False`. vLLM **sam** go dezaktywuje w runtime, bo nie
+spełniony jest warunek topologiczny. To znaczy, że włożenie mostków powinno go
+odblokować bez żadnej zmiany konfiguracji.
+
+**Uwaga kluczowa: `custom_all_reduce` wymaga PEŁNEJ SIATKI NVLink w grupie TP.**
+vLLM nie pyta „czy jest jakiś NVLink", tylko sprawdza **każdą parę ranków** (NVML
+P2P per para, `is_full_nvlink`). Przy mostkach 4+4:
+
+- **TP=4 w jednej wyspie (Qwen, GPU 0-3)** — wszystkie 6 par ma link ⇒ pełna
+  siatka ⇒ **warning znika**.
+- **TP=8 przez dwie wyspy (Kimi)** — pary typu GPU0↔GPU4 linku nie mają ⇒ siatka
+  niepełna ⇒ **warning zostaje**, mimo że mostki działają poprawnie.
+
+| linia w logu | PCIe (06-08) | Qwen TP4 intra | Kimi TP8 (4+4) |
+|---|---|---|---|
+| `custom_all_reduce.py:153` *„not supported on more than two PCIe-only GPUs"* | obecna | **znika** | **zostaje** (siatka niepełna) |
+| `flashinfer_all_reduce.py:65` *„does not support multicasting … **NVLink bridge-only** or PCIe"* | obecna | zostaje | zostaje |
+| `allreduce_rms_fusion.py:801` *„fusion will be disabled"* | obecna | zostaje | zostaje |
+
+Drugi wiersz: vLLM **wprost wymienia „NVLink bridge-only"** jako topologię bez
+multicastu. Multicast daje NVSwitch, nie mostki — ścieżka FlashInfer/NVLS nie
+wróci ani przy TP4, ani przy TP8.
+
+**To daje darmowy rozstrzygacz, o ile Cz. 4 poleci przed Cz. 5:**
+
+| Qwen TP4 | Kimi TP8 | wniosek |
+|---|---|---|
+| warning znika | warning zostaje | **mostki działają**; TP=8 nie dostaje custom AR z powodu topologii 4+4 — zgodnie z oczekiwaniem |
+| warning zostaje | warning zostaje | **vLLM nie widzi mostków w ogóle** — awaria, wróć do Cz. 1 |
+| warning znika | warning znika | niespodzianka — vLLM traktuje TP8 jako pełną siatkę; zanotuj, bo przeczy powyższemu modelowi |
+
+Bez wyniku z Qwena warning u Kimi jest **nierozstrzygalny** — dlatego Cz. 4 nie
+jest tu tylko „ładniejsza metodologicznie".
+
+**Konsekwencja dla predykcji Kimi:** jeśli TP=8 nigdy nie dostanie kernela custom
+all-reduce przy topologii 4+4, to cały zysk musi pochodzić z tego, że **NCCL**
+używa NVLinka na odcinkach wewnątrz wysp. Szacunek 2,7× był liczony bez tego
+rozróżnienia, więc należy go traktować jako **optymistyczny**. Zejście na TP=4 w
+jednej wyspie nie jest dla Kimi opcją — T9 ustalił, że model się na 4 GPU nie
+mieści.
+
+**Uwaga o czystości dawki:** mostki zmieniają dwie rzeczy naraz — (a) klasę linku,
+(b) odblokowanie custom all-reduce. Dzisiejszy zysk to zysk **pakietu**.
+Rozdzielenie wymaga osobnej dawki: jawne `--disable-custom-all-reduce` w komendzie
+silnika **przy włożonych mostkach** (to flaga CLI, nie zmienna środowiskowa) —
+poza tym slotem, zanotowane w wątkach otwartych.
 
 ---
 
@@ -106,15 +149,17 @@ mostkach) — poza tym slotem, zanotowane w wątkach otwartych.
 | | **razem** | **112** |
 
 **Kolejność cięcia przy poślizgu:**
-Cz. 5 c=16 → Cz. 4 c=1 → Cz. 3 (wyspa 0-3) → Cz. 2 (pary dalsze) → Cz. 4 całe.
+Cz. 5 c=16 → Cz. 4 c=1 → Cz. 3 (wyspa 0-3) → Cz. 2 (pary dalsze) → Cz. 4 c=64.
 
-**Nietykalne:** Cz. 0, Cz. 1, Cz. 3 (kontrola 2+2), **Cz. 5 c=32**, Cz. 6.
+**Nietykalne:** Cz. 0, Cz. 1, Cz. 3 (kontrola 2+2), **start Qwena TP4 z odczytem
+logu** (rozstrzygacz custom all-reduce, §1), **Cz. 5 c=32**, Cz. 6.
 
-Uzasadnienie: Cz. 5 c=32 to jedyny pomiar realnego scenariusza produkcyjnego i
-jedyny, który dotyka ruchu międzywyspowego pod obciążeniem. Cz. 4 jest ładniejsza
-metodologicznie, ale jeśli ma paść jedno z dwóch — pada Qwen. **Cz. 6 nigdy nie
-tnij:** restore stacku i tak trzeba zrobić, a liczniki błędów bez odczytu po
-obciążeniu są bezwartościowe.
+Uzasadnienie: Cz. 5 c=32 to jedyny pomiar realnego scenariusza produkcyjnego.
+Cz. 4 można okroić do samego startu silnika + `grep` po logu (~7 min) — **ale nie
+skasować całkowicie**, bo bez niej warning o custom all-reduce u Kimi jest
+nierozstrzygalny (nie wiadomo, czy to normalna konsekwencja topologii 4+4, czy
+awaria montażu). **Cz. 6 nigdy nie tnij:** restore stacku i tak trzeba zrobić, a
+liczniki błędów bez odczytu po obciążeniu są bezwartościowe.
 
 ---
 
@@ -172,6 +217,9 @@ nvidia-smi -q -d NVLINK   > "$NOUT/nvlink_query_full.txt" 2>&1
 # TOPOLOGIA — pojedynczy najważniejszy artefakt sesji
 nvidia-smi topo -m        | tee "$NOUT/topo_m.txt"
 nvidia-smi topo -p2p rw   > "$NOUT/topo_p2p_rw.txt" 2>&1
+# macierz NVLink per para — to jest dokładnie to, co czyta vLLM w is_full_nvlink;
+# jeśli flaga 'n' nie jest wspierana, ta sama informacja jest w topo -m
+nvidia-smi topo -p2p n    > "$NOUT/topo_p2p_nvlink.txt" 2>&1
 
 # migawka liczników błędów PRZED obciążeniem (delta > reset — nie zależy od
 # tego, czy ta wersja nvidia-smi w ogóle wspiera reset liczników)
@@ -384,6 +432,18 @@ wait_http_health () {  # $1=url $2=próby $3=sekundy przerwy
   return 1
 }
 
+ensure_dataset () {   # dataset SWE do kontenera + WERYFIKACJA
+  # /tmp jest lokalne dla INSTANCJI kontenera: każdy --force-recreate je czyści.
+  # Wywołuj PO każdym starcie silnika, tuż przed benchem. `docker cp` zamiast
+  # `docker compose cp` — celuje w container_name `vllm`, bez zgadywania projektu.
+  docker cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl \
+    || { echo "STOP: docker cp nie zadziałał — sprawdź, czy kontener 'vllm' stoi"; return 1; }
+  n=$(docker exec vllm sh -c 'wc -l < /tmp/swe_bench_vllm.jsonl' 2>/dev/null | tr -d ' ')
+  echo "dataset w kontenerze: ${n:-BRAK} linii"
+  { [ -n "$n" ] && [ "$n" -gt 100 ]; } \
+    || { echo "STOP: dataset nie dotarł do kontenera — NIE benchuj, wynik byłby pusty"; return 1; }
+}
+
 show_bench () {  # $1 = katalog z JSON-ami benchu
   python3 - "$1" <<'PYEOF'
 import glob, json, sys
@@ -447,7 +507,7 @@ grep '^CUDA_VISIBLE_DEVICES=0,1,2,3$' "$QOUT/engine_env_tp4.txt" \
   || echo "ZŁY PLACEMENT — porównanie z baseline 06-11 nieważne"
 
 # KROK 3 — prereqs w świeżym kontenerze (pip i /tmp nie przeżywają recreate)
-docker compose -f "$QWEN_COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
+ensure_dataset || echo "PRZERWIJ — bez datasetu bench c=64 nie ma sensu"
 docker compose -f "$QWEN_COMPOSE" exec vllm bash -c \
   'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' \
   || echo "PREREQS FAILED — nie leć dalej"
@@ -479,8 +539,14 @@ mkdir -p "$QOUT/bench_tp4"
 docker compose -f "$QWEN_COMPOSE" cp vllm:/tmp/qbench/. "$QOUT/bench_tp4/"
 docker logs vllm > "$QOUT/log_qwen_tp4.txt" 2>&1
 nvidia-smi > "$QOUT/nvidia_smi_tp4.txt"
-grep -iE "custom all.?reduce|PCIe-only|NVLink|nvls" "$QOUT/log_qwen_tp4.txt" \
-  | head -20 | tee "$QOUT/vllm_allreduce_lines.txt"
+# ── ROZSTRZYGACZ dla całej sesji: TP=4 w wyspie to PEŁNA siatka NVLink,
+#    więc TU warning o custom all-reduce ma zniknąć. Bez tego odczytu ten sam
+#    warning u Kimi (Cz. 5) jest nierozstrzygalny — patrz §1, „Warstwa vLLM".
+grep -iE "custom all.?reduce|PCIe-only|multicast|NVSwitch|NVLink|nvls|flashinfer_all_reduce|allreduce_rms" \
+  "$QOUT/log_qwen_tp4.txt" | tee "$QOUT/vllm_allreduce_lines.txt" | head -30
+CAR_Q=$(grep -c "not supported on more than two PCIe-only GPUs" "$QOUT/vllm_allreduce_lines.txt")
+echo "Qwen TP4 custom_all_reduce WARNING: $CAR_Q  (0 = mostki widziane przez vLLM)" \
+  | tee "$QOUT/allreduce_gate.txt"
 
 show_bench "$QOUT/bench_tp4"
 ```
@@ -522,18 +588,34 @@ grep -o 'speculative-config' "$KOUT/engine_cmd_kimi.json" || echo "UWAGA: Kimi b
 docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$KOUT/verify_kimi.txt"
 grep -q "tensor_parallel_size=8" "$KOUT/verify_kimi.txt" || echo "TP MISMATCH — PRZERWIJ"
 
-# darmowy dowód z silnika: czy vLLM odblokował custom all-reduce po NVLinku
-docker logs vllm 2>&1 | grep -iE "custom all.?reduce|PCIe-only|NVLink|nvls" \
-  | head -20 | tee "$KOUT/vllm_allreduce_lines.txt"
+# ── BRAMKA vLLM: czy silnik w ogóle zobaczył mostki ────────────────────
+# Na PCIe (06-08) log Kimi miał 8× WARNING z custom_all_reduce.py:153.
+# Nie jest to nasza flaga — compose nie ustawia --disable-custom-all-reduce,
+# a engine config raportuje disable_custom_all_reduce=False. vLLM wyłączał to
+# SAM, bo topologia była PCIe-only. Po NVLinku warunek przestaje obowiązywać.
+docker logs vllm 2>&1 | grep -iE "custom all.?reduce|PCIe-only|multicast|NVSwitch|NVLink|nvls|flashinfer_all_reduce|allreduce_rms" \
+  | tee "$KOUT/vllm_allreduce_lines.txt" | head -30
 
-# prereqs benchu
-docker compose -f "$COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
+CAR_K=$(grep -c "not supported on more than two PCIe-only GPUs" "$KOUT/vllm_allreduce_lines.txt")
+FIR_K=$(grep -c "does not support multicasting" "$KOUT/vllm_allreduce_lines.txt")
+CAR_Q=$(grep -c "not supported on more than two PCIe-only GPUs" "$QOUT/vllm_allreduce_lines.txt" 2>/dev/null || echo BRAK)
+{ echo "Kimi TP8  custom_all_reduce WARNING: $CAR_K   flashinfer multicast: $FIR_K"
+  echo "Qwen TP4  custom_all_reduce WARNING: $CAR_Q   (rozstrzygacz z Cz. 4)"
+} | tee "$KOUT/allreduce_gate.txt"
+# TP=8 na mostkach 4+4 NIE jest pelna siatka NVLink, wiec warning u Kimi jest
+# OCZEKIWANY. Rozstrzyga dopiero zestawienie z Qwenem TP4 (pelna siatka w wyspie).
+
+# prereqs benchu — kontener Kimi jest ŚWIEŻY po --force-recreate, więc kopia
+# datasetu zrobiona w Cz. 4 (kontener Qwena) przepadła. Trzeba wgrać ponownie.
+ensure_dataset || echo "PRZERWIJ — bez datasetu benche Kimi nie ruszą"
 docker compose -f "$COMPOSE" exec vllm bash -c \
   'rm -rf /tmp/kbench; mkdir -p /tmp/kbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' \
   || echo "PREREQS FAILED — nie leć dalej"
 
 kimi_bench_c () {   # $1=concurrency  $2=num_prompts  $3=sufit okna dcgmi (s)
   c="$1"; np="$2"; tag="kimi_c${c}"
+  docker exec vllm test -s /tmp/swe_bench_vllm.jsonl \
+    || { echo "BRAK /tmp/swe_bench_vllm.jsonl — uruchom ensure_dataset"; return 1; }
   start_sample_window "$tag" "$3"
   docker compose -f "$COMPOSE" exec vllm bash -c '
     export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
@@ -567,7 +649,20 @@ poślizgu tracisz c=16, nie kluczowy pomiar.
 ale `output_throughput` **nie** — mniejszy udział steady-state względem rampy.
 Do sprawdzenia anomalii porównuj ITL, nie throughput.
 
-**Odczyt:**
+**Odczyt — najpierw bramka vLLM, potem liczby.** `allreduce_gate.txt` czytaj
+**zanim** zinterpretujesz cokolwiek innego, i czytaj go **parą** Qwen+Kimi
+(pełna tabela decyzyjna w §1, „Warstwa vLLM"):
+
+| Qwen TP4 | Kimi TP8 | co to znaczy dla Cz. 5 |
+|---|---|---|
+| znika | zostaje | **norma dla 4+4.** Mostki działają; TP=8 nie dostaje kernela custom AR, bo siatka niepełna. Liczby są o NVLinku przez NCCL — czytaj dalej |
+| zostaje | zostaje | **awaria** — vLLM nie widzi mostków. Wyniki Cz. 5 nie są o NVLinku, wróć do Cz. 1 |
+| znika | znika | vLLM uznał TP8 za pełną siatkę wbrew modelowi — zanotuj, zysk może być wyższy niż predykcja |
+
+Sam warning u Kimi **nie jest** dowodem awarii — przy 4+4 jest oczekiwany.
+Warning FlashInfera o multicaście ma zostać w obu przypadkach.
+
+Dopiero potem liczby:
 
 - **c=32 ~770 tok/s** → predykcja 2,7× trafiona, `capture 0,75` się broni, zakup
   uzasadniony w scenariuszu, dla którego był robiony.
@@ -672,14 +767,19 @@ Negatywny wynik też commituj — „mostki włożone, topologia się nie zmieni
 
 ## Wątki otwarte po tej sesji (nie dziś)
 
-- **Rozdzielenie dawki:** `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
-  mostkach — ile z zysku to link, a ile odblokowany custom all-reduce.
+- **Rozdzielenie dawki:** jawne `--disable-custom-all-reduce` w komendzie silnika
+  **przy włożonych mostkach** — ile z zysku to sam link, a ile kernel custom
+  all-reduce, który vLLM na PCIe wyłączał automatycznie. Jedna dawka, jeden bench
+  c=32, ~20 min. Bez tego zysk z Cz. 5 jest wielkością pakietową.
 - **Trace Kimi TP8 @c=32 po NVLinku** — udział NCCL powinien spaść z 83,9%; to
   domknęłoby rachunek `share × capture` od strony mechanizmu, a nie tylko wyniku.
   Wymaga `--profiler-config` (w vLLM v0.20 `VLLM_TORCH_PROFILER_DIR` już nie działa).
 - **Kimi c=32 vs c=16** — jeśli anomalia przeżyła NVLink, warto ją wreszcie
   zdiagnozować od strony schedulera (`max-num-seqs` vs `max-concurrency`).
-- **Czy `NCCL_NVLS_ENABLE=1`** (już w compose Qwena) cokolwiek zmienia bez NVSwitcha.
+- **`NCCL_NVLS_ENABLE=1` w compose Qwena — prawie na pewno martwy zapis.** NVLS
+  (NVLink SHARP) opiera się na multicaście, a log vLLM z 06-08 mówi wprost, że
+  „NVLink bridge-only" go nie ma. Do sprawdzenia przy okazji i ewentualnego
+  usunięcia z compose, żeby nie sugerował działającej funkcji.
 
 ---
 
