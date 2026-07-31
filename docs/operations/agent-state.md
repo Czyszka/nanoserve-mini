@@ -323,10 +323,19 @@ status, not a task list. Update when work moves.
   `wait_http_health`, `kimi_bench_c`, …) is written out inline rather than referenced,
   after the 06-11 session died on a variable that never got pasted across.
   Pre-registered predictions table is in §1 — do not edit it after the run.
-  Known confound recorded: bridges
-  also unblock vLLM custom all-reduce (was disabled by *"not supported on more
-  than two PCIe-only GPUs"*), so today's gain is a bundled dose; the
-  `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` separation is deferred. After the session:
+  **Custom all-reduce clarified (2026-07-31):** it is *not* disabled by a compose
+  flag — `serving/` has no `--disable-custom-all-reduce` and the engine config
+  logs `disable_custom_all_reduce=False`. vLLM auto-disables it at runtime
+  (`custom_all_reduce.py:153`, 8× worker in `kimi_log_eagle3_on.txt:67`) purely
+  because the topology was PCIe-only, so bridges should re-enable it with no
+  config change. That WARNING disappearing is now a **gate** in Cz. 5 — if it
+  persists, vLLM never saw the bridges and the Kimi numbers are not about NVLink.
+  Companion prediction: the FlashInfer multicast WARNING must **remain**, since
+  vLLM names "NVLink bridge-only" as a non-multicast topology — which also makes
+  `NCCL_NVLS_ENABLE=1` in the Qwen compose a probably-dead setting. Gain measured
+  today is therefore a bundled dose (link + re-enabled custom AR); separating it
+  needs an explicit `--disable-custom-all-reduce` run with bridges in (CLI flag,
+  not an env var — the earlier note said otherwise). After the session:
   `infrastructure.md` §2.2 still claims *"Interconnect GPU↔GPU: wyłącznie PCIe"*
   and must be rewritten with the real `topo -m` matrix.
 - **#48 — speculative decoding methodology:** new research issue tracking a

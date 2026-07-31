@@ -82,12 +82,30 @@ Jeśli TP4+NVLink dobije do ~1400, TP4 przestaje być karą.
 Ostatni wiersz jest niezależnym sygnałem z liczników dcgmi — nie wymaga wiary w
 log NCCL ani w benchmark.
 
-**Uwaga o czystości dawki:** włożenie mostków zmienia dwie rzeczy naraz —
-(a) klasę linku, (b) **kwalifikowalność custom all-reduce w vLLM**, wyłączanego
-na PCIe komunikatem *„not supported on more than two PCIe-only GPUs"*
-(`kimi_log_eagle3_on.txt:67`). Dzisiejszy zysk to zysk **pakietu**. Rozdzielenie
-wymaga osobnej dawki (`VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
-mostkach) — poza tym slotem, zanotowane w wątkach otwartych.
+### Warstwa vLLM — co ma się zmienić w logu silnika
+
+Custom all-reduce **nie jest wyłączony flagą w compose** — engine config raportuje
+`disable_custom_all_reduce=False`. vLLM **sam** go dezaktywuje w runtime, bo nie
+spełniony jest warunek topologiczny. To znaczy, że włożenie mostków powinno go
+odblokować bez żadnej zmiany konfiguracji.
+
+| linia w logu | stan na PCIe (06-08) | predykcja po NVLink |
+|---|---|---|
+| `custom_all_reduce.py:153` *„disabled … not supported on more than two PCIe-only GPUs"* | obecna (8× worker) | **znika** |
+| `flashinfer_all_reduce.py:65` *„Device does not support multicasting … expected on GPUs without NVSwitch (e.g. **NVLink bridge-only** or PCIe topologies)"* | obecna | **zostaje** |
+| `allreduce_rms_fusion.py:801` *„Flashinfer allreduce-norm fusion will be disabled"* | obecna | **zostaje** (skutek powyższej) |
+
+Drugi wiersz jest tu cenny, bo vLLM **wprost wymienia „NVLink bridge-only"** jako
+topologię bez multicastu. Multicast daje NVSwitch, nie mostki — więc ścieżka
+FlashInfer/NVLS nie wróci i nie ma co jej wyglądać. **Jeśli po instalacji zostaną
+obie linie — vLLM w ogóle nie widzi mostków** i żaden wynik z Cz. 4/5 nie jest o
+NVLinku.
+
+**Uwaga o czystości dawki:** mostki zmieniają dwie rzeczy naraz — (a) klasę linku,
+(b) odblokowanie custom all-reduce. Dzisiejszy zysk to zysk **pakietu**.
+Rozdzielenie wymaga osobnej dawki: jawne `--disable-custom-all-reduce` w komendzie
+silnika **przy włożonych mostkach** (to flaga CLI, nie zmienna środowiskowa) —
+poza tym slotem, zanotowane w wątkach otwartych.
 
 ---
 
@@ -522,9 +540,21 @@ grep -o 'speculative-config' "$KOUT/engine_cmd_kimi.json" || echo "UWAGA: Kimi b
 docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$KOUT/verify_kimi.txt"
 grep -q "tensor_parallel_size=8" "$KOUT/verify_kimi.txt" || echo "TP MISMATCH — PRZERWIJ"
 
-# darmowy dowód z silnika: czy vLLM odblokował custom all-reduce po NVLinku
-docker logs vllm 2>&1 | grep -iE "custom all.?reduce|PCIe-only|NVLink|nvls" \
-  | head -20 | tee "$KOUT/vllm_allreduce_lines.txt"
+# ── BRAMKA vLLM: czy silnik w ogóle zobaczył mostki ────────────────────
+# Na PCIe (06-08) log Kimi miał 8× WARNING z custom_all_reduce.py:153.
+# Nie jest to nasza flaga — compose nie ustawia --disable-custom-all-reduce,
+# a engine config raportuje disable_custom_all_reduce=False. vLLM wyłączał to
+# SAM, bo topologia była PCIe-only. Po NVLinku warunek przestaje obowiązywać.
+docker logs vllm 2>&1 | grep -iE "custom all.?reduce|PCIe-only|multicast|NVSwitch|NVLink|nvls|flashinfer_all_reduce|allreduce_rms" \
+  | tee "$KOUT/vllm_allreduce_lines.txt" | head -30
+
+CAR=$(grep -c "not supported on more than two PCIe-only GPUs" "$KOUT/vllm_allreduce_lines.txt")
+FIR=$(grep -c "does not support multicasting" "$KOUT/vllm_allreduce_lines.txt")
+echo "custom_all_reduce WARNING: $CAR   flashinfer multicast WARNING: $FIR" \
+  | tee "$KOUT/allreduce_gate.txt"
+[ "$CAR" -eq 0 ] && echo "OK: custom all-reduce ODBLOKOWANY (mostki widziane przez vLLM)" \
+                 || echo "ALARM: vLLM DALEJ widzi topologię jako PCIe-only — wyniki Cz.5 nie sa o NVLinku"
+[ "$FIR" -gt 0 ] && echo "OK (oczekiwane): FlashInfer/NVLS dalej off — mostki nie daja multicastu"
 
 # prereqs benchu
 docker compose -f "$COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
@@ -567,7 +597,19 @@ poślizgu tracisz c=16, nie kluczowy pomiar.
 ale `output_throughput` **nie** — mniejszy udział steady-state względem rampy.
 Do sprawdzenia anomalii porównuj ITL, nie throughput.
 
-**Odczyt:**
+**Odczyt — najpierw bramka vLLM, potem liczby.** `allreduce_gate.txt` czytaj
+**zanim** zinterpretujesz cokolwiek innego:
+
+| custom_all_reduce WARNING | co to znaczy |
+|---|---|
+| **0 wystąpień** | vLLM widzi mostki, custom all-reduce wrócił — dalsze liczby są o NVLinku |
+| **8 wystąpień (jak na PCIe)** | vLLM dalej klasyfikuje topologię jako PCIe-only. **Wyniki Cz. 5 nie są o NVLinku** — wróć do Cz. 1 i sprawdź, czy TP=8 w ogóle ma jak korzystać z wysp |
+
+Warning FlashInfera o multicaście ma **zostać** — mostki go nie dają (vLLM sam
+wymienia „NVLink bridge-only" jako topologię bez multicastu). Jego obecność nie
+jest problemem; jego **zniknięcie** byłoby zaskoczeniem wartym zanotowania.
+
+Dopiero potem liczby:
 
 - **c=32 ~770 tok/s** → predykcja 2,7× trafiona, `capture 0,75` się broni, zakup
   uzasadniony w scenariuszu, dla którego był robiony.
@@ -672,14 +714,19 @@ Negatywny wynik też commituj — „mostki włożone, topologia się nie zmieni
 
 ## Wątki otwarte po tej sesji (nie dziś)
 
-- **Rozdzielenie dawki:** `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
-  mostkach — ile z zysku to link, a ile odblokowany custom all-reduce.
+- **Rozdzielenie dawki:** jawne `--disable-custom-all-reduce` w komendzie silnika
+  **przy włożonych mostkach** — ile z zysku to sam link, a ile kernel custom
+  all-reduce, który vLLM na PCIe wyłączał automatycznie. Jedna dawka, jeden bench
+  c=32, ~20 min. Bez tego zysk z Cz. 5 jest wielkością pakietową.
 - **Trace Kimi TP8 @c=32 po NVLinku** — udział NCCL powinien spaść z 83,9%; to
   domknęłoby rachunek `share × capture` od strony mechanizmu, a nie tylko wyniku.
   Wymaga `--profiler-config` (w vLLM v0.20 `VLLM_TORCH_PROFILER_DIR` już nie działa).
 - **Kimi c=32 vs c=16** — jeśli anomalia przeżyła NVLink, warto ją wreszcie
   zdiagnozować od strony schedulera (`max-num-seqs` vs `max-concurrency`).
-- **Czy `NCCL_NVLS_ENABLE=1`** (już w compose Qwena) cokolwiek zmienia bez NVSwitcha.
+- **`NCCL_NVLS_ENABLE=1` w compose Qwena — prawie na pewno martwy zapis.** NVLS
+  (NVLink SHARP) opiera się na multicaście, a log vLLM z 06-08 mówi wprost, że
+  „NVLink bridge-only" go nie ma. Do sprawdzenia przy okazji i ewentualnego
+  usunięcia z compose, żeby nie sugerował działającej funkcji.
 
 ---
 
