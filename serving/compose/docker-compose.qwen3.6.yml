@@ -30,7 +30,7 @@ services:
               count: all
               capabilities: [gpu]
     command:
-      --model Qwen/Qwen3.6-35B-A3B --served-model-name=${QWEN_SERVED_MODEL_NAME:-Qwen3.6} --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size ${QWEN_TP:-8} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --speculative-config='{"method":"mtp","num_speculative_tokens":${QWEN_NUM_SPECULATIVE_TOKENS:-3},"max_model_len":${QWEN_SPEC_MAX_MODEL_LEN:-8192}}' --mm-encoder-tp-mode data --max-model-len ${QWEN_MAX_MODEL_LEN:-65536} --max-num-seqs ${QWEN_MAX_NUM_SEQS:-32} --max-num-batched-tokens ${QWEN_MAX_NUM_BATCHED_TOKENS:-8192} --gpu-memory-utilization ${QWEN_GPU_MEM_UTIL:-0.9}
+      --model Qwen/Qwen3.6-35B-A3B --served-model-name=${QWEN_SERVED_MODEL_NAME:-Qwen3.6} --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size ${QWEN_TP:-8} --enable-auto-tool-choice --tool-call-parser qwen3_coder --reasoning-parser qwen3 --speculative-config='{"method":"mtp","num_speculative_tokens":${QWEN_NUM_SPECULATIVE_TOKENS:-3},"max_model_len":${QWEN_SPEC_MAX_MODEL_LEN:-8192}}' --mm-encoder-tp-mode data --max-model-len ${QWEN_MAX_MODEL_LEN:-65536} --max-num-seqs ${QWEN_MAX_NUM_SEQS:-32} --max-num-batched-tokens ${QWEN_MAX_NUM_BATCHED_TOKENS:-8192} --gpu-memory-utilization ${QWEN_GPU_MEM_UTIL:-0.9} ${QWEN_EXTRA_ARGS:-}
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
