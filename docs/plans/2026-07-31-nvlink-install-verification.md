@@ -71,11 +71,15 @@ slotem**, ale zanotuj jako otwarty wątek.
 | Cz. 5 | liczniki błędów po obciążeniu + restore + commit | 15 |
 | | **razem** | **85** |
 
-**Kolejność cięcia przy poślizgu:** Cz. 3 → Cz. 4 (c=1) → Cz. 2 (pary dalsze).
-Nietykalne: **Cz. 0, Cz. 1, Cz. 4 (c=64), Cz. 5**.
+**Kolejność cięcia przy poślizgu:** Cz. 3 (wyspa 0-3) → Cz. 4 (c=1) → Cz. 2
+(pary dalsze). Nietykalne: **Cz. 0, Cz. 1, Cz. 3 (kontrola 2+2), Cz. 4 (c=64),
+Cz. 5**.
 
-Uzasadnienie cięcia Cz. 3 jako pierwszej: Cz. 4 i tak zostawia w logu vLLM ślad,
-jakiego transportu użył NCCL — dowód ścieżki jest wtedy wtórny, choć słabszy.
+Uzasadnienie: benchmark z Cz. 4 i tak zostawia w logu vLLM ślad, jakiego
+transportu użył NCCL w wyspie, więc pomiar busbw wewnątrz wyspy jest wtórny.
+Kontrola **2+2 przez wyspy** jest odwrotnie — nic innego jej nie zastępuje, bo
+Cz. 4 w ogóle nie dotyka ruchu międzywyspowego, a to on decyduje o predykcji dla
+Kimi TP8 (patrz Cz. 4, ograniczenie 3).
 
 ---
 
@@ -270,12 +274,52 @@ było w czerwcu. Rozstrzyga (a) etykieta `NVL` w grafie, (b) liczba `busbw`:
 sufit PCIe zmierzony w czerwcu to ~7,2–7,9 GB/s transportu, więc **busbw > 100
 GB/s jest dowodem nie do podważenia**, nawet gdyby log był niejednoznaczny.
 
-Opcjonalnie, jeśli zostaje minuta — ten sam przebieg na `CUDA_VISIBLE_DEVICES=0,1,4,5`
-(2+2 przez wyspy) jako kontrola: busbw powinien spaść do poziomu PCIe.
+**Kontrola 2+2 przez wyspy** — ten sam przebieg na `CUDA_VISIBLE_DEVICES=0,1,4,5`
+(artefakt `nccl_allreduce_cross.txt`). To nie jest ozdobnik: 2 z 4 odcinków ringu
+idą wtedy po PCIe, czyli w miniaturze odtwarza sytuację Kimi TP8. **busbw na
+poziomie PCIe (~7 GB/s) ⇒ NCCL zbudował płaski ring i najwolniejszy segment kasuje
+zysk z pozostałych — wtedy `capture 0,75` dla TP8 jest złym modelem.** Wyraźnie
+wyżej ⇒ kolektyw hierarchiczny i predykcja 2,7× ma podstawy. Najtańsza istniejąca
+przesłanka w tej sprawie: 3 minuty.
 
 ---
 
 ## Cz. 4 — punkt kontrolny predykcji #50: Qwen TP4 w jednej wyspie (25 min)
+
+### Dlaczego Qwen — i czego ten pomiar NIE mówi
+
+Qwen TP4 jest tu **przyrządem pomiarowym, nie scenariuszem produkcyjnym**.
+
+Za: (a) jedyne miejsce z **pre-rejestrowaną predykcją i baseline 1:1** — ten sam
+compose, workload i zestaw GPU co 06-11; (b) predykcja 2,1× została wyprowadzona
+**z trace'u tego właśnie configu** (Q4, NCCL 53,3%), więc inny model wprowadziłby
+konfundę; (c) TP4 na GPU 0-3 leży **w całości w jednej wyspie** — wszystkie sześć
+par po NVLinku, zero segmentów mieszanych, najczystszy możliwy test; (d) start
+~5 min, podczas gdy Kimi TP8 to >10 min na sam capture cudagraphów.
+
+Ograniczenia, które trzeba zapisać razem z wynikiem:
+
+1. **Qwen 35B-A3B mieści się na 1-2 GPU.** Werdykt #50 klasyfikuje TP≥4 dla
+   takiego modelu jako *błąd konfiguracji* (wiersz NO-GO). Mierzymy konfigurację,
+   której nikt by nie serwował — po to, żeby zwalidować model, nie żeby ją zalecić.
+2. **3B aktywnych parametrów + `--enable-expert-parallel`.** Mało obliczeń na token
+   względem komunikacji, a EP dokłada all-to-all ponad all-reduce TP. Udział comms
+   jest tu z natury wysoki, więc zmierzony zysk to raczej **górne oszacowanie** dla
+   modelu gęstego.
+3. **Ten pomiar nie waliduje `capture ≈ 0,75` dla TP=8** — a to najsłabszy element
+   uzasadnienia zakupu. TP8 przechodzi między wyspami po PCIe, i w ringu all-reduce
+   przepustowość ogranicza **najwolniejszy segment**. Model „6 z 8 odcinków po
+   NVLinku ⇒ 0,75" zakłada, że NCCL zbuduje kolektyw **hierarchiczny** (redukcja
+   w wyspie po NVLinku, potem cross-island), a nie płaski ring. NCCL zwykle tak
+   robi, ale zależy to od jego detekcji topologii. **Wymaga osobnego pomiaru na
+   Kimi TP8** (wątki otwarte). Jeśli w Cz. 3 zrobisz kontrolę 2+2 na
+   `CUDA_VISIBLE_DEVICES=0,1,4,5`, będzie to pierwsza wskazówka — busbw na
+   poziomie PCIe oznacza ring, wyraźnie wyższy oznacza hierarchię.
+4. **`max-num-seqs 32` przy `--max-concurrency 64`** — silnik i tak trzyma ≤32
+   requestów w locie. Baseline 06-11 miał to samo, więc porównanie jest ważne, ale
+   „c=64" to etykieta workloadu, nie realna głębokość batcha.
+
+### Przebieg
 
 Wklej z `docs/plans/2026-06-10-bottleneck-followup-session.md`: `sample_window`,
 `wait_http_health`, `start_sample_window`, `stop_sample_window` (Cz. 0) oraz
@@ -413,8 +457,13 @@ Negatywny wynik też commituj — „mostki włożone, topologia się nie zmieni
 
 - Rozdzielenie dawki: `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
   mostkach — ile z zysku to link, a ile odblokowany custom AR.
-- Kimi TP8 batched (predykcja ~2,7×, capture 0,75) — wymaga dłuższego slotu,
-  bo TP8 to load + capture cudagraphów > 10 min.
+- **Kimi TP8 batched (predykcja ~2,7×, capture 0,75) — priorytet nr 1 na następny
+  slot.** To jedyny scenariusz, który realnie uzasadniał zakup, i jedyny, w którym
+  ruch przechodzi między wyspami. Otwarte pytanie mechaniczne: czy NCCL składa
+  kolektyw hierarchicznie (redukcja w wyspie po NVLinku → cross-island po PCIe),
+  czy płaski ring, w którym najwolniejszy segment kasuje zysk z pozostałych sześciu.
+  Od tego zależy, czy `capture 0,75` jest w ogóle właściwym modelem. Wymaga
+  dłuższego slotu — TP8 to load + capture cudagraphów > 10 min.
 - Anomalia Kimi c=16: czy NVLink ją usuwa, czy zostaje (jeśli zostaje —
   potwierdza diagnozę „patologia software'owa").
 - Czy `NCCL_NVLS_ENABLE=1` (już w compose Qwena) cokolwiek zmienia bez NVSwitcha.
