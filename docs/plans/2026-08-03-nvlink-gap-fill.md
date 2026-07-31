@@ -85,8 +85,8 @@ warningu FlashInfera, ale usunięcie teraz psuje porównywalność). Sprzątanie
 | Cz. 2 | **Qwen TP4 + `--disable-custom-all-reduce`**: c64 + c1 | 30 |
 | Cz. 3 | Qwen TP2 NVLink c64 (opcja) | 20 |
 | Cz. 4 | Kimi restore + c16@192 (+ c32@384 warunkowo — liczniki NVL) | 35 |
-| Cz. 5 | błędy AFTER, restore stacku, snapshoty końcowe, commit | 10 |
-| | **razem** | **110** |
+| Cz. 5 | błędy AFTER, restore stacku, snapshoty, digesty obs (#49), commit | 12 |
+| | **razem** | **112** |
 
 **Kolejność cięcia:** Cz. 4 c32-rerun → Cz. 3 → Cz. 2 c1 → Cz. 1 `topo -p2p n`.
 **Nietykalne:** Cz. 0, **Cz. 2 c64** (główny cel sesji), Cz. 4 restore + c16@192, Cz. 5.
@@ -400,9 +400,14 @@ show_bench "$KOUT/bench"
 vs K1. Jeśli c32 rerun poszedł: średnie NVL TX/RX z `kimi_c32_dcgmi.txt` to
 pierwszy **bezpośredni** licznik ruchu NVLink w projekcie.
 
+**Piggyback #34 (opcjonalnie, zero skryptu):** benche c16/c32 to dokładnie ten
+concurrent load, którego brakowało panelom queue/latency/KV. Jeśli stack
+obserwability stoi i masz Grafanę w przeglądarce — zrób screenshot dashboardu
+vLLM **w trakcie** biegu c32; domyka pozycję „screenshot pod obciążeniem" z #34.
+
 ---
 
-## Cz. 5 — błędy AFTER, restore stacku, commit (10 min)
+## Cz. 5 — błędy AFTER, restore stacku, commit (12 min)
 
 ```bash
 nvidia-smi nvlink -e > "$NOUT/nvlink_errors_after.txt" 2>&1
@@ -419,6 +424,14 @@ curl -fsS http://127.0.0.1:8000/health && echo "kimi OK"
 docker compose -f "$COMPOSE" ps | tee "$RUN_DIR/session/restore_ps.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_end.txt"
 git rev-parse HEAD > "$RUN_DIR/session/end_commit.txt"
+
+# piggyback #49 (czysty odczyt, ~2 min): digesty obrazów obserwability —
+# bez nich nie da się przypiąć wersji (Grafana/Prometheus/renderer są na
+# floating tagach). Pinning sam w sobie to praca laptopowa, PO sesji.
+docker images --digests | grep -iE "grafana|prom" \
+  > "$RUN_DIR/session/obs_image_digests.txt" 2>&1 || true
+docker compose -f serving/compose/docker-compose.observability.yml ps \
+  > "$RUN_DIR/session/obs_stack_ps.txt" 2>&1 || true
 
 git status
 du -sh "$RUN_DIR"
@@ -452,6 +465,13 @@ git push -u origin main
   domyka rachunek `share × capture` od strony mechanizmu. Osobna sesja.
 - **Anomalia c16** — jeśli wróci przy 192 promptach: diagnoza od strony
   `max-num-seqs` vs `max-concurrency`.
+- **dcgm-exporter (#34, HIGH VALUE)** — świadomie NIE w tym slocie: laptop-prep
+  nie istnieje (brak serwisu w observability compose), a nieprzetestowany
+  kontener wdrażany przy restore psułby czystość sesji; do tego exporter
+  watchuje te same pola `PROF_*`, co okna `dcgmi dmon`. Kolejność: prep na
+  laptopie (compose + scrape job + wiersz dashboardu) → deploy w osobnym touchu.
+- **NCCL_ALGO sweep + nsys** — odłożone do W2 (plan 06-10).
+- **#44 T8 proxy overhead (R1–R8)** — własny program pomiarowy, osobna sesja.
 
 ---
 
