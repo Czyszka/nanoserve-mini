@@ -1,0 +1,14 @@
+{
+  "8MiB": {
+    "algbw_GBps": 16.5,
+    "busbw_GBps": 24.8
+  },
+  "64MiB": {
+    "algbw_GBps": 20.9,
+    "busbw_GBps": 31.3
+  },
+  "512MiB": {
+    "algbw_GBps": 20.2,
+    "busbw_GBps": 30.4
+  }
+}

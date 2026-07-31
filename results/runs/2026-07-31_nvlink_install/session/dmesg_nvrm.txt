@@ -1,0 +1,2 @@
+[   32.943212] nvidia-nvlink: Nvlink Core is being initialized, major device number 508
+[   33.108493] NVRM: loading NVIDIA UNIX x86_64 Kernel Module  595.58.03  Tue Mar 17 19:54:55 UTC 2026

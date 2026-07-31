@@ -1,0 +1,6 @@
+GPU0->GPU1  peer=True    132.8 GB/s
+GPU0->GPU2  peer=True    132.8 GB/s
+GPU0->GPU3  peer=True    132.7 GB/s
+GPU4->GPU5  peer=True    132.7 GB/s
+GPU0->GPU4  peer=True     29.1 GB/s
+GPU3->GPU4  peer=True     29.1 GB/s
