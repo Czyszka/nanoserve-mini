@@ -432,6 +432,18 @@ wait_http_health () {  # $1=url $2=próby $3=sekundy przerwy
   return 1
 }
 
+ensure_dataset () {   # dataset SWE do kontenera + WERYFIKACJA
+  # /tmp jest lokalne dla INSTANCJI kontenera: każdy --force-recreate je czyści.
+  # Wywołuj PO każdym starcie silnika, tuż przed benchem. `docker cp` zamiast
+  # `docker compose cp` — celuje w container_name `vllm`, bez zgadywania projektu.
+  docker cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl \
+    || { echo "STOP: docker cp nie zadziałał — sprawdź, czy kontener 'vllm' stoi"; return 1; }
+  n=$(docker exec vllm sh -c 'wc -l < /tmp/swe_bench_vllm.jsonl' 2>/dev/null | tr -d ' ')
+  echo "dataset w kontenerze: ${n:-BRAK} linii"
+  { [ -n "$n" ] && [ "$n" -gt 100 ]; } \
+    || { echo "STOP: dataset nie dotarł do kontenera — NIE benchuj, wynik byłby pusty"; return 1; }
+}
+
 show_bench () {  # $1 = katalog z JSON-ami benchu
   python3 - "$1" <<'PYEOF'
 import glob, json, sys
@@ -495,7 +507,7 @@ grep '^CUDA_VISIBLE_DEVICES=0,1,2,3$' "$QOUT/engine_env_tp4.txt" \
   || echo "ZŁY PLACEMENT — porównanie z baseline 06-11 nieważne"
 
 # KROK 3 — prereqs w świeżym kontenerze (pip i /tmp nie przeżywają recreate)
-docker compose -f "$QWEN_COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
+ensure_dataset || echo "PRZERWIJ — bez datasetu bench c=64 nie ma sensu"
 docker compose -f "$QWEN_COMPOSE" exec vllm bash -c \
   'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' \
   || echo "PREREQS FAILED — nie leć dalej"
@@ -593,14 +605,17 @@ CAR_Q=$(grep -c "not supported on more than two PCIe-only GPUs" "$QOUT/vllm_allr
 # TP=8 na mostkach 4+4 NIE jest pelna siatka NVLink, wiec warning u Kimi jest
 # OCZEKIWANY. Rozstrzyga dopiero zestawienie z Qwenem TP4 (pelna siatka w wyspie).
 
-# prereqs benchu
-docker compose -f "$COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
+# prereqs benchu — kontener Kimi jest ŚWIEŻY po --force-recreate, więc kopia
+# datasetu zrobiona w Cz. 4 (kontener Qwena) przepadła. Trzeba wgrać ponownie.
+ensure_dataset || echo "PRZERWIJ — bez datasetu benche Kimi nie ruszą"
 docker compose -f "$COMPOSE" exec vllm bash -c \
   'rm -rf /tmp/kbench; mkdir -p /tmp/kbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' \
   || echo "PREREQS FAILED — nie leć dalej"
 
 kimi_bench_c () {   # $1=concurrency  $2=num_prompts  $3=sufit okna dcgmi (s)
   c="$1"; np="$2"; tag="kimi_c${c}"
+  docker exec vllm test -s /tmp/swe_bench_vllm.jsonl \
+    || { echo "BRAK /tmp/swe_bench_vllm.jsonl — uruchom ensure_dataset"; return 1; }
   start_sample_window "$tag" "$3"
   docker compose -f "$COMPOSE" exec vllm bash -c '
     export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
