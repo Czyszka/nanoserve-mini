@@ -306,6 +306,21 @@ status, not a task list. Update when work moves.
   table, follow-up item 5) and the article's gaps list. `infrastructure.md`
   gained the full connection diagram (CPU0/1 ↔ UPI, 4 PCIe switches, GPU
   pairs, link-class examples mapped to expected `topo -m` labels).
+- **NVLink 4-way ZAINSTALOWANY (2026-07-31):** user physically installed 4-way
+  bridges as **two islands (GPU 0-3, GPU 4-7)**. This flips the #50 decision from
+  prediction to verification — the boundary verdict's estimates
+  (`results/summaries/2026-06-11-nvlink-boundary-verdict.md`) are now falsifiable
+  against a measured post-intervention run. Session plan:
+  `docs/plans/2026-07-31-nvlink-install-verification.md` (short slot ~90 min:
+  health/Xid → `topo -m` gate → P2P bandwidth with cross-island control → NCCL
+  busbw → **Qwen TP4 intra-island c=1+c=64 vs the 06-11 PCIe baseline 680 tok/s /
+  53,7 ms ITL, predicted ~1430 tok/s**). Pre-registered predictions table is in
+  §1 of the plan — do not edit it after the run. Known confound recorded: bridges
+  also unblock vLLM custom all-reduce (was disabled by *"not supported on more
+  than two PCIe-only GPUs"*), so today's gain is a bundled dose; the
+  `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` separation is deferred. After the session:
+  `infrastructure.md` §2.2 still claims *"Interconnect GPU↔GPU: wyłącznie PCIe"*
+  and must be rewritten with the real `topo -m` matrix.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -569,6 +584,13 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-07-31 (laptop) - server session plan: NVLink 4-way install verification
+
+- Why: user installed 4-way NVLink bridges (islands 0-3 / 4-7) and asked for a same-day server plan; the #50 verdict was built entirely on PCIe-era predictions, so the install is an opportunity to validate the model, not just the hardware.
+- Did: added `docs/plans/2026-07-31-nvlink-install-verification.md` — pre-registered prediction table (P2P >100 GB/s in-island, NCCL busbw >100 GB/s vs the 7,2-7,9 GB/s PCIe transport ceiling, Qwen TP4 c64 680 -> ~1430 tok/s, c1 unchanged because floor-bound), 5 parts sized to ~90 min with an explicit cut order, `topo -m` as the hard gate, a cross-island control pair inside the P2P measurement, torch/NCCL run from the vLLM image instead of building `cuda-samples`, error-counter delta bracketing real load, and the custom-all-reduce confound recorded up front. Reuses `run_qwen_tp` from the 06-10 plan so the c=64 comparison stays 1:1 with the 06-11 baseline.
+- Validation: `git diff --check` OK (docs-only; no `.py` touched).
+- Next: run the session; then rewrite `infrastructure.md` §2.2 (still says PCIe-only), comment predicted-vs-measured on #50, add a "measurement after intervention" section to T9.
 
 ### 2026-06-14 (laptop) - NVLink decision note finalized (Polish redaction + source audit)
 
