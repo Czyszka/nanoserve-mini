@@ -311,11 +311,19 @@ status, not a task list. Update when work moves.
   prediction to verification — the boundary verdict's estimates
   (`results/summaries/2026-06-11-nvlink-boundary-verdict.md`) are now falsifiable
   against a measured post-intervention run. Session plan:
-  `docs/plans/2026-07-31-nvlink-install-verification.md` (short slot ~90 min:
-  baseline snapshot → `topo -m` gate → P2P bandwidth with cross-island control → NCCL
-  busbw → **Qwen TP4 intra-island c=1+c=64 vs the 06-11 PCIe baseline 680 tok/s /
-  53,7 ms ITL, predicted ~1430 tok/s**). Pre-registered predictions table is in
-  §1 of the plan — do not edit it after the run. Known confound recorded: bridges
+  `docs/plans/2026-07-31-nvlink-install-verification.md` (~112 min: baseline
+  snapshot → `topo -m` gate → P2P bandwidth with cross-island control → NCCL busbw
+  in-island **plus a 2+2 cross-island control that decides ring-vs-hierarchical and
+  therefore whether `capture 0,75` is the right model at all** → **Qwen TP4
+  intra-island** (mechanism test, baseline 680 tok/s → predicted ~1430) → **Kimi
+  TP8** (production case, baseline c32 285 tok/s → predicted ~770; the engine start
+  doubles as the mandatory restore, so only the benches are marginal cost).
+  DeepSeek rejected as a test vehicle: `--max-num-seqs 2` makes a batched run
+  impossible. Plan is deliberately **self-contained** — every helper (`sample_window`,
+  `wait_http_health`, `kimi_bench_c`, …) is written out inline rather than referenced,
+  after the 06-11 session died on a variable that never got pasted across.
+  Pre-registered predictions table is in §1 — do not edit it after the run.
+  Known confound recorded: bridges
   also unblock vLLM custom all-reduce (was disabled by *"not supported on more
   than two PCIe-only GPUs"*), so today's gain is a bundled dose; the
   `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` separation is deferred. After the session:
@@ -588,7 +596,8 @@ Newest entry first.
 ### 2026-07-31 (laptop) - server session plan: NVLink 4-way install verification
 
 - Why: user installed 4-way NVLink bridges (islands 0-3 / 4-7) and asked for a same-day server plan; the #50 verdict was built entirely on PCIe-era predictions, so the install is an opportunity to validate the model, not just the hardware.
-- Did: added `docs/plans/2026-07-31-nvlink-install-verification.md` — pre-registered prediction table (P2P >100 GB/s in-island, NCCL busbw >100 GB/s vs the 7,2-7,9 GB/s PCIe transport ceiling, Qwen TP4 c64 680 -> ~1430 tok/s, c1 unchanged because floor-bound), 5 parts sized to ~90 min with an explicit cut order, `topo -m` as the hard gate, a cross-island control pair inside the P2P measurement, torch/NCCL run from the vLLM image instead of building `cuda-samples`, error-counter delta bracketing real load, and the custom-all-reduce confound recorded up front. Reuses `run_qwen_tp` from the 06-10 plan so the c=64 comparison stays 1:1 with the 06-11 baseline.
+- Did: added `docs/plans/2026-07-31-nvlink-install-verification.md` — pre-registered prediction table (P2P >100 GB/s in-island, NCCL busbw >100 GB/s vs the 7,2-7,9 GB/s PCIe transport ceiling, Qwen TP4 c64 680 -> ~1430 tok/s, Kimi TP8 c32 285 -> ~770 tok/s, both c=1 rows unchanged because floor-bound, Kimi c16 anomaly predicted to survive, PCIe RX predicted to drop), 7 parts sized to ~112 min with an explicit cut order, `topo -m` as the hard gate, a cross-island control pair inside the P2P measurement, a 2+2 NCCL control that tests ring-vs-hierarchical before Kimi runs, torch/NCCL run from the vLLM image instead of building `cuda-samples`, DCGM NVLINK_TX/RX fields probed with a fallback, error-counter delta bracketing real load, and the custom-all-reduce confound recorded up front.
+- Note: the plan is written **self-contained on purpose** — all helpers inlined, no "paste from the 06-10 plan", since the 06-11 session was lost to exactly that failure mode. Kimi's engine start is scheduled as the session restore, so the production-case benchmark costs only bench time.
 - Validation: `git diff --check` OK (docs-only; no `.py` touched).
 - Next: run the session; then rewrite `infrastructure.md` §2.2 (still says PCIe-only), comment predicted-vs-measured on #50, add a "measurement after intervention" section to T9.
 

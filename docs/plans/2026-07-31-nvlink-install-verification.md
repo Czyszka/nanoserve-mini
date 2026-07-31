@@ -2,12 +2,17 @@
 
 **Status:** draft → aktywny w dniu sesji
 **Maszyna:** ubuntusrv2 (8×H200 NVL)
-**Slot:** krótki, 1–2 h. Restarty silników dozwolone.
+**Slot:** ~2 h. Restarty silników dozwolone.
 **Konfiguracja sprzętowa (deklarowana):** mostki **4-way, dwie wyspy** —
 GPU 0-1-2-3 oraz GPU 4-5-6-7.
 **Kontekst:** issue #50, werdykt `results/summaries/2026-06-11-nvlink-boundary-verdict.md`,
 wątek `docs/writeups/w1/t9-bottleneck-nvlink.md`, notatka decyzyjna
 `docs/writeups/w1/nvlink-4way-notatka-decyzyjna.md`.
+
+> **Plan jest samowystarczalny.** Wszystkie funkcje pomocnicze i komendy są
+> wypisane w całości — nic nie trzeba doklejać z poprzednich planów. Sesja
+> 2026-06-11 przepadła właśnie na tym (compose bez interpolacji `${QWEN_TP}`,
+> `export QWEN_TP` po cichu zignorowany, benche z błędnym TP).
 
 ---
 
@@ -21,41 +26,68 @@ Dwa cele, w tej kolejności:
 2. **Czy werdykt #50 się potwierdza.** Cała decyzja zakupowa stała na
    **predykcjach z modelu** `gain = 1/(1 − share × capture)`, wyliczonych na
    PCIe. Teraz mostki są w środku, więc predykcje są **falsyfikowalne**. To
-   rzadka okazja: pre-rejestrowana predykcja + pomiar po interwencji. Jeśli
-   dziś nie zmierzymy TP=4, zostanie tylko „kupiliśmy i chyba jest szybciej".
+   rzadka okazja: pre-rejestrowana predykcja + pomiar po interwencji.
 
-Cel 2 kosztuje ~25 min i używa gotowego `run_qwen_tp` z poprzednich sesji.
-Nie odpuszczaj go, jeśli Cz. 1 przejdzie.
+Mierzymy **dwa modele**, bo odpowiadają na różne pytania:
+
+- **Qwen TP4 w jednej wyspie** — czysty test mechanizmu (wszystkie pary po
+  NVLinku, zero segmentów mieszanych), tam gdzie powstała predykcja 2,1×.
+- **Kimi TP8 przez dwie wyspy** — realny scenariusz produkcyjny i jedyny, który
+  uzasadniał zakup (predykcja 2,7× przy `capture 0,75`). Start silnika Kimi jest
+  **i tak wymagany** jako restore na koniec sesji, więc koszt krańcowy tego testu
+  to same benche.
+
+DeepSeek-V4-Flash odpada: `--max-num-seqs 2` w compose oznacza, że nie ma jak
+zrobić testu batched, a jego baseline'y z 06-05 są sekwencyjne (c=1), czyli w
+strefie, gdzie werdykt przewiduje zysk ≈ 0.
 
 ---
 
 ## 1. Predykcje pre-rejestrowane (wpisane PRZED sesją — nie zmieniaj po fakcie)
 
-Baseline PCIe pochodzi z `results/runs/2026-06-11_nvlink_boundary/` (Q3 intra,
-GPU 0-3) i `results/summaries/2026-06-11-qwen-tp-curve.md`.
+Baseline pochodzi z `results/runs/2026-06-11_nvlink_boundary/` (Q3 intra + K1)
+oraz `results/summaries/2026-06-11-qwen-tp-curve.md`.
+
+### Warstwa sprzętowa
+
+| pomiar | baseline PCIe | predykcja | falsyfikacja |
+|---|---:|---|---|
+| P2P uni GPU0↔GPU1 (ta sama wyspa) | ~25–50 GB/s | **> 100 GB/s** | < 60 GB/s → mostek nie działa lub siedzi krzywo |
+| P2P uni GPU0↔GPU4 (**kontrola**, cross-island) | PCIe/UPI | **bez zmian** | wzrost → mapa wysp jest zła |
+| NCCL busbw, 4 ranki w wyspie (0-3) | sufit ~7,2–7,9 GB/s | **> 100 GB/s** | < 30 GB/s → NCCL nie wybrał NVLinka |
+| NCCL busbw, 2+2 przez wyspy (0,1,4,5) | — | **rozstrzyga ring vs hierarchia** | ~7 GB/s → płaski ring, `capture 0,75` to zły model |
+
+### Qwen TP4, jedna wyspa (GPU 0-3) — test mechanizmu
 
 | pomiar | baseline PCIe (06-11) | predykcja #50 | falsyfikacja |
 |---|---:|---|---|
-| P2P uni GPU0↔GPU1 (ta sama wyspa) | ~25–50 GB/s (PCIe sw.) | **> 100 GB/s** | < 60 GB/s → mostek nie działa lub siedzi krzywo |
-| P2P uni GPU0↔GPU4 (**kontrola**, cross-island) | PCIe/UPI | **bez zmian** | wzrost → moja mapa wysp jest zła |
-| NCCL all_reduce busbw, 4 ranki 0-3 | sufit ~7,2–7,9 GB/s (transport) | **> 100 GB/s** | < 30 GB/s → NCCL nie wybrał NVLinka |
-| Qwen TP4 intra c=64, out tok/s | **680** | **~1430** (share 0,533 × capture 1,0 ⇒ 2,1×) | < 850 tok/s → model share×capture zawyżony |
-| Qwen TP4 intra c=64, ITL med | **53,7 ms** | **~26 ms** | > 45 ms → jw. |
-| Qwen TP4 intra c=1, ITL med | **10,54 ms** | **9–10,5 ms** (podłoga rządzi) | < 8 ms → teza „c=1 floor-bound" upada |
-| Qwen TP4 intra c=1, TPOT med | **4,00 ms** | **≥ 3,4 ms** | jw. |
+| c=64, out tok/s | **680** | **~1430** (share 0,533 × capture 1,0 ⇒ 2,1×) | < 850 → model zawyżony |
+| c=64, ITL med | **53,7 ms** | **~26 ms** | > 45 ms → jw. |
+| c=1, ITL med | **10,54 ms** | **9–10,5 ms** (podłoga rządzi) | < 8 ms → teza „c=1 floor-bound" upada |
+| c=1, TPOT med | **4,00 ms** | **≥ 3,4 ms** | jw. |
 
 Punkt odniesienia dla decyzji serwowania: **TP2 na PCIe dawał 1404 tok/s @c64.**
-Jeśli TP4+NVLink dobije do ~1400, TP4 przestaje być karą — to jest realna
-konsekwencja operacyjna, nie ciekawostka.
+Jeśli TP4+NVLink dobije do ~1400, TP4 przestaje być karą.
 
-**Uwaga o czystości dawki (zapisz w notatkach, nie ignoruj):** włożenie mostków
-zmienia jednocześnie dwie rzeczy — (a) klasę linku, (b) **kwalifikowalność
-custom all-reduce w vLLM**, który na PCIe był wyłączany komunikatem *„not
-supported on more than two PCIe-only GPUs"* (`kimi_log_eagle3_on.txt:67`). Zysk
-zmierzony dziś jest zyskiem **pakietu** „NVLink + odblokowany custom AR", nie
-czystego linku. Rozdzielenie tego wymagałoby osobnej dawki
-(`VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych mostkach) — **poza dzisiejszym
-slotem**, ale zanotuj jako otwarty wątek.
+### Kimi TP8, dwie wyspy — scenariusz produkcyjny
+
+| pomiar | baseline PCIe (K1, 06-11) | predykcja #50 | falsyfikacja |
+|---|---:|---|---|
+| c=32, out tok/s | **285** | **~770** (share 0,839 × capture 0,75 ⇒ 2,7×) | < 400 → `capture 0,75` zawyżony |
+| c=32, ITL med | **127 ms** | **~47 ms** | > 100 ms → jw. |
+| c=1, TPOT med | **8,7 ms** | **≥ 6,7 ms** (≤1,3×, gaps 63%) | < 5 ms → teza „floor-bound przy c=1" upada |
+| c=16, ITL med | **512 ms** (anomalia) | **anomalia zostaje** | zniknie → anomalia była transportowa, nie schedulerowa |
+| PCIe RX @c≥8 | **sufit 7,2–7,9 GB/s** | **wyraźny spadek** (ruch na NVLink) | brak spadku → NCCL nie używa mostków w TP8 |
+
+Ostatni wiersz jest niezależnym sygnałem z liczników dcgmi — nie wymaga wiary w
+log NCCL ani w benchmark.
+
+**Uwaga o czystości dawki:** włożenie mostków zmienia dwie rzeczy naraz —
+(a) klasę linku, (b) **kwalifikowalność custom all-reduce w vLLM**, wyłączanego
+na PCIe komunikatem *„not supported on more than two PCIe-only GPUs"*
+(`kimi_log_eagle3_on.txt:67`). Dzisiejszy zysk to zysk **pakietu**. Rozdzielenie
+wymaga osobnej dawki (`VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
+mostkach) — poza tym slotem, zanotowane w wątkach otwartych.
 
 ---
 
@@ -66,39 +98,44 @@ slotem**, ale zanotuj jako otwarty wątek.
 | Cz. 0 | stan wyjściowy + zwolnienie GPU | 5 |
 | Cz. 1 | **BRAMKA:** czy sterownik widzi linki + topologia | 10 |
 | Cz. 2 | surowa przepustowość P2P (z kontrolą cross-island) | 15 |
-| Cz. 3 | dowód ścieżki NCCL (all_reduce busbw) | 15 |
-| Cz. 4 | **punkt kontrolny predykcji:** Qwen TP4 intra c=1 + c=64 | 25 |
-| Cz. 5 | liczniki błędów po obciążeniu + restore + commit | 15 |
-| | **razem** | **85** |
+| Cz. 3 | NCCL busbw: wyspa + **kontrola 2+2** | 15 |
+| Cz. H | wklejenie funkcji pomocniczych | 2 |
+| Cz. 4 | Qwen TP4 intra c=1 + c=64 (test mechanizmu) | 25 |
+| Cz. 5 | Kimi TP8 c=1/16/32 (= restore + bench) | 30 |
+| Cz. 6 | liczniki błędów, domknięcie stacku, commit | 10 |
+| | **razem** | **112** |
 
-**Kolejność cięcia przy poślizgu:** Cz. 3 (wyspa 0-3) → Cz. 4 (c=1) → Cz. 2
-(pary dalsze). Nietykalne: **Cz. 0, Cz. 1, Cz. 3 (kontrola 2+2), Cz. 4 (c=64),
-Cz. 5**.
+**Kolejność cięcia przy poślizgu:**
+Cz. 5 c=16 → Cz. 4 c=1 → Cz. 3 (wyspa 0-3) → Cz. 2 (pary dalsze) → Cz. 4 całe.
 
-Uzasadnienie: benchmark z Cz. 4 i tak zostawia w logu vLLM ślad, jakiego
-transportu użył NCCL w wyspie, więc pomiar busbw wewnątrz wyspy jest wtórny.
-Kontrola **2+2 przez wyspy** jest odwrotnie — nic innego jej nie zastępuje, bo
-Cz. 4 w ogóle nie dotyka ruchu międzywyspowego, a to on decyduje o predykcji dla
-Kimi TP8 (patrz Cz. 4, ograniczenie 3).
+**Nietykalne:** Cz. 0, Cz. 1, Cz. 3 (kontrola 2+2), **Cz. 5 c=32**, Cz. 6.
+
+Uzasadnienie: Cz. 5 c=32 to jedyny pomiar realnego scenariusza produkcyjnego i
+jedyny, który dotyka ruchu międzywyspowego pod obciążeniem. Cz. 4 jest ładniejsza
+metodologicznie, ale jeśli ma paść jedno z dwóch — pada Qwen. **Cz. 6 nigdy nie
+tnij:** restore stacku i tak trzeba zrobić, a liczniki błędów bez odczytu po
+obciążeniu są bezwartościowe.
 
 ---
 
 ## Cz. 0 — start i stan wyjściowy (5 min)
-
-Migawka „przed": commit, stan kart, mapowanie numerów GPU na bus-ID (potrzebne,
-gdyby trzeba było wrócić do fizycznych slotów), `dmesg` po zmianie topologii.
 
 ```bash
 cd ~/nanoserve-mini && git pull --ff-only origin main
 # BEZ set -euo pipefail; BEZ exit — sesja interaktywna po SSH
 
 RUN_DIR=results/runs/2026-07-31_nvlink_install
-NOUT="$RUN_DIR/nvlink"; QOUT="$RUN_DIR/qwen"
-mkdir -p "$NOUT" "$QOUT" "$RUN_DIR/session"
+NOUT="$RUN_DIR/nvlink"; QOUT="$RUN_DIR/qwen"; KOUT="$RUN_DIR/kimi"
+COMPOSE="serving/compose/docker-compose.kimi-k2.6.yml"
+QWEN_COMPOSE="serving/compose/docker-compose.qwen3.6.yml"
+IMAGE=vllm/vllm-openai:v0.20.0-cu130-ubuntu2404
+SWE=results/runs/2026-06-05_w1_evidence/benchmarking/swe_bench_vllm.jsonl
+mkdir -p "$NOUT" "$QOUT" "$KOUT" "$RUN_DIR/session"
 set -a; source .env; set +a
 
 git rev-parse HEAD > "$RUN_DIR/session/start_commit.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
+
 # inwentarz z bus-ID — potrzebny do mapowania numerów GPU na fizyczne sloty
 nvidia-smi --query-gpu=index,serial,uuid,pci.bus_id --format=csv \
   | tee "$RUN_DIR/session/gpu_inventory.csv"
@@ -111,11 +148,9 @@ dmesg | grep -i "nvlink\|nvrm" | tail -80 \
 Fabric manager świadomie pominięty: to warstwa dla **NVSwitch** (HGX/DGX), a tu
 są bezpośrednie mostki — nie ma fabric do zainicjalizowania.
 
-**Zwolnij GPU na resztę sesji:**
+**Zwolnij GPU na Cz. 1–4:**
 
 ```bash
-COMPOSE="serving/compose/docker-compose.kimi-k2.6.yml"
-QWEN_COMPOSE="serving/compose/docker-compose.qwen3.6.yml"
 docker compose -f "$COMPOSE" stop vllm vllm-small litellm open-webui
 docker compose -f "$COMPOSE" rm -f vllm 2>/dev/null || true   # kolizja container_name z compose Qwena
 nvidia-smi --query-gpu=index,memory.used --format=csv | tee "$RUN_DIR/session/gpu_free_check.csv"
@@ -147,7 +182,7 @@ nvidia-smi nvlink -e > "$NOUT/nvlink_errors_before.txt" 2>&1
 
 1. **`topo_m.txt`:** każda z **sześciu** par wewnątrz wyspy 0-3 (`0↔1, 0↔2, 0↔3,
    1↔2, 1↔3, 2↔3`) pokazuje `NV<n>`, i analogicznie sześć par w 4-7. Jeżeli
-   `NV` widać tylko dla par sąsiednich (`0↔1`, `2↔3`), to mostek pracuje jak
+   `NV` widać tylko dla par sąsiednich (`0↔1`, `2↔3`), mostek pracuje jak
    **dwa 2-way**, a nie jak 4-way — a wtedy werdykt #50 przewiduje zysk ≈ 0,
    bo TP=2 był przypadkiem NO-GO.
 2. **Pary międzywyspowe (`0↔4` itd.) muszą dalej pokazywać `SYS`.** To nie
@@ -170,11 +205,11 @@ wart commita).
 ## Cz. 2 — surowa przepustowość P2P (15 min)
 
 Świadomie **nie klonujemy `cuda-samples`** — `make` w krótkim slocie to strata
-15 min i zależność od sieci. Kontener vLLM ma torch i NCCL; to wystarcza.
+15 min i zależność od sieci. Obraz vLLM ma torch i NCCL; to wystarcza.
 
 Kluczowy element metodyczny: **para kontrolna `0↔4`** mierzona tym samym
-skryptem, w tym samym przebiegu. Dzięki temu nie porównujemy z zapamiętanymi
-liczbami PCIe z czerwca, tylko mamy kontrolę wewnątrz pomiaru.
+skryptem, w tym samym przebiegu. Nie porównujemy z zapamiętanymi liczbami PCIe
+z czerwca — mamy kontrolę wewnątrz pomiaru.
 
 ```bash
 cat > "$NOUT/p2p_bw.py" <<'PYEOF'
@@ -210,21 +245,20 @@ json.dump(out, open("/out/nvlink/p2p_bw.json", "w"), indent=2)
 PYEOF
 
 docker run --rm --gpus all --ipc=host --entrypoint bash \
-  -v "$PWD/$RUN_DIR:/out" vllm/vllm-openai:v0.20.0-cu130-ubuntu2404 \
+  -v "$PWD/$RUN_DIR:/out" "$IMAGE" \
   -lc 'python3 /out/nvlink/p2p_bw.py' 2>&1 | tee "$NOUT/p2p_bw.txt"
 ```
 
 **Odczyt:** oczekiwany rozjazd to rząd wielkości — pary w wyspie ~130–160 GB/s,
-para kontrolna `0↔4` w okolicach kilkudziesięciu GB/s (PCIe 5.0 x16) lub mniej.
-Jeśli **wszystkie** pary wyglądają podobnie, albo `peer_access=False` w wyspie,
-to nie jest zwycięstwo NVLinka tylko wspólna ścieżka hosta.
+para kontrolna `0↔4` w okolicach kilkudziesięciu GB/s lub mniej. Jeśli
+**wszystkie** pary wyglądają podobnie albo `peer_access=False` w wyspie, to nie
+jest zwycięstwo NVLinka tylko wspólna ścieżka hosta.
 
 ---
 
-## Cz. 3 — dowód ścieżki NCCL (15 min)
+## Cz. 3 — NCCL: busbw w wyspie i kontrola przez wyspy (15 min)
 
 Statusy potrafią kłamać, a vLLM nie robi `copy_` — robi all-reduce przez NCCL.
-To jest test docelowy.
 
 ```bash
 cat > "$NOUT/nccl_ar.py" <<'PYEOF'
@@ -233,6 +267,7 @@ import os, json, torch, torch.distributed as dist
 dist.init_process_group("nccl")
 rank, world = dist.get_rank(), dist.get_world_size()
 torch.cuda.set_device(rank)
+tag = os.environ.get("AR_TAG", "run")
 res = {}
 for mb in (8, 64, 512):
     x = torch.ones(mb << 19, dtype=torch.float16, device="cuda")  # mb MiB
@@ -246,138 +281,322 @@ for mb in (8, 64, 512):
     end.record()
     torch.cuda.synchronize()
     sec = beg.elapsed_time(end) / 1e3 / 20
-    nbytes = x.numel() * 2
-    algbw = nbytes / sec / 1e9
-    res[f"{mb}MiB"] = {"algbw_GBps": round(algbw, 1),
-                       "busbw_GBps": round(algbw * 2 * (world - 1) / world, 1)}
+    algbw = x.numel() * 2 / sec / 1e9
+    busbw = algbw * 2 * (world - 1) / world
+    res[f"{mb}MiB"] = {"algbw_GBps": round(algbw, 1), "busbw_GBps": round(busbw, 1)}
     if rank == 0:
-        print(f"{mb:4d} MiB  algbw {algbw:7.1f}  busbw "
-              f"{algbw * 2 * (world - 1) / world:7.1f} GB/s", flush=True)
+        print(f"{mb:4d} MiB  algbw {algbw:7.1f}  busbw {busbw:7.1f} GB/s", flush=True)
 if rank == 0:
-    json.dump(res, open("/out/nvlink/nccl_allreduce.json", "w"), indent=2)
+    json.dump(res, open(f"/out/nvlink/nccl_allreduce_{tag}.json", "w"), indent=2)
 dist.destroy_process_group()
 PYEOF
 
+# 3a — cztery ranki w JEDNEJ wyspie
 docker run --rm --gpus all --ipc=host --entrypoint bash \
-  -e CUDA_VISIBLE_DEVICES=0,1,2,3 -e NCCL_DEBUG=INFO -e NCCL_DEBUG_SUBSYS=INIT,GRAPH \
-  -v "$PWD/$RUN_DIR:/out" vllm/vllm-openai:v0.20.0-cu130-ubuntu2404 \
+  -e CUDA_VISIBLE_DEVICES=0,1,2,3 -e AR_TAG=island \
+  -e NCCL_DEBUG=INFO -e NCCL_DEBUG_SUBSYS=INIT,GRAPH \
+  -v "$PWD/$RUN_DIR:/out" "$IMAGE" \
   -lc 'torchrun --nproc_per_node=4 /out/nvlink/nccl_ar.py' 2>&1 \
-  | tee "$NOUT/nccl_allreduce_island0.txt"
+  | tee "$NOUT/nccl_allreduce_island.txt"
 
-grep -iE "NVL|nvlink|P2P/|via " "$NOUT/nccl_allreduce_island0.txt" \
-  | head -40 | tee "$NOUT/nccl_path_grep.txt"
+# 3b — KONTROLA 2+2 przez wyspy (nie opcjonalna, patrz odczyt niżej)
+docker run --rm --gpus all --ipc=host --entrypoint bash \
+  -e CUDA_VISIBLE_DEVICES=0,1,4,5 -e AR_TAG=cross \
+  -e NCCL_DEBUG=INFO -e NCCL_DEBUG_SUBSYS=INIT,GRAPH \
+  -v "$PWD/$RUN_DIR:/out" "$IMAGE" \
+  -lc 'torchrun --nproc_per_node=4 /out/nvlink/nccl_ar.py' 2>&1 \
+  | tee "$NOUT/nccl_allreduce_cross.txt"
+
+grep -iE "NVL|nvlink|via |Channel|Trees" "$NOUT/nccl_allreduce_island.txt" \
+  | head -40 | tee "$NOUT/nccl_path_island.txt"
+grep -iE "NVL|nvlink|via |Channel|Trees" "$NOUT/nccl_allreduce_cross.txt" \
+  | head -40 | tee "$NOUT/nccl_path_cross.txt"
 ```
 
-**Odczyt:** w logu `NCCL_DEBUG` szukaj oznaczenia **`NVL`** w opisie kanałów /
-grafu. Uwaga: samo `via P2P` **nie rozstrzyga** — P2P działa też po PCIe i tak
-było w czerwcu. Rozstrzyga (a) etykieta `NVL` w grafie, (b) liczba `busbw`:
-sufit PCIe zmierzony w czerwcu to ~7,2–7,9 GB/s transportu, więc **busbw > 100
-GB/s jest dowodem nie do podważenia**, nawet gdyby log był niejednoznaczny.
+**Odczyt 3a:** w logu szukaj oznaczenia **`NVL`** w opisie grafu. Samo `via P2P`
+**nie rozstrzyga** — P2P działa też po PCIe i tak było w czerwcu. Rozstrzyga
+(a) etykieta `NVL`, (b) liczba: sufit PCIe zmierzony w czerwcu to ~7,2–7,9 GB/s,
+więc **busbw > 100 GB/s jest dowodem nie do podważenia**, nawet przy
+niejednoznacznym logu.
 
-**Kontrola 2+2 przez wyspy** — ten sam przebieg na `CUDA_VISIBLE_DEVICES=0,1,4,5`
-(artefakt `nccl_allreduce_cross.txt`). To nie jest ozdobnik: 2 z 4 odcinków ringu
-idą wtedy po PCIe, czyli w miniaturze odtwarza sytuację Kimi TP8. **busbw na
-poziomie PCIe (~7 GB/s) ⇒ NCCL zbudował płaski ring i najwolniejszy segment kasuje
-zysk z pozostałych — wtedy `capture 0,75` dla TP8 jest złym modelem.** Wyraźnie
-wyżej ⇒ kolektyw hierarchiczny i predykcja 2,7× ma podstawy. Najtańsza istniejąca
-przesłanka w tej sprawie: 3 minuty.
+**Odczyt 3b — to jest test `capture 0,75`, nie ozdobnik.** Dwa z czterech
+odcinków idą po PCIe, czyli w miniaturze odtwarza to sytuację Kimi TP8:
+
+- **busbw ≈ 7 GB/s** ⇒ NCCL zbudował **płaski ring**, w którym najwolniejszy
+  segment kasuje zysk z pozostałych. Wtedy `capture 0,75` jest złym modelem, a
+  predykcja 2,7× dla Kimi TP8 traci podstawę **jeszcze przed Cz. 5**.
+- **busbw wyraźnie wyżej** ⇒ kolektyw **hierarchiczny** (redukcja w wyspie po
+  NVLinku, potem cross-island) i predykcja ma podstawy.
+
+Zanotuj wynik 3b przed Cz. 5 — zmienia to, czego się w Cz. 5 spodziewasz.
 
 ---
 
-## Cz. 4 — punkt kontrolny predykcji #50: Qwen TP4 w jednej wyspie (25 min)
+## Cz. H — funkcje pomocnicze (wklej raz, 2 min)
+
+Wklej **cały blok** do tej samej sesji SSH. Dalsze części z niego korzystają.
+Nic tu nie jest skrótem do innego pliku.
+
+```bash
+# ── sampler liczników GPU (tier-1 dcgmi, potwierdzony na tym hoście) ─────
+# 155  = POWER_USAGE           1002 = PROF_SM_ACTIVE
+# 1004 = PROF_PIPE_TENSOR_ACT  1005 = PROF_DRAM_ACTIVE
+# 1009 = PROF_PCIE_TX_BYTES    1010 = PROF_PCIE_RX_BYTES
+# 1011 = PROF_NVLINK_TX_BYTES  1012 = PROF_NVLINK_RX_BYTES
+# Pola NVLink są nowe w tej sesji — sprawdź, czy sterownik je wystawia:
+dcgmi dmon -e 155,1002,1004,1005,1009,1010,1011,1012 -d 1000 -c 2 \
+  > "$RUN_DIR/session/dcgmi_fields_probe.txt" 2>&1
+grep -qi "error\|not supported\|unknown field" "$RUN_DIR/session/dcgmi_fields_probe.txt" \
+  && DCGM_FIELDS=155,1002,1004,1005,1009,1010 \
+  || DCGM_FIELDS=155,1002,1004,1005,1009,1010,1011,1012
+echo "DCGM_FIELDS=$DCGM_FIELDS" | tee "$RUN_DIR/session/dcgm_fields_used.txt"
+
+sample_window () {  # $1=label $2=sekundy(sufit)
+  out="$P0OUT/$1"; date +%s > "${out}_start_epoch.txt"
+  dcgmi dmon -e "$DCGM_FIELDS" -d 1000 -c "$2" > "${out}_dcgmi.txt" 2>&1
+  date +%s > "${out}_end_epoch.txt"
+}
+
+start_sample_window () {  # $1=label $2=sekundy(sufit)
+  sample_window "$1" "$2" &
+  SAMPLE_PID=$!
+}
+
+stop_sample_window () {
+  # kończy okno RAZEM z benchem: ubija dcgmi (dziecko podpowłoki) zamiast
+  # czekać do końca okna — czas okna to tylko sufit; zero próbek idle w ogonie
+  status=0
+  if [ -n "${SAMPLE_PID:-}" ]; then
+    pkill -TERM -P "$SAMPLE_PID" 2>/dev/null || true
+    wait "$SAMPLE_PID" || status=$?
+    unset SAMPLE_PID
+  fi
+  return "$status"
+}
+
+wait_http_health () {  # $1=url $2=próby $3=sekundy przerwy
+  url="$1"; attempts="$2"; pause="$3"
+  for _ in $(seq 1 "$attempts"); do
+    curl -fsS "$url" >/dev/null 2>&1 && return 0
+    sleep "$pause"
+  done
+  echo "health timeout: $url" >&2
+  return 1
+}
+
+show_bench () {  # $1 = katalog z JSON-ami benchu
+  python3 - "$1" <<'PYEOF'
+import glob, json, sys
+for f in sorted(glob.glob(sys.argv[1] + "/*.json")):
+    d = json.load(open(f))
+    print(f"{f.split('/')[-1]:28s} out tok/s {d.get('output_throughput', 0):8.1f}"
+          f" | ITL med {d.get('median_itl_ms', 0):8.2f}"
+          f" | TPOT med {d.get('median_tpot_ms', 0):7.2f}"
+          f" | done {d.get('completed', 0)}")
+PYEOF
+}
+```
+
+---
+
+## Cz. 4 — Qwen TP4 w jednej wyspie: test mechanizmu (25 min)
 
 ### Dlaczego Qwen — i czego ten pomiar NIE mówi
 
-Qwen TP4 jest tu **przyrządem pomiarowym, nie scenariuszem produkcyjnym**.
+Qwen TP4 jest **przyrządem pomiarowym, nie scenariuszem produkcyjnym**.
 
-Za: (a) jedyne miejsce z **pre-rejestrowaną predykcją i baseline 1:1** — ten sam
-compose, workload i zestaw GPU co 06-11; (b) predykcja 2,1× została wyprowadzona
-**z trace'u tego właśnie configu** (Q4, NCCL 53,3%), więc inny model wprowadziłby
-konfundę; (c) TP4 na GPU 0-3 leży **w całości w jednej wyspie** — wszystkie sześć
-par po NVLinku, zero segmentów mieszanych, najczystszy możliwy test; (d) start
-~5 min, podczas gdy Kimi TP8 to >10 min na sam capture cudagraphów.
+Za: (a) jedyne miejsce z **pre-rejestrowaną predykcją i baseline 1:1**;
+(b) predykcja 2,1× została wyprowadzona **z trace'u tego właśnie configu**
+(Q4, NCCL 53,3%); (c) TP4 na GPU 0-3 leży **w całości w jednej wyspie** —
+najczystszy możliwy test; (d) start ~5 min.
 
 Ograniczenia, które trzeba zapisać razem z wynikiem:
 
 1. **Qwen 35B-A3B mieści się na 1-2 GPU.** Werdykt #50 klasyfikuje TP≥4 dla
    takiego modelu jako *błąd konfiguracji* (wiersz NO-GO). Mierzymy konfigurację,
-   której nikt by nie serwował — po to, żeby zwalidować model, nie żeby ją zalecić.
-2. **3B aktywnych parametrów + `--enable-expert-parallel`.** Mało obliczeń na token
-   względem komunikacji, a EP dokłada all-to-all ponad all-reduce TP. Udział comms
-   jest tu z natury wysoki, więc zmierzony zysk to raczej **górne oszacowanie** dla
-   modelu gęstego.
-3. **Ten pomiar nie waliduje `capture ≈ 0,75` dla TP=8** — a to najsłabszy element
-   uzasadnienia zakupu. TP8 przechodzi między wyspami po PCIe, i w ringu all-reduce
-   przepustowość ogranicza **najwolniejszy segment**. Model „6 z 8 odcinków po
-   NVLinku ⇒ 0,75" zakłada, że NCCL zbuduje kolektyw **hierarchiczny** (redukcja
-   w wyspie po NVLinku, potem cross-island), a nie płaski ring. NCCL zwykle tak
-   robi, ale zależy to od jego detekcji topologii. **Wymaga osobnego pomiaru na
-   Kimi TP8** (wątki otwarte). Jeśli w Cz. 3 zrobisz kontrolę 2+2 na
-   `CUDA_VISIBLE_DEVICES=0,1,4,5`, będzie to pierwsza wskazówka — busbw na
-   poziomie PCIe oznacza ring, wyraźnie wyższy oznacza hierarchię.
-4. **`max-num-seqs 32` przy `--max-concurrency 64`** — silnik i tak trzyma ≤32
-   requestów w locie. Baseline 06-11 miał to samo, więc porównanie jest ważne, ale
-   „c=64" to etykieta workloadu, nie realna głębokość batcha.
+   której nikt by nie serwował — żeby zwalidować model, nie żeby ją zalecić.
+2. **3B aktywnych parametrów + `--enable-expert-parallel`.** Mało obliczeń na
+   token względem komunikacji, a EP dokłada all-to-all ponad all-reduce TP.
+   Zmierzony zysk to raczej **górne oszacowanie** dla modelu gęstego.
+3. **Nie waliduje `capture 0,75` dla TP=8** — od tego jest Cz. 3b i Cz. 5.
+4. **`max-num-seqs 32` przy `--max-concurrency 64`** — silnik trzyma ≤32
+   requestów w locie. Baseline 06-11 miał to samo, więc porównanie jest ważne,
+   ale „c=64" to etykieta workloadu, nie realna głębokość batcha.
 
 ### Przebieg
 
-Wklej z `docs/plans/2026-06-10-bottleneck-followup-session.md`: `sample_window`,
-`wait_http_health`, `start_sample_window`, `stop_sample_window` (Cz. 0) oraz
-`run_qwen_tp` (Cz. A). Potem:
-
 ```bash
-P0OUT="$QOUT"                       # sample_window / run_qwen_tp piszą tutaj
-export QWEN_CUDA_VISIBLE_DEVICES=0,1,2,3     # ta sama wyspa co baseline 06-11 (intra)
-run_qwen_tp 4 _nvlink
-unset QWEN_CUDA_VISIBLE_DEVICES
+P0OUT="$QOUT"                                # sample_window pisze tutaj
+export QWEN_TP=4
+export QWEN_CUDA_VISIBLE_DEVICES=0,1,2,3     # ta sama wyspa co baseline 06-11
 
-# darmowy dowód z silnika: czy vLLM odblokował custom all-reduce
-grep -iE "custom all.?reduce|PCIe-only|NVLink|nvls" "$QOUT/log_qwen_tp4_nvlink.txt" \
+# KROK 1 — start silnika
+docker compose -f "$QWEN_COMPOSE" up -d --force-recreate vllm
+wait_http_health http://127.0.0.1:8000/health 240 5 || echo "START FAILED — nie benchuj"
+
+# KROK 2 — FAIL-FAST verify: runtime musi potwierdzić TP (lekcja 06-11).
+#          grep po PEŁNYM logu; tail ucina linię configu przy dłuższych startach.
+docker inspect vllm --format '{{json .Config.Cmd}}' > "$QOUT/engine_cmd_tp4.json"
+docker inspect vllm --format '{{range .Config.Env}}{{println .}}{{end}}' \
+  | sed -E 's/^(HUGGING_FACE_HUB_TOKEN|HF_TOKEN|[A-Z_]*API_KEY|[A-Z_]*SECRET[A-Z_]*)=.*/\1=REDACTED/' \
+  > "$QOUT/engine_env_tp4.txt"
+docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$QOUT/verify_tp4.txt"
+grep -q "tensor_parallel_size=4" "$QOUT/verify_tp4.txt" \
+  || echo "TP MISMATCH — w logu: '$(cat "$QOUT/verify_tp4.txt")' — PRZERWIJ"
+grep '^CUDA_VISIBLE_DEVICES=0,1,2,3$' "$QOUT/engine_env_tp4.txt" \
+  || echo "ZŁY PLACEMENT — porównanie z baseline 06-11 nieważne"
+
+# KROK 3 — prereqs w świeżym kontenerze (pip i /tmp nie przeżywają recreate)
+docker compose -f "$QWEN_COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
+docker compose -f "$QWEN_COMPOSE" exec vllm bash -c \
+  'rm -rf /tmp/qbench; mkdir -p /tmp/qbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' \
+  || echo "PREREQS FAILED — nie leć dalej"
+
+# KROK 4 — okno c=1 (random 64-in/512-out, ignore-eos)
+start_sample_window "qwen_tp4_c1" 600
+docker compose -f "$QWEN_COMPOSE" exec vllm bash -c '
+  export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+  vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
+    --model Qwen3.6 --trust-remote-code --tokenizer Qwen/Qwen3.6-35B-A3B \
+    --dataset-name random --random-input-len 64 --random-output-len 512 \
+    --ignore-eos --num-warmups 3 --num-prompts 40 --max-concurrency 1 \
+    --save-result --result-dir /tmp/qbench --result-filename tp4_c1.json'
+stop_sample_window || echo "WARN: sampler c1"
+
+# KROK 5 — okno c=64 (SWE custom, 256-out)
+start_sample_window "qwen_tp4_c64" 900
+docker compose -f "$QWEN_COMPOSE" exec vllm bash -c '
+  export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+  vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
+    --model Qwen3.6 --trust-remote-code --tokenizer Qwen/Qwen3.6-35B-A3B \
+    --dataset-name custom --dataset-path /tmp/swe_bench_vllm.jsonl \
+    --custom-output-len 256 --ignore-eos --num-prompts 600 --max-concurrency 64 \
+    --save-result --result-dir /tmp/qbench --result-filename tp4_c64.json'
+stop_sample_window || echo "WARN: sampler c64"
+
+# KROK 6 — ZAWSZE zbierz artefakty (lekcja 06-10: brak cp = bezpowrotna strata)
+mkdir -p "$QOUT/bench_tp4"
+docker compose -f "$QWEN_COMPOSE" cp vllm:/tmp/qbench/. "$QOUT/bench_tp4/"
+docker logs vllm > "$QOUT/log_qwen_tp4.txt" 2>&1
+nvidia-smi > "$QOUT/nvidia_smi_tp4.txt"
+grep -iE "custom all.?reduce|PCIe-only|NVLink|nvls" "$QOUT/log_qwen_tp4.txt" \
   | head -20 | tee "$QOUT/vllm_allreduce_lines.txt"
+
+show_bench "$QOUT/bench_tp4"
 ```
 
-`run_qwen_tp` sam robi fail-fast verify na `tensor_parallel_size=4` i zbiera
-`engine_cmd_*`, `engine_env_*` (z redakcją sekretów), liczniki dcgmi oraz oba
-benche. **Nie modyfikuj workloadu** — porównanie z 06-11 jest ważne tylko przy
-identycznym benchu (c=1: random 64/512, 40 promptów; c=64: SWE custom, 256-out,
-600 promptów).
+**Odczyt — trzy możliwe wyniki:**
 
-**Odczyt na żywo, zanim wstaniesz od terminala:**
-
-```bash
-python3 - <<'EOF'
-import json, glob
-for f in sorted(glob.glob("results/runs/2026-07-31_nvlink_install/qwen/bench_tp4_nvlink/*.json")):
-    d = json.load(open(f))
-    print(f.split("/")[-1], "| out tok/s", round(d.get("output_throughput", 0), 1),
-          "| ITL med", round(d.get("median_itl_ms", 0), 2),
-          "| TPOT med", round(d.get("median_tpot_ms", 0), 2))
-EOF
-```
-
-Porównaj z tabelą predykcji z sekcji 1. **Trzy możliwe wyniki i co każdy znaczy:**
-
-- **~1400 tok/s @c64** → predykcja 2,1× trafiona; model `share × capture`
-  zwalidowany na interwencji; TP=4 dogania TP=2 — realna zmiana rekomendacji
-  serwowania.
+- **~1400 tok/s @c64** → predykcja 2,1× trafiona; TP=4 dogania TP=2 — realna
+  zmiana rekomendacji serwowania.
 - **~850–1100 tok/s** → kierunek dobry, `share` przeszacowany. Najbardziej
   prawdopodobna przyczyna: czas NCCL zawiera **peer-wait**, którego szybszy link
-  nie usuwa (zastrzeżenie 2 werdyktu). To wynik, nie porażka — doprecyzowuje model.
-- **< 850 tok/s** → predykcja obalona. Wtedy sprawdź najpierw, czy c=64 nie
-  wpadło w patologię schedulera analogiczną do anomalii Kimi c=16
-  (`max-num-seqs 32` vs `--max-concurrency 64`) — czyli czy limiterem nie jest
-  software, a nie transport.
-
-Jeśli zostaje czas: powtórz sam bench c=64 drugi raz (bez restartu silnika),
-żeby mieć pasmo szumu. W czerwcu trzy niezależne starty TP2 dały ±0,4 ms na
-kroku c=1 — bez powtórki nie wiadomo, czy różnica mieści się w szumie.
+  nie usuwa (zastrzeżenie 2 werdyktu). To doprecyzowanie modelu, nie porażka.
+- **< 850 tok/s** → predykcja obalona. Sprawdź najpierw, czy c=64 nie wpadło w
+  patologię schedulera analogiczną do anomalii Kimi c=16 — czy limiterem nie jest
+  software zamiast transportu.
 
 ---
 
-## Cz. 5 — liczniki błędów po obciążeniu, restore, commit (15 min)
+## Cz. 5 — Kimi TP8 przez dwie wyspy: scenariusz produkcyjny (30 min)
+
+**To jest jednocześnie restore stacku.** Compose Kimi ma TP=8 i Eagle3 zaszyte na
+sztywno — czyli dokładnie konfigurację baseline K1 z 06-11. Start silnika trzeba
+było wykonać tak czy inaczej; benche są kosztem krańcowym.
+
+`vllm-small` (DeepSeek) **musi zostać wyłączony** przez cały ten etap — dzieli te
+same GPU i skaziłby liczniki dcgmi. Wraca dopiero w Cz. 6.
+
+```bash
+P0OUT="$KOUT"                                # sample_window pisze tutaj
+unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES      # inaczej wyciekną do compose Kimi
+
+docker compose -f "$QWEN_COMPOSE" down
+docker compose -f "$COMPOSE" up -d --force-recreate vllm
+wait_http_health http://127.0.0.1:8000/health 360 5 || echo "KIMI START FAILED"
+# TP=8 + capture cudagraphów potrafi trwać >10 min — stąd 360 prób po 5 s
+
+# verify: TP=8 i Eagle3 obecne (bez tego porównanie z K1 jest nieważne)
+docker inspect vllm --format '{{json .Config.Cmd}}' > "$KOUT/engine_cmd_kimi.json"
+grep -o 'speculative-config' "$KOUT/engine_cmd_kimi.json" || echo "UWAGA: Kimi bez Eagle3"
+docker logs vllm 2>&1 | grep -m1 -o "tensor_parallel_size=[0-9]*" | tee "$KOUT/verify_kimi.txt"
+grep -q "tensor_parallel_size=8" "$KOUT/verify_kimi.txt" || echo "TP MISMATCH — PRZERWIJ"
+
+# darmowy dowód z silnika: czy vLLM odblokował custom all-reduce po NVLinku
+docker logs vllm 2>&1 | grep -iE "custom all.?reduce|PCIe-only|NVLink|nvls" \
+  | head -20 | tee "$KOUT/vllm_allreduce_lines.txt"
+
+# prereqs benchu
+docker compose -f "$COMPOSE" cp "$SWE" vllm:/tmp/swe_bench_vllm.jsonl
+docker compose -f "$COMPOSE" exec vllm bash -c \
+  'rm -rf /tmp/kbench; mkdir -p /tmp/kbench; export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1; pip install -q pandas datasets; python3 -c "import pandas,datasets;print(\"deps ok\")"' \
+  || echo "PREREQS FAILED — nie leć dalej"
+
+kimi_bench_c () {   # $1=concurrency  $2=num_prompts  $3=sufit okna dcgmi (s)
+  c="$1"; np="$2"; tag="kimi_c${c}"
+  start_sample_window "$tag" "$3"
+  docker compose -f "$COMPOSE" exec vllm bash -c '
+    export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+    vllm bench serve --backend vllm --base-url http://127.0.0.1:8000 \
+      --model kimi-k2.6 --trust-remote-code --tokenizer moonshotai/Kimi-K2.6 \
+      --dataset-name custom --dataset-path /tmp/swe_bench_vllm.jsonl \
+      --custom-output-len 256 --ignore-eos --num-warmups 2 \
+      --num-prompts '"$np"' --max-concurrency '"$c"' \
+      --save-result --result-dir /tmp/kbench --result-filename '"$tag"'.json'
+  bench_status=$?
+  stop_sample_window || echo "WARN: sampler $tag"
+  [ "$bench_status" -ne 0 ] && echo "WARN: bench $tag failed"
+  mkdir -p "$KOUT/bench"
+  docker compose -f "$COMPOSE" cp vllm:/tmp/kbench/. "$KOUT/bench/" || echo "WARN: cp $tag"
+}
+
+kimi_bench_c 32 384 1200    # NIETYKALNY — najlepszy punkt pracy, baseline 285 tok/s
+kimi_bench_c  1  24  600    # kontrola podłogi, baseline TPOT 8,7 ms
+kimi_bench_c 16  96  900    # anomalia, baseline ITL med 512 ms — TNIJ JAKO PIERWSZY
+
+docker logs vllm > "$KOUT/log_kimi.txt" 2>&1
+nvidia-smi > "$KOUT/nvidia_smi_kimi.txt"
+show_bench "$KOUT/bench"
+```
+
+**Kolejność benchy jest celowa** — c=32 idzie pierwszy, bo jest nietykalny; przy
+poślizgu tracisz c=16, nie kluczowy pomiar.
+
+**Uwaga do porównania c=16:** baseline K1 miał 192 prompty, tu jest 96 (oszczędność
+~6 min). **ITL/TPOT median są porównywalne** (mediana po tysiącach interwałów),
+ale `output_throughput` **nie** — mniejszy udział steady-state względem rampy.
+Do sprawdzenia anomalii porównuj ITL, nie throughput.
+
+**Odczyt:**
+
+- **c=32 ~770 tok/s** → predykcja 2,7× trafiona, `capture 0,75` się broni, zakup
+  uzasadniony w scenariuszu, dla którego był robiony.
+- **c=32 400–600 tok/s** → zysk realny, ale `capture` niższy niż 0,75. Zestaw z
+  busbw z Cz. 3b — jeśli tam wyszedł płaski ring, to jest spójna historia.
+- **c=32 ≈ 285 tok/s (bez zmian)** → NCCL nie używa mostków przy 8 rankach.
+  Sprawdź `vllm_allreduce_lines.txt` i liczniki PCIe RX: jeśli RX dalej siedzi na
+  suficie 7,2–7,9 GB/s, ruch w ogóle nie przeszedł na NVLink.
+- **c=16 dalej ~512 ms ITL** → potwierdza diagnozę „patologia schedulera", bo
+  zmiana transportu jej nie ruszyła. To wynik pozytywny dla tezy z werdyktu.
+
+Szybki odczyt liczników bez czekania na analizę laptopową:
+
+```bash
+for f in "$KOUT"/kimi_c*_dcgmi.txt; do
+  echo "== $f"; awk 'NR>2 && NF>6 {p+=$3; rx+=$8; n++} END {if(n) printf "  srednia moc %.0f W | PCIE_RX %.2f | probek %d\n", p/n, rx/n, n}' "$f"
+done
+```
+
+Kolumny `dcgmi dmon` zależą od `$DCGM_FIELDS` — jeśli powyższy `awk` pokaże
+bzdury, obejrzyj nagłówek pliku i popraw numery kolumn. **Nie zgaduj — to
+2 sekundy `head -3`.**
+
+---
+
+## Cz. 6 — liczniki błędów, domknięcie stacku, commit (10 min)
 
 Liczniki mają sens tylko wtedy, gdy obejmują realny ruch — dlatego czytamy je
-**po** Cz. 2–4, a nie zaraz po włożeniu mostków.
+**po** Cz. 2–5, a nie zaraz po włożeniu mostków.
 
 ```bash
 nvidia-smi nvlink -e > "$NOUT/nvlink_errors_after.txt" 2>&1
@@ -388,24 +607,19 @@ dmesg | grep -i "nvlink\|nvrm" | tail -40 > "$RUN_DIR/session/dmesg_end.txt"
 ```
 
 **Odczyt:** rosnące `Replay` / `Recovery` / CRC = link marginalny, najczęściej
-niedociśnięty mostek. Zero przyrostu przy kilkuset GB przepchniętych w Cz. 2–4
-to mocny sygnał poprawnego montażu. **Pusty `nvlink_errors_delta.txt` = wynik
-pozytywny** — zapisz go jawnie w notatkach, żeby nie wyglądał jak brak pomiaru.
+niedociśnięty mostek. Zero przyrostu po kilkuset GB przepchniętych w Cz. 2–5 to
+mocny sygnał poprawnego montażu. **Pusty `nvlink_errors_delta.txt` = wynik
+pozytywny** — zapisz to jawnie w notatkach, żeby nie wyglądał jak brak pomiaru.
 
-Restore:
+Domknięcie stacku (Kimi już stoi z Cz. 5 — dostawiamy resztę):
 
 ```bash
-unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES QWEN_EXTRA_COMPOSE
-docker compose -f "$QWEN_COMPOSE" down
-docker compose -f "$COMPOSE" up -d --force-recreate vllm vllm-small litellm open-webui
-wait_http_health http://127.0.0.1:8000/health 240 5 && echo "kimi OK"
+docker compose -f "$COMPOSE" up -d vllm-small litellm open-webui
 wait_http_health http://127.0.0.1:8004/health 240 5 && echo "deepseek OK"
-docker inspect vllm --format '{{json .Config.Cmd}}' > "$RUN_DIR/session/restore_engine_cmd.json"
-grep -o 'speculative-config' "$RUN_DIR/session/restore_engine_cmd.json" || echo "UWAGA: Kimi bez Eagle3"
-# darmowa obserwacja: czy Kimi TP8 też zmienił komunikat o custom all-reduce
-docker logs vllm 2>&1 | grep -iE "custom all.?reduce|PCIe-only|NVLink" | head \
-  | tee "$RUN_DIR/session/kimi_allreduce_lines.txt"
+curl -fsS http://127.0.0.1:8000/health && echo "kimi OK"
+docker compose -f "$COMPOSE" ps | tee "$RUN_DIR/session/restore_ps.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_end.txt"
+git rev-parse HEAD > "$RUN_DIR/session/end_commit.txt"
 ```
 
 Commit (artefakty są małe — tekst/JSON; polityka wyników w `CLAUDE.md`):
@@ -413,7 +627,10 @@ Commit (artefakty są małe — tekst/JSON; polityka wyników w `CLAUDE.md`):
 ```bash
 git status
 du -sh "$RUN_DIR"
-git add "$RUN_DIR" && git commit -m "bench: weryfikacja instalacji NVLink 4-way — topologia, P2P, NCCL, Qwen TP4"
+find "$RUN_DIR" -name 'engine_env_*' -exec grep -l "HUGGING_FACE_HUB_TOKEN=hf_" {} \; \
+  && echo "STOP: token w artefaktach — popraw redakcję przed commitem"
+git add "$RUN_DIR"
+git commit -m "bench: weryfikacja instalacji NVLink 4-way - topologia, P2P, NCCL, Qwen TP4, Kimi TP8"
 git push -u origin main
 ```
 
@@ -428,10 +645,10 @@ Kolejność od najtańszego:
 2. **Rozstaw slotów.** H200 NVL wspiera konkretne konfiguracje mostków;
    mechaniczne wejście nie oznacza elektrycznego połączenia. Sprawdź, czy
    zmostkowane pary odpowiadają fizycznym parom kart, nie tylko numerom w
-   `nvidia-smi` — mapowanie robisz przez `pci.bus_id` z `gpu_inventory.csv`
-   (znane pary za switchami: `1D/1E`, `40/41`, `AA/AB`, `BB/BC`).
-3. **Zimny start, nie warm reboot.** Trenowanie linku po zmianie topologii
-   bywa wykonywane tylko przy pełnym cyklu zasilania.
+   `nvidia-smi` — mapowanie przez `pci.bus_id` z `gpu_inventory.csv` (znane pary
+   za switchami: `1D/1E`, `40/41`, `AA/AB`, `BB/BC`).
+3. **Zimny start, nie warm reboot.** Trenowanie linku po zmianie topologii bywa
+   wykonywane tylko przy pełnym cyklu zasilania.
 
 Negatywny wynik też commituj — „mostki włożone, topologia się nie zmieniła, oto
 `dmesg`" to pełnoprawny artefakt diagnostyczny i oszczędza następną sesję.
@@ -440,38 +657,34 @@ Negatywny wynik też commituj — „mostki włożone, topologia się nie zmieni
 
 ## Po sesji (laptop, poza slotem)
 
-1. **`docs/operations/infrastructure.md` §2.2** — wklej macierz `topo -m`.
-   Sekcja od 2026-06-10 ma jawne TODO „po zebraniu wkleić macierz do tej
-   sekcji", a zdanie *„Interconnect GPU↔GPU: wyłącznie PCIe — brak NVLink"*
-   przestaje być prawdą i musi zostać przepisane wraz z datą zmiany.
-2. **Issue #50** — komentarz z tabelą predykcja vs pomiar. Issue może zostać
-   zamknięte dopiero po tym porównaniu, nie po samym zakupie.
-3. **`docs/writeups/w1/t9-bottleneck-nvlink.md`** — nowa sekcja „pomiar po
+1. **`docs/operations/infrastructure.md` §2.2** — wklej macierz `topo -m`. Sekcja
+   ma jawne TODO „po zebraniu wkleić macierz do tej sekcji", a zdanie
+   *„Interconnect GPU↔GPU: wyłącznie PCIe — brak NVLink"* przestaje być prawdą i
+   musi zostać przepisane wraz z datą zmiany.
+2. **Issue #50** — komentarz z tabelą predykcja vs pomiar (osobno Qwen TP4 i Kimi
+   TP8). Issue może zostać zamknięte dopiero po tym porównaniu, nie po zakupie.
+3. **`docs/writeups/w1/t9-bottleneck-nvlink.md`** — sekcja „pomiar po
    interwencji". T9 jest zapisem decyzji; walidacja predykcji na interwencji to
    najmocniejszy materiał, jaki ten wątek może dostać.
-4. **`docs/writeups/w1/nvlink-4way-notatka-decyzyjna.md`** — dopisek, czy
-   decyzja się obroniła.
+4. **`docs/writeups/w1/nvlink-4way-notatka-decyzyjna.md`** — dopisek, czy decyzja
+   się obroniła.
 5. **`docs/operations/agent-state.md`** — `sync-state`.
 
 ## Wątki otwarte po tej sesji (nie dziś)
 
-- Rozdzielenie dawki: `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
-  mostkach — ile z zysku to link, a ile odblokowany custom AR.
-- **Kimi TP8 batched (predykcja ~2,7×, capture 0,75) — priorytet nr 1 na następny
-  slot.** To jedyny scenariusz, który realnie uzasadniał zakup, i jedyny, w którym
-  ruch przechodzi między wyspami. Otwarte pytanie mechaniczne: czy NCCL składa
-  kolektyw hierarchicznie (redukcja w wyspie po NVLinku → cross-island po PCIe),
-  czy płaski ring, w którym najwolniejszy segment kasuje zysk z pozostałych sześciu.
-  Od tego zależy, czy `capture 0,75` jest w ogóle właściwym modelem. Wymaga
-  dłuższego slotu — TP8 to load + capture cudagraphów > 10 min.
-- Anomalia Kimi c=16: czy NVLink ją usuwa, czy zostaje (jeśli zostaje —
-  potwierdza diagnozę „patologia software'owa").
-- Czy `NCCL_NVLS_ENABLE=1` (już w compose Qwena) cokolwiek zmienia bez NVSwitcha.
+- **Rozdzielenie dawki:** `VLLM_DISABLE_CUSTOM_ALL_REDUCE=1` przy włożonych
+  mostkach — ile z zysku to link, a ile odblokowany custom all-reduce.
+- **Trace Kimi TP8 @c=32 po NVLinku** — udział NCCL powinien spaść z 83,9%; to
+  domknęłoby rachunek `share × capture` od strony mechanizmu, a nie tylko wyniku.
+  Wymaga `--profiler-config` (w vLLM v0.20 `VLLM_TORCH_PROFILER_DIR` już nie działa).
+- **Kimi c=32 vs c=16** — jeśli anomalia przeżyła NVLink, warto ją wreszcie
+  zdiagnozować od strony schedulera (`max-num-seqs` vs `max-concurrency`).
+- **Czy `NCCL_NVLS_ENABLE=1`** (już w compose Qwena) cokolwiek zmienia bez NVSwitcha.
 
 ---
 
 ## Walidacja planu
 
 ```text
-git diff --check    (docs-only; bez .py w repo — skrypty są heredocami w planie)
+git diff --check    (docs-only; skrypty są heredocami wewnątrz planu)
 ```
