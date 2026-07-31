@@ -328,8 +328,15 @@ status, not a task list. Update when work moves.
   logs `disable_custom_all_reduce=False`. vLLM auto-disables it at runtime
   (`custom_all_reduce.py:153`, 8× worker in `kimi_log_eagle3_on.txt:67`) purely
   because the topology was PCIe-only, so bridges should re-enable it with no
-  config change. That WARNING disappearing is now a **gate** in Cz. 5 — if it
-  persists, vLLM never saw the bridges and the Kimi numbers are not about NVLink.
+  config change. **Refined the same day:** the check is `is_full_nvlink` — a **full
+  mesh** over the TP group, verified per GPU pair. With 4+4 bridges, TP=4 inside an
+  island is a full mesh (warning should clear) but **TP=8 is not** (GPU0↔GPU4 has
+  no link), so Kimi is expected to keep the warning even when the bridges work
+  perfectly. The gate is therefore the **pair** Qwen-TP4 vs Kimi-TP8:
+  clears/persists = healthy 4+4; persists/persists = vLLM never saw the bridges.
+  This makes the Qwen engine start non-cuttable, and it means Kimi TP8 likely never
+  gets the custom-AR kernel on this topology — all its gain must come from NCCL
+  using NVLink on intra-island segments, so the ~2,7× estimate is an upper bound.
   Companion prediction: the FlashInfer multicast WARNING must **remain**, since
   vLLM names "NVLink bridge-only" as a non-multicast topology — which also makes
   `NCCL_NVLS_ENABLE=1` in the Qwen compose a probably-dead setting. Gain measured
