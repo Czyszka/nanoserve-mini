@@ -312,7 +312,7 @@ status, not a task list. Update when work moves.
   (`results/summaries/2026-06-11-nvlink-boundary-verdict.md`) are now falsifiable
   against a measured post-intervention run. Session plan:
   `docs/plans/2026-07-31-nvlink-install-verification.md` (short slot ~90 min:
-  health/Xid → `topo -m` gate → P2P bandwidth with cross-island control → NCCL
+  baseline snapshot → `topo -m` gate → P2P bandwidth with cross-island control → NCCL
   busbw → **Qwen TP4 intra-island c=1+c=64 vs the 06-11 PCIe baseline 680 tok/s /
   53,7 ms ITL, predicted ~1430 tok/s**). Pre-registered predictions table is in
   §1 of the plan — do not edit it after the run. Known confound recorded: bridges

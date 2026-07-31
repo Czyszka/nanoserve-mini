@@ -63,13 +63,13 @@ slotem**, ale zanotuj jako otwarty wątek.
 
 | część | co | min |
 |---|---|---:|
-| Cz. 0 | zdrowie kart + stan wyjściowy | 10 |
+| Cz. 0 | stan wyjściowy + zwolnienie GPU | 5 |
 | Cz. 1 | **BRAMKA:** czy sterownik widzi linki + topologia | 10 |
 | Cz. 2 | surowa przepustowość P2P (z kontrolą cross-island) | 15 |
 | Cz. 3 | dowód ścieżki NCCL (all_reduce busbw) | 15 |
 | Cz. 4 | **punkt kontrolny predykcji:** Qwen TP4 intra c=1 + c=64 | 25 |
 | Cz. 5 | liczniki błędów po obciążeniu + restore + commit | 15 |
-| | **razem** | **90** |
+| | **razem** | **85** |
 
 **Kolejność cięcia przy poślizgu:** Cz. 3 → Cz. 4 (c=1) → Cz. 2 (pary dalsze).
 Nietykalne: **Cz. 0, Cz. 1, Cz. 4 (c=64), Cz. 5**.
@@ -79,12 +79,10 @@ jakiego transportu użył NCCL — dowód ścieżki jest wtedy wtórny, choć s�
 
 ---
 
-## Cz. 0 — start i zdrowie kart (10 min)
+## Cz. 0 — start i stan wyjściowy (5 min)
 
-Twoja własna uwaga o Xid 79 jest tu decydująca: **grzebałeś fizycznie w slotach**,
-więc zanim cokolwiek uznamy za „efekt NVLinka", trzeba wykluczyć „efekt tego
-feralnego slotu". Jeśli podejrzana karta jest w wyspie, którą będziemy benchować,
-wynik jest skażony i trzeba to zapisać w notatkach.
+Migawka „przed": commit, stan kart, mapowanie numerów GPU na bus-ID (potrzebne,
+gdyby trzeba było wrócić do fizycznych slotów), `dmesg` po zmianie topologii.
 
 ```bash
 cd ~/nanoserve-mini && git pull --ff-only origin main
@@ -97,28 +95,21 @@ set -a; source .env; set +a
 
 git rev-parse HEAD > "$RUN_DIR/session/start_commit.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
-nvidia-smi --query-gpu=index,serial,uuid,pci.bus_id,ecc.errors.uncorrected.volatile.total \
-  --format=csv | tee "$RUN_DIR/session/gpu_inventory.csv"
+# inwentarz z bus-ID — potrzebny do mapowania numerów GPU na fizyczne sloty
+nvidia-smi --query-gpu=index,serial,uuid,pci.bus_id --format=csv \
+  | tee "$RUN_DIR/session/gpu_inventory.csv"
 
-# 1) czy któraś karta pamięta uraz — Xid / retired / remapped rows
-nvidia-smi -q | grep -i -A4 "Xid\|Retired\|Remapped\|Pending" \
-  > "$RUN_DIR/session/health_xid_remapped.txt" 2>&1
-dmesg | grep -i "nvrm\|xid\|nvlink" | tail -80 \
+# ślad trenowania linków po zmianie topologii
+dmesg | grep -i "nvlink\|nvrm" | tail -80 \
   > "$RUN_DIR/session/dmesg_nvrm.txt" 2>&1
 
-# 2) fabricmanager: przy bezpośrednich mostkach zwykle NIEwymagany,
+# fabricmanager: przy bezpośrednich mostkach zwykle NIEwymagany,
 #    ale zainstalowany-i-padający potrafi zablokować inicjalizację
 systemctl status nvidia-fabricmanager --no-pager \
   > "$RUN_DIR/session/fabricmanager.txt" 2>&1
 nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1 \
   >> "$RUN_DIR/session/fabricmanager.txt"
 ```
-
-**Bramka 0:** jeżeli w `health_xid_remapped.txt` widzisz `Remapped Rows: Pending
-= Yes` albo świeże Xid po dzisiejszym starcie — **zanotuj numer GPU** i sprawdź,
-czy leży w wyspie 0-3. Jeśli tak, przenieś benchmark Cz. 4 na wyspę 4-7
-(`QWEN_CUDA_VISIBLE_DEVICES=4,5,6,7`) i odnotuj, że porównanie z baseline 06-11
-(GPU 0-3) traci wtedy dokładność 1:1.
 
 **Zwolnij GPU na resztę sesji:**
 
@@ -353,7 +344,7 @@ nvidia-smi nvlink -e > "$NOUT/nvlink_errors_after.txt" 2>&1
 diff "$NOUT/nvlink_errors_before.txt" "$NOUT/nvlink_errors_after.txt" \
   > "$NOUT/nvlink_errors_delta.txt" 2>&1
 nvidia-smi topo -m > "$NOUT/topo_m_after.txt"     # topologia nie powinna się ruszyć
-dmesg | grep -i "nvlink\|nvrm\|xid" | tail -40 > "$RUN_DIR/session/dmesg_end.txt"
+dmesg | grep -i "nvlink\|nvrm" | tail -40 > "$RUN_DIR/session/dmesg_end.txt"
 ```
 
 **Odczyt:** rosnące `Replay` / `Recovery` / CRC = link marginalny, najczęściej
