@@ -102,14 +102,10 @@ nvidia-smi --query-gpu=index,serial,uuid,pci.bus_id --format=csv \
 # ślad trenowania linków po zmianie topologii
 dmesg | grep -i "nvlink\|nvrm" | tail -80 \
   > "$RUN_DIR/session/dmesg_nvrm.txt" 2>&1
-
-# fabricmanager: przy bezpośrednich mostkach zwykle NIEwymagany,
-#    ale zainstalowany-i-padający potrafi zablokować inicjalizację
-systemctl status nvidia-fabricmanager --no-pager \
-  > "$RUN_DIR/session/fabricmanager.txt" 2>&1
-nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1 \
-  >> "$RUN_DIR/session/fabricmanager.txt"
 ```
+
+Fabric manager świadomie pominięty: to warstwa dla **NVSwitch** (HGX/DGX), a tu
+są bezpośrednie mostki — nie ma fabric do zainicjalizowania.
 
 **Zwolnij GPU na resztę sesji:**
 
@@ -390,11 +386,7 @@ Kolejność od najtańszego:
    zmostkowane pary odpowiadają fizycznym parom kart, nie tylko numerom w
    `nvidia-smi` — mapowanie robisz przez `pci.bus_id` z `gpu_inventory.csv`
    (znane pary za switchami: `1D/1E`, `40/41`, `AA/AB`, `BB/BC`).
-3. **`systemctl status nvidia-fabricmanager`.** Przy bezpośrednich mostkach
-   zwykle niepotrzebny (to domena NVSwitch/HGX), ale zainstalowany i padający
-   potrafi zablokować inicjalizację. Wersja fabric managera musi **dokładnie**
-   odpowiadać wersji sterownika (595.58.03).
-4. **Zimny start, nie warm reboot.** Trenowanie linku po zmianie topologii
+3. **Zimny start, nie warm reboot.** Trenowanie linku po zmianie topologii
    bywa wykonywane tylko przy pełnym cyklu zasilania.
 
 Negatywny wynik też commituj — „mostki włożone, topologia się nie zmieniła, oto
