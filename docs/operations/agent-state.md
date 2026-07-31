@@ -362,6 +362,12 @@ status, not a task list. Update when work moves.
   `--disable-custom-all-reduce`, Kimi c16@192, probe pól NVL, opcjonalnie TP2
   na NVLinku); compose Qwena dostał `${QWEN_EXTRA_ARGS:-}` pod tę dawkę.
   Docs owed po 08-03: infrastructure §2.2, komentarz #50, T9, notatka decyzyjna.
+- **Prezentacja meetupowa NVLink (draft, 2026-07-31):** plan w
+  `docs/plans/2026-07-31-nvlink-meetup-prezentacja.md` — 20 slajdów (hook „100%
+  GPU-Util, a karty się nudzą" → hipotezy → śledztwo → Amdahl/predykcje → montaż
+  → przed/po), wykresy W1–W6 z commitowanych danych + diagram topologii, HTML
+  samowystarczalny do `docs/presentations/`. Wracamy po sesji gap-fill 08-03
+  (jej wyniki mogą wzmocnić puentę 1 — rozdzielenie dawki custom-AR).
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
