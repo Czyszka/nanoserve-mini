@@ -345,6 +345,23 @@ status, not a task list. Update when work moves.
   not an env var — the earlier note said otherwise). After the session:
   `infrastructure.md` §2.2 still claims *"Interconnect GPU↔GPU: wyłącznie PCIe"*
   and must be rewritten with the real `topo -m` matrix.
+- **NVLink 07-31 wyniki przeanalizowane (2026-07-31, laptop):** montaż POTWIERDZONY
+  (pełna siatka NV6 w obu wyspach, P2P 132,8 vs 29,1 GB/s kontrola, NCCL busbw
+  w wyspie 185–333 GB/s vs sufit PCIe 7,2–7,9, 2+2 cross 24,8–31,3 → kolektyw
+  hierarchiczny, delta błędów pusta). Bramka custom-AR: Qwen warning zniknął +
+  `Registering cuda graph addresses` (kernel AKTYWNY), Kimi warning został —
+  wiersz „norma dla 4+4". Liczby: **Qwen TP4 c64 680→2022 tok/s (2,97×,
+  PONAD sufit modelu 2,14× przy capture=1 — model niekompletny)**; Kimi c32
+  285→594 (2,08×, implikowany capture ≈0,62 vs założone 0,75); c1 floor-bound
+  z ~20% zyskiem (Qwen TPOT 3,21, Kimi 7,44); **anomalia c16 ZNIKŁA**
+  (512→48,6 ms ITL — była transportowa, nie schedulerowa; teza werdyktu obalona
+  w tym punkcie). PCIe RX spadł (Kimi c32 4,3 śr.; Qwen c64 ~0,07) — ruch na
+  NVLinku, ale pola dcgmi 1011/1012 NIE weszły do próbek (brak bezpośrednich
+  liczników NVL). Braki i plan domknięcia:
+  `docs/plans/2026-08-03-nvlink-gap-fill.md` (rozdzielenie dawki
+  `--disable-custom-all-reduce`, Kimi c16@192, probe pól NVL, opcjonalnie TP2
+  na NVLinku); compose Qwena dostał `${QWEN_EXTRA_ARGS:-}` pod tę dawkę.
+  Docs owed po 08-03: infrastructure §2.2, komentarz #50, T9, notatka decyzyjna.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
