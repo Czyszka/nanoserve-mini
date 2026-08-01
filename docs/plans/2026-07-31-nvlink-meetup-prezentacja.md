@@ -4,6 +4,10 @@ Status: **draft** — wracamy po sesji gap-fill 08-03
 (`docs/plans/2026-08-03-nvlink-gap-fill.md`); jej wyniki mogą wzmocnić puentę 1
 (rozdzielenie dawki custom all-reduce od dawki łącza).
 
+**Do zdobycia na sesji 08-03 (dla prezentacji):** screenshot terminala
+`nvidia-smi` pod obciążeniem batched (100% GPU-Util + niski pobór mocy) — slajd 3;
+w repo nie ma takiego dumpa (commitowane złapały 0% util między benchami).
+
 ## Kontekst
 
 Prezentacja na meetup/konferencję (po polsku, ~20 slajdów, pełne speaker notes,
@@ -26,10 +30,22 @@ Ustalenia z 2026-07-31:
 2. **Kontekst** — lab nanoserve-mini; sprzęt: Supermicro SYS-521GE-TNRT,
    2× Xeon Gold 6530, 8× H200 NVL 143 GB, **PCIe-only**; modele: Kimi-K2.6
    (~1T, 554 GB wag, TP8+Eagle3) i Qwen3.6-35B (model testowy).
-3. **Obserwacja otwierająca (hook)** — `nvidia-smi` pod obciążeniem: GPU-Util
-   100%, a pobór mocy tylko ~180–240 W z 600 W. Głębiej (DCGM): SMACT ~0,2,
-   DRAM_ACTIVE 0,07–0,09, moc 169–199 W — **nic nie jest nasycone**; GPU-Util
-   mierzy „czy cokolwiek się dzieje", nie „czy krzem pracuje" (WYKRES W2).
+3. **Obserwacja otwierająca (hook)** — dwa elementy + pytanie do sali:
+   (a) **zrzut `nvidia-smi`** sprzed NVLink pod obciążeniem: GPU-Util 100%,
+   pobór tylko ~180–240 W z 600 W. UWAGA: w repo nie ma commitowanego dumpa
+   z 100% util (wszystkie złapane między benchami, 0%) — do zdobycia podczas
+   sesji serwerowej 08-03 (screenshot terminala pod loadem; przy c=1 obraz
+   „100% util / niska moc" wystąpi także z mostkami — opisać uczciwie datę),
+   fallback: rekonstrukcja ramki nvidia-smi w monospace z danych z repo,
+   z adnotacją „rekonstrukcja z pomiarów";
+   (b) **WYKRES W0**: moc w czasie (matplotlib) z szeregów
+   `*_dcgmi.txt` całego okna benchmarku, linia limitu 600 W — dowód, że to
+   stan trwały, nie chwilowy;
+   (c) **pytanie do sali**: „kto to widział u siebie i zastanawiał się,
+   czemu przy 100% zajętości karta bierze ćwierć mocy?".
+   Dopiero potem DCGM: SMACT ~0,2, DRAM_ACTIVE 0,07–0,09 — **nic nie jest
+   nasycone**; GPU-Util mierzy „czy cokolwiek się dzieje", nie „czy krzem
+   pracuje" (WYKRES W2).
 4. **Zastanowienie: co może dawać taki obraz?** — przestrzeń hipotez, każda
    z przewidywaniem w licznikach: **H1** memory-bound/HBM (wysoki DRAM_ACTIVE —
    a jest 0,07–0,09), **H2** komunikacja między GPU po PCIe, **H3** podłoga
@@ -92,6 +108,10 @@ Ustalenia z 2026-07-31:
 
 Dane wyłącznie z commitowanych plików:
 
+- **W0** moc w czasie pod obciążeniem (hook): kolumna power z
+  `results/runs/2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
+  (i/lub `qwen_tp_curve/qwen_tp8_c64_dcgmi.txt`) — przebieg per GPU przez całe
+  okno benchmarku + linia 600 W; pokazuje, że niski pobór to stan trwały.
 - **W1** krzywa TP Qwen c=64:
   `results/runs/2026-06-11_bottleneck/qwen_tp_curve/bench_tp{2,4,8}/tp*_c64.json`
   + TP1 z summary (1202, adnotacja źródła) — słupki tok/s + linia efektywności.
