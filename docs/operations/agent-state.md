@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `6472d06`
-- Last summarized at: 2026-06-14 (NVLink decision note finalized in Polish + source audit)
+- Last summarized commit: `e7986c4`
+- Last summarized at: 2026-08-03 (NVLink zweryfikowany pomiarem; trace c32, dekompozycja, reguła wygrzewki, docs domknięte)
 - Note: prior cursor `3fd150b` sits on a pre-rewrite lineage, so `3fd150b..HEAD`
   over-reports commits (SHA divergence); this sync used the clean tree delta
   (7 files), not the commit list.
@@ -48,6 +48,14 @@ Phase 1 deliverables still owed:
 - Local Windows laptop bootstrap is done; Python workflow uses `uv`; `ruff` + `pytest` configured; `.gitattributes` normalises line endings.
 - Local research PDFs and Claude/Codex worktrees stay outside Git (`docs/**/papers/`, `.claude/worktrees/`, `.uv-cache-codex/`).
 - **Server**: ubuntusrv2 (Ubuntu 24.04, 8×H200 NVL 143 GB, CUDA 13.2, driver 595.58.03).
+- **NVLink 4-way ZAINSTALOWANY i ZWERYFIKOWANY** (07-31/08-03): dwie wyspy NV6
+  (GPU 0-3 / 4-7), cross-island SYS; zmierzona macierz `topo -m` w
+  `infrastructure.md` §2.2; zyski: Kimi TP8 c32 2,08×, Qwen TP4 c64 ~2,97×;
+  trace c32: NCCL 61,1% spanu. Synteza:
+  `results/summaries/2026-08-03-nvlink-day-summary.md`; T9 §14.
+- **Reguła wygrzewki (od 08-03, obowiązkowa):** pierwszy bench po starcie
+  silnika płaci 10–15% kary — pomiar zawsze po benchu-wygrzewce na odrzut
+  (`benchmark-methodology.md`, "Engine warm-up rule").
 - **Hardware reference**: Supermicro SYS-521GE-TNRT datasheet is mirrored as
   lightweight Markdown at `docs/operations/sys-521ge-tnrt.md`; source PDF kept
   at `docs/operations/sys-521ge-tnrt.pdf`.
@@ -362,6 +370,9 @@ status, not a task list. Update when work moves.
   `--disable-custom-all-reduce`, Kimi c16@192, probe pól NVL, opcjonalnie TP2
   na NVLinku); compose Qwena dostał `${QWEN_EXTRA_ARGS:-}` pod tę dawkę.
   Docs owed po 08-03: infrastructure §2.2, komentarz #50, T9, notatka decyzyjna.
+  **2026-08-03: DOMKNIĘTE w całości** — 4 sesje wykonane (gap-fill, trace,
+  dogrywka-dryf, domknięcie), wszystkie docs owed dostarczone, #51 zamknięte;
+  szczegóły w handoff-entry 2026-08-03 i `2026-08-03-nvlink-day-summary.md`.
 - **Prezentacja meetupowa NVLink (draft, 2026-07-31):** plan w
   `docs/plans/2026-07-31-nvlink-meetup-prezentacja.md` — 20 slajdów (hook „100%
   GPU-Util, a karty się nudzą" → hipotezy → śledztwo → Amdahl/predykcje → montaż
@@ -445,6 +456,9 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 | State updates | Codex and Claude Code must update `docs/operations/agent-state.md` after meaningful work and before commit/push handoff |
 | Local papers | Stored in ignored `docs/**/papers/`; commit summaries separately if useful |
 | Coding-agent benchmarks | Archived 2026-05-17 to `archive/coding-agent-tasks` branch; not part of Phase 1 DoD |
+| NVLink 4-way | Zainstalowany 2026-07-31 (wyspy 4+4); GO dla batched TP≥4 potwierdzony pomiarem (2,08–2,97×); #51 zamknięte, #50 rozliczone komentarzem (zamknięcie po stronie właściciela) |
+| Metodologia benchów | Od 2026-08-03 obowiązkowa wygrzewka po każdym starcie silnika; porównania konfiguracji tylko ciepłe-z-ciepłym; dekompozycje <10% wymagają A/B/A/B n≥3 |
+| Rekonstrukcje "bez NVLinku" | `NCCL_P2P_DISABLE=1` nie zeruje ruchu NVL (ścieżki poza NCCL) — dawki tego typu są z definicji częściowe (T9 §14.6) |
 
 ---
 
@@ -464,14 +478,11 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
   added a #34 comment scoping a follow-on study — correlate GPU-util ↔ HBM
   bandwidth and disambiguate HBM-bound vs TP-comms-bound; needs DCGM
   `DRAM_ACTIVE` / `TENSOR_ACTIVE` / `NVLINK_*` / `PCIE_*` counters; maps to W2.
-  **2026-06-08 — topology now hard fact, not assumed:** server is **PCIe-only, no
-  NVLink, no NVSwitch** (user-confirmed + vLLM log `kimi_log_eagle3_on.txt:67,138`:
-  custom all-reduce *"not supported on more than two PCIe-only GPUs"*, FlashInfer
-  *"expected on GPUs without NVSwitch… PCIe topologies"*). So all TP=8 all-reduce
-  is on PCIe today; the earlier "4-way NVLink = 2 islands of 4" is a *hypothetical
-  upgrade*, not the current node. Posted a #34 correction comment; T5 hardware
-  layer updated.
-- [ ] Which exact vLLM metric names should drive the first Grafana dashboard? Need inventory from live `/metrics` and/or Prometheus.
+  **2026-08-03:** pola NVL 1011/1012 działają host-side (`dcgmi dmon`, probe
+  nagłówka obowiązkowy — ciche pominięcie przy niedostępności); topologia po
+  montażu mostków w `infrastructure.md` §2.2. Exporter (kontener + scrape job
+  + wiersz dashboardu) nadal do zrobienia: prep laptopowy → deploy w osobnym
+  touchu.
 - [ ] Should `sample_gpu_metrics` be integrated into `run_bench_suite.py`, or stay as a separate explicit tool?
 - [ ] Which Kimi-K2.6 memory parameters are stable enough for long runs while DeepSeek stays up beside it?
 - [ ] When to implement `benchmarks/scripts/aggregate_runs.py` (Wave C)?
@@ -479,6 +490,15 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-08-03 (laptop) sesje NVLink domknięte + docs:
+
+```text
+git diff --check    OK (docs/compose-only; no .py touched)
+przywrocenie artefaktow gap-fill z 7c91f3d: epoch c64 = 1785735431    OK
+trace overhead control: profiled ITL -9% vs unprofiled (pasmo +/-15%)    OK
+replikacja ciepla B2 2040 vs 07-31 2022/1989 (+/-2,5%)    OK
+```
 
 2026-06-14 (laptop) NVLink decision note finalized + source audit:
 
@@ -631,6 +651,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-08-03 - NVLink zweryfikowany pomiarem: trace, dekompozycja, wygrzewka, docs domknięte
+
+- Why: montaż mostków (07-31) wymagał weryfikacji predykcji #50 i domknięcia mechanizmu share×capture.
+- Did: 5 sesji serwerowych + analiza laptopowa — trace c32 (NCCL 83,9%→61,1%), zyski 2,08×/2,97×, odkryta kara zimnego startu 10–15% (reguła wygrzewki w metodologii), T9 §14, notatka decyzyjna §9, infrastructure §2.2, para screenów Grafany przed/po, #50 rozliczone komentarzem, #51 zamknięte, errata nadpisanych artefaktów naprawiona.
+- Range: `6472d06..e7986c4` (30 commits)
+- Validation: OK
+- Next: prezentacja meetupowa (plan `2026-07-31-nvlink-meetup-prezentacja.md`) z gotowymi materiałami; zamknięcie #50 po stronie właściciela.
 
 ### 2026-07-31 (laptop) - server session plan: NVLink 4-way install verification
 
