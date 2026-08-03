@@ -18,7 +18,6 @@ services:
       HF_HUB_ENABLE_HF_TRANSFER: "1"
       VLLM_WORKER_MULTIPROC_METHOD: spawn
       NCCL_CUMEM_ENABLE: "1"
-      NCCL_NVLS_ENABLE: "1"
       CUDA_VISIBLE_DEVICES: "${QWEN_CUDA_VISIBLE_DEVICES:-0,1,2,3,4,5,6,7}"
     volumes:
       - /home/ubuntusrv2/.vllm/models:/root/.cache/huggingface
