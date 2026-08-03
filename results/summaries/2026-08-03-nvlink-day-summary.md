@@ -111,15 +111,29 @@ Nieudana replikacja TP4-AR (1747 vs 2022 przy identycznych `engine_cmd` i
 
 ## 6. Braki i sprawy otwarte
 
-- `dmesg_end.txt` (gap-fill) — czwarte podejście nie wykonane; plik nadal
-  0 B. Do zrobienia przy następnym SSH (komenda z gwarancją niepustego pliku
-  w planie domknięcia, Cz. 1). #51 zad. 1 otwarte.
-- `trace_c16_status.txt` — notatka o straconych trace'ach c16 nie powstała
-  (ta wiedza jest w tym summary; plik przy okazji).
+- `dmesg_end.txt` — DOMKNIĘTE (`f215f3b`): jawna notatka „bufor nie sięga
+  boota; zero wpisów nvlink/nvrm/xid". #51 zad. 1 zamykalne.
+- `trace_c16_status.txt` — DOMKNIĘTE (`f215f3b`).
 - Kimi c16 przy 192 promptach na ciepłym silniku — obecne 501 to zimny bieg;
   wartość informacyjna niska (ITL identyczny), nie planujemy.
 - `NCCL_NVLS_ENABLE=1` w compose Qwena — do usunięcia TERAZ (dzień pomiarowy
   zamknięty, porównywalność już niepotrzebna).
+
+### Errata: nadpisanie artefaktów gap-fill w `f215f3b` (naprawione)
+
+Commit `f215f3b` („adding missing files"), poza dodaniem dwóch powyższych
+plików, **nadpisał 10 artefaktów porannej sesji gap-fill** (log, okna dcgmi
+noAR c1/c64 + epochs, `engine_env_tp4_noAR.txt`, `nvidia_smi_start.txt`,
+`start_commit.txt`) i skasował `nvidia_smi_tp4_noAR.txt` — mechanizm: stare
+zmienne (`RUN_DIR`/`P0OUT`/etykiety z rana) w reużywanym shellu SSH podczas
+sesji trace'owej; zabłąkane okno (epoch 1785741122, ~07:12) biegło w trakcie
+benchu TP4-**AR** pod etykietą `tp4_noAR`. Bench JSON-y NIE zostały ruszone
+(1748 nienaruszone), kanoniczne okno AR istnieje osobno
+(`…_kimi_trace_nvlink/qwen/qwen_tp4_ar_c64_dcgmi.txt`). Oryginały przywrócone
+z `7c91f3d` w commicie tej erraty; zabłąkane dane odrzucone jako źle
+etykietowane (treść ambiwalentna, bez pary bench↔okno). Wniosek operacyjny
+do przyszłych planów: Cz. 0 każdego planu powinno zaczynać się od świeżego
+shella albo jawnego `unset` zmiennych sesyjnych.
 
 ## 7. Ścieżki dowodowe
 
