@@ -1,0 +1,1 @@
+trace c16 (Cz. 4b sesji trace): NIE skopiowane przed force-recreate przy restore — STRACONE; bench JSON kimi_c16_profiled.json (618 tok/s, ITL 50,09) zachowany; c32 jest kanoniczny
