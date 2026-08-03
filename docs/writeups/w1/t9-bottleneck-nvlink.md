@@ -615,6 +615,10 @@ so the verdict composes with any price tag.
 trace (the GO estimate's share is traced at c=16, extrapolated to c=32 from
 counters); the root cause of the c=16 scheduler pathology; a clean
 (warmed-up) TP1 CPU-timeline to itemize the remaining 5.36 ms of floor.
+*Post-scriptum 2026-08-03: the first two residuals are resolved by the
+post-intervention measurements — see §14. The c=32 trace was taken (NCCL
+61.1% of span), and the c=16 "scheduler pathology" turned out to be
+transport-caused: it vanished the moment the bridges went in.*
 
 ## 13. Evidence
 
@@ -630,6 +634,114 @@ counters); the root cause of the c=16 scheduler pathology; a clean
 | External support for architecture estimates only: `~14 KiB` payload (`hidden_size=7168`, BF16), 61 decoder layers, and ~2 Megatron-style forward TP reductions/layer | [Hugging Face Kimi K2 config](https://huggingface.co/moonshotai/Kimi-K2-Instruct-0905/resolve/main/config.json); [Megatron-LM TP paper](https://ar5iv.labs.arxiv.org/html/1909.08053); [vLLM DeepSeek/Kimi-style source](https://github.com/vllm-project/vllm/blob/v0.20.0/vllm/model_executor/models/deepseek_v2.py) |
 | Goal, parametric model, first-pass NVLink table | [#50](https://github.com/Czyszka/nanoserve-mini/issues/50) |
 | Executed session plans (methodology of record) | `docs/plans/2026-06-10-server-session.md`, `docs/plans/2026-06-10-bottleneck-followup-session.md`, `docs/plans/2026-06-11-nvlink-boundary-session.md` |
+
+## 14. Measurement after the intervention (2026-07-31 → 2026-08-03)
+
+Everything above this section was written **before** the bridges existed on
+the node — the verdict was a falsifiable prediction. On 2026-07-31 the 4-way
+NVLink bridges were physically installed as two islands (GPU 0–3, GPU 4–7),
+and four server sessions (07-31 install-verification; 08-03 gap-fill, trace,
+close-out) turned the prediction table into measurements. Day-level synthesis:
+`results/summaries/2026-08-03-nvlink-day-summary.md`.
+
+### 14.1 Install verification
+
+Full NV6 mesh inside both islands (`topo -m`); P2P bandwidth 132.8 GB/s
+in-island vs 29.1 GB/s cross-island control; NCCL busbw 185–333 GB/s
+in-island vs the 7.2–7.9 GB/s PCIe transport ceiling this thread measured;
+2+2 cross-island busbw 24.8–31.3 GB/s (hierarchical collective, as the
+capture model assumed); NVLink error-counter delta across the whole loaded
+day: empty. The custom all-reduce gate behaved exactly as §5 predicted for a
+4+4 topology: the Qwen TP4 warning cleared and the kernel registered cuda
+graph addresses (active), while the Kimi TP8 warning persisted (TP group not
+a full mesh — expected, not a failure).
+
+### 14.2 Predicted vs measured
+
+| scenario | PCIe baseline | prediction | measured (warm) | verdict on prediction |
+|---|---:|---|---:|---|
+| Qwen TP4 c64 out tok/s | 680 | ~1430 (capture=1, share 0.533) | **1989–2040 (2.9–3.0×)** | **exceeded the model's own ceiling** `1/(1−share)` = 2.14× |
+| Kimi TP8 c32 out tok/s | 285 | ~770 (capture 0.75) | **594–608 (2.08×)** | implied capture **0.62** |
+| both c=1 rows | floor-bound | ~unchanged | TPOT −17…−25% | roughly held (small gain, floor still dominates) |
+| Kimi c16 anomaly (ITL 512 ms) | scheduler-suspect | predicted to survive | **vanished** (48.6–49.0 ms) | **refuted — it was transport-caused** |
+| PCIe RX under TP load | 7.2–7.9 GB/s ceiling | drop | Kimi c32: 4.4 GB/s; Qwen c64: ~0.03 | held; direct NVL counters: Kimi c32 **7.89 GB/s** avg/GPU |
+
+Two predictions failed in instructive ways. The c=16 pathology was listed in
+§12 as a "free software lever" — it was actually the transport itself; on
+NVLink the operating point is clean. And the Qwen gain exceeding the Amdahl
+ceiling exposes that the traced "NCCL share" (kernel-residency) includes
+exposed peer-wait, which shrinks *superlinearly* when the transport gets
+faster — the share×capture model is a lower-bound estimator, not an upper
+bound, when the share is measured as kernel time.
+
+### 14.3 Mechanism closed: the post-intervention trace
+
+Kimi TP8 c=32 trace on NVLink (rank0; rank7 within 1.4 p.p.):
+
+| span share | PCIe @c16 (§7, in-anomaly) | NVLink @c32 |
+|---|---:|---:|
+| NCCL/comms | 83.9% | **61.1%** |
+| compute | 4.6% | **30.2%** |
+| gaps | — | ~0–2% |
+
+Profiler-overhead control: profiled bench ITL −9% vs unprofiled (inside the
+±15% acceptance band → quantitative). The arithmetic closes: comms time
+compressed ~2.9× (0.839·T → 0.294·T) while the non-comms remainder stayed
+~constant — **the entire measured 2.08× came out of communication**, and the
+implied capture 0.62 matches the bench-side number independently. Communication
+still holds ~61% of the span, so a full-mesh fabric (NVSwitch-class) retains a
+theoretical further ~2.6× on batched Kimi — the §12 ceiling remains live.
+
+### 14.4 Dose decomposition: link vs custom-AR kernel
+
+- Package (warm AR vs PCIe): **~2.97×** — the headline number.
+- Kernel dose at c64: **interval 1.0–1.2×, unresolved.** Cold-vs-cold same-day
+  A/B gives 1.00× (1747 vs 1748); warm-vs-warm gives 1.22× (mean 2017 vs
+  1655); single-run noise is ±6%, and the warm-noAR point sits *below* the
+  cold-noAR point, so the interval cannot be narrowed without an interleaved
+  A/B/A/B protocol (n≥3). Deliberately not scheduled — the verdict does not
+  depend on the split.
+- Kernel dose at c=1: **real, ~+8% TPOT** (3.30 ms with AR — replicating
+  07-31's 3.21 — vs 3.58/3.80 without).
+- NVL counters (DCGM 1011/1012) see custom-AR traffic: TP4-AR averages
+  3.78 GB/s vs 4.68 GB/s under NCCL-only at similar throughput — the one-shot
+  kernel moves ~19% fewer bytes per token than the ring.
+
+### 14.5 The cold-start discovery (methodology)
+
+The decomposition initially looked irreproducible (1747 vs 2022 with
+bit-identical `engine_cmd` + `engine_env`). The resolution: **the first bench
+after an engine start pays a 10–15% penalty**, concentrated in prefill/tail
+latency. On 07-31 every c64 ran after a c1 (warm); on 08-03 every morning c64
+ran first (cold). A controlled test (no-sampler vs sampler-on-old-fields on
+the same engine) exonerated both DCGM sampling and the NVL fields and
+replicated 07-31 to ±2.5%. Retroactively explained: Kimi c16 501 vs 538
+tok/s, and the single TP2-NVLink run (1530, cold — an *underestimate*, which
+only strengthens the TP2-per-GPU-optimum conclusion). Now codified as the
+mandatory warm-up rule in `docs/operations/benchmark-methodology.md`.
+
+### 14.6 A control worth recording: `NCCL_P2P_DISABLE=1` is not "bridges off"
+
+Attempting a logical reconstruction of the pre-bridge regime on Kimi TP8 c32:
+throughput fell 594→458 tok/s, per-GPU power fell to 172–181 W at 100% util
+(the pre-bridge visual signature), and PCIe RX returned exactly to the old
+7.1 GB/s ceiling — NCCL did move to host memory. But NVL counters still
+showed **~4 GB/s** of residual NVLink traffic from non-NCCL paths (torch/vLLM
+P2P copies not governed by the NCCL env), and throughput stayed well above
+the true PCIe-era 285 tok/s. Any future "without NVLink" dose on this node is
+impure by construction; label reconstructions accordingly.
+
+### 14.7 Evidence (this section)
+
+| Claim | Source |
+|---|---|
+| Install verification (topo, P2P, busbw, error delta, AR gate) | `results/runs/2026-07-31_nvlink_install/` |
+| Post-intervention benches: Qwen TP4/TP2, Kimi c16@192 / c32, NVL counters | `results/runs/2026-08-03_nvlink_gap_fill/` |
+| Kimi c32 trace + summaries rank0/rank7, TP4-AR window | `results/runs/2026-08-03_kimi_trace_nvlink/` (traces: `/home/ubuntusrv2/working/nanoserve-tracing/kimi_c32_nvlink_2026-08-03`) |
+| Cold/warm ladder, drift test B1/B2/B3, c1 kernel dose | `…_kimi_trace_nvlink/qwen/bench_drift/`, `…_domkniecie_grafana/qwen/bench/` |
+| nop2p reconstruction + nvidia-smi frames + Grafana before/after pair | `results/runs/2026-08-03_domkniecie_grafana/` |
+| Day synthesis, errata, evidence paths | `results/summaries/2026-08-03-nvlink-day-summary.md` |
+| Executed session plans (methodology of record) | `docs/plans/2026-07-31-nvlink-install-verification.md`, `docs/plans/2026-08-03-{nvlink-gap-fill,kimi-trace-nvlink,drift-test-domkniecia,domkniecie-grafana-nop2p}.md` |
 
 ## Appendix: operational lessons (paid for in session time)
 
@@ -667,3 +779,17 @@ and are now codified in the plans:
 - **Profile after warmup** — the F3 trace burned its window on torch.compile
   because the bench ran cold (the one methodology slip of the series, left
   visible in §7 as a worked example of why warmups matter).
+- **Bench after warmup, too** — the first bench after any engine start pays a
+  10–15% cold penalty (§14.5); it masqueraded as day-to-day drift and as DCGM
+  sampling cost for half a session before an on-engine A/B pinned it.
+- **Reused SSH shells overwrite earlier sessions' artifacts** — stale
+  `RUN_DIR`/label variables sent one trace-session sampling window into the
+  morning session's files (restored from git in `386e41a`); start each plan's
+  Cz. 0 from a fresh shell or an explicit `unset`.
+- **`find | sort | tail -1` is not "the last rank"** — vLLM's per-process
+  trace directory also contains `vllm_1.async_llm…` (API process, python-only
+  events), which sorts after `rank7` and yields nonsense shares; select rank
+  files by an explicit `*rank7*` glob.
+- **Copy traces off the container before any recreate** — `/tmp/vllm_profile`
+  dies with the container layer; the c16 traces of 08-03 were lost this way
+  (bench JSON survived, traces did not).

@@ -482,6 +482,28 @@ Minimum controls:
 A benchmark without workload and server controls is not a benchmark result. It is
 only an anecdote.
 
+### Engine warm-up rule (mandatory since 2026-08-03)
+
+**After every engine (re)start, run a throwaway warm-up bench before any
+measured run.** The first bench after a cold engine start is 10–15% slower
+than subsequent runs, with the loss concentrated in prefill/tail latency
+(TTFT, mean ITL), not steady-state decode.
+
+Evidence (Qwen3.6 TP4 c64, identical `engine_cmd` + `engine_env`, 07-31 and
+08-03 sessions): cold first-bench runs scored 1747–1851 tok/s while warm runs
+(any prior bench on the same engine, even a 40-prompt c1 on a different
+dataset) scored 1989–2040 tok/s. The effect was initially misread as
+day-to-day drift and as DCGM sampling cost; a controlled A/B (bench with no
+sampler vs bench with sampler, same engine) exonerated both. Details:
+`results/summaries/2026-08-03-nvlink-day-summary.md` §3.
+
+Practical form: one short bench on the target engine (e.g. c1, 20–40 prompts,
+or a truncated version of the measured workload) whose results are discarded.
+Record it in artifacts as `*_warmup_*` so the provenance is explicit. When
+comparing configurations across engine restarts, compare warm-to-warm only;
+single-run noise is ±6%, so decompositions smaller than ~10% additionally
+need repeated interleaved runs (A/B/A/B, n≥3).
+
 ## Workload definitions
 
 Workloads should be named and repeatable. At minimum, Phase 1 should distinguish:
