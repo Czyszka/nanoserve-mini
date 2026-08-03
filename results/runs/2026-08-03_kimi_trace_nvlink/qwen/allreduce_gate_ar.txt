@@ -1,0 +1,1 @@
+custom AR registering lines: 8 (oczekiwane >0)

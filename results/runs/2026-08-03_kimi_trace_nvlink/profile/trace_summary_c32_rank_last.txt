@@ -1,0 +1,4 @@
+kategorie: {'python_function': 3528124, 'Trace': 1}
+span 38.50s  kernel-time 1317.75s  gaps -1279.25s (-3322%)
+  other               1317.75s  3422.4% of span
+  compute                0.00s    0.0% of span

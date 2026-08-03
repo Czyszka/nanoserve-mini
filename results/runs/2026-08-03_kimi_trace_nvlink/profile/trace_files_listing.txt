@@ -1,0 +1,20 @@
+total 754932
+drwxrwxr-x 2 ubuntusrv2 ubuntusrv2     4096 sie  3 11:10 .
+drwxrwxr-x 7 ubuntusrv2 ubuntusrv2     4096 sie  3 11:10 ..
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 93021723 sie  3 09:34 dp0_pp0_tp0_dcp0_ep0_rank0.1785742408865611068.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 89404694 sie  3 09:34 dp0_pp0_tp1_dcp0_ep1_rank1.1785742408361840677.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 89552165 sie  3 09:34 dp0_pp0_tp2_dcp0_ep2_rank2.1785742408648354924.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 89873053 sie  3 09:34 dp0_pp0_tp3_dcp0_ep3_rank3.1785742408336317926.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 89065450 sie  3 09:34 dp0_pp0_tp4_dcp0_ep4_rank4.1785742408483221659.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 89958959 sie  3 09:34 dp0_pp0_tp5_dcp0_ep5_rank5.1785742412127652281.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 89867987 sie  3 09:34 dp0_pp0_tp6_dcp0_ep6_rank6.1785742408696203056.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 85090307 sie  3 09:34 dp0_pp0_tp7_dcp0_ep7_rank7.1785742409100086600.pt.trace.json.gz
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_0.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_1.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_2.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_3.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_4.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_5.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_6.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2    20653 sie  3 09:35 profiler_out_7.txt
+-rw-r--r-- 1 ubuntusrv2 ubuntusrv2 56988528 sie  3 09:34 vllm_1.async_llm.1785742402952433635.pt.trace.json.gz
