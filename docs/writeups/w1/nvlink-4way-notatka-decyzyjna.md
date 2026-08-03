@@ -780,6 +780,35 @@ Uszczegółowiona tabela „Twierdzenie → źródło" na poziomie pliku, per se
 
 
 
+## 9. Dopisek po interwencji (2026-08-03): czy decyzja się obroniła
+
+Mostki zainstalowano 2026-07-31 (dwie wyspy 4-way: GPU 0–3 i 4–7), a sesje
+pomiarowe z 07-31 i 08-03 zweryfikowały rekomendację z sekcji 1. **Decyzja
+obroniła się:**
+
+- **Kimi (8 kart, wiele zapytań):** zmierzone **2,08×** przepustowości
+  (285 → 594–608 tok/s) — wewnątrz obiecanego przedziału 2–3×, poniżej
+  górnego oszacowania 2,7× (implikowany współczynnik przejęcia komunikacji
+  0,62 wobec zakładanego 0,75).
+- **Model 4-kartowy, wiele zapytań (Qwen TP4):** zmierzone **~2,97×**
+  (680 → 1989–2040 tok/s) — powyżej sufitu z prawa Amdahla dla s=0,533
+  (2,14×). Wyjaśnienie: udział komunikacji mierzony czasem kerneli NCCL
+  zawiera także czas czekania na inne karty (peer-wait), który przy szybszym
+  łączu kurczy się ponadproporcjonalnie — model z sekcji 7 jest więc
+  oszacowaniem **dolnym**, nie górnym.
+- **Pojedyncze zapytania:** zysk mały (TPOT −17…−25%), zgodnie z „poniżej
+  1,3×" z sekcji 1.
+- **Mechanizm potwierdzony wprost:** nowy profil czasowy Kimi (c=32, na
+  NVLinku) pokazuje spadek udziału komunikacji z 83,9% do **61,1%** czasu —
+  cały zmierzony zysk przyszedł z komunikacji, a jej pozostałe ~61% oznacza,
+  że pełna siatka (klasy NVSwitch) miałaby jeszcze ~2,6× do zebrania.
+- **Jedna niespodzianka in plus:** anomalia c=16 (ITL 512 ms), w notatce
+  traktowana jako patologia planisty, **zniknęła po montażu** — była
+  transportowa. Punkt pracy c=16 jest na NVLinku czysty (48,6–49,0 ms).
+
+Szczegóły i pełne rozliczenie predykcji: T9 §14 oraz
+`results/summaries/2026-08-03-nvlink-day-summary.md`.
+
 ## Załącznik A. Słowniczek pojęć
 
 Pojęcia zebrano w grupy tematyczne.
