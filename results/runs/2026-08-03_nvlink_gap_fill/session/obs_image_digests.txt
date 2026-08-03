@@ -1,0 +1,3 @@
+grafana/grafana-image-renderer   latest                     sha256:a30a68c2de11a1aad5733452536ac50fbc2f3958e6d0aa046ef9eb56db7c6a6d   ee9ac342580a   2 months ago    1.41GB
+grafana/grafana                  latest                     sha256:2d1f9ae67c1778d33e291d4c3c759cd8b650e67491f02533499eb950e075eeb5   ffe38074db41   2 months ago    1.07GB
+prom/prometheus                  v3                         sha256:e4254400b85610324913f0dc4acf92603d9984e7519414c5a12811aa6146acc3   eb76b4fb5776   3 months ago    423MB
