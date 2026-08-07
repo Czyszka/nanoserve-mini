@@ -1,0 +1,38 @@
+# HELP vllm:spec_decode_num_drafts_total Number of spec decoding drafts.
+# TYPE vllm:spec_decode_num_drafts_total counter
+vllm:spec_decode_num_drafts_total{engine="0",model_name="kimi-k2.6"} 95790.0
+# HELP vllm:spec_decode_num_drafts_created Number of spec decoding drafts.
+# TYPE vllm:spec_decode_num_drafts_created gauge
+vllm:spec_decode_num_drafts_created{engine="0",model_name="kimi-k2.6"} 1.7861024656232293e+09
+# HELP vllm:spec_decode_num_draft_tokens_total Number of draft tokens.
+# TYPE vllm:spec_decode_num_draft_tokens_total counter
+vllm:spec_decode_num_draft_tokens_total{engine="0",model_name="kimi-k2.6"} 766320.0
+# HELP vllm:spec_decode_num_draft_tokens_created Number of draft tokens.
+# TYPE vllm:spec_decode_num_draft_tokens_created gauge
+vllm:spec_decode_num_draft_tokens_created{engine="0",model_name="kimi-k2.6"} 1.786102465623354e+09
+# HELP vllm:spec_decode_num_accepted_tokens_total Number of accepted tokens.
+# TYPE vllm:spec_decode_num_accepted_tokens_total counter
+vllm:spec_decode_num_accepted_tokens_total{engine="0",model_name="kimi-k2.6"} 124144.0
+# HELP vllm:spec_decode_num_accepted_tokens_created Number of accepted tokens.
+# TYPE vllm:spec_decode_num_accepted_tokens_created gauge
+vllm:spec_decode_num_accepted_tokens_created{engine="0",model_name="kimi-k2.6"} 1.7861024656234283e+09
+# HELP vllm:spec_decode_num_accepted_tokens_per_pos_total Accepted tokens per draft position.
+# TYPE vllm:spec_decode_num_accepted_tokens_per_pos_total counter
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="0"} 44118.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="1"} 29667.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="2"} 19354.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="3"} 12716.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="4"} 8217.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="5"} 5166.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="6"} 3118.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="7"} 1788.0
+# HELP vllm:spec_decode_num_accepted_tokens_per_pos_created Accepted tokens per draft position.
+# TYPE vllm:spec_decode_num_accepted_tokens_per_pos_created gauge
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="0"} 1.7861024656234968e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="1"} 1.7861024656235185e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="2"} 1.7861024656235366e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="3"} 1.7861024656235526e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="4"} 1.7861024656235693e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="5"} 1.786102465623585e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="6"} 1.7861024656236012e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="7"} 1.7861024656236162e+09

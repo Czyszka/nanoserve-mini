@@ -1,0 +1,8 @@
+227:2026-08-07T11:31:40.851460548Z (Worker_TP6_EP6 pid=1219) INFO 08-07 11:31:40 [gpu_model_runner.py:5437] Using auxiliary layers from speculative config: (2, 13, 25, 36, 48, 59)
+233:2026-08-07T11:31:43.365280041Z (Worker_TP5_EP5 pid=1218) INFO 08-07 11:31:43 [gpu_model_runner.py:5437] Using auxiliary layers from speculative config: (2, 13, 25, 36, 48, 59)
+239:2026-08-07T11:31:49.965192495Z (Worker_TP4_EP4 pid=1217) INFO 08-07 11:31:49 [gpu_model_runner.py:5437] Using auxiliary layers from speculative config: (2, 13, 25, 36, 48, 59)
+248:2026-08-07T11:31:53.269231452Z (Worker_TP1_EP1 pid=1214) INFO 08-07 11:31:53 [gpu_model_runner.py:5437] Using auxiliary layers from speculative config: (2, 13, 25, 36, 48, 59)
+251:2026-08-07T11:31:53.554473534Z (Worker_TP2_EP2 pid=1215) INFO 08-07 11:31:53 [gpu_model_runner.py:5437] Using auxiliary layers from speculative config: (2, 13, 25, 36, 48, 59)
+330:2026-08-07T11:34:20.029334871Z (Worker_TP0_EP0 pid=1213) INFO 08-07 11:34:20 [gpu_model_runner.py:6844] Graph capturing finished in 43 secs, took 1.86 GiB
+359:2026-08-07T11:34:25.619317336Z (EngineCore pid=988) WARNING 08-07 11:34:25 [vllm.py:1718] max_num_scheduled_tokens is set to 3872 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+398:2026-08-07T11:34:32.104146021Z (APIServer pid=1) INFO:     Application startup complete.

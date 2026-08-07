@@ -1,0 +1,28 @@
+# HELP vllm:spec_decode_num_drafts_total Number of spec decoding drafts.
+# TYPE vllm:spec_decode_num_drafts_total counter
+vllm:spec_decode_num_drafts_total{engine="0",model_name="kimi-k2.6"} 63158.0
+# HELP vllm:spec_decode_num_drafts_created Number of spec decoding drafts.
+# TYPE vllm:spec_decode_num_drafts_created gauge
+vllm:spec_decode_num_drafts_created{engine="0",model_name="kimi-k2.6"} 1.7861042050832424e+09
+# HELP vllm:spec_decode_num_draft_tokens_total Number of draft tokens.
+# TYPE vllm:spec_decode_num_draft_tokens_total counter
+vllm:spec_decode_num_draft_tokens_total{engine="0",model_name="kimi-k2.6"} 189474.0
+# HELP vllm:spec_decode_num_draft_tokens_created Number of draft tokens.
+# TYPE vllm:spec_decode_num_draft_tokens_created gauge
+vllm:spec_decode_num_draft_tokens_created{engine="0",model_name="kimi-k2.6"} 1.786104205083285e+09
+# HELP vllm:spec_decode_num_accepted_tokens_total Number of accepted tokens.
+# TYPE vllm:spec_decode_num_accepted_tokens_total counter
+vllm:spec_decode_num_accepted_tokens_total{engine="0",model_name="kimi-k2.6"} 57633.0
+# HELP vllm:spec_decode_num_accepted_tokens_created Number of accepted tokens.
+# TYPE vllm:spec_decode_num_accepted_tokens_created gauge
+vllm:spec_decode_num_accepted_tokens_created{engine="0",model_name="kimi-k2.6"} 1.786104205083313e+09
+# HELP vllm:spec_decode_num_accepted_tokens_per_pos_total Accepted tokens per draft position.
+# TYPE vllm:spec_decode_num_accepted_tokens_per_pos_total counter
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="0"} 26058.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="1"} 18438.0
+vllm:spec_decode_num_accepted_tokens_per_pos_total{engine="0",model_name="kimi-k2.6",position="2"} 13137.0
+# HELP vllm:spec_decode_num_accepted_tokens_per_pos_created Accepted tokens per draft position.
+# TYPE vllm:spec_decode_num_accepted_tokens_per_pos_created gauge
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="0"} 1.7861042050833461e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="1"} 1.7861042050833557e+09
+vllm:spec_decode_num_accepted_tokens_per_pos_created{engine="0",model_name="kimi-k2.6",position="2"} 1.786104205083364e+09
