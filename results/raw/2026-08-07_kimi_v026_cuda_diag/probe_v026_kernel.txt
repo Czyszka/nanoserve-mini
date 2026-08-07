@@ -1,0 +1,2 @@
+device NVIDIA H200 NVL capability (9, 0)
+matmul OK, sum = 4707.1533203125

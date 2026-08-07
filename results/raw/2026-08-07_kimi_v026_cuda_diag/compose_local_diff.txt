@@ -1,0 +1,1 @@
+# git diff pusty — zmiana taga zrobiona poza repo? zanotuj gdzie

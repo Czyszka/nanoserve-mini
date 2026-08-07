@@ -1,0 +1,1 @@
+# brak bloku błędu w biegu debug — silnik wstał? sprawdź /health i zanotuj

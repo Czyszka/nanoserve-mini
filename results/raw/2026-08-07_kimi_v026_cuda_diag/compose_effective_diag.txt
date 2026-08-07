@@ -1,0 +1,77 @@
+name: compose
+services:
+  vllm:
+    command:
+      - --model
+      - moonshotai/Kimi-K2.6
+      - --served-model-name=kimi-k2.6
+      - --host=0.0.0.0
+      - --port=8000
+      - --trust-remote-code
+      - --enable-expert-parallel
+      - --tensor-parallel-size
+      - "8"
+      - --gpu-memory-utilization
+      - "0.6"
+      - --tool-call-parser=kimi_k2
+      - --reasoning-parser=kimi_k2
+      - --enable-auto-tool-choice
+      - --language-model-only
+      - --max-num-seqs
+      - "32"
+      - --max-model-len
+      - "131072"
+      - --max-num-batched-tokens
+      - "4096"
+      - --speculative-config={"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3,"max_model_len":8192}
+    container_name: vllm
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities:
+                - gpu
+              driver: nvidia
+              count: -1
+    environment:
+      CUDA_LAUNCH_BLOCKING: "1"
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      HUGGING_FACE_HUB_TOKEN: REDACTED
+      NCCL_CUMEM_ENABLE: "1"
+      NCCL_DEBUG: INFO
+      NCCL_DEBUG_SUBSYS: INIT,GRAPH,ENV
+      NCCL_NVLS_ENABLE: "1"
+      VLLM_LOGGING_LEVEL: DEBUG
+      VLLM_WORKER_MULTIPROC_METHOD: spawn
+    hostname: vllm
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -fsS http://localhost:8000/health || exit 1
+      timeout: 10s
+      interval: 30s
+      retries: 60
+      start_period: 30m0s
+    image: vllm/vllm-openai:v0.20.0-cu130-ubuntu2404
+    ipc: host
+    networks:
+      nanoserve-net: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8000"
+        protocol: tcp
+    privileged: true
+    restart: "no"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    volumes:
+      - type: bind
+        source: /home/ubuntusrv2/.vllm/models
+        target: /root/.cache/huggingface
+        bind:
+          create_host_path: true
+networks:
+  nanoserve-net:
+    name: nanoserve-net

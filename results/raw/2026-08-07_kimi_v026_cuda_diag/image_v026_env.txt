@@ -1,0 +1,7 @@
+["PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+"NVIDIA_REQUIRE_CUDA=cuda>=13.0 brand=unknown
+"NV_CUDA_CUDART_VERSION=13.0.96-1"
+"CUDA_VERSION=13.0.2"
+"LD_LIBRARY_PATH=/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64"
+"VLLM_ENABLE_CUDA_COMPATIBILITY=0"
+"TORCH_CUDA_ARCH_LIST=7.5 8.0 8.6 8.9 9.0 10.0 12.0"

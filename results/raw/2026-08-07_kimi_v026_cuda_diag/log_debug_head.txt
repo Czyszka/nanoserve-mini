@@ -1,0 +1,150 @@
+2026-08-07T06:54:30.871976749Z DEBUG 08-07 06:54:30 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:54:30.872087493Z DEBUG 08-07 06:54:30 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:54:30.872336094Z DEBUG 08-07 06:54:30 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:54:30.872375972Z DEBUG 08-07 06:54:30 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:54:31.572540948Z DEBUG 08-07 06:54:31 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:54:31.635954989Z DEBUG 08-07 06:54:31 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:54:31.635993979Z DEBUG 08-07 06:54:31 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:54:31.636127619Z DEBUG 08-07 06:54:31 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:54:31.636157458Z DEBUG 08-07 06:54:31 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:54:31.636846346Z DEBUG 08-07 06:54:31 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:54:32.816895157Z DEBUG 08-07 06:54:32 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:54:33.077979631Z DEBUG 08-07 06:54:33 [platforms/__init__.py:246] Automatically detected platform cuda.
+2026-08-07T06:54:41.509481378Z DEBUG 08-07 06:54:41 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+2026-08-07T06:54:41.509555607Z DEBUG 08-07 06:54:41 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+2026-08-07T06:54:41.509672652Z DEBUG 08-07 06:54:41 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+2026-08-07T06:54:41.509728842Z DEBUG 08-07 06:54:41 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+2026-08-07T06:54:41.559514967Z WARNING 08-07 06:54:41 [utils/argparse_utils.py:257] With `vllm serve`, you should provide the model as a positional argument or in a config file instead of via the `--model` option. The `--model` option will be removed in a future version.
+2026-08-07T06:54:41.563396951Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:299] 
+2026-08-07T06:54:41.563448423Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:299]        █     █     █▄   ▄█
+2026-08-07T06:54:41.563460437Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:299]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.20.0
+2026-08-07T06:54:41.563468384Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:299]   █▄█▀ █     █     █     █  model   moonshotai/Kimi-K2.6
+2026-08-07T06:54:41.563476628Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:299]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+2026-08-07T06:54:41.563483784Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:299] 
+2026-08-07T06:54:41.568671229Z (APIServer pid=1) INFO 08-07 06:54:41 [entrypoints/utils.py:233] non-default args: {'model_tag': 'moonshotai/Kimi-K2.6', 'enable_auto_tool_choice': True, 'tool_call_parser': 'kimi_k2', 'host': '0.0.0.0', 'model': 'moonshotai/Kimi-K2.6', 'trust_remote_code': True, 'max_model_len': 131072, 'served_model_name': ['kimi-k2.6'], 'reasoning_parser': 'kimi_k2', 'tensor_parallel_size': 8, 'enable_expert_parallel': True, 'gpu_memory_utilization': 0.6, 'language_model_only': True, 'max_num_batched_tokens': 4096, 'max_num_seqs': 32, 'speculative_config': {'model': 'lightseekorg/kimi-k2.6-eagle3-mla', 'method': 'eagle3', 'num_speculative_tokens': 3, 'max_model_len': 8192}}
+2026-08-07T06:54:43.792100067Z (APIServer pid=1) DEBUG 08-07 06:54:43 [model_executor/models/registry.py:804] Cached model info file for class vllm.model_executor.models.kimi_k25.KimiK25ForConditionalGeneration not found
+2026-08-07T06:54:43.792424305Z (APIServer pid=1) DEBUG 08-07 06:54:43 [model_executor/models/registry.py:864] Cache model info for class vllm.model_executor.models.kimi_k25.KimiK25ForConditionalGeneration miss. Loading model instead.
+2026-08-07T06:54:55.180988715Z (APIServer pid=1) DEBUG 08-07 06:54:55 [model_executor/models/registry.py:874] Loaded model info for class vllm.model_executor.models.kimi_k25.KimiK25ForConditionalGeneration
+2026-08-07T06:54:56.513532464Z (APIServer pid=1) DEBUG 08-07 06:54:56 [utils/import_utils.py:73] Loading module triton_kernels from /usr/local/lib/python3.12/dist-packages/vllm/third_party/triton_kernels/__init__.py.
+2026-08-07T06:54:56.731036074Z (APIServer pid=1) INFO 08-07 06:54:56 [distributed/nixl_utils.py:20] Setting UCX_RCACHE_MAX_UNRELEASED to '1024' to avoid a rare memory leak in UCX when using NIXL.
+2026-08-07T06:54:56.774721674Z (APIServer pid=1) INFO 08-07 06:54:56 [distributed/nixl_utils.py:32] NIXL is available
+2026-08-07T06:54:56.841012270Z (APIServer pid=1) DEBUG 08-07 06:54:56 [logging_utils/log_time.py:29] Registry inspect model class: Elapsed time 13.0498295 secs
+2026-08-07T06:54:56.841757517Z (APIServer pid=1) INFO 08-07 06:54:56 [config/model.py:555] Resolved architecture: KimiK25ForConditionalGeneration
+2026-08-07T06:54:56.842259362Z (APIServer pid=1) INFO 08-07 06:54:56 [config/model.py:1680] Using max model len 131072
+2026-08-07T06:54:57.088001221Z (APIServer pid=1) DEBUG 08-07 06:54:57 [compilation/decorators.py:215] Inferred dynamic dimensions for forward method of <class 'vllm.model_executor.models.deepseek_v4.DeepseekV4Model'>: ['input_ids', 'positions', 'intermediate_tensors', 'inputs_embeds']
+2026-08-07T06:54:57.260990691Z (APIServer pid=1) DEBUG 08-07 06:54:57 [config/model.py:1745] Generative models support chunked prefill.
+2026-08-07T06:54:57.261040914Z (APIServer pid=1) DEBUG 08-07 06:54:57 [config/model.py:1803] Generative models support prefix caching.
+2026-08-07T06:54:57.261234516Z (APIServer pid=1) DEBUG 08-07 06:54:57 [engine/arg_utils.py:2271] Enabling chunked prefill by default
+2026-08-07T06:54:57.261246148Z (APIServer pid=1) DEBUG 08-07 06:54:57 [engine/arg_utils.py:2299] Enabling prefix caching by default
+2026-08-07T06:54:57.267450875Z (APIServer pid=1) DEBUG 08-07 06:54:57 [config/parallel.py:836] Defaulting to use mp for distributed inference
+2026-08-07T06:54:57.871327404Z (APIServer pid=1) DEBUG 08-07 06:54:57 [transformers_utils/config.py:797] Overriding HF config with <function SpeculativeConfig.hf_config_override at 0x769de49b3380>
+2026-08-07T06:54:58.298003039Z (APIServer pid=1) DEBUG 08-07 06:54:58 [model_executor/models/registry.py:804] Cached model info file for class vllm.model_executor.models.deepseek_eagle3.Eagle3DeepseekV2ForCausalLM not found
+2026-08-07T06:54:58.298381580Z (APIServer pid=1) DEBUG 08-07 06:54:58 [model_executor/models/registry.py:864] Cache model info for class vllm.model_executor.models.deepseek_eagle3.Eagle3DeepseekV2ForCausalLM miss. Loading model instead.
+2026-08-07T06:55:09.465955576Z (APIServer pid=1) DEBUG 08-07 06:55:09 [model_executor/models/registry.py:874] Loaded model info for class vllm.model_executor.models.deepseek_eagle3.Eagle3DeepseekV2ForCausalLM
+2026-08-07T06:55:09.467352303Z (APIServer pid=1) DEBUG 08-07 06:55:09 [logging_utils/log_time.py:29] Registry inspect model class: Elapsed time 11.1698527 secs
+2026-08-07T06:55:09.467767605Z (APIServer pid=1) INFO 08-07 06:55:09 [config/model.py:555] Resolved architecture: Eagle3DeepseekV2ForCausalLM
+2026-08-07T06:55:09.468435903Z (APIServer pid=1) INFO 08-07 06:55:09 [config/model.py:1680] Using max model len 262144
+2026-08-07T06:55:09.485379777Z (APIServer pid=1) INFO 08-07 06:55:09 [config/scheduler.py:239] Chunked prefill is enabled with max_num_batched_tokens=4096.
+2026-08-07T06:55:09.487369734Z (APIServer pid=1) INFO 08-07 06:55:09 [config/vllm.py:840] Asynchronous scheduling is enabled.
+2026-08-07T06:55:09.488082437Z (APIServer pid=1) DEBUG 08-07 06:55:09 [config/kernel.py:187] Setting platform-specific IR op priority defaults: IrOpPriorityConfig(rms_norm=['native']), user-defined: IrOpPriorityConfig(rms_norm=[])
+2026-08-07T06:55:09.489043139Z (APIServer pid=1) INFO 08-07 06:55:09 [config/kernel.py:205] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'])
+2026-08-07T06:55:09.489809162Z (APIServer pid=1) WARNING 08-07 06:55:09 [config/vllm.py:1402] max_num_scheduled_tokens is set to 4096 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+2026-08-07T06:55:17.896769368Z (APIServer pid=1) DEBUG 08-07 06:55:17 [tokenizers/registry.py:78] Loading CachedHfTokenizer for tokenizer_mode='hf'
+2026-08-07T06:55:19.283452022Z (APIServer pid=1) WARNING 08-07 06:55:19 [tokenizers/registry.py:246] Using a slow tokenizer. This might cause a significant slowdown. Consider using a fast tokenizer instead.
+2026-08-07T06:55:19.288199219Z (APIServer pid=1) INFO 08-07 06:55:19 [config/compilation.py:303] Enabled custom fusions: allreduce_rms
+2026-08-07T06:55:19.389991853Z (APIServer pid=1) DEBUG 08-07 06:55:19 [plugins/__init__.py:36] No plugins for group vllm.stat_logger_plugins found.
+2026-08-07T06:55:19.390497011Z (APIServer pid=1) DEBUG 08-07 06:55:19 [renderers/registry.py:58] Loading HfRenderer for renderer_mode='hf'
+2026-08-07T06:55:20.176955128Z (APIServer pid=1) INFO 08-07 06:55:20 [multimodal/registry.py:126] All limits of multimodal modalities supported by the model are set to 0, running in text-only mode.
+2026-08-07T06:55:20.619239663Z (APIServer pid=1) DEBUG 08-07 06:55:20 [utils/torch_utils.py:136] OMP_NUM_THREADS is not set; defaulting Torch threads to 1.
+2026-08-07T06:55:23.690641106Z DEBUG 08-07 06:55:23 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:23.690670822Z DEBUG 08-07 06:55:23 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:23.690954950Z DEBUG 08-07 06:55:23 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:23.690965705Z DEBUG 08-07 06:55:23 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:24.975534863Z DEBUG 08-07 06:55:24 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:25.063980739Z DEBUG 08-07 06:55:25 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:55:25.064135595Z DEBUG 08-07 06:55:25 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:55:25.064194681Z DEBUG 08-07 06:55:25 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:55:25.064323997Z DEBUG 08-07 06:55:25 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:55:25.065397802Z DEBUG 08-07 06:55:25 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:25.750305732Z DEBUG 08-07 06:55:25 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:25.839545049Z DEBUG 08-07 06:55:25 [platforms/__init__.py:246] Automatically detected platform cuda.
+2026-08-07T06:55:29.880422254Z DEBUG 08-07 06:55:29 [utils/import_utils.py:73] Loading module triton_kernels from /usr/local/lib/python3.12/dist-packages/vllm/third_party/triton_kernels/__init__.py.
+2026-08-07T06:55:29.955505363Z INFO 08-07 06:55:29 [distributed/nixl_utils.py:32] NIXL is available
+2026-08-07T06:55:30.001082972Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [v1/engine/core.py:1044] Waiting for init message from front-end.
+2026-08-07T06:55:30.003102699Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [v1/engine/core.py:1055] Received init message: EngineHandshakeMetadata(addresses=EngineZmqAddresses(inputs=['ipc:///tmp/c73f2955-88c0-4d42-8de8-d7d8272fd211'], outputs=['ipc:///tmp/4bf5df8a-6272-4115-a4b9-b7b1f36bf86b'], coordinator_input=None, coordinator_output=None, frontend_stats_publish_address=None), parallel_config={})
+2026-08-07T06:55:30.003171599Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [v1/engine/core.py:854] Has DP Coordinator: False, stats publish address: None
+2026-08-07T06:55:30.003322485Z (APIServer pid=1) DEBUG 08-07 06:55:30 [v1/engine/utils.py:1266] HELLO from local core engine process 0.
+2026-08-07T06:55:30.009391309Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [plugins/__init__.py:44] Available plugins for group vllm.general_plugins:
+2026-08-07T06:55:30.009406361Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [plugins/__init__.py:46] - lora_filesystem_resolver -> vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver
+2026-08-07T06:55:30.009579639Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [plugins/__init__.py:46] - lora_hf_hub_resolver -> vllm.plugins.lora_resolvers.hf_hub_resolver:register_hf_hub_resolver
+2026-08-07T06:55:30.009620821Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [plugins/__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+2026-08-07T06:55:30.010840060Z (EngineCore pid=664) INFO 08-07 06:55:30 [v1/engine/core.py:109] Initializing a V1 LLM engine (v0.20.0) with config: model='moonshotai/Kimi-K2.6', speculative_config=SpeculativeConfig(method='eagle3', model='lightseekorg/kimi-k2.6-eagle3-mla', num_spec_tokens=3), tokenizer='moonshotai/Kimi-K2.6', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=131072, download_dir=None, load_format=auto, tensor_parallel_size=8, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=compressed-tensors, quantization_config=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='kimi_k2', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=kimi-k2.6, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::gdn_attention_core', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [36, 4096], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': True, 'alignment_asserts': True, 'scalar_asserts': True, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': True}, 'max_cudagraph_capture_size': 256, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native']), enable_flashinfer_autotune=True, moe_backend='auto')
+2026-08-07T06:55:30.010924712Z (EngineCore pid=664) WARNING 08-07 06:55:30 [v1/executor/multiproc_executor.py:1029] Reducing Torch parallelism from 64 threads to 1 to avoid unnecessary CPU contention. Set OMP_NUM_THREADS in the external environment to tune this value as needed.
+2026-08-07T06:55:30.011240393Z (EngineCore pid=664) INFO 08-07 06:55:30 [v1/executor/multiproc_executor.py:139] DP group leader: node_rank=0, node_rank_within_dp=0, master_addr=127.0.0.1, mq_connect_ip=172.19.0.5 (local), world_size=8, local_world_size=8
+2026-08-07T06:55:30.013021055Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [distributed/device_communicators/shm_broadcast.py:390] Binding to ipc:///tmp/faada479-1bbd-4560-aaf3-2c5862fd7d9d
+2026-08-07T06:55:30.013249268Z (EngineCore pid=664) DEBUG 08-07 06:55:30 [distributed/device_communicators/shm_broadcast.py:443] vLLM message queue communication handle: Handle(local_reader_ranks=[0, 1, 2, 3, 4, 5, 6, 7], buffer_handle=(8, 16777216, 10, 'psm_25ea58a2'), local_subscribe_addr='ipc:///tmp/faada479-1bbd-4560-aaf3-2c5862fd7d9d', local_notify_addr='ipc:///tmp/b1eb12ae-74d9-4c3e-a34e-1524d754a6ee', remote_subscribe_addr=None, remote_addr_ipv6=False)
+2026-08-07T06:55:31.606821108Z DEBUG 08-07 06:55:31 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:31.606903766Z DEBUG 08-07 06:55:31 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:31.606998123Z DEBUG 08-07 06:55:31 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:31.607029520Z DEBUG 08-07 06:55:31 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:31.623487884Z DEBUG 08-07 06:55:31 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:31.623529115Z DEBUG 08-07 06:55:31 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:31.623726449Z DEBUG 08-07 06:55:31 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:31.623755782Z DEBUG 08-07 06:55:31 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:31.626894459Z DEBUG 08-07 06:55:31 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:31.626931909Z DEBUG 08-07 06:55:31 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:31.627078169Z DEBUG 08-07 06:55:31 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:31.627106632Z DEBUG 08-07 06:55:31 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:31.630836663Z DEBUG 08-07 06:55:31 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:31.630888462Z DEBUG 08-07 06:55:31 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:31.630992412Z DEBUG 08-07 06:55:31 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:31.631030991Z DEBUG 08-07 06:55:31 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:31.910256304Z DEBUG 08-07 06:55:31 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:31.910303311Z DEBUG 08-07 06:55:31 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:31.910775049Z DEBUG 08-07 06:55:31 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:31.910823651Z DEBUG 08-07 06:55:31 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:32.376493954Z DEBUG 08-07 06:55:32 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:32.376541301Z DEBUG 08-07 06:55:32 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:32.376648781Z DEBUG 08-07 06:55:32 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:32.376682270Z DEBUG 08-07 06:55:32 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:32.455336969Z DEBUG 08-07 06:55:32 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:32.455379627Z DEBUG 08-07 06:55:32 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:32.455469155Z DEBUG 08-07 06:55:32 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:32.455489421Z DEBUG 08-07 06:55:32 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:32.620631864Z DEBUG 08-07 06:55:32 [plugins/__init__.py:36] No plugins for group vllm.platform_plugins found.
+2026-08-07T06:55:32.620671481Z DEBUG 08-07 06:55:32 [platforms/__init__.py:37] Checking if TPU platform is available.
+2026-08-07T06:55:32.621160833Z DEBUG 08-07 06:55:32 [platforms/__init__.py:56] TPU platform is not available because: No module named 'libtpu'
+2026-08-07T06:55:32.621198543Z DEBUG 08-07 06:55:32 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:36.467184462Z DEBUG 08-07 06:55:36 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:36.516601138Z DEBUG 08-07 06:55:36 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:36.541209691Z DEBUG 08-07 06:55:36 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:36.887926879Z DEBUG 08-07 06:55:36 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:37.037146273Z DEBUG 08-07 06:55:37 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:37.680174836Z DEBUG 08-07 06:55:37 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:37.728621494Z DEBUG 08-07 06:55:37 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:37.780965877Z DEBUG 08-07 06:55:37 [platforms/__init__.py:85] Confirmed CUDA platform is available.
+2026-08-07T06:55:37.989445758Z DEBUG 08-07 06:55:37 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:55:37.990296104Z DEBUG 08-07 06:55:37 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:55:37.990492451Z DEBUG 08-07 06:55:37 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:55:37.991151147Z DEBUG 08-07 06:55:37 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:55:37.993421611Z DEBUG 08-07 06:55:37 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:38.038056365Z DEBUG 08-07 06:55:38 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:55:38.039061931Z DEBUG 08-07 06:55:38 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:55:38.039565769Z DEBUG 08-07 06:55:38 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:55:38.039809662Z DEBUG 08-07 06:55:38 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:55:38.042157368Z DEBUG 08-07 06:55:38 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:38.053148106Z DEBUG 08-07 06:55:38 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:55:38.054259913Z DEBUG 08-07 06:55:38 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:55:38.054792283Z DEBUG 08-07 06:55:38 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:55:38.054989731Z DEBUG 08-07 06:55:38 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:55:38.057491606Z DEBUG 08-07 06:55:38 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:38.060964335Z DEBUG 08-07 06:55:38 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:55:38.062206598Z DEBUG 08-07 06:55:38 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:55:38.062675864Z DEBUG 08-07 06:55:38 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:55:38.062936228Z DEBUG 08-07 06:55:38 [platforms/__init__.py:113] Checking if ROCm platform is available.
+2026-08-07T06:55:38.062959021Z DEBUG 08-07 06:55:38 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:55:38.064124009Z DEBUG 08-07 06:55:38 [platforms/__init__.py:127] ROCm platform is not available because: No module named 'amdsmi'
+2026-08-07T06:55:38.064611610Z DEBUG 08-07 06:55:38 [platforms/__init__.py:134] Checking if XPU platform is available.
+2026-08-07T06:55:38.064876690Z DEBUG 08-07 06:55:38 [platforms/__init__.py:165] Checking if CPU platform is available.
+2026-08-07T06:55:38.065563196Z DEBUG 08-07 06:55:38 [platforms/__init__.py:62] Checking if CUDA platform is available.
+2026-08-07T06:55:38.066508646Z DEBUG 08-07 06:55:38 [platforms/__init__.py:113] Checking if ROCm platform is available.

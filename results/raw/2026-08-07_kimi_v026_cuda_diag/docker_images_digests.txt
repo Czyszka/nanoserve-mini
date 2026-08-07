@@ -1,0 +1,5 @@
+REPOSITORY                       TAG                               DIGEST                                                                    IMAGE ID       CREATED         SIZE
+vllm/vllm-openai                 v0.26.0                           sha256:ffb2d59b1c059a5bd8d781320c9f5189de8293693b7d95da54befddaa54abf52   da9136512c30   13 days ago     18.9GB
+vllm/vllm-openai                 vllm-x86_64-cu13-0.25.1-7a33ba9   sha256:0d3aa50fd8cde18aa527a71be98e0bb6d7c4251e96c5ece5166cf4eb9ff2bdcd   a5c1dedcfd39   3 weeks ago     17.2GB
+vllm/vllm-openai                 latest-cu130-ubuntu2404           sha256:aff65d7198dd284c37dd0a18a606544cc5e92bfb0d5eb608b77e8b8f1c6b8b0d   f257c06b67ac   3 months ago    23GB
+vllm/vllm-openai                 v0.20.0-cu130-ubuntu2404          sha256:aff65d7198dd284c37dd0a18a606544cc5e92bfb0d5eb608b77e8b8f1c6b8b0d   f257c06b67ac   3 months ago    23GB

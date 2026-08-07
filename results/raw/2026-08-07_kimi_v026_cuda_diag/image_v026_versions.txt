@@ -1,0 +1,5 @@
+torch 2.11.0+cu130
+torch.cuda (runtime build) 13.0
+nccl (2, 28, 9)
+vllm 0.26.0
+flashinfer 0.6.14
