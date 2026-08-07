@@ -79,11 +79,13 @@ grep -q 'v0.26.0' "$COMPOSE" && grep -q 'fuse_allreduce_rms' "$COMPOSE" \
 git rev-parse HEAD > "$RUN_DIR/session/start_commit.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
 
-# pobranie draftera W TLE od razu (mały model, ale nie blokujmy się na starcie silnika)
+# pobranie draftera W TLE od razu (mały model, ale nie blokujmy się na starcie silnika);
+# nowsze obrazy mają CLI `hf` zamiast `huggingface-cli` — próbujemy obu
 docker run --rm -e HUGGING_FACE_HUB_TOKEN="$HF_TOKEN" -e HF_HUB_ENABLE_HF_TRANSFER=1 \
   -v /home/ubuntusrv2/.vllm/models:/root/.cache/huggingface \
-  --entrypoint huggingface-cli vllm/vllm-openai:v0.26.0 \
-  download nvidia/Kimi-K2.6-DFlash > "$DIAG/hf_download_dflash.log" 2>&1 &
+  --entrypoint bash vllm/vllm-openai:v0.26.0 \
+  -c 'huggingface-cli download nvidia/Kimi-K2.6-DFlash || hf download nvidia/Kimi-K2.6-DFlash' \
+  > "$DIAG/hf_download_dflash.log" 2>&1 &
 DL_PID=$!
 ```
 
@@ -195,7 +197,8 @@ Overlay = pełna kanoniczna komenda 0.26 (z workaroundem fuzji!) z podmienionym
 TYLKO `--speculative-config`. Compose w repo nietykalny do decyzji bramki.
 
 ```bash
-wait $DL_PID; tail -2 "$DIAG/hf_download_dflash.log"   # download draftu skończony?
+[ -n "${DL_PID:-}" ] && wait "$DL_PID"                 # (guard: świeży shell nie ma DL_PID)
+tail -2 "$DIAG/hf_download_dflash.log"                 # download draftu skończony?
 
 cat > /tmp/kimi-dflash.yml <<'EOF'
 services:
@@ -206,8 +209,9 @@ services:
 EOF
 docker compose -f "$COMPOSE" -f /tmp/kimi-dflash.yml up -d --force-recreate vllm
 
-# FAIL-FAST: dawka w runtime (lekcja 06-11)
-docker inspect vllm --format '{{json .Config.Cmd}}' | grep -qo '"method":"dflash"' \
+# FAIL-FAST: dawka w runtime (lekcja 06-11). UWAGA: wyjście `inspect '{{json ...}}'`
+# escapuje cudzysłowy JSON-a (\"method\") — wzorce muszą być gołymi tokenami bez cudzysłowów
+docker inspect vllm --format '{{json .Config.Cmd}}' | grep -qo 'dflash' \
   || echo "STOP: spec-config dflash nie wszedł do cmd"
 docker inspect vllm --format '{{json .Config.Cmd}}' | grep -qo 'fuse_allreduce_rms' \
   || echo "STOP: workaround fuzji wypadł z komendy — NIE startuj bez niego"
