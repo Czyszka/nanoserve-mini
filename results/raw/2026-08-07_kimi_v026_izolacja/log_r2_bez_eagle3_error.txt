@@ -1,0 +1,163 @@
+190-2026-08-07T07:44:16.335608127Z (Worker_TP0_EP0 pid=988)   return func(*args, **kwargs)
+191-2026-08-07T07:44:16.335616217Z [rank0]:[W807 07:44:16.276368457 ProcessGroupNCCL.cpp:5188] Guessing device ID based on global rank. This can cause a hang if rank to GPU mapping is heterogeneous. You can specify device_id in init_process_group()
+192-2026-08-07T07:44:16.779136423Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:16 [flashinfer_all_reduce.py:170] Initialized FlashInfer Allreduce norm fusion workspace with backend=mnnvl
+193-2026-08-07T07:44:21.241320549Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:21 [backends.py:378] Cache the graph of compile range (1, 36) for later use
+194-2026-08-07T07:44:22.913547413Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:22 [backends.py:378] Cache the graph of compile range (37, 4096) for later use
+195-2026-08-07T07:44:31.041105355Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:31 [backends.py:393] Compiling a graph for compile range (1, 36) takes 9.80 s
+196-2026-08-07T07:44:31.827261535Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:31 [backends.py:393] Compiling a graph for compile range (37, 4096) takes 10.59 s
+197-2026-08-07T07:44:36.077637231Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:36 [decorators.py:708] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/9cbc6706fce19b45f855aac57e405edd40fa58cf5b1f052ae7231d186e18f24f/rank_0_0/model
+198-2026-08-07T07:44:36.077665712Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:44:36 [monitor.py:53] torch.compile took 34.28 s in total
+199-2026-08-07T07:45:02.367430719Z (EngineCore pid=759) INFO 08-07 07:45:02 [shm_broadcast.py:705] No available shared memory broadcast block found in 60 seconds. This typically happens when some processes are hanging or doing some time-consuming work (e.g. compilation, weight/kv cache quantization).
+200-2026-08-07T07:45:21.280978014Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:45:21 [monitor.py:81] Initial profiling/warmup run took 45.20 s
+201-2026-08-07T07:45:26.158667032Z (Worker_TP6_EP6 pid=994) INFO 08-07 07:45:26 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+202-2026-08-07T07:45:26.792158091Z (Worker_TP3_EP3 pid=991) INFO 08-07 07:45:26 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+203-2026-08-07T07:45:26.899501775Z (Worker_TP2_EP2 pid=990) INFO 08-07 07:45:26 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+204-2026-08-07T07:45:27.085177331Z (Worker_TP7_EP7 pid=995) INFO 08-07 07:45:27 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+205-2026-08-07T07:45:27.174331131Z (Worker_TP0_EP0 pid=988) INFO 08-07 07:45:27 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+206-2026-08-07T07:45:27.295971348Z (Worker_TP5_EP5 pid=993) INFO 08-07 07:45:27 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+207-2026-08-07T07:45:28.914567986Z (Worker_TP1_EP1 pid=989) INFO 08-07 07:45:28 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+208-2026-08-07T07:45:29.270549239Z (Worker_TP4_EP4 pid=992) INFO 08-07 07:45:29 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=11 (largest=64), FULL=7 (largest=32)
+209-2026-08-07T07:45:31.696003968Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] WorkerProc hit an exception.
+210:2026-08-07T07:45:31.696059694Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] Traceback (most recent call last):
+211-2026-08-07T07:45:31.696067061Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6663, in profile_cudagraph_memory
+212-2026-08-07T07:45:31.696073721Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     self._warmup_and_capture(
+213-2026-08-07T07:45:31.696078606Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6866, in _warmup_and_capture
+214-2026-08-07T07:45:31.696084876Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     self._dummy_run(
+215-2026-08-07T07:45:31.696089660Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+216-2026-08-07T07:45:31.696095451Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+217-2026-08-07T07:45:31.696100435Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+218-2026-08-07T07:45:31.696105293Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6084, in _dummy_run
+219-2026-08-07T07:45:31.696110671Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     outputs = self.model(
+220-2026-08-07T07:45:31.696115379Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]               ^^^^^^^^^^^
+221-2026-08-07T07:45:31.696120145Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+222-2026-08-07T07:45:31.696125619Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
+223-2026-08-07T07:45:31.696130565Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+224-2026-08-07T07:45:31.696137410Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+225-2026-08-07T07:45:31.696143074Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+226-2026-08-07T07:45:31.696147742Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+227-2026-08-07T07:45:31.696178077Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+228-2026-08-07T07:45:31.696183417Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+229-2026-08-07T07:45:31.696188061Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+230-2026-08-07T07:45:31.696192913Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/kimi_k25.py", line 454, in forward
+231-2026-08-07T07:45:31.696198423Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     hidden_states = self.language_model(
+232-2026-08-07T07:45:31.696203076Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]                     ^^^^^^^^^^^^^^^^^^^^
+233-2026-08-07T07:45:31.696207837Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+234-2026-08-07T07:45:31.696213223Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+235-2026-08-07T07:45:31.696218004Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+236-2026-08-07T07:45:31.696222877Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+237-2026-08-07T07:45:31.696227964Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+238-2026-08-07T07:45:31.696233622Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+239-2026-08-07T07:45:31.696238491Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1883, in forward
+240-2026-08-07T07:45:31.696243929Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     hidden_states = self.model(
+241-2026-08-07T07:45:31.696248571Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]                     ^^^^^^^^^^^
+242-2026-08-07T07:45:31.696253267Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/decorators.py", line 520, in __call__
+243-2026-08-07T07:45:31.696258721Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self.aot_compiled_fn(self, *args, **kwargs)
+244-2026-08-07T07:45:31.696263907Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+245-2026-08-07T07:45:31.696271301Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/aot_compile.py", line 224, in __call__
+246-2026-08-07T07:45:31.696276950Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self.fn(*args, **kwargs)
+247-2026-08-07T07:45:31.696286710Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^
+248-2026-08-07T07:45:31.696291610Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1413, in forward
+249-2026-08-07T07:45:31.696296895Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     def forward(
+250-2026-08-07T07:45:31.696301550Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/caching.py", line 217, in __call__
+251-2026-08-07T07:45:31.696306818Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self.optimized_call(*args, **kwargs)
+252-2026-08-07T07:45:31.696311900Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+253-2026-08-07T07:45:31.696317767Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "<string>", line 493, in execution_fn
+254-2026-08-07T07:45:31.696324269Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+255-2026-08-07T07:45:31.696329761Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
+256-2026-08-07T07:45:31.696334541Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+257-2026-08-07T07:45:31.696339273Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/piecewise_backend.py", line 380, in __call__
+258-2026-08-07T07:45:31.696344512Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return range_entry.runnable(*args)
+259-2026-08-07T07:45:31.696349117Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+260-2026-08-07T07:45:31.696353837Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/standalone_compile.py", line 122, in __call__
+261-2026-08-07T07:45:31.696358957Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._compiled_fn(*args)
+262-2026-08-07T07:45:31.696363719Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^
+263-2026-08-07T07:45:31.696368486Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/eval_frame.py", line 1263, in _fn
+264-2026-08-07T07:45:31.696373573Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return fn(*args, **kwargs)
+265-2026-08-07T07:45:31.696378136Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^
+266-2026-08-07T07:45:31.696386668Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_functorch/aot_autograd.py", line 1200, in forward
+267-2026-08-07T07:45:31.696392147Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return compiled_fn(full_args)
+268-2026-08-07T07:45:31.696397360Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^
+269-2026-08-07T07:45:31.696402236Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 580, in runtime_wrapper
+270-2026-08-07T07:45:31.696408036Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     all_outs = call_func_at_runtime_with_args(
+--
+297-2026-08-07T07:45:31.696552283Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return super().__torch_function__(func, types, args, kwargs)
+298-2026-08-07T07:45:31.696557228Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+299-2026-08-07T07:45:31.696562059Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_ops.py", line 865, in __call__
+300-2026-08-07T07:45:31.696567133Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._op(*args, **kwargs)
+301-2026-08-07T07:45:31.696571851Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+302-2026-08-07T07:45:31.696576791Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_compile.py", line 54, in inner
+303-2026-08-07T07:45:31.696581942Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return disable_fn(*args, **kwargs)
+304-2026-08-07T07:45:31.696590442Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+305-2026-08-07T07:45:31.696595267Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/eval_frame.py", line 1263, in _fn
+306-2026-08-07T07:45:31.696600402Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return fn(*args, **kwargs)
+307-2026-08-07T07:45:31.696604954Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^
+308-2026-08-07T07:45:31.696609678Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 409, in __torch_dispatch__
+309-2026-08-07T07:45:31.696615122Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     res = func(*args, **kwargs)
+310-2026-08-07T07:45:31.696619901Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]           ^^^^^^^^^^^^^^^^^^^^^
+311-2026-08-07T07:45:31.696625165Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_ops.py", line 865, in __call__
+312-2026-08-07T07:45:31.696630785Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._op(*args, **kwargs)
+313-2026-08-07T07:45:31.696635350Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+314-2026-08-07T07:45:31.696640269Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 887, in _min_latency_fused_qkv_a_proj_impl
+315-2026-08-07T07:45:31.696645821Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return torch.nn.functional.linear(input_, weight)
+316-2026-08-07T07:45:31.696650719Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+317:2026-08-07T07:45:31.696655869Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] RuntimeError: CUDA error: CUBLAS_STATUS_EXECUTION_FAILED when calling `cublasGemmEx( handle, opa, opb, m, n, k, &falpha, a, CUDA_R_16BF, lda, b, CUDA_R_16BF, ldb, &fbeta, c, std::is_same_v<C_Dtype, float> ? CUDA_R_32F : CUDA_R_16BF, ldc, compute_type, CUBLAS_GEMM_DEFAULT_TENSOR_OP)`
+318-2026-08-07T07:45:31.696664316Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] 
+319-2026-08-07T07:45:31.696668869Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] During handling of the above exception, another exception occurred:
+320-2026-08-07T07:45:31.696673820Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] 
+321-2026-08-07T07:45:31.696678284Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] Traceback (most recent call last):
+322-2026-08-07T07:45:31.696682904Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 999, in worker_busy_loop
+323-2026-08-07T07:45:31.696692470Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     output = func(*args, **kwargs)
+324-2026-08-07T07:45:31.696697250Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]              ^^^^^^^^^^^^^^^^^^^^^
+325-2026-08-07T07:45:31.696702479Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+326-2026-08-07T07:45:31.696708264Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+327-2026-08-07T07:45:31.696712859Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+328-2026-08-07T07:45:31.696717549Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 506, in determine_available_memory
+329-2026-08-07T07:45:31.696722855Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     cudagraph_memory_estimate = self.model_runner.profile_cudagraph_memory()
+330-2026-08-07T07:45:31.696727791Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+331-2026-08-07T07:45:31.696732609Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+332-2026-08-07T07:45:31.696737751Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+333-2026-08-07T07:45:31.696742296Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+334-2026-08-07T07:45:31.696747110Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6725, in profile_cudagraph_memory
+335-2026-08-07T07:45:31.696752602Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     self._cleanup_profiling_kv_cache()
+336-2026-08-07T07:45:31.696757290Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6506, in _cleanup_profiling_kv_cache
+337-2026-08-07T07:45:31.696762636Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     torch.accelerator.synchronize()
+338-2026-08-07T07:45:31.696767277Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/accelerator/__init__.py", line 263, in synchronize
+339-2026-08-07T07:45:31.696773022Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     torch._C._accelerator_synchronizeDevice(device_index)
+340-2026-08-07T07:45:31.696778103Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] torch.AcceleratorError: CUDA error: an illegal memory access was encountered
+341-2026-08-07T07:45:31.696783001Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] Search for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
+342-2026-08-07T07:45:31.696793342Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+343-2026-08-07T07:45:31.696798821Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] For debugging consider passing CUDA_LAUNCH_BLOCKING=1
+344-2026-08-07T07:45:31.696803607Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+345-2026-08-07T07:45:31.696808427Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] 
+346-2026-08-07T07:45:31.696812772Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007] Traceback (most recent call last):
+347-2026-08-07T07:45:31.696817325Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6663, in profile_cudagraph_memory
+348-2026-08-07T07:45:31.696823116Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     self._warmup_and_capture(
+349-2026-08-07T07:45:31.696827754Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6866, in _warmup_and_capture
+350-2026-08-07T07:45:31.696833521Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     self._dummy_run(
+351-2026-08-07T07:45:31.696838079Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+352-2026-08-07T07:45:31.696843266Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+353-2026-08-07T07:45:31.696953603Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+354-2026-08-07T07:45:31.697005171Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6084, in _dummy_run
+355-2026-08-07T07:45:31.697013043Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     outputs = self.model(
+356-2026-08-07T07:45:31.697018003Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]               ^^^^^^^^^^^
+357-2026-08-07T07:45:31.697022961Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+358-2026-08-07T07:45:31.697028283Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
+359-2026-08-07T07:45:31.697032923Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+360-2026-08-07T07:45:31.697037770Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+361-2026-08-07T07:45:31.697068748Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+362-2026-08-07T07:45:31.697074273Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+363-2026-08-07T07:45:31.697079140Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+364-2026-08-07T07:45:31.697084554Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+365-2026-08-07T07:45:31.697089378Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+366-2026-08-07T07:45:31.697093977Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/kimi_k25.py", line 454, in forward
+367-2026-08-07T07:45:31.697099267Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     hidden_states = self.language_model(
+368-2026-08-07T07:45:31.697105752Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]                     ^^^^^^^^^^^^^^^^^^^^
+369-2026-08-07T07:45:31.697110497Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+370-2026-08-07T07:45:31.697115748Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+371-2026-08-07T07:45:31.697120448Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+372-2026-08-07T07:45:31.697125317Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+373-2026-08-07T07:45:31.697130572Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+374-2026-08-07T07:45:31.697135300Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+375-2026-08-07T07:45:31.697140080Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1883, in forward
+376-2026-08-07T07:45:31.697145664Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]     hidden_states = self.model(
+377-2026-08-07T07:45:31.697150278Z (Worker_TP0_EP0 pid=988) ERROR 08-07 07:45:31 [multiproc_executor.py:1007]                     ^^^^^^^^^^^

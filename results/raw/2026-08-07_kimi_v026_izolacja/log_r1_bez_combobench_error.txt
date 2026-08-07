@@ -1,0 +1,163 @@
+308-2026-08-07T07:38:02.596022609Z (Worker_TP2_EP2 pid=1211) 2026-08-07 07:38:02,595 - INFO - autotuner.py:674 - flashinfer.jit: [Autotuner]: Autotuning process ends
+309-2026-08-07T07:38:02.598590663Z (Worker_TP3_EP3 pid=1212) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+310-2026-08-07T07:38:02.598627036Z (Worker_TP5_EP5 pid=1214) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+311-2026-08-07T07:38:02.598942928Z (Worker_TP6_EP6 pid=1215) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+312-2026-08-07T07:38:02.598979718Z (Worker_TP4_EP4 pid=1213) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+313-2026-08-07T07:38:02.598986454Z (Worker_TP1_EP1 pid=1210) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+314-2026-08-07T07:38:02.598991326Z (Worker_TP7_EP7 pid=1216) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+315-2026-08-07T07:38:02.598996512Z (Worker_TP0_EP0 pid=1209) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+316-2026-08-07T07:38:02.599016106Z (Worker_TP2_EP2 pid=1211) INFO 08-07 07:38:02 [kernel_warmup.py:65] Warming up ll_bf16 router GEMM kernels.
+317-2026-08-07T07:38:09.501096549Z (Worker_TP7_EP7 pid=1216) INFO 08-07 07:38:09 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+318-2026-08-07T07:38:09.521500915Z (Worker_TP0_EP0 pid=1209) INFO 08-07 07:38:09 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+319-2026-08-07T07:38:09.521547179Z (Worker_TP0_EP0 pid=1209) INFO 08-07 07:38:09 [gpu_model_runner.py:6798] Rank 0: Torch profiler disabled for CUDA graph capture
+320-2026-08-07T07:38:09.606574162Z (Worker_TP5_EP5 pid=1214) INFO 08-07 07:38:09 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+321-2026-08-07T07:38:10.623269608Z (Worker_TP4_EP4 pid=1213) INFO 08-07 07:38:10 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+322-2026-08-07T07:38:11.190159364Z (Worker_TP2_EP2 pid=1211) INFO 08-07 07:38:11 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+323-2026-08-07T07:38:11.427760019Z (Worker_TP1_EP1 pid=1210) INFO 08-07 07:38:11 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+324-2026-08-07T07:38:11.757557276Z (Worker_TP3_EP3 pid=1212) INFO 08-07 07:38:11 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+325-2026-08-07T07:38:13.762795441Z (Worker_TP6_EP6 pid=1215) INFO 08-07 07:38:13 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+326-2026-08-07T07:38:29.318166501Z (Worker_TP0_EP0 pid=1209) Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/33 [00:00<?, ?it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   3%|▎         | 1/33 [00:04<02:25,  4.53s/it]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   6%|▌         | 2/33 [00:05<01:12,  2.32s/it]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   9%|▉         | 3/33 [00:05<00:43,  1.44s/it]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 4/33 [00:05<00:28,  1.01it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  15%|█▌        | 5/33 [00:06<00:20,  1.35it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  18%|█▊        | 6/33 [00:07<00:20,  1.31it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  21%|██        | 7/33 [00:07<00:16,  1.55it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  24%|██▍       | 8/33 [00:07<00:13,  1.88it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  27%|██▋       | 9/33 [00:08<00:11,  2.17it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  30%|███       | 10/33 [00:08<00:12,  1.78it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  33%|███▎      | 11/33 [00:09<00:11,  1.97it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  36%|███▋      | 12/33 [00:09<00:09,  2.13it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  39%|███▉      | 13/33 [00:10<00:08,  2.25it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  42%|████▏     | 14/33 [00:11<00:12,  1.58it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  45%|████▌     | 15/33 [00:11<00:09,  1.82it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  48%|████▊     | 16/33 [00:11<00:08,  2.00it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  52%|█████▏    | 17/33 [00:12<00:10,  1.56it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  55%|█████▍    | 18/33 [00:13<00:08,  1.77it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  58%|█████▊    | 19/33 [00:13<00:07,  1.90it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  61%|██████    | 20/33 [00:14<00:08,  1.48it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  64%|██████▎   | 21/33 [00:15<00:07,  1.68it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  67%|██████▋   | 22/33 [00:15<00:05,  1.85it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  70%|██████▉   | 23/33 [00:16<00:06,  1.52it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  73%|███████▎  | 24/33 [00:16<00:05,  1.68it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  76%|███████▌  | 25/33 [00:17<00:04,  1.85it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  79%|███████▉  | 26/33 [00:18<00:04,  1.48it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 27/33 [00:18<00:03,  1.64it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  85%|████████▍ | 28/33 [00:19<00:02,  1.83it/s]Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  85%|████████▍ | 28/33 [00:19<00:03,  1.45it/s]
+327-2026-08-07T07:38:29.873514963Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007] WorkerProc hit an exception.
+328:2026-08-07T07:38:29.873570253Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007] Traceback (most recent call last):
+329-2026-08-07T07:38:29.873577487Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 999, in worker_busy_loop
+330-2026-08-07T07:38:29.873588481Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     output = func(*args, **kwargs)
+331-2026-08-07T07:38:29.873593916Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]              ^^^^^^^^^^^^^^^^^^^^^
+332-2026-08-07T07:38:29.873598812Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+333-2026-08-07T07:38:29.873604319Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+334-2026-08-07T07:38:29.873609159Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+335-2026-08-07T07:38:29.873614506Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 784, in compile_or_warm_up_model
+336-2026-08-07T07:38:29.873620360Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     cuda_graph_memory_bytes = self.model_runner.capture_model()
+337-2026-08-07T07:38:29.873625420Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+338-2026-08-07T07:38:29.873630247Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+339-2026-08-07T07:38:29.873635558Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+340-2026-08-07T07:38:29.873640143Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+341-2026-08-07T07:38:29.873646878Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6811, in capture_model
+342-2026-08-07T07:38:29.873652668Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     self._capture_cudagraphs(
+343-2026-08-07T07:38:29.873657570Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6938, in _capture_cudagraphs
+344-2026-08-07T07:38:29.873662932Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     self._warmup_and_capture(
+345-2026-08-07T07:38:29.873667572Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6866, in _warmup_and_capture
+346-2026-08-07T07:38:29.873696865Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     self._dummy_run(
+347-2026-08-07T07:38:29.873701841Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+348-2026-08-07T07:38:29.873707130Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+349-2026-08-07T07:38:29.873711862Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+350-2026-08-07T07:38:29.873716664Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6084, in _dummy_run
+351-2026-08-07T07:38:29.873722440Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     outputs = self.model(
+352-2026-08-07T07:38:29.873727084Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]               ^^^^^^^^^^^
+353-2026-08-07T07:38:29.873731642Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+354-2026-08-07T07:38:29.873736836Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
+355-2026-08-07T07:38:29.873741695Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+356-2026-08-07T07:38:29.873747227Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+357-2026-08-07T07:38:29.873753111Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+358-2026-08-07T07:38:29.873757919Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+359-2026-08-07T07:38:29.873763054Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+360-2026-08-07T07:38:29.873768315Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+361-2026-08-07T07:38:29.873773054Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+362-2026-08-07T07:38:29.873777630Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/kimi_k25.py", line 454, in forward
+363-2026-08-07T07:38:29.873782950Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     hidden_states = self.language_model(
+364-2026-08-07T07:38:29.873787550Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]                     ^^^^^^^^^^^^^^^^^^^^
+365-2026-08-07T07:38:29.873792346Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+366-2026-08-07T07:38:29.873802301Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+367-2026-08-07T07:38:29.873807193Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+368-2026-08-07T07:38:29.873811859Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+369-2026-08-07T07:38:29.873816897Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+370-2026-08-07T07:38:29.873821497Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+371-2026-08-07T07:38:29.873826999Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1883, in forward
+372-2026-08-07T07:38:29.873832886Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     hidden_states = self.model(
+373-2026-08-07T07:38:29.873837388Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]                     ^^^^^^^^^^^
+374-2026-08-07T07:38:29.873841964Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/decorators.py", line 520, in __call__
+375-2026-08-07T07:38:29.873847624Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.aot_compiled_fn(self, *args, **kwargs)
+376-2026-08-07T07:38:29.873894395Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+377-2026-08-07T07:38:29.873899430Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/aot_compile.py", line 224, in __call__
+378-2026-08-07T07:38:29.873904655Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.fn(*args, **kwargs)
+379-2026-08-07T07:38:29.873909356Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^
+380-2026-08-07T07:38:29.873913949Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1413, in forward
+381-2026-08-07T07:38:29.873919403Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     def forward(
+382-2026-08-07T07:38:29.873924065Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/caching.py", line 217, in __call__
+383-2026-08-07T07:38:29.873929705Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.optimized_call(*args, **kwargs)
+384-2026-08-07T07:38:29.873934675Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+385-2026-08-07T07:38:29.873944761Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "<string>", line 493, in execution_fn
+386-2026-08-07T07:38:29.873951344Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+387-2026-08-07T07:38:29.873956682Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
+388-2026-08-07T07:38:29.873961769Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+416-2026-08-07T07:38:29.874106259Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/output_code.py", line 656, in __call__
+417-2026-08-07T07:38:29.874111663Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.current_callable(inputs)
+418-2026-08-07T07:38:29.874116357Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+419-2026-08-07T07:38:29.874121029Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_inductor/utils.py", line 3401, in run
+420-2026-08-07T07:38:29.874126244Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     out = model(new_inputs)
+421-2026-08-07T07:38:29.874130727Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]           ^^^^^^^^^^^^^^^^^
+422-2026-08-07T07:38:29.874136355Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/root/.cache/vllm/torch_compile_cache/torch_aot_compile/bf85c17836fe35a6755a7ceefb201716a48e3418dd90e365d3f09f6b5fb90996/inductor_cache/eq/ceqhgrjy6po24pxelwjujnynquccfbjqwhz6jtv6dm7enz2woqfu.py", line 1183, in call
+423-2026-08-07T07:38:29.874143218Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     extern_kernels.mm(buf13, reinterpret_tensor(arg6_1, (1536, 1536), (1, 1536), 0), out=buf14)
+424-2026-08-07T07:38:29.874152508Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_compile.py", line 54, in inner
+425-2026-08-07T07:38:29.874157738Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return disable_fn(*args, **kwargs)
+426-2026-08-07T07:38:29.874162501Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+427-2026-08-07T07:38:29.874167194Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/eval_frame.py", line 1263, in _fn
+428-2026-08-07T07:38:29.874173046Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return fn(*args, **kwargs)
+429-2026-08-07T07:38:29.874177769Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^
+430-2026-08-07T07:38:29.874182486Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py", line 409, in __torch_dispatch__
+431-2026-08-07T07:38:29.874188489Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     res = func(*args, **kwargs)
+432-2026-08-07T07:38:29.874193012Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]           ^^^^^^^^^^^^^^^^^^^^^
+433-2026-08-07T07:38:29.874197667Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_ops.py", line 865, in __call__
+434-2026-08-07T07:38:29.874202752Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self._op(*args, **kwargs)
+435-2026-08-07T07:38:29.874207289Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+436:2026-08-07T07:38:29.874212441Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007] RuntimeError: CUDA error: CUBLAS_STATUS_EXECUTION_FAILED when calling `cublasGemmEx( handle, opa, opb, m, n, k, &falpha, a, CUDA_R_16BF, lda, b, CUDA_R_16BF, ldb, &fbeta, c, std::is_same_v<C_Dtype, float> ? CUDA_R_32F : CUDA_R_16BF, ldc, compute_type, CUBLAS_GEMM_DEFAULT_TENSOR_OP)`
+437-2026-08-07T07:38:29.874219916Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007] Traceback (most recent call last):
+438-2026-08-07T07:38:29.874224646Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/executor/multiproc_executor.py", line 999, in worker_busy_loop
+439-2026-08-07T07:38:29.874230135Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     output = func(*args, **kwargs)
+440-2026-08-07T07:38:29.874234571Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]              ^^^^^^^^^^^^^^^^^^^^^
+441-2026-08-07T07:38:29.874239228Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+442-2026-08-07T07:38:29.874249643Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+443-2026-08-07T07:38:29.874254439Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+444-2026-08-07T07:38:29.874259713Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py", line 784, in compile_or_warm_up_model
+445-2026-08-07T07:38:29.874265387Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     cuda_graph_memory_bytes = self.model_runner.capture_model()
+446-2026-08-07T07:38:29.874270523Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+447-2026-08-07T07:38:29.874275784Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/tracing/otel.py", line 178, in sync_wrapper
+448-2026-08-07T07:38:29.874280939Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+449-2026-08-07T07:38:29.874285466Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+450-2026-08-07T07:38:29.874290237Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6811, in capture_model
+451-2026-08-07T07:38:29.874295486Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     self._capture_cudagraphs(
+452-2026-08-07T07:38:29.874300097Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6938, in _capture_cudagraphs
+453-2026-08-07T07:38:29.874305397Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     self._warmup_and_capture(
+454-2026-08-07T07:38:29.874310141Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6866, in _warmup_and_capture
+455-2026-08-07T07:38:29.874315397Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     self._dummy_run(
+456-2026-08-07T07:38:29.874320343Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+457-2026-08-07T07:38:29.874325605Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return func(*args, **kwargs)
+458-2026-08-07T07:38:29.874330357Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^
+459-2026-08-07T07:38:29.874335063Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_model_runner.py", line 6084, in _dummy_run
+460-2026-08-07T07:38:29.874340256Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     outputs = self.model(
+461-2026-08-07T07:38:29.874349296Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]               ^^^^^^^^^^^
+462-2026-08-07T07:38:29.874354151Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+463-2026-08-07T07:38:29.874359587Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
+464-2026-08-07T07:38:29.874364247Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+465-2026-08-07T07:38:29.874368936Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+466-2026-08-07T07:38:29.874374229Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+467-2026-08-07T07:38:29.874378931Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+468-2026-08-07T07:38:29.874383695Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+469-2026-08-07T07:38:29.874388779Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+470-2026-08-07T07:38:29.874393308Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+471-2026-08-07T07:38:29.874398499Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/kimi_k25.py", line 454, in forward
+472-2026-08-07T07:38:29.874403755Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     hidden_states = self.language_model(
+473-2026-08-07T07:38:29.874408338Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]                     ^^^^^^^^^^^^^^^^^^^^
+474-2026-08-07T07:38:29.874413038Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+475-2026-08-07T07:38:29.874418166Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self._call_impl(*args, **kwargs)
+476-2026-08-07T07:38:29.874422774Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+477-2026-08-07T07:38:29.874427958Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+478-2026-08-07T07:38:29.874433045Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return forward_call(*args, **kwargs)
+479-2026-08-07T07:38:29.874438134Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480-2026-08-07T07:38:29.874442965Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1883, in forward
+481-2026-08-07T07:38:29.874452093Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     hidden_states = self.model(
+482-2026-08-07T07:38:29.874456753Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]                     ^^^^^^^^^^^
+483-2026-08-07T07:38:29.874461373Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/decorators.py", line 520, in __call__
+484-2026-08-07T07:38:29.874466556Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.aot_compiled_fn(self, *args, **kwargs)
+485-2026-08-07T07:38:29.874471818Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+486-2026-08-07T07:38:29.874476928Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/torch/_dynamo/aot_compile.py", line 224, in __call__
+487-2026-08-07T07:38:29.874482138Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.fn(*args, **kwargs)
+488-2026-08-07T07:38:29.874486692Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^
+489-2026-08-07T07:38:29.874491291Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/model_executor/models/deepseek_v2.py", line 1413, in forward
+490-2026-08-07T07:38:29.874496705Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     def forward(
+491-2026-08-07T07:38:29.874501275Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/caching.py", line 217, in __call__
+492-2026-08-07T07:38:29.874506897Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.optimized_call(*args, **kwargs)
+493-2026-08-07T07:38:29.874511571Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+494-2026-08-07T07:38:29.874516119Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "<string>", line 493, in execution_fn
+495-2026-08-07T07:38:29.874521446Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]   File "/usr/local/lib/python3.12/dist-packages/vllm/compilation/cuda_graph.py", line 254, in __call__
+496-2026-08-07T07:38:29.874526575Z (Worker_TP2_EP2 pid=1211) ERROR 08-07 07:38:29 [multiproc_executor.py:1007]     return self.runnable(*args, **kwargs)
