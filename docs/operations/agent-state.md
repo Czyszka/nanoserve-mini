@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `1072d48`
-- Last summarized at: 2026-08-07 (Kimi na vLLM 0.26: diagnoza CUDA error → workaround fuse_allreduce_rms=false, adopcja z bramką wydajnościową)
+- Last summarized commit: `3914f46`
+- Last summarized at: 2026-08-07 (A/B drafterów: DFlash przegrywa z Eagle3 na Kimi/H200 — bramka NIE; stack przywrócony w pełnym składzie)
 - Note: prior cursor `3fd150b` sits on a pre-rewrite lineage, so `3fd150b..HEAD`
   over-reports commits (SHA divergence); this sync used the clean tree delta
   (7 files), not the commit list.
@@ -64,8 +64,13 @@ Phase 1 deliverables still owed:
   `--compilation-config pass_config.fuse_allreduce_rms=false` — bez niego race
   przy capture grafów CUDA (illegal access / Xid 31) na TP8/wyspach 4+4;
   diagnoza w `results/raw/2026-08-07_kimi_v026_*`. DeepSeek (`vllm-small`)
-  nadal na 0.20. Stack serwujący aktualnie POŁOŻONY (`down`, decyzja serii
-  diagnostycznej) — restore w osobnym touchu.
+  nadal na 0.20. Stack przywrócony w pełnym składzie 08-07/08 (Kimi Eagle3 +
+  DeepSeek + LiteLLM + OpenWebUI — `2026-08-07_kimi_dflash_ab/session/restore_ps.txt`).
+- **Drafter Kimi: Eagle3 zostaje.** A/B z NVIDIA DFlash (k=8, util 0,65) przegrany:
+  c1 TPOT 1,07× i c32 0,89× vs Eagle3; pozycje 4-7 bloku dają 15% akceptacji.
+  Werdykt: `results/runs/2026-08-07_kimi_dflash_ab/NOTES.md`. UWAGA metodyczna:
+  historyczne Kimi c1 (7,44 ms) mierzone na SWE custom — c1-random z tej sesji
+  z nim NIE porównywać.
 - **Observability compose**: `serving/compose/docker-compose.observability.yml` plus:
   - `serving/compose/prometheus/prometheus.yml`
   - `serving/compose/grafana/provisioning/datasources/prometheus.yml`
@@ -465,7 +470,8 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 | Metodologia benchów | Od 2026-08-03 obowiązkowa wygrzewka po każdym starcie silnika; porównania konfiguracji tylko ciepłe-z-ciepłym; dekompozycje <10% wymagają A/B/A/B n≥3 |
 | Rekonstrukcje "bez NVLinku" | `NCCL_P2P_DISABLE=1` nie zeruje ruchu NVL (ścieżki poza NCCL) — dawki tego typu są z definicji częściowe (T9 §14.6) |
 | vLLM 0.26 dla Kimi | Od 2026-08-07 Kimi na `v0.26.0` z obowiązkowym `pass_config.fuse_allreduce_rms=false` (race przy capture grafów na TP8/4+4, klasa vllm#46253; 2×PASS potwierdzenia, 5×FAIL bez flagi); bramka wydajnościowa zaliczona: c32 warm 676 vs 594 tok/s (+13,8%). DeepSeek zostaje na 0.20 — migracja osobno |
-| Plany sesji | Tagi obrazów Docker weryfikowane w rejestrze przed wpisaniem do planu (0.26.1rc0 istniał na GH, nie miał obrazu); helpery przenoszone ze sprawdzonych planów (wzorzec: `2026-08-03-nvlink-gap-fill.md`), zmienne raz w Cz. 0 |
+| Plany sesji | Tagi obrazów Docker weryfikowane w rejestrze przed wpisaniem do planu (0.26.1rc0 istniał na GH, nie miał obrazu); helpery przenoszone ze sprawdzonych planów (wzorzec: `2026-08-03-nvlink-gap-fill.md`), zmienne raz w Cz. 0; checki fail-fast tylko na zweryfikowanym formacie danych (inspect escapuje cudzysłowy JSON) |
+| Drafter Kimi | Eagle3 (k=3) zostaje; NVIDIA DFlash odrzucony po A/B 2026-08-07 (wolniejszy w c1 i c32, +0,05 util pamięci); hipoteza k=4 świadomie nieprzetestowana. Benche c1 Kimi ZAWSZE na SWE custom (nie random) — porównywalność z historią |
 
 ---
 
@@ -497,6 +503,16 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-08-07/08 (sesja A/B drafterów + analiza laptopowa):
+
+```text
+git diff --check    OK (docs/results-only; no .py touched)
+A/B wewnetrznie spojne: obie nogi util 0.65, ten sam dzien, ten sam mix workloadu    OK
+sanity akceptacji: tokens generated = steps + accepted (oba silniki, ±2%)    OK
+restore pelnego stacku potwierdzony w restore_ps.txt    OK
+wykryta niespojnosc metodyczna: c1-random vs historyczne c1-SWE — odnotowana w NOTES    OK
+```
 
 2026-08-07 (laptop + 3 sesje serwerowe) diagnoza i adopcja vLLM 0.26:
 
@@ -668,6 +684,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-08-07/08 - A/B drafterów Kimi: DFlash odrzucony, Eagle3 zostaje
+
+- Why: użytkownik chciał sprawdzić drafter NVIDIA DFlash jako zamiennik Eagle3 (wyjątek od scope, jawnie odblokowany).
+- Did: sesja A/B na 0.26 (obie nogi util 0,65) — DFlash wolniejszy w c1 (1,07×) i c32 (0,89×), pozycje 4-7 bloku k=8 dają 15% akceptacji; bramka NIE, compose bez zmian; stack przywrócony w pełnym składzie; wykryty i odnotowany błąd metodyczny (c1-random vs historyczne c1-SWE).
+- Range: `1072d48..3914f46` (4 commits)
+- Validation: OK
+- Next: materiał write-upowy z A/B (opcjonalnie); komentarz do vllm#46253 wciąż po stronie właściciela; migracja DeepSeeka na 0.26 — osobna decyzja.
 
 ### 2026-08-07 - Kimi na vLLM 0.26: diagnoza CUDA error i adopcja z workaroundem
 
