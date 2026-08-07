@@ -1,0 +1,2 @@
+322:2026-08-07T08:15:37.533461085Z (Worker_TP0_EP0 pid=1208) INFO 08-07 08:15:37 [gpu_model_runner.py:6844] Graph capturing finished in 29 secs, took 1.45 GiB
+388:2026-08-07T08:15:49.413123731Z (APIServer pid=1) INFO:     Application startup complete.
