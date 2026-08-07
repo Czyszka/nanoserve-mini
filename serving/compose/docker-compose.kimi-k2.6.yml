@@ -4,7 +4,10 @@
 # `docker images --digests` into the run-id directory at run time.
 services:
   vllm:
-    image: vllm/vllm-openai:v0.20.0-cu130-ubuntu2404
+    # v0.26.0: wymagany workaround --compilation-config pass_config.fuse_allreduce_rms=false
+    # (illegal memory access przy capture grafow CUDA na TP8/4+4; diagnoza 2026-08-07,
+    # results/raw/2026-08-07_kimi_v026_izolacja/; klasa vllm-project/vllm#46253)
+    image: vllm/vllm-openai:v0.26.0
     container_name: vllm
     hostname: vllm
     restart: unless-stopped
@@ -38,7 +41,7 @@ services:
               capabilities: [gpu]
 
     command:
-      --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 8 --gpu-memory-utilization 0.6 --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2 --enable-auto-tool-choice --language-model-only --max-num-seqs 32 --max-model-len 131072 --max-num-batched-tokens 4096 --speculative-config='{"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3,"max_model_len":8192}' 
+      --model moonshotai/Kimi-K2.6 --served-model-name=kimi-k2.6 --host=0.0.0.0 --port=8000 --trust-remote-code --enable-expert-parallel --tensor-parallel-size 8 --gpu-memory-utilization 0.6 --tool-call-parser=kimi_k2 --reasoning-parser=kimi_k2 --enable-auto-tool-choice --language-model-only --max-num-seqs 32 --max-model-len 131072 --max-num-batched-tokens 4096 --speculative-config='{"model":"lightseekorg/kimi-k2.6-eagle3-mla","method":"eagle3","num_speculative_tokens":3,"max_model_len":8192}' --compilation-config='{"pass_config":{"fuse_allreduce_rms":false}}'
 
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
