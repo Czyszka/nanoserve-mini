@@ -8,8 +8,8 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `e7986c4`
-- Last summarized at: 2026-08-03 (NVLink zweryfikowany pomiarem; trace c32, dekompozycja, reguła wygrzewki, docs domknięte)
+- Last summarized commit: `1072d48`
+- Last summarized at: 2026-08-07 (Kimi na vLLM 0.26: diagnoza CUDA error → workaround fuse_allreduce_rms=false, adopcja z bramką wydajnościową)
 - Note: prior cursor `3fd150b` sits on a pre-rewrite lineage, so `3fd150b..HEAD`
   over-reports commits (SHA divergence); this sync used the clean tree delta
   (7 files), not the commit list.
@@ -60,10 +60,15 @@ Phase 1 deliverables still owed:
   lightweight Markdown at `docs/operations/sys-521ge-tnrt.md`; source PDF kept
   at `docs/operations/sys-521ge-tnrt.pdf`.
 - **Kimi + DeepSeek + OpenWebUI + LiteLLM compose**: canonical compose lives at `serving/compose/docker-compose.kimi-k2.6.yml`.
+- **Kimi na vLLM v0.26.0 (od 2026-08-07)** z obowiązkowym workaroundem
+  `--compilation-config pass_config.fuse_allreduce_rms=false` — bez niego race
+  przy capture grafów CUDA (illegal access / Xid 31) na TP8/wyspach 4+4;
+  diagnoza w `results/raw/2026-08-07_kimi_v026_*`. DeepSeek (`vllm-small`)
+  nadal na 0.20. Stack serwujący aktualnie POŁOŻONY (`down`, decyzja serii
+  diagnostycznej) — restore w osobnym touchu.
 - **Observability compose**: `serving/compose/docker-compose.observability.yml` plus:
   - `serving/compose/prometheus/prometheus.yml`
   - `serving/compose/grafana/provisioning/datasources/prometheus.yml`
-- Observability runtime data should live in explicit host directories, not opaque Docker named volumes, when local control is needed.
 - Benchmark/metrics producer scripts on `main`:
   - `benchmarks/scripts/request_once.py`
   - `benchmarks/scripts/measure_ttft_once.py`
@@ -459,6 +464,8 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 | NVLink 4-way | Zainstalowany 2026-07-31 (wyspy 4+4); GO dla batched TP≥4 potwierdzony pomiarem (2,08–2,97×); #51 zamknięte, #50 rozliczone komentarzem (zamknięcie po stronie właściciela) |
 | Metodologia benchów | Od 2026-08-03 obowiązkowa wygrzewka po każdym starcie silnika; porównania konfiguracji tylko ciepłe-z-ciepłym; dekompozycje <10% wymagają A/B/A/B n≥3 |
 | Rekonstrukcje "bez NVLinku" | `NCCL_P2P_DISABLE=1` nie zeruje ruchu NVL (ścieżki poza NCCL) — dawki tego typu są z definicji częściowe (T9 §14.6) |
+| vLLM 0.26 dla Kimi | Od 2026-08-07 Kimi na `v0.26.0` z obowiązkowym `pass_config.fuse_allreduce_rms=false` (race przy capture grafów na TP8/4+4, klasa vllm#46253; 2×PASS potwierdzenia, 5×FAIL bez flagi); bramka wydajnościowa zaliczona: c32 warm 676 vs 594 tok/s (+13,8%). DeepSeek zostaje na 0.20 — migracja osobno |
+| Plany sesji | Tagi obrazów Docker weryfikowane w rejestrze przed wpisaniem do planu (0.26.1rc0 istniał na GH, nie miał obrazu); helpery przenoszone ze sprawdzonych planów (wzorzec: `2026-08-03-nvlink-gap-fill.md`), zmienne raz w Cz. 0 |
 
 ---
 
@@ -490,6 +497,16 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-08-07 (laptop + 3 sesje serwerowe) diagnoza i adopcja vLLM 0.26:
+
+```text
+git diff --check    OK (docs/compose/results-only; no .py touched)
+probe goly kernel v0.26.0 (matmul, docker run): PASS -> H1 driver/CUDA obalona    OK
+matrix izolacyjny: baseline 3xFAIL, R1 FAIL, R2 FAIL, R3 (fuzja off) PASS    OK
+powtorka R3 + start z compose repo: 2xPASS, 'fuse_allreduce_rms': False w configu    OK
+bramka wydajnosciowa: c32 cold 645 / warm 676 tok/s vs 594 (prog >=559)    OK
+```
 
 2026-08-03 (laptop) sesje NVLink domknięte + docs:
 
@@ -651,6 +668,14 @@ T4). No `ruff` / `pytest` run.
 ## Handoff log
 
 Newest entry first.
+
+### 2026-08-07 - Kimi na vLLM 0.26: diagnoza CUDA error i adopcja z workaroundem
+
+- Why: podbicie vLLM 0.20→0.26 wywalało silnik Kimi CUDA errorem przy starcie; trzeba było znaleźć przyczynę i rozwiązanie optymalne wydajnościowo.
+- Did: 3 iteracje (zrzuty diagnostyczne → matrix izolacyjny R1-R4 → potwierdzenie) wskazały race w passie `fuse_allreduce_rms` przy capture grafów (TP8 na 4+4, custom AR w fallbacku PYNCCL); compose Kimi na 0.26 z flagą off, bramka zaliczona (c32 warm 676 tok/s, +13,8% vs 594).
+- Range: `35ca9a5..1072d48` (8 commits)
+- Validation: OK
+- Next: komentarz do vllm#46253 (treść gotowa w rozmowie 08-07, wkleja właściciel); migracja Qwen/DeepSeek na 0.26 i restore stacku — osobne touche.
 
 ### 2026-08-03 - NVLink zweryfikowany pomiarem: trace, dekompozycja, wygrzewka, docs domknięte
 
