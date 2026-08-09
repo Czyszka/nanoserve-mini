@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100% GPU-Util, a tylko 1/3 mocy — jak badać wydajność inferencji LLM?</title>
+<style>
+  :root {
+    --plane: #f0efec;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --baseline: #c3c2b7;
+    --accent: #2a78d6;
+    --accent-2: #eb6834;
+    --critical: #d03b3b;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  [data-theme="dark"] {
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: #2c2c2a;
+    --baseline: #383835;
+    --accent: #3987e5;
+    --accent-2: #d95926;
+    --critical: #e66767;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+  #stage {
+    position: absolute;
+    inset: 0 0 40px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    padding: 52px 72px 46px;
+    display: none;
+    flex-direction: column;
+    transform-origin: center center;
+  }
+  .slide.current { display: flex; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 16px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  h1 { font-size: 38px; font-weight: 650; line-height: 1.15; letter-spacing: -0.01em; }
+  .slide-body { flex: 1; display: flex; flex-direction: column; margin-top: 26px; gap: 18px; min-height: 0; }
+  p, li { font-size: 21px; line-height: 1.45; color: var(--ink); }
+  .secondary { color: var(--ink-2); }
+  .small { font-size: 18px; }
+  strong { font-weight: 650; }
+  ul, ol { padding-left: 28px; }
+  li { margin-bottom: 8px; }
+  em { font-style: italic; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td {
+    font-size: 18px;
+    line-height: 1.35;
+    text-align: left;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--baseline);
+  }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.tight th, table.tight td { font-size: 16px; padding: 5px 10px; }
+
+  .verdict {
+    border: 1px solid var(--baseline);
+    border-left: 4px solid var(--ink);
+    padding: 14px 20px;
+  }
+  .verdict .label {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .verdict p { font-size: 19px; line-height: 1.4; margin-bottom: 2px; }
+  .verdict .result { font-weight: 650; }
+
+  .figure { display: flex; justify-content: center; align-items: center; min-height: 0; overflow: hidden; }
+  .figure svg { max-width: 100%; max-height: 100%; height: auto; }
+  .figure img { max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--hairline); }
+  .fig-grow { flex: 1; }
+  .cols .figure { height: 100%; }
+  .caption { font-size: 15px; color: var(--muted); text-align: center; }
+
+  .formula {
+    font-family: var(--mono);
+    font-size: 24px;
+    text-align: center;
+    padding: 10px 0;
+  }
+  .formula.small-f { font-size: 21px; }
+  .cols { display: flex; gap: 36px; min-height: 0; }
+  .cols > div { flex: 1; min-width: 0; }
+  .quote {
+    border-left: 3px solid var(--baseline);
+    padding: 6px 0 6px 22px;
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  .bigq { font-size: 30px; font-weight: 650; line-height: 1.3; text-align: center; }
+  .check { list-style: none; padding-left: 6px; }
+  .check li { padding-left: 30px; position: relative; }
+  .check li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+  .spacer { flex: 1; }
+
+  /* Slajd tytulowy i koncowy */
+  .title-slide { justify-content: center; text-align: left; }
+  .title-slide h1 { font-size: 54px; max-width: 1050px; }
+  .title-slide .subtitle { margin-top: 34px; font-size: 24px; color: var(--ink-2); }
+  .thanks { font-size: 30px; font-weight: 650; margin-top: 8px; }
+
+  aside.notes { display: none; }
+
+  #hud {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    user-select: none;
+  }
+  #notes-panel {
+    position: absolute;
+    left: 0; right: 0; bottom: 40px;
+    max-height: 42%;
+    overflow: auto;
+    background: var(--surface);
+    border-top: 2px solid var(--baseline);
+    padding: 18px 28px 22px;
+    z-index: 5;
+  }
+  #notes-panel h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  #notes-panel div { font-size: 17px; line-height: 1.55; color: var(--ink); max-width: 1100px; }
+  [hidden] { display: none !important; }
+
+  /* diagramy inline */
+  .diag text { font-family: var(--sans); fill: var(--ink); }
+  .diag .lbl { fill: var(--ink-2); }
+  .diag .mut { fill: var(--muted); }
+  .diag .box { fill: none; stroke: var(--baseline); stroke-width: 1.5; }
+  .diag .wire { stroke: var(--baseline); stroke-width: 1.5; fill: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide.current { animation: fadein 140ms ease-out; }
+    @keyframes fadein { from { opacity: 0.4; } to { opacity: 1; } }
+  }
+</style>
+</head>
+<body>
+<main id="stage">
+
+<!-- ================================================== SLAJD 1 -->
+<section class="slide title-slide">
+  <h1>100% GPU-Util, a&nbsp;tylko 1/3 mocy —<br>jak badać wydajność inferencji LLM?</h1>
+  <p class="subtitle">Studium przypadku: vLLM, Kimi-K2.6 (1T), 8×H200, prawo Amdahla</p>
+  <aside class="notes">Cześć — zanim zaczniemy, dwa słowa o mnie. [przedstawienie ustne, poza
+  slajdem]. Ten tytuł to nie metafora, tylko prawdziwy odczyt z naszego serwera: osiem kart H200
+  raportowało 100% zajętości, a pobierało ledwie jedną trzecią dostępnej mocy. Sytuację tę
+  zaplanowałem przedstawić w formie studium przypadku, aby teoria mogła spotkać się z praktyką
+  i pokazać kompletny, powtarzalny protokół badania wydajności: od zauważenia anomalii, przez
+  hipotezy i eksperymenty, po decyzję sprzętową zweryfikowaną pomiarem.</aside>
+</section>
+
+<!-- ================================================== SLAJD 2 -->
+<section class="slide">
+  <div class="eyebrow">Studium przypadku</div>
+  <h1>Serwer badawczy</h1>
+  <div class="slide-body">
+    <table>
+      <tbody>
+      <tr><td style="width:22%"><strong>CPU</strong></td><td>2× Intel Xeon Gold 6530 (dwa sockety)</td></tr>
+      <tr><td><strong>GPU</strong></td><td>8× NVIDIA H200 NVL — PCIe 5.0, 143 GB</td></tr>
+      <tr><td><strong>Modele</strong></td><td>
+        Kimi-K2.6 — 1T parametrów, 554 GB wag, TP=8<br>
+        Qwen3.6-35B — model testowy (pomiary TP=1/2/4/8)
+      </td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="notes">Środowisko badania: serwer laboratoryjny z dwoma procesorami Xeon Gold 6530
+  i ośmioma kartami H200 NVL po 143 GB, połączonymi magistralą PCIe 5.0. Inferencję serwuje vLLM
+  w kontenerach Docker. Model główny to Kimi-K2.6: bilion parametrów, 554 GB wag — nie mieści się
+  na mniej niż ośmiu kartach, więc pracuje wyłącznie w konfiguracji TP=8, z dekodowaniem
+  spekulacyjnym Eagle3. Drugim modelem jest Qwen3.6-35B w roli narzędzia badawczego: mieści się
+  na pojedynczej karcie, dzięki czemu umożliwia pomiary przy TP=1, 2 i 4 (w badaniu także TP=8).
+  Należy zaznaczyć, że TP=4/8 dla modelu tej wielkości nie jest poprawną konfiguracją
+  produkcyjną.</aside>
+</section>
+
+<!-- ================================================== SLAJD 3 -->
+<section class="slide">
+  <div class="eyebrow">Krok 1</div>
+  <h1>Zauważ anomalię</h1>
+  <div class="slide-body">
+    <div class="cols fig-grow">
+      <div class="figure"><img src="{{PNG:nvidia_smi}}" alt="Zrzut nvidia-smi: 8 kart H200, GPU-Util 100%, pobór ok. 175 W z 600 W"></div>
+      <div class="figure">{{SVG:w0_moc_w_czasie}}</div>
+    </div>
+    <p class="bigq">Kto spotkał się z taką sytuacją i zastanawiał się, dlaczego przy 100%
+    GPU-Util karty zużywają tylko ~30% dostępnej mocy?</p>
+  </div>
+  <aside class="notes">Punkt wyjścia badania: podczas benchmarków obciążających wszystkie osiem
+  kart nvidia-smi raportował 100% GPU-Util, a jednocześnie pobór mocy pozostawał w okolicach
+  111–185 W na kartę, przy limicie 600 W. Wykres pokazuje przebieg mocy w całym oknie pomiarowym
+  z oryginalnych badań — to stan trwały, a nie chwilowy przestój między zadaniami. Pierwszy krok
+  protokołu: nie przechodzić obok takiej obserwacji — zanotować ją, zanim cokolwiek zaczniemy
+  zmieniać.</aside>
+</section>
+
+<!-- ================================================== SLAJD 4 -->
+<section class="slide">
+  <div class="eyebrow">Krok 2</div>
+  <h1>Zrozum, co mierzy Twoja metryka</h1>
+  <div class="slide-body">
+    <p><strong>GPU-Util mierzy: „czy coś się dzieje" — nie: „ile krzemu pracuje"</strong></p>
+    <div class="figure">
+      <svg class="diag" viewBox="0 0 1080 210" width="1020" role="img" aria-label="Oś czasu jednego kroku dekodowania z odcinkami kerneli">
+        <path class="wire" d="M70 62 L70 50 L836 50 L836 62" stroke-width="1.5"></path>
+        <text x="453" y="40" text-anchor="middle" class="mut" font-size="16">dla GPU-Util wszystko to = „zajęte"</text>
+        <rect x="70" y="70" width="220" height="52" fill="var(--accent)"></rect>
+        <rect x="294" y="70" width="300" height="52" fill="var(--accent-2)"></rect>
+        <rect x="598" y="70" width="238" height="52" fill="#1baf7a"></rect>
+        <rect x="840" y="70" width="170" height="52" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="6 5"></rect>
+        <text x="180" y="102" text-anchor="middle" fill="#fcfcfb" font-size="16">kernel obliczeniowy</text>
+        <text x="444" y="94" text-anchor="middle" fill="#fcfcfb" font-size="16">kernel NCCL</text>
+        <text x="444" y="114" text-anchor="middle" fill="#fcfcfb" font-size="14">(czeka na inne GPU)</text>
+        <text x="717" y="102" text-anchor="middle" fill="#fcfcfb" font-size="16">kernel memory-bound</text>
+        <text x="925" y="94" text-anchor="middle" class="mut" font-size="16">przerwa</text>
+        <text x="925" y="114" text-anchor="middle" class="mut" font-size="14">(host)</text>
+        <line x1="70" y1="150" x2="1010" y2="150" class="wire" marker-end="none"></line>
+        <path d="M1010 150 l-12 -5 v10 z" fill="var(--baseline)"></path>
+        <text x="540" y="180" text-anchor="middle" class="mut" font-size="15">czas →</text>
+      </svg>
+    </div>
+    <p>Elementy składowe zajętości:</p>
+    <ul class="small-list">
+      <li>kernele obliczeniowe (compute)</li>
+      <li>kernele komunikacyjne NCCL — w tym czekanie (spin-wait) na inne GPU</li>
+      <li>operacje ograniczone pamięcią (memory-bound)</li>
+      <li>drobne kernele orkiestracji</li>
+    </ul>
+  </div>
+  <aside class="notes">Definicja formalna, za dokumentacją NVIDIA NVML (pole utilization.gpu):
+  GPU-Util to procent czasu w oknie próbkowania, w którym na karcie wykonywał się co najmniej
+  jeden kernel. Kernel to pojedynczy program uruchamiany na GPU — na przykład jedno mnożenie
+  macierzy, jedna operacja na pamięci albo jedna operacja komunikacji zbiorowej. Metryka nie
+  rozróżnia, co ten kernel robi: kernel NCCL, który w pętli czeka na dane od innej karty, podnosi
+  zajętość dokładnie tak samo jak kernel liczący mnożenie macierzy. W konsekwencji 100% GPU-Util
+  informuje jedynie, że kolejka karty nie była pusta — kolejka to bufor zadań (strumienie CUDA),
+  z którego GPU pobiera kolejne kernele do wykonania; dopóki czeka w niej choć jeden kernel,
+  karta raportuje zajętość. Nic to nie mówi o nasyceniu jednostek obliczeniowych ani interfejsu
+  pamięci.</aside>
+</section>
+
+<!-- ================================================== SLAJD 5 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 3–4</div>
+  <h1>Zmierz nasycenie właściwymi licznikami</h1>
+  <div class="slide-body">
+    <p class="secondary small">Narzędzie: <strong>DCGM</strong> — <code style="font-family:var(--mono)">dcgmi dmon</code>
+    (pomiar z hosta, bez zmian w kontenerach) · Pomiar: <strong>Kimi-K2.6, TP=8 — okna c=1 i c=64</strong>
+    (c = liczba równoległych zapytań)</p>
+    <div class="cols fig-grow">
+      <div>
+        <table>
+          <thead><tr><th>Licznik</th><th>Co mierzy</th><th class="num">Wynik (c=1 / c=64)</th></tr></thead>
+          <tbody>
+            <tr><td>moc</td><td>pobór względem limitu 600 W</td><td class="num"><strong>170 / 199 W ≈ 30% limitu</strong></td></tr>
+            <tr><td>SM_ACTIVE</td><td>% czasu pracy jednostek obliczeniowych (SM)</td><td class="num"><strong>0,21 / 0,20 (~20%)</strong></td></tr>
+            <tr><td>DRAM_ACTIVE</td><td>% czasu aktywności interfejsu pamięci HBM</td><td class="num"><strong>0,093 / 0,070 (7–9%)</strong></td></tr>
+            <tr><td>PCIe RX/TX</td><td>ruch na magistrali GPU↔reszta systemu</td><td class="num"><strong>~10% przepustowości</strong> (6–8 GB/s)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="figure">{{SVG:w2_util_vs_liczniki}}</div>
+    </div>
+    <p class="bigq">GPU-Util: 100%. Nasycenie: żadnego zasobu.</p>
+  </div>
+  <aside class="notes">DCGM (Data Center GPU Manager) to narzędzie NVIDIA do monitoringu GPU;
+  dcgmi dmon próbkuje liczniki profilowania na żywo z poziomu hosta, bez modyfikowania kontenerów
+  z inferencją. SM (streaming multiprocessor) to podstawowy blok obliczeniowy GPU — karta zawiera
+  ich ponad sto, a SM_ACTIVE podaje, przez jaki procent czasu bloki te wykonywały jakiekolwiek
+  instrukcje. DRAM_ACTIVE analogicznie mierzy procent czasu, w którym pracował interfejs pamięci
+  HBM — czyli jak mocno wykorzystujemy przepustowość pamięci karty. Wyniki dotyczą modelu
+  produkcyjnego Kimi-K2.6 na TP=8, w dwóch oknach pomiarowych: jeden klient (c=1) i 64 klientów
+  (c=64); trzecie okno — stan spoczynkowy — dało 0,000 na obu licznikach aktywności, co
+  potwierdza poprawne odseparowanie obciążenia od tła. Przy stałym 100% GPU-Util moc to
+  170–199 W, czyli około 30% limitu, jednostki obliczeniowe pracują przez ~20% czasu, interfejs
+  pamięci przez 7–9%, a magistrala PCIe przenosi 6–8 GB/s, czyli ~10% swojej przepustowości —
+  żaden zasób nie zbliża się do nasycenia. Zastrzeżenie: profil zależy od modelu i konfiguracji —
+  testowy Qwen przy TP=1 i c=64 osiągał SMACT 0,68 i DRAM_ACTIVE 0,39 na swojej jedynej karcie;
+  anomalia dotyczy właśnie konfiguracji wielokartowych. Zgodnie z krokiem 4 protokołu wszystkie
+  odczyty zapisujemy liczbowo, z datą i pełną konfiguracją — będą podstawą porównań w kolejnych
+  krokach. (Pełne identyfikatory: DCGM_FI_DEV_POWER_USAGE, DCGM_FI_PROF_SM_ACTIVE,
+  DCGM_FI_PROF_DRAM_ACTIVE, DCGM_FI_PROF_PCIE_RX_BYTES / _TX_BYTES.)</aside>
+</section>
+
+<!-- ================================================== SLAJD 6 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 5–6</div>
+  <h1>Postaw hipotezy z przewidywaniami</h1>
+  <div class="slide-body">
+    <p class="secondary">Czas kroku generowania rozkłada się na trzy składniki:</p>
+    <p class="formula small-f"><strong>T(krok) = F_host + N_rounds × r(łącze, liczba kart) + W_silicon</strong></p>
+    <p class="caption">stały narzut silnika &nbsp;|&nbsp; komunikacja: rundy × czas rundy &nbsp;|&nbsp; obliczenia i pamięć</p>
+    <table>
+      <thead><tr><th style="width:26%">Hipoteza (składnik)</th><th style="width:34%">Mechanizm</th><th>Przewidywany ślad w danych</th></tr></thead>
+      <tbody>
+        <tr><td><strong>H1: pamięć HBM</strong><br><span class="secondary small">W_silicon</span></td>
+            <td>karta czeka na odczyt wag z pamięci</td>
+            <td>wysoki DRAM_ACTIVE (0,70–0,90)</td></tr>
+        <tr><td><strong>H2: komunikacja GPU↔GPU</strong><br><span class="secondary small">N_rounds × r</span></td>
+            <td>krok czeka na scalenia (all-reduce) po PCIe</td>
+            <td>czas kroku rośnie z liczbą kart; w profilu przeważa komunikacja</td></tr>
+        <tr><td><strong>H3: narzut hosta</strong><br><span class="secondary small">F_host</span></td>
+            <td>silnik obciąża każdy krok: wybór zapytań, spekulacja, wymiana poleceń CPU↔GPU</td>
+            <td>krok drogi nawet na 1 karcie; w profilu przeważają przerwy</td></tr>
+        <tr><td><strong>H4: topologia (UPI)</strong><br><span class="secondary small">wariant r(łącze)</span></td>
+            <td>trasa między gniazdami CPU wolniejsza niż przez switch PCIe</td>
+            <td>ta sama liczba kart, gorszy wynik na trasie przez UPI</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="notes">Hipotezy nie są dowolne — wynikają z rozkładu czasu kroku generowania na
+  trzy składniki wzoru: stały narzut silnika F_host, komunikację N_rounds × r (liczba
+  synchronicznych rund scalania razy czas jednej rundy, zależny od łącza i liczby kart) oraz
+  obliczenia i pamięć W_silicon. Suma składników to cały krok, więc przestrzeń hipotez jest
+  z konstrukcji kompletna; H4 to wariant topologiczny H2 — pytanie nie „czy komunikacja", ale
+  „która trasa". Dwa pojęcia: all-reduce to synchroniczne scalanie wyników częściowych
+  z wszystkich kart — przy podziale modelu (tensor parallelism) trzeba scalać ~2 razy na warstwę,
+  co dla 61 warstw Kimi daje ~122 scalenia na każdy krok, a żadna karta nie rusza dalej, dopóki
+  nie skończy ostatnia. UPI to łącze między dwoma procesorami serwera — karty podpięte pod różne
+  CPU komunikują się właśnie przez nie. Kluczowy element kroku 6: do każdej hipotezy z góry
+  zapisujemy ślad, jaki musiałaby zostawić w danych — dzięki temu wynik pomiaru będzie
+  rozstrzygał, a nie ilustrował.</aside>
+</section>
+
+<!-- ================================================== SLAJD 7 -->
+<section class="slide">
+  <div class="eyebrow">Krok 7</div>
+  <h1>Tanie eliminacje</h1>
+  <div class="slide-body">
+    <p class="secondary">Zanim zaplanujesz eksperymenty — sprawdź, które hipotezy padają od
+    danych, które już masz.</p>
+    <div class="figure fig-grow">{{SVG:w7_dram_active}}</div>
+    <div class="verdict">
+      <div class="label">Werdykt</div>
+      <p>Predykcja H1: DRAM_ACTIVE 0,70–0,90 &nbsp;·&nbsp; Pomiar: 0,070–0,093</p>
+      <p class="result">H1 OBALONA — bez żadnego eksperymentu; do hipotezy nie wracamy</p>
+    </div>
+  </div>
+  <aside class="notes">Krok 7 to eliminacje w kolejności kosztu: zanim uruchomimy jakikolwiek
+  eksperyment, konfrontujemy hipotezy z danymi już zebranymi w krokach 3–4. H1 miała z góry
+  zapisany ślad — aktywność interfejsu pamięci na poziomie 0,70–0,90 — a pomiar pokazuje
+  0,070–0,093, czyli o rząd wielkości mniej, stabilnie przez całe okno obciążenia. Zastrzeżenie
+  metodyczne: próbkowanie co 1 sekundę uśrednia chwilowe skoki wewnątrz kroku dekodowania, więc
+  nie jest to pełna charakterystyka pamięci HBM — ale przy różnicy rzędu wielkości wystarcza do
+  werdyktu. Werdykt zapisujemy w formacie, który będzie wracał do końca prezentacji: predykcja,
+  pomiar, rozstrzygnięcie z zakresem ważności — tu: obalona dla badanych scenariuszy pracy
+  serwera. Hipoteza kosztowała nas zero dodatkowych pomiarów; zostały trzy, każda wymaga już
+  eksperymentu.</aside>
+</section>
+
+<!-- ================================================== SLAJD 8 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 8–10</div>
+  <h1>Zaplanuj eksperymenty</h1>
+  <div class="slide-body">
+    <p class="quote">„Jeżeli badany mechanizm rzeczywiście odpowiada za czas kroku, to jego
+    pogorszenie musi ten czas mierzalnie wydłużyć, natomiast brak efektu wyklucza go jako
+    przyczynę."</p>
+    <table>
+      <thead><tr><th style="width:26%">Hipoteza</th><th>Eksperyment — co robimy</th></tr></thead>
+      <tbody>
+        <tr><td><strong>H4: topologia (UPI)</strong></td>
+            <td>ta sama para kart TP=2: raz pod wspólnym switchem PCIe, raz na dwóch różnych CPU (trasa przez UPI)</td></tr>
+        <tr><td><strong>H3: narzut hosta</strong></td>
+            <td>profil czasowy kroku przy c=1 + wyłączanie po kolei: spekulacji, CUDA Graphs, oszczędzania energii CPU</td></tr>
+        <tr><td><strong>H2: komunikacja</strong></td>
+            <td>krzywa TP=1/2/4/8 przy niezmienionej reszcie konfiguracji + wyłączenie bezpośredniej komunikacji P2P + profil pod obciążeniem</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Kolejność badań: od najtańszego sprawdzenia.</strong></p>
+  </div>
+  <aside class="notes">Reguła planu: każdy eksperyment zmienia dokładnie jeden element układu,
+  reszta konfiguracji zostaje zamrożona — inaczej wynik nie wskaże przyczyny. Kolejność ustala
+  koszt: H4 to jeden dodatkowy bieg, H3 to jeden profil i trzy przełączniki silnika, H2 wymaga
+  osobnego startu silnika dla każdej wartości TP. Dane będą pochodzić z trzech niezależnych
+  źródeł: metryk po stronie klienta (vllm bench serve — TPOT/ITL i przepustowość, każdy pomiar po
+  rozgrzewce), liczników sprzętowych DCGM (dcgmi dmon, próbkowanie co 1 s, uśrednianie tylko
+  w oknie benchmarku) oraz profilu czasowego torch profiler (rozkład czasu kroku na komunikację,
+  obliczenia i przerwy) — zbieżność źródeł sprawdzimy osobno w kroku 15. Do tego kalibracja
+  szumu: restarty silnika, których i tak wymagały warianty eksperymentów, posłużyły do
+  oszacowania zmienności pomiaru — dla TP=2 wyniosła około ±0,4 ms między niezależnymi
+  uruchomieniami; każdą przyszłą różnicę będziemy odnosić do tego pasma, zanim nazwiemy ją
+  efektem.</aside>
+</section>
+
+<!-- ================================================== SLAJD 9 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 11–14 · Eksperyment H4</div>
+  <h1>Kara UPI — najtańszy test</h1>
+  <div class="slide-body">
+    <div class="figure">
+      <svg class="diag" viewBox="0 0 1080 250" width="980" role="img" aria-label="Topologia serwera: dwa CPU połączone UPI, cztery switche PCIe, osiem GPU; wyróżnione trasy GPU0-GPU1 i GPU0-GPU4">
+        <rect class="box" x="240" y="18" width="180" height="46"></rect>
+        <text x="330" y="47" text-anchor="middle" font-size="17">CPU 0</text>
+        <rect class="box" x="660" y="18" width="180" height="46"></rect>
+        <text x="750" y="47" text-anchor="middle" font-size="17">CPU 1</text>
+        <line x1="420" y1="41" x2="660" y2="41" stroke="var(--accent-2)" stroke-width="3"></line>
+        <text x="540" y="32" text-anchor="middle" class="mut" font-size="14">UPI</text>
+        <!-- switche -->
+        <rect class="box" x="120" y="102" width="150" height="40"></rect>
+        <text x="195" y="128" text-anchor="middle" font-size="14">switch PCIe</text>
+        <rect class="box" x="330" y="102" width="150" height="40"></rect>
+        <text x="405" y="128" text-anchor="middle" font-size="14">switch PCIe</text>
+        <rect class="box" x="600" y="102" width="150" height="40"></rect>
+        <text x="675" y="128" text-anchor="middle" font-size="14">switch PCIe</text>
+        <rect class="box" x="810" y="102" width="150" height="40"></rect>
+        <text x="885" y="128" text-anchor="middle" font-size="14">switch PCIe</text>
+        <line class="wire" x1="300" y1="64" x2="195" y2="102"></line>
+        <line class="wire" x1="360" y1="64" x2="405" y2="102"></line>
+        <line class="wire" x1="720" y1="64" x2="675" y2="102"></line>
+        <line class="wire" x1="780" y1="64" x2="885" y2="102"></line>
+        <!-- GPU -->
+        <g font-size="14">
+          <rect class="box" x="105" y="182" width="80" height="36"></rect><text x="145" y="205" text-anchor="middle">GPU0</text>
+          <rect class="box" x="195" y="182" width="80" height="36"></rect><text x="235" y="205" text-anchor="middle">GPU1</text>
+          <rect class="box" x="315" y="182" width="80" height="36"></rect><text x="355" y="205" text-anchor="middle">GPU2</text>
+          <rect class="box" x="405" y="182" width="80" height="36"></rect><text x="445" y="205" text-anchor="middle">GPU3</text>
+          <rect class="box" x="585" y="182" width="80" height="36"></rect><text x="625" y="205" text-anchor="middle">GPU4</text>
+          <rect class="box" x="675" y="182" width="80" height="36"></rect><text x="715" y="205" text-anchor="middle">GPU5</text>
+          <rect class="box" x="795" y="182" width="80" height="36"></rect><text x="835" y="205" text-anchor="middle">GPU6</text>
+          <rect class="box" x="885" y="182" width="80" height="36"></rect><text x="925" y="205" text-anchor="middle">GPU7</text>
+        </g>
+        <line class="wire" x1="160" y1="142" x2="145" y2="182"></line>
+        <line class="wire" x1="230" y1="142" x2="235" y2="182"></line>
+        <line class="wire" x1="370" y1="142" x2="355" y2="182"></line>
+        <line class="wire" x1="440" y1="142" x2="445" y2="182"></line>
+        <line class="wire" x1="640" y1="142" x2="625" y2="182"></line>
+        <line class="wire" x1="710" y1="142" x2="715" y2="182"></line>
+        <line class="wire" x1="850" y1="142" x2="835" y2="182"></line>
+        <line class="wire" x1="920" y1="142" x2="925" y2="182"></line>
+        <!-- trasa 1: GPU0-GPU1 przez switch -->
+        <path d="M145 182 L160 146 L230 146 L235 182" fill="none" stroke="var(--accent)" stroke-width="3.5"></path>
+        <!-- trasa 2: GPU0-GPU4 przez UPI -->
+        <path d="M141 182 L156 144 L166 140 L295 66 L305 62 L420 45 M420 45 L660 45 M660 45 L717 62 L727 66 L644 140 L634 144 L621 182" fill="none" stroke="var(--accent-2)" stroke-width="3.5" opacity="0.85"></path>
+        <text x="188" y="240" class="lbl" font-size="14" fill="var(--accent)">trasa 1: wspólny switch</text>
+        <text x="620" y="240" class="lbl" font-size="14" fill="var(--accent-2)">trasa 2: przez dwa CPU i UPI</text>
+      </svg>
+    </div>
+    <table>
+      <thead><tr><th>Porównanie</th><th class="num">przez switch PCIe</th><th class="num">trasa przez UPI</th></tr></thead>
+      <tbody>
+        <tr><td>TP=2, c=1 — czas kroku</td><td class="num">9,91 ms</td><td class="num">9,13 ms</td></tr>
+        <tr><td>TP=4, c=64 — czas kroku / przepustowość</td><td class="num">53,7 ms / 680 tok/s</td><td class="num">48,3 ms / 716 tok/s</td></tr>
+      </tbody>
+    </table>
+    <div class="verdict">
+      <div class="label">Werdykt</div>
+      <p>Predykcja H4: trasa przez UPI wyraźnie wolniejsza &nbsp;·&nbsp; Pomiar: w żadnym porównaniu nie jest wolniejsza</p>
+      <p class="result">H4 OBALONA (dla badanych układów 2 i 4 kart)</p>
+    </div>
+  </div>
+  <aside class="notes">Konstrukcja eksperymentu: ta sama liczba kart, zmieniamy wyłącznie trasę
+  komunikacji — rozmieszczenie wymusza CUDA_VISIBLE_DEVICES, a kontrolę poprawności daje pobór
+  mocy: karty nieuczestniczące pozostają przy poziomie spoczynkowym ~70 W, więc obciążenie na
+  pewno szło na wskazane GPU. Wyniki: przy dwóch kartach wariant przez UPI wyszedł 9,13 ms wobec
+  9,91 ms — pozornie szybszy, ale to pojedynczy pomiar przy zmienności ±0,4 ms między
+  niezależnymi startami, więc odczytujemy go wyłącznie jako brak kary, nie jako przewagę UPI;
+  analogicznie przy czterech kartach pod c=64. Werdykt: H4 obalona dla badanych układów w tym
+  serwerze — najgroźniejsza topologicznie trasa nie kosztuje nic mierzalnego. To ważny wynik
+  kierunkowy: skoro rodzaj trasy nie boli, podejrzenie przesuwa się na liczbę uczestników
+  komunikacji i na stały narzut — czyli dokładnie na H2 i H3, które badamy dalej, wciąż
+  w kolejności kosztu.</aside>
+</section>
+
+<!-- ================================================== SLAJD 10 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 11–14 · Eksperyment H3</div>
+  <h1>Stały narzut hosta</h1>
+  <div class="slide-body" style="gap:12px;margin-top:18px">
+    <p class="secondary" style="font-size:17px">Stały narzut (F_host): czas, który silnik
+    serwujący zużywa w każdym kroku na czynności organizacyjne — wybór zapytań do kroku, obsługę
+    spekulacji, wymianę poleceń CPU↔GPU — niezależnie od sprzętu.</p>
+    <div class="figure" style="height:206px">{{SVG:w3a_profil_c1}}</div>
+    <div class="cols" style="gap:28px">
+      <div>
+        <p class="secondary" style="font-size:15px;margin-bottom:6px">Interwencje w składniki
+        narzutu (model testowy Qwen, TP=1 — celowo bez komunikacji):</p>
+        <table class="tight">
+          <thead><tr><th>Wariant</th><th class="num">Czas kroku</th><th class="num">TPOT</th></tr></thead>
+          <tbody>
+            <tr><td>pełna konfiguracja</td><td class="num">8,93 ms</td><td class="num">3,39 ms</td></tr>
+            <tr><td>spekulacja wyłączona</td><td class="num">5,36 ms</td><td class="num">5,36 ms</td></tr>
+            <tr><td>CUDA Graphs wyłączone (tryb eager)</td><td class="num">55,1 ms</td><td class="num">19,6 ms</td></tr>
+            <tr><td>governor CPU performance</td><td class="num">9,86 ms</td><td class="num">3,70 ms</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:16px;margin-top:8px"><strong>Krótszy krok nie znaczy szybszy
+        token</strong> — bez spekulacji krok daje 1 token zamiast ~2,6.</p>
+      </div>
+      <div class="verdict" style="flex:1.1;padding:12px 18px;align-self:flex-start">
+        <div class="label">Werdykt</div>
+        <p style="font-size:16px">Predykcja H3: krok drogi nawet bez komunikacji, w profilu
+        przeważają przerwy · Pomiar: 63% kroku bez operacji GPU; obsługa spekulacji
+        3,57 ms = 40% kroku; CUDA Graphs maskują ~46 ms narzutu na krok</p>
+        <p class="result" style="font-size:17px">H3 POTWIERDZONA dla c=1 — szybsze łącze między
+        kartami tego nie naprawi</p>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">Tu debiutuje trzecie źródło danych — profil czasowy torch profiler, czyli
+  pełna oś czasu operacji GPU; kontrola rzetelności: przebieg profilowany i nieprofilowany różnią
+  się o około 5%, więc profil nie zniekształca obrazu. W profilu pojedynczego zapytania
+  największym składnikiem jest czas bez żadnej zarejestrowanej operacji GPU — 63% — to właśnie
+  stały narzut hosta. Interwencje wykonano na modelu testowym przy TP=1, gdzie komunikacja nie
+  występuje, więc wynik przypisuje koszty wyłącznie hostowi. Dwie metryki w tabeli: czas kroku
+  podajemy jako medianę ITL, czyli odstępu między kolejnymi porcjami wygenerowanych tokenów
+  zwracanymi przez serwer; TPOT pokazuje średni czas przypadający na jeden wygenerowany token.
+  Przy spekulacji MTP jeden krok może zaakceptować więcej niż jeden token, dlatego TPOT może
+  pozostać podobny nawet wtedy, gdy sam krok, mierzony przez ITL, staje się dłuższy. Czytanie
+  tabeli: wyłączenie spekulacji skraca krok z 8,93 do 5,36 ms, ale krok bez spekulacji daje jeden
+  token zamiast średnio ~2,6 — na pojedynczy token spekulacja wygrywa (TPOT 3,39 vs 5,36 ms),
+  a jej obsługa kosztuje 3,57 ms, czyli 40% kroku. Wariant eager nie rozkłada kroku, lecz ujawnia
+  koszt, którego konfiguracja unika: bez CUDA Graphs (mechanizmu nagrywania sekwencji kerneli
+  i odtwarzania ich jednym poleceniem) krok rośnie do 55,1 ms przy SM_ACTIVE 0,009 — karta niemal
+  wyłącznie czeka na polecenia hosta. Governor CPU w trybie performance nic nie zmienia —
+  oszczędzanie energii zostaje uniewinnione. Werdykt: H3 potwierdzona dla pojedynczego
+  klienta.</aside>
+</section>
+
+<!-- ================================================== SLAJD 11 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 11–13 · Eksperyment H2 (a)</div>
+  <h1>Jak płynie komunikacja</h1>
+  <div class="slide-body">
+    <p class="secondary small">Badany składnik wzoru: <strong>N_rounds × r(łącze, liczba kart)</strong></p>
+    <div class="figure">
+      <svg class="diag" viewBox="0 0 1080 190" width="960" role="img" aria-label="Grupy TP na topologii: TP=2 wspólny switch, TP=4 przez root CPU, TP=8 przez UPI">
+        <g font-size="14">
+          <rect class="box" x="105" y="14" width="80" height="36"></rect><text x="145" y="37" text-anchor="middle">GPU0</text>
+          <rect class="box" x="195" y="14" width="80" height="36"></rect><text x="235" y="37" text-anchor="middle">GPU1</text>
+          <rect class="box" x="315" y="14" width="80" height="36"></rect><text x="355" y="37" text-anchor="middle">GPU2</text>
+          <rect class="box" x="405" y="14" width="80" height="36"></rect><text x="445" y="37" text-anchor="middle">GPU3</text>
+          <rect class="box" x="585" y="14" width="80" height="36"></rect><text x="625" y="37" text-anchor="middle">GPU4</text>
+          <rect class="box" x="675" y="14" width="80" height="36"></rect><text x="715" y="37" text-anchor="middle">GPU5</text>
+          <rect class="box" x="795" y="14" width="80" height="36"></rect><text x="835" y="37" text-anchor="middle">GPU6</text>
+          <rect class="box" x="885" y="14" width="80" height="36"></rect><text x="925" y="37" text-anchor="middle">GPU7</text>
+        </g>
+        <path d="M105 70 L105 78 L275 78 L275 70" fill="none" stroke="var(--accent)" stroke-width="2.5"></path>
+        <text x="290" y="83" font-size="15" fill="var(--accent)">TP=2 — wspólny switch (PIX); TP=1: jedna karta, zero komunikacji</text>
+        <path d="M105 104 L105 112 L485 112 L485 104" fill="none" stroke="#1baf7a" stroke-width="2.5"></path>
+        <text x="500" y="117" font-size="15" fill="#1baf7a">TP=4 — cztery karty pod jednym CPU, trasa przez root (NODE)</text>
+        <path d="M105 138 L105 146 L965 146 L965 138" fill="none" stroke="var(--accent-2)" stroke-width="2.5"></path>
+        <text x="290" y="172" font-size="15" fill="var(--accent-2)">TP=8 — wszystkie karty, pary cross-socket przez UPI (SYS)</text>
+      </svg>
+    </div>
+    <div class="figure">
+      <svg class="diag" viewBox="0 0 1080 130" width="1020" role="img" aria-label="Warstwa modelu pod TP: attention, scalenie 1, FFN/MoE, scalenie 2">
+        <rect class="box" x="20" y="30" width="150" height="48"></rect>
+        <text x="95" y="52" text-anchor="middle" font-size="14">wejście</text>
+        <text x="95" y="69" text-anchor="middle" font-size="14">warstwy k</text>
+        <rect class="box" x="205" y="30" width="160" height="48"></rect>
+        <text x="285" y="59" text-anchor="middle" font-size="15">blok uwagi</text>
+        <rect x="400" y="30" width="170" height="48" fill="var(--accent-2)"></rect>
+        <text x="485" y="52" text-anchor="middle" font-size="14" fill="#fcfcfb">SCALENIE 1</text>
+        <text x="485" y="69" text-anchor="middle" font-size="13" fill="#fcfcfb">(all-reduce)</text>
+        <rect class="box" x="605" y="30" width="160" height="48"></rect>
+        <text x="685" y="59" text-anchor="middle" font-size="15">blok FFN/MoE</text>
+        <rect x="800" y="30" width="170" height="48" fill="var(--accent-2)"></rect>
+        <text x="885" y="52" text-anchor="middle" font-size="14" fill="#fcfcfb">SCALENIE 2</text>
+        <text x="885" y="69" text-anchor="middle" font-size="13" fill="#fcfcfb">(all-reduce)</text>
+        <g stroke="var(--baseline)" stroke-width="1.5">
+          <line x1="170" y1="54" x2="205" y2="54"></line><line x1="365" y1="54" x2="400" y2="54"></line>
+          <line x1="570" y1="54" x2="605" y2="54"></line><line x1="765" y1="54" x2="800" y2="54"></line>
+          <line x1="970" y1="54" x2="1005" y2="54"></line>
+        </g>
+        <text x="1012" y="59" font-size="15" class="mut">× 61</text>
+        <text x="540" y="112" text-anchor="middle" font-size="16"><tspan font-weight="650">~122 scalenia w każdym kroku</tspan><tspan class="mut"> — scalenie jest synchroniczne: żadna karta nie kontynuuje, dopóki nie skończy ostatnia</tspan></text>
+      </svg>
+    </div>
+    <div class="verdict">
+      <div class="label">Przewidywanie — zapisane przed pomiarem</div>
+      <p class="result">Jeśli H2 prawdziwa: czas kroku rośnie z liczbą kart, a w profilu pod
+      obciążeniem przeważa komunikacja.</p>
+    </div>
+  </div>
+  <aside class="notes">Składnik N_rounds × r ma dwie części o różnym pochodzeniu: N_rounds wynika
+  z architektury modelu — po bloku uwagi i po bloku FFN/MoE wyniki częściowe trzeba scalić, czyli
+  ~2 razy na warstwę, co przy 61 warstwach Kimi daje ~122 obowiązkowe scalenia w każdym kroku;
+  r to czas jednej rundy, zależny od łącza i rosnący z liczbą uczestników. Samo scalanie
+  realizuje biblioteka NCCL; modelem odniesienia jest ring all-reduce — karty tworzą logiczny
+  pierścień, redukcja i rozesłanie wyniku to 2(N−1) kroków, a każda karta czeka na pozostałe
+  w każdej rundzie; NCCL dobiera wariant algorytmu per wywołanie. Istotne dla interpretacji:
+  sprzętowo przyspieszane ścieżki scalania były na tym serwerze nieaktywne — własny all-reduce
+  vLLM wyłączony (nieobsługiwany dla &gt;2 GPU w konfiguracji wyłącznie PCIe), multicast NVLS
+  niedostępny — scala więc standardowe NCCL po PCIe. Konstrukcja eksperymentu: krzywa TP na
+  modelu testowym, gdzie TP=1 działa bez żadnej komunikacji i stanowi punkt odniesienia — każdą
+  dodatkową milisekundę kroku przy TP=2/4/8 można przypisać wyłącznie zrównolegleniu.
+  Przewidywanie zapisujemy przed pomiarem — na następnym slajdzie skonfrontujemy je
+  z danymi.</aside>
+</section>
+
+<!-- ================================================== SLAJD 12 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 12–14 · Eksperyment H2 (b)</div>
+  <h1>Wyniki i werdykt</h1>
+  <div class="slide-body" style="gap:10px;margin-top:18px">
+    <div class="cols" style="height:338px">
+      <div class="figure">{{SVG:w1_krzywa_tp}}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;justify-content:flex-start">
+        <table class="tight">
+          <thead><tr><th>TP (c=1)</th><th class="num">1</th><th class="num">2</th><th class="num">4</th><th class="num">8</th></tr></thead>
+          <tbody>
+            <tr><td>czas kroku</td><td class="num">8,98 ms</td><td class="num">9,91 ms</td><td class="num">10,54 ms</td><td class="num">14,16 ms</td></tr>
+            <tr><td>wzrost</td><td class="num">—</td><td class="num">+0,93</td><td class="num">+1,56</td><td class="num"><strong>+5,18</strong></td></tr>
+          </tbody>
+        </table>
+        <table class="tight">
+          <thead><tr><th>Profil czasowy</th><th class="num">bez op. GPU</th><th class="num">NCCL</th><th class="num">obliczenia</th></tr></thead>
+          <tbody>
+            <tr><td>Kimi TP=8, c=1</td><td class="num">63%</td><td class="num">22,5%</td><td class="num">9,1%</td></tr>
+            <tr><td>Kimi TP=8, c=16</td><td class="num">10%</td><td class="num"><strong>83,9%</strong></td><td class="num">4,6%</td></tr>
+            <tr><td>Qwen TP=4, c=64</td><td class="num">33%</td><td class="num"><strong>53,3%</strong></td><td class="num">5,6%</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:16px">Interwencja P2P (TP=2, c=64): wyłączenie bezpośredniej
+        komunikacji GPU↔GPU: 1403,5 → 1395,6 tok/s (<strong>−0,6%</strong> — brak efektu)</p>
+      </div>
+    </div>
+    <div class="verdict" style="padding:10px 16px">
+      <div class="label">Werdykt</div>
+      <p style="font-size:16px">Predykcja H2: czas kroku rośnie z liczbą kart, profil pod
+      obciążeniem zdominowany komunikacją · Pomiar: +5,18 ms przy TP=8 (13× pasmo szumu); NCCL
+      83,9% profilu pod obciążeniem; przy TP=2 efekt ≈ 0</p>
+      <p class="result" style="font-size:17px">H2 POTWIERDZONA dla TP≥4 pod obciążeniem
+      równoległym — winowajcą liczba uczestników scalania, nie pojedyncza trasa</p>
+    </div>
+    <p style="font-size:16px"><strong>Bilans śledztwa:</strong> c=1 → stały narzut hosta (H3);
+    obciążenie równoległe + TP≥4 → komunikacja (H2); H1, H4 obalone.</p>
+  </div>
+  <aside class="notes">Czytanie krzywej: TP=2 daje +17% przepustowości względem jednej karty
+  (58% ideału), od TP=4 wynik spada poniżej pojedynczej karty, a TP=8 osiąga 21% wyniku TP=1 przy
+  efektywności skalowania 2,7%. Przyrosty czasu kroku odnosimy do pasma szumu ±0,4 ms: +1,56 ms
+  przy TP=4 to 4× pasmo, +5,18 ms przy TP=8 to 13× — efekty realne; +0,93 ms przy TP=2 ledwie
+  wystaje z szumu. Liczniki potwierdzają mechanizm: moc na kartę spada z 436 W (TP=1) do 111 W
+  (TP=8), SM_ACTIVE z 0,665 do 0,053, a PCIe RX rośnie do 7,18 GB/s i we wszystkich scenariuszach
+  c≥8 — u Kimi i u Qwena — zatrzymuje się w paśmie 7,2–7,9 GB/s. Ważne, jak to czytać: to NIE
+  jest wysycenie łącza — nominalnie PCIe Gen5 x16 przenosi ~64 GB/s w jedną stronę, używamy więc
+  ~11%. All-reduce składa się z wielu krótkich, synchronicznych rund, w których dominują czas
+  pojedynczej wymiany między kartami (na PCIe ~20 µs, na NVLink 2–9 µs) i czekanie na pozostałych
+  uczestników — ogranicza nas czas rundy, nie przepustowość rury. Interwencja P2P: zgodnie
+  z kryterium przyczynowości brak efektu (−0,6%) wyklucza transport jako ograniczenie przy dwóch
+  kartach — koszt komunikacji rośnie z liczbą uczestników, nie z samego istnienia łącza. Profile
+  domykają obraz: przy c=1 komunikacja to 22,5% (nie dominuje — tam rządzi narzut hosta), pod
+  obciążeniem równoległym 83,9% — obie hipotezy prawdziwe, każda w swoim reżimie pracy
+  serwera.</aside>
+</section>
+
+<!-- ================================================== SLAJD 13 -->
+<section class="slide">
+  <div class="eyebrow">Krok 15</div>
+  <h1>Sprawdź wniosek drugą, niezależną metodą</h1>
+  <div class="slide-body">
+    <p class="secondary">Ta sama wielkość, dwie niezależne drogi pomiaru:</p>
+    <div class="cols">
+      <div>
+        <p><strong>Droga 1 — bench po stronie klienta</strong></p>
+        <p class="formula small-f">spadek TP=2 → TP=4:<br>1 − 680/1404 = <strong>52%</strong></p>
+      </div>
+      <div>
+        <p><strong>Droga 2 — profil czasowy GPU</strong></p>
+        <p class="formula small-f">udział NCCL w kroku (TP=4, c=64):<br><strong>53,3%</strong></p>
+      </div>
+    </div>
+    <p class="formula">680 ÷ (1 − 0,533) ≈ <strong>1456 tok/s</strong> &nbsp;·&nbsp; zmierzone na TP=2: <strong>1404 tok/s</strong> &nbsp;·&nbsp; zgodność ~4%</p>
+    <p class="bigq">Dwie metody, jedna liczba → wniosek o komunikacji jest wiarygodny.</p>
+    <div class="spacer"></div>
+    <p class="secondary small">Poza modelem została jedna zagadka (nietypowe zachowanie punktu
+    c=16) — zarejestrowana i <strong>zaparkowana</strong>; poza zakresem tej prezentacji.</p>
+  </div>
+  <aside class="notes">Zasada kroku 15: wniosek przyjmujemy dopiero wtedy, gdy dwie niezależne
+  drogi pomiarowe dają tę samą liczbę — tu metryki klienta (vllm bench serve) i profil czasowy
+  GPU (torch profiler), czyli różne narzędzia patrzące na różne warstwy systemu. Logika rachunku
+  krzyżowego: jeżeli komunikacja zabiera 53,3% czasu kroku, to jej usunięcie powinno podnieść
+  przepustowość TP=4 do 680 ÷ (1−0,533) ≈ 1456 tok/s; na TP=2, gdzie interwencja P2P pokazała
+  koszt komunikacji bliski zera, zmierzono 1404 tok/s — różnica ~4%. Zagadka c=16: ITL 512 ms
+  wobec 127 ms przy c=32 — cztery razy wolniej przy mniejszym obciążeniu; powtórka daje 525 ms
+  (±3%), więc to nie błąd pomiaru, a żaden zmierzony zasób tego nie tłumaczy. Wartość metodyczna
+  parkowania: nie wszystko trzeba wyjaśnić natychmiast — anomalię rejestrujemy z liczbami i datą,
+  żeby nie zgubić jej z oczu; jej wyjaśnienie wykracza poza zakres tej prezentacji.</aside>
+</section>
+
+<!-- ================================================== SLAJD 14 -->
+<section class="slide">
+  <div class="eyebrow">Kroki 16–17</div>
+  <h1>Zbuduj model i policz zysk</h1>
+  <div class="slide-body" style="gap:14px">
+    <p class="secondary small">Model z kroku 5 — teraz z liczbami z eksperymentów.</p>
+    <div class="cols">
+      <div>
+        <table>
+          <thead><tr><th>scenariusz</th><th class="num">s — udział komunikacji</th><th class="num">capture</th><th>podstawa</th></tr></thead>
+          <tbody>
+            <tr><td>TP=2</td><td class="num">0</td><td class="num">1,0</td><td class="small">brak efektu interwencji P2P</td></tr>
+            <tr><td>TP=4, c=1</td><td class="num">0,148</td><td class="num">1,0</td><td class="small">1,56 / 10,54 ms (krzywa TP)</td></tr>
+            <tr><td>TP=4, c=64</td><td class="num">0,533</td><td class="num">1,0</td><td class="small">profil czasowy Qwen</td></tr>
+            <tr><td>TP=8, c=1</td><td class="num">0,225</td><td class="num">0,75</td><td class="small">profil czasowy Kimi</td></tr>
+            <tr><td>TP=8, wysoka współb.</td><td class="num">0,839</td><td class="num">0,75</td><td class="small">profil czasowy Kimi</td></tr>
+          </tbody>
+        </table>
+        <p class="caption" style="text-align:left;margin-top:8px">capture = część komunikacji,
+        którą przejmie NVLink (mostek 4-way łączy 4 karty w „wyspę"; przy 8 kartach część scaleń
+        zostaje na PCIe)</p>
+      </div>
+      <div>
+        <p class="formula small-f"><strong>S_nvlink = 1 / (1 − s × capture × (1 − 128/900))</strong></p>
+        <p class="caption">PCIe 128 → NVLink 900 GB/s: objęty składnik krótszy o ~86%, nie usunięty</p>
+        <table style="margin-top:10px">
+          <thead><tr><th>scenariusz</th><th class="num">S_ideal</th><th class="num">S_nvlink</th></tr></thead>
+          <tbody>
+            <tr><td>TP=2</td><td class="num">1,00×</td><td class="num">1,00×</td></tr>
+            <tr><td>TP=4, c=1</td><td class="num">1,17×</td><td class="num">1,15×</td></tr>
+            <tr><td>TP=4, c=64</td><td class="num">2,14×</td><td class="num"><strong>1,84×</strong></td></tr>
+            <tr><td>TP=8, c=1</td><td class="num">1,20×</td><td class="num">1,17×</td></tr>
+            <tr><td>TP=8, wysoka współb.</td><td class="num">2,70×</td><td class="num"><strong>2,18×</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">Krok 16 w tym śledztwie to nie budowa nowego modelu, lecz kalibracja
+  wzoru, który prowadził nas od postawienia hipotez: każde s w tabeli wejść pochodzi z konkretnego
+  pomiaru — z krzywej TP albo z profilu czasowego — i ma wskazaną podstawę. Współczynnik capture
+  wynika z geometrii mostków: grupa do czterech kart mieści się w jednej wyspie NVLink (capture
+  1,0), przy ośmiu kartach część scaleń nadal przechodzi między wyspami po PCIe — przyjęto 0,75.
+  Wariant idealny, S_ideal = 1/(1 − s·capture), to górna granica dla łącza, które usuwa całą
+  objętą komunikację; wariant realny dodaje czynnik 1 − 128/900 = 0,858, bo NVLink nie zeruje
+  czasu rund, tylko go skraca proporcjonalnie do przepustowości (wartości nominalne z kart
+  katalogowych: 128 wobec 900 GB/s dwukierunkowo). Uczciwe zastrzeżenie do konstrukcji modelu:
+  stosunek przepustowości to uproszczenie — realny mechanizm zysku to skrócenie czasu pojedynczej
+  rundy (opóźnienie wymiany i czekanie na uczestników), którego ten czynnik nie modeluje wprost;
+  zobaczymy konsekwencje przy konfrontacji predykcji z pomiarem. Zastrzeżenie drugie: s = 0,839
+  pochodzi z profilu punktu c=16, który oznaczyliśmy jako nietypowy — nie reprezentuje wszystkich
+  punktów wysokiej współbieżności, więc wynik 2,18× traktujemy ostrożnie. Odczyt decyzyjny
+  modelu: zysk pojawia się tylko tam, gdzie komunikacja dominuje krok — TP≥4 pod obciążeniem
+  równoległym (1,84–2,18×); dla pojedynczego klienta i dla TP=2 model przewiduje wartości poniżej
+  1,2× — czyli brak uzasadnienia zakupu w tych scenariuszach.</aside>
+</section>
+
+<!-- ================================================== SLAJD 15 -->
+<section class="slide">
+  <div class="eyebrow">Krok 18</div>
+  <h1>Pre-rejestruj predykcje</h1>
+  <div class="slide-body">
+    <p class="secondary small">Zapisane przed montażem mostków, z progami falsyfikacji:</p>
+    <table>
+      <thead><tr><th>pomiar</th><th class="num">baseline (PCIe)</th><th>predykcja</th><th>próg falsyfikacji</th></tr></thead>
+      <tbody>
+        <tr><td>P2P w wyspie (GPU0↔GPU1)</td><td class="num">~25–50 GB/s</td><td><strong>&gt; 100 GB/s</strong></td><td class="small">&lt; 60 → mostek nie działa</td></tr>
+        <tr><td>NCCL busbw, 4 karty w wyspie</td><td class="num">plateau 7,2–7,9 GB/s</td><td><strong>&gt; 100 GB/s</strong></td><td class="small">&lt; 30 → NCCL nie wybrał NVLinka</td></tr>
+        <tr><td>Qwen TP=4, c=64</td><td class="num">680 tok/s</td><td><strong>~1430 tok/s</strong> (2,1×)</td><td class="small">&lt; 850 → model zawyżony</td></tr>
+        <tr><td>Kimi TP=8, c=32</td><td class="num">285 tok/s</td><td><strong>~770 tok/s</strong> (2,7×, górne oszac.)</td><td class="small">&lt; 400 → capture 0,75 zawyżony</td></tr>
+        <tr><td>c=1 (oba modele)</td><td class="num">Qwen ITL 10,54 ms; Kimi TPOT 8,7 ms</td><td><strong>zysk co najwyżej mały, ≤1,3×</strong> (rządzi narzut hosta)</td><td class="small">Qwen ITL &lt; 8 ms lub Kimi TPOT &lt; 5 ms → teza o narzucie upada</td></tr>
+        <tr><td>PCIe RX przy c≥8</td><td class="num">plateau 7,2–7,9 GB/s</td><td><strong>wyraźny spadek</strong></td><td class="small">brak spadku → NCCL nie używa mostków</td></tr>
+        <tr><td>warning custom all-reduce (log vLLM)</td><td class="num">aktywny u obu</td><td><strong>Qwen TP4: znika / Kimi TP8: zostaje</strong></td><td class="small">inna para → mechanizm źle zrozumiany</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <aside class="notes">Predykcje wpisano do planu sesji przed fizycznym montażem mostków,
+  z adnotacją „nie zmieniaj po fakcie" — dzięki temu późniejsza konfrontacja jest uczciwa: nie da
+  się dopasować oczekiwań do wyniku. Istota kroku 18 to kolumna progów — każda predykcja ma
+  z góry określoną wartość, przy której uznamy ją za obaloną, więc model jest falsyfikowalny
+  w sensie ścisłym. Predykcję Kimi traktujemy jako górne oszacowanie: s=0,839 pochodzi
+  z nietypowego punktu c=16, a capture 0,75 jest założeniem geometrycznym, nie pomiarem. Para
+  warningów custom all-reduce sprawdza zrozumienie mechanizmu, nie tylko liczb: vLLM aktywuje
+  własny, szybszy all-reduce tylko przy pełnej siatce NVLink w grupie TP, sprawdzając każdą parę
+  kart — przy mostkach 4+4 grupa TP=4 w jednej wyspie ma pełną siatkę (warning powinien
+  zniknąć), a TP=8 przez dwie wyspy nie ma (para GPU0↔GPU4 bez linku — warning powinien zostać
+  mimo poprawnie działających mostków). Wiersz o PCIe RX jest sygnałem niezależnym od benchmarków
+  i logów NCCL — pochodzi wprost z liczników sprzętowych.</aside>
+</section>
+
+<!-- ================================================== SLAJD 16 -->
+<section class="slide">
+  <div class="eyebrow">Krok 19 (a)</div>
+  <h1>Interwencja — montaż i weryfikacja mikro</h1>
+  <div class="slide-body" style="gap:12px">
+    <p class="secondary small">Interwencja: mostki NVLink 4-way — dwie wyspy: GPU 0–3 i GPU 4–7</p>
+    <div class="cols">
+      <div class="figure">
+        <svg class="diag" viewBox="0 0 760 200" width="520" role="img" aria-label="Topologia po montażu: pełna siatka NVLink wewnątrz każdej z dwóch wysp po cztery GPU, między wyspami PCIe/UPI">
+          <g font-size="12">
+            <rect class="box" x="20" y="32" width="65" height="30"></rect><text x="52.5" y="52" text-anchor="middle">GPU0</text>
+            <rect class="box" x="95" y="32" width="65" height="30"></rect><text x="127.5" y="52" text-anchor="middle">GPU1</text>
+            <rect class="box" x="170" y="32" width="65" height="30"></rect><text x="202.5" y="52" text-anchor="middle">GPU2</text>
+            <rect class="box" x="245" y="32" width="65" height="30"></rect><text x="277.5" y="52" text-anchor="middle">GPU3</text>
+            <rect class="box" x="390" y="32" width="65" height="30"></rect><text x="422.5" y="52" text-anchor="middle">GPU4</text>
+            <rect class="box" x="465" y="32" width="65" height="30"></rect><text x="497.5" y="52" text-anchor="middle">GPU5</text>
+            <rect class="box" x="540" y="32" width="65" height="30"></rect><text x="572.5" y="52" text-anchor="middle">GPU6</text>
+            <rect class="box" x="615" y="32" width="65" height="30"></rect><text x="647.5" y="52" text-anchor="middle">GPU7</text>
+          </g>
+          <!-- wyspa 0: pelna siatka (6 par) -->
+          <g stroke="var(--accent)" stroke-width="2" fill="none">
+            <path d="M52.5 62 C 52.5 88, 127.5 88, 127.5 62"></path>
+            <path d="M127.5 62 C 127.5 88, 202.5 88, 202.5 62"></path>
+            <path d="M202.5 62 C 202.5 88, 277.5 88, 277.5 62"></path>
+            <path d="M52.5 62 C 52.5 108, 202.5 108, 202.5 62"></path>
+            <path d="M127.5 62 C 127.5 108, 277.5 108, 277.5 62"></path>
+            <path d="M52.5 62 C 52.5 128, 277.5 128, 277.5 62"></path>
+          </g>
+          <!-- wyspa 1: pelna siatka (6 par) -->
+          <g stroke="var(--accent)" stroke-width="2" fill="none">
+            <path d="M422.5 62 C 422.5 88, 497.5 88, 497.5 62"></path>
+            <path d="M497.5 62 C 497.5 88, 572.5 88, 572.5 62"></path>
+            <path d="M572.5 62 C 572.5 88, 647.5 88, 647.5 62"></path>
+            <path d="M422.5 62 C 422.5 108, 572.5 108, 572.5 62"></path>
+            <path d="M497.5 62 C 497.5 108, 647.5 108, 647.5 62"></path>
+            <path d="M422.5 62 C 422.5 128, 647.5 128, 647.5 62"></path>
+          </g>
+          <text x="165" y="155" text-anchor="middle" font-size="14" fill="var(--accent)">wyspa 0 — pełna siatka NVLink</text>
+          <text x="535" y="155" text-anchor="middle" font-size="14" fill="var(--accent)">wyspa 1 — pełna siatka NVLink</text>
+          <text x="350" y="185" text-anchor="middle" class="mut" font-size="14">między wyspami: nadal PCIe / UPI</text>
+        </svg>
+      </div>
+      <div class="figure">{{SVG:w4_p2p_busbw}}</div>
+    </div>
+    <p class="small" style="margin-bottom:4px">Pierwsze odhaczenia tabeli predykcji:</p>
+    <ul class="check small" style="columns:2;gap:40px">
+      <li>P2P w wyspie: <strong>132,8 GB/s</strong> (predykcja: &gt;100)</li>
+      <li>NCCL busbw w wyspie: <strong>185–333 GB/s</strong> (predykcja: &gt;100)</li>
+      <li>kontrola cross-island: <strong>29,1 GB/s — bez zmian</strong> (predykcja: bez zmian)</li>
+      <li>warning custom all-reduce: <strong>Qwen TP4 zniknął / Kimi TP8 został</strong> — para zgodna z predykcją</li>
+    </ul>
+  </div>
+  <aside class="notes">Krok 19 protokołu mówi: wykonaj zmianę i zmierz dokładnie to samo, co
+  przed nią — ale zanim uruchomimy benchmarki end-to-end, sprawdzamy warstwę mikro: czy łącze
+  fizycznie działa i czy system je widzi. P2P w wyspie skacze z ~25–50 do 132,8 GB/s; kontrola
+  negatywna — para między wyspami zostaje przy 29,1 GB/s, co potwierdza, że mapa wysp jest
+  poprawna (wzrost na tej parze oznaczałby błąd w rozpoznaniu topologii). NCCL busbw wewnątrz
+  wyspy osiąga 185–333 GB/s wobec plateau 7,2–7,9 z ery PCIe — dwa rzędy wielkości; grupa 2+2
+  rozpięta przez obie wyspy daje tylko 24,8–31,3 GB/s, co pokazuje, że kolektyw działa
+  hierarchicznie, a nie płaskim pierścieniem — to empiryczne wsparcie dla założenia capture
+  z modelu. Bramka custom all-reduce zamknęła się dokładnie po przewidzianej parze: warning
+  zniknął u Qwena (pełna siatka w wyspie przy TP=4; log potwierdza aktywację kernela), a został
+  u Kimi (TP=8 przez dwie wyspy — siatka niepełna, mimo poprawnie działających mostków).
+  Wszystkie predykcje warstwy mikro zaliczone — dopiero teraz przechodzimy do pomiaru
+  end-to-end.</aside>
+</section>
+
+<!-- ================================================== SLAJD 17 -->
+<section class="slide">
+  <div class="eyebrow">Krok 19 (b)</div>
+  <h1>Zmierz dokładnie to samo</h1>
+  <div class="slide-body" style="gap:12px">
+    <p class="secondary small">Te same benchmarki, ta sama konfiguracja — jedyna zmiana: mostki.</p>
+    <div class="figure fig-grow">{{SVG:w5_przed_po}}</div>
+    <ul class="check small">
+      <li>Qwen TP=4, c=64: <strong>2022 tok/s (2,97×)</strong> — próg 850 przekroczony</li>
+      <li>Kimi TP=8, c=32: <strong>594 tok/s (2,08×)</strong> — próg 400 przekroczony</li>
+      <li>c=1: zysk mały — TPOT Qwen 4,00→3,21 ms (−20%), Kimi 8,7→7,44 ms (−15%) —
+      w przewidzianym „≤1,3×", rządzi stały narzut hosta</li>
+    </ul>
+    <p class="small secondary">Oba pomiary przechodzą progi. Jak dokładnie trafiły w predykcje —
+    następny slajd.</p>
+  </div>
+  <aside class="notes">Zasada kroku 19: mierzymy dokładnie te same benchmarki, na tej samej
+  konfiguracji silnika, którą mierzyliśmy przed interwencją — jedyną zmienną są mostki, więc
+  porównanie jest 1:1. Wyniki: Qwen TP=4 przy c=64 przyspiesza z 680 do 2022 tok/s (2,97×), Kimi
+  TP=8 przy c=32 z 285 do 594 tok/s (2,08×); przy pojedynczym kliencie TPOT spada o ~15–20% —
+  mieści się w przewidzianym „poniżej 1,3×" i potwierdza, że w tym reżimie rządzi stały narzut
+  hosta, którego szybsze łącze nie usuwa. Wykres ma dwie linie odniesienia i czytamy go względem
+  obu: próg falsyfikacji mówi, czy model przeżył konfrontację, predykcja — jak dokładnie trafił;
+  oba słupki przechodzą progi, ocenę dokładności robimy za chwilę. Kontekst decyzyjny wart
+  odnotowania: optimum ery PCIe wynosiło 1404 tok/s na TP=2 — TP=4 z NVLink (2022) przebija tę
+  wartość, więc konfiguracja czterokartowa przestała być karą.</aside>
+</section>
+
+<!-- ================================================== SLAJD 18 -->
+<section class="slide">
+  <div class="eyebrow">Krok 20</div>
+  <h1>Analizuj błędy modelu — w obie strony</h1>
+  <div class="slide-body" style="gap:14px">
+    <p class="secondary small">Oba pomiary przeszły progi — a model pomylił się w obu kierunkach.</p>
+    <div>
+      <p><strong>Qwen: 2,97× — ponad sufit uproszczonego modelu transfer-only (S_ideal 2,14×).</strong> Dlaczego niedoszacował:</p>
+      <ul class="small">
+        <li>udział komunikacji z profilu zawierał także czekanie na inne karty (peer-wait),
+        a ono przy szybszym łączu kurczy się ponadproporcjonalnie → model był oszacowaniem
+        <strong>dolnym</strong>, nie górnym</li>
+        <li>interwencja nie była pojedyncza: mostki przy okazji odblokowały kernel custom
+        all-reduce vLLM — <strong>ukryta druga zmiana</strong></li>
+      </ul>
+    </div>
+    <div>
+      <p><strong>Kimi: 2,08× — poniżej predykcji (2,18–2,70×):</strong></p>
+      <ul class="small">
+        <li>implikowany capture = <strong>0,62</strong> zamiast założonego 0,75
+        (0,75 = 6 z 8 odcinków pierścienia all-reduce leży w wyspach; 0,62 = wartość wynikająca
+        ze zmierzonego 2,08×) — dwa odcinki między wyspami kosztują więcej czasu, niż wynosi ich
+        udział w liczbie odcinków</li>
+      </ul>
+    </div>
+    <div class="verdict">
+      <div class="label">Dowód mechanizmu — profil po interwencji</div>
+      <p class="small">Udział NCCL w kroku Kimi: <strong>83,9% → 61,1%</strong>; arytmetycznie
+      <strong>cały zysk 2,08× przyszedł ze skrócenia komunikacji</strong>, a implikowany capture
+      0,62 potwierdza się niezależnie.</p>
+    </div>
+    <p><strong>Błędy modelu w obu kierunkach uczą więcej niż trafienia.</strong></p>
+  </div>
+  <aside class="notes">Krok 20 nie kończy się na „przeszło / nie przeszło" — analizujemy
+  odchylenia w obu kierunkach, bo to one korygują rozumienie mechanizmu. Błąd w górę u Qwena ma
+  dwie przyczyny: po pierwsze, model traktował czas kerneli NCCL jako czysty transfer, a profil
+  wlicza do NCCL także czekanie na karty, które przy krótszej rundzie znika szybciej niż
+  proporcjonalnie — wniosek przenośny: udział komunikacji z profilu to górna granica czasu
+  transferu, więc zbudowany na nim model daje dolne oszacowanie zysku. Po drugie, kontrola
+  pojedynczości interwencji: vLLM sam aktywował własny kernel all-reduce, gdy zobaczył pełną
+  siatkę — zmiana sprzętowa pociągnęła za sobą zmianę software'ową. Późniejsza próba rozdzielenia
+  tych wkładów: przy c=64 nierozstrzygnięta (porównania dają przedział 1,0–1,2× przy szumie ±6%
+  pojedynczego biegu), przy c=1 wkład kernela realny, około +8% na TPOT. Błąd w dół u Kimi —
+  skąd obie liczby: 0,75 przyjęto z geometrii ring all-reduce (karty tworzą logiczny pierścień
+  0→1→…→7→0, komunikacja rozkłada się równomiernie na odcinki; przy wyspach 0–3 i 4–7 sześć
+  z ośmiu odcinków leży wewnątrz wysp → 6/8 = 0,75); 0,62 to wartość odwrócona z pomiaru —
+  podstawiając zmierzone 2,08× i s = 0,839 do wzoru, wychodzi capture ≈ 0,62. Fizyczna
+  interpretacja rozjazdu: runda scalenia jest synchroniczna, więc idzie w tempie najwolniejszego
+  ogniwa — dwa odcinki między wyspami (nadal PCIe) zabierają większą część CZASU rundy, niż
+  wynosi ich udział w LICZBIE odcinków; widać to też w pomiarze busbw grupy 2+2 przez wyspy
+  (24,8–31,3 GB/s wobec 185–333 w wyspie). Pomiar end-to-end i profil dają zgodnie 0,62 — dwie
+  niezależne drogi znów spotykają się na jednej liczbie, tym razem przy analizie błędu.</aside>
+</section>
+
+<!-- ================================================== SLAJD 19 -->
+<section class="slide">
+  <div class="eyebrow">Protokół badania</div>
+  <h1>Do zabrania</h1>
+  <div class="slide-body">
+    <ol style="columns:2;gap:56px;font-size:20px">
+      <li>Zauważ anomalię i zanotuj ją, zanim cokolwiek zmienisz.</li>
+      <li>Sprawdź, co naprawdę mierzy Twoja metryka.</li>
+      <li>Nasycenie mierz właściwymi licznikami; wyniki zapisuj z datą i konfiguracją.</li>
+      <li>Wypisz hipotezy — każda z przewidywanym śladem w danych.</li>
+      <li>Najpierw tanie eliminacje: z danych, które już masz.</li>
+      <li>Eksperymenty: jedna zmiana naraz, w kolejności kosztu.</li>
+      <li>Skalibruj szum, zanim nazwiesz różnicę efektem.</li>
+      <li>Werdykt zawsze z zakresem ważności.</li>
+      <li>Wniosek sprawdź drugą, niezależną metodą.</li>
+      <li>Zbuduj model, pre-rejestruj predykcje z progami — a po zmianie analizuj błędy modelu
+      w obie strony.</li>
+    </ol>
+    <div class="spacer"></div>
+    <p class="thanks">Dziękuję.</p>
+  </div>
+  <aside class="notes">Klamra na koniec: te dziesięć punktów to skondensowany szkielet całej
+  prezentacji — każdy z nich ma za sobą pokazany dziś przykład z pomiarów: metrykę, która nie
+  mierzyła tego, co myśleliśmy; hipotezę obaloną za darmo; interwencje po jednej zmianie; pasmo
+  szumu, do którego odnosiliśmy różnice; dwie niezależne metody spotykające się na jednej
+  liczbie; model, który pomylił się w obie strony i właśnie dlatego czegoś nas nauczył. Protokół
+  jest ogólny — nie zależy od vLLM, NVLink ani konkretnego serwera; zmienia się tylko treść
+  hipotez i liczniki. Dziękuję za uwagę.</aside>
+</section>
+
+</main>
+
+<div id="notes-panel" hidden>
+  <h2>Notatki prelegenta</h2>
+  <div id="notes-body"></div>
+</div>
+
+<footer id="hud">
+  <span id="counter">1 / 19</span>
+  <span>← → nawigacja &nbsp;·&nbsp; N notatki &nbsp;·&nbsp; T motyw</span>
+</footer>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var counter = document.getElementById("counter");
+  var panel = document.getElementById("notes-panel");
+  var notesBody = document.getElementById("notes-body");
+  var idx = 0;
+
+  var fromHash = parseInt(location.hash.slice(1), 10);
+  if (fromHash >= 1 && fromHash <= slides.length) idx = fromHash - 1;
+
+  function fit() {
+    var stage = document.getElementById("stage");
+    var scale = Math.min(stage.clientWidth / 1320, stage.clientHeight / 760);
+    slides.forEach(function (s) { s.style.transform = "scale(" + scale + ")"; });
+  }
+
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, k) { s.classList.toggle("current", k === idx); });
+    counter.textContent = (idx + 1) + " / " + slides.length;
+    history.replaceState(null, "", "#" + (idx + 1));
+    var notes = slides[idx].querySelector("aside.notes");
+    notesBody.innerHTML = notes ? notes.innerHTML : "(brak notatek)";
+    fit();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { show(idx + 1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { show(idx - 1); e.preventDefault(); }
+    else if (e.key === "Home") { show(0); }
+    else if (e.key === "End") { show(slides.length - 1); }
+    else if (e.key === "n" || e.key === "N") { panel.hidden = !panel.hidden; }
+    else if (e.key === "t" || e.key === "T") {
+      var root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === "dark" ? "" : "dark";
+    }
+  });
+  window.addEventListener("resize", fit);
+  show(idx);
+})();
+</script>
+</body>
+</html>
