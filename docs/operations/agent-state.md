@@ -383,12 +383,19 @@ status, not a task list. Update when work moves.
   **2026-08-03: DOMKNIĘTE w całości** — 4 sesje wykonane (gap-fill, trace,
   dogrywka-dryf, domknięcie), wszystkie docs owed dostarczone, #51 zamknięte;
   szczegóły w handoff-entry 2026-08-03 i `2026-08-03-nvlink-day-summary.md`.
-- **Prezentacja meetupowa NVLink (draft, 2026-07-31):** plan w
-  `docs/plans/2026-07-31-nvlink-meetup-prezentacja.md` — 20 slajdów (hook „100%
-  GPU-Util, a karty się nudzą" → hipotezy → śledztwo → Amdahl/predykcje → montaż
-  → przed/po), wykresy W1–W6 z commitowanych danych + diagram topologii, HTML
-  samowystarczalny do `docs/presentations/`. Wracamy po sesji gap-fill 08-03
-  (jej wyniki mogą wzmocnić puentę 1 — rozdzielenie dawki custom-AR).
+- **Prezentacja meetupowa NVLink (w budowie, 2026-08-09):** plan przepisany
+  na v3 (`docs/plans/2026-07-31-nvlink-meetup-prezentacja.md`) — szkieletem
+  jest 20-krokowy protokół badania, 19 slajdów, eksperymenty w kolejności
+  kosztu H4→H3→H2; slajd zagadki c=16 WYCIĘTY (decyzja: brak wyjaśnionego
+  mechanizmu), terminologia za notatką („stały narzut hosta", „interwencje").
+  Pełna treść slajdów napisana iteracyjnie z użytkownikiem:
+  `docs/presentations/2026-07-31-nvlink-meetup/tresc-slajdow.md` (slajdy 1–18
+  ZAAKCEPTOWANE, 19/checklista w iteracji); treść zweryfikowana z notatką
+  decyzyjną co do cyfry. Wykresy W0–W5+W7 wygenerowane z commitowanych danych
+  (`generate_charts.py` + `charts/*.svg`; W2 odtwarza §6.1 z surowych dcgmi).
+  Zostało: akcept slajdu 19, `index.html` (19 slajdów, speaker notes pod `N`,
+  inline SVG) + ręczne diagramy D1 (topologia przed/po), D2 (oś czasu
+  zajętości), D3 (warstwa pod TP).
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -503,6 +510,16 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 ---
 
 ## Last validation
+
+2026-08-09 (laptop) prezentacja NVLink: plan v3 + treść slajdów + wykresy:
+
+```text
+uv run ruff check docs/presentations/.../generate_charts.py    OK (repo-wide: wcześniejsze naruszenia w download_swe_bench_lite.py i results/.../nvlink/*.py — nietknięte)
+uv run pytest    132 passed
+git diff --check    OK
+W2 sanity: filtr SMACT>=0,10 na surowych dcgmi → 168,5 W / 0,206 / 0,093 (c1) i 198,8 / 0,204 / 0,070 (c64) = notatka §6.1    OK
+W5 sanity: bench JSONy dają 2022,0 (bench_tp4_nvlink) i 594,1 (kimi c32)    OK
+```
 
 2026-08-07/08 (sesja A/B drafterów + analiza laptopowa):
 
