@@ -274,7 +274,7 @@ rozstrzygał, a nie ilustrował.
 
 ---
 
-## Slajd 7 — Krok 7: Tanie eliminacje
+## Slajd 7 — Krok 7: Szybkie eliminacje
 
 Status: ZAAKCEPTOWANY (2026-08-09)
 
@@ -286,7 +286,7 @@ H1.
 
 ### Na slajdzie
 
-> ## Krok 7: Tanie eliminacje
+> ## Krok 7: Szybkie eliminacje
 >
 > Zanim zaplanujesz eksperymenty — sprawdź, które hipotezy padają od
 > danych, które już masz.
@@ -441,6 +441,9 @@ narzutu profilera w notes.
 > | spekulacja wyłączona | 5,36 ms | 5,36 ms |
 > | CUDA Graphs wyłączone (tryb eager) | 55,1 ms | 19,6 ms |
 > | governor CPU `performance` | 9,86 ms | 3,70 ms |
+>
+> **Krótszy krok nie znaczy szybszy token** — bez spekulacji krok
+> daje 1 token zamiast ~2,6.
 >
 > ┌─ WERDYKT ──────────────────────────────────────────┐
 > │ Predykcja H3: krok drogi nawet bez komunikacji,    │
@@ -889,8 +892,8 @@ liczby rozdzielania wkładu custom-AR w notes.
 >
 > Oba pomiary przeszły progi — a model pomylił się w obu kierunkach.
 >
-> **Qwen: 2,97× — PONAD sufit modelu (S_ideal 2,14×).** Dlaczego
-> niedoszacował:
+> **Qwen: 2,97× — ponad sufit uproszczonego modelu transfer-only
+> (S_ideal 2,14×).** Dlaczego niedoszacował:
 > - udział komunikacji z profilu zawierał także czekanie na inne
 >   karty (peer-wait), a ono przy szybszym łączu kurczy się
 >   ponadproporcjonalnie → model był oszacowaniem **dolnym**, nie
@@ -956,7 +959,7 @@ slajd 19.
 
 ## Slajd 19 — Protokół badania: do zabrania
 
-Status: W ITERACJI
+Status: ZAAKCEPTOWANY (2026-08-09)
 
 Decyzje: checklista skrócona do 10 haseł (kondensacja 20 kroków);
 bez sekcji „co dalej"; prezentację kończy sama checklista +
@@ -971,7 +974,7 @@ podziękowanie; bez danych kontaktowych i linków.
 > 3. Nasycenie mierz właściwymi licznikami; wyniki zapisuj z datą
 >    i konfiguracją.
 > 4. Wypisz hipotezy — każda z przewidywanym śladem w danych.
-> 5. Najpierw tanie eliminacje: z danych, które już masz.
+> 5. Najpierw szybkie eliminacje: z danych, które już masz.
 > 6. Eksperymenty: jedna zmiana naraz, w kolejności kosztu.
 > 7. Skalibruj szum, zanim nazwiesz różnicę efektem.
 > 8. Werdykt zawsze z zakresem ważności.

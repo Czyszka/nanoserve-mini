@@ -43,7 +43,7 @@ topologii inline SVG; speaker notes pełne (3–6 zdań/slajd).
 5. Wypisz wszystkie hipotezy, które mogą tłumaczyć obraz.
 6. Do każdej hipotezy dopisz przewidywanie: co zobaczysz, jeśli jest
    prawdziwa.
-7. Najpierw tanie eliminacje: odrzuć hipotezy padające od danych, które
+7. Najpierw szybkie eliminacje: odrzuć hipotezy padające od danych, które
    już masz.
 8. Do żywych hipotez zaplanuj eksperymenty.
 9. Każdy eksperyment zmienia tylko jedną rzecz naraz.
@@ -103,7 +103,7 @@ topologii inline SVG; speaker notes pełne (3–6 zdań/slajd).
    CPU/launch/orkiestracja spekulacji (przewidywanie: przy c=1 dominują
    przerwy między kernelami), **H4** kara UPI za cross-socket
    (przewidywanie: placement przez UPI wyraźnie wolniejszy).
-7. **KROK 7: Tanie eliminacje** — slajd czysto o H1, skonfrontowanej z
+7. **KROK 7: Szybkie eliminacje** — slajd czysto o H1, skonfrontowanej z
    danymi, które już mamy: DRAM_ACTIVE 0,070–0,093 vs oczekiwane
    0,70–0,90 → **OBALONA bez żadnego eksperymentu** (WYKRES W7:
    DRAM_ACTIVE w osi czasu + pas oczekiwany). Tu debiutuje stały
@@ -245,10 +245,15 @@ numeracji v3:
 
 ```text
 docs/presentations/2026-07-31-nvlink-meetup/
-├── index.html            # samowystarczalne slajdy (pełny dokument HTML)
+├── index.html            # samowystarczalny artefakt końcowy (SVG+PNG inline)
+├── index_src.html        # źródło z placeholderami {{SVG:...}}/{{PNG:...}}
+├── build_index.py        # skleja index.html ze źródła i charts/*.svg
 ├── generate_charts.py    # reprodukcja W0–W5 i W7 z commitowanych danych → SVG
+├── tresc-slajdow.md      # zaakceptowana treść slajdów (etap 2)
 └── charts/*.svg          # wygenerowane wykresy (małe, tekstowe)
 ```
+
+Edycje robić w `index_src.html`, potem `build_index.py` → `index.html`.
 
 - `generate_charts.py` uruchamiany przez `uv run --with matplotlib python ...` —
   bez dodawania matplotlib do `pyproject.toml`.
