@@ -39,14 +39,7 @@ wydarzenia i daty, bez linków do GitHub (na żadnym slajdzie).
 
 ### Speaker notes
 
-Cześć — zanim zaczniemy, dwa słowa o mnie. [przedstawienie ustne,
-poza slajdem]. Ten tytuł to nie metafora, tylko prawdziwy odczyt z
-naszego serwera: osiem kart H200 raportowało 100% zajętości, a
-pobierało ledwie jedną trzecią dostępnej mocy. Sytuację tę
-zaplanowałem przedstawić w formie studium przypadku, aby teoria mogła
-spotkać się z praktyką i pokazać kompletny, powtarzalny protokół
-badania wydajności: od zauważenia anomalii, przez hipotezy i
-eksperymenty, po decyzję sprzętową zweryfikowaną pomiarem.
+Ten tytuł to prawdziwy odczyt z naszego serwera. Osiem kart H200 pokazywało 100% obciążenia — a realnie pobierały jedną trzecią mocy. Chcę pokazać, jak krok po kroku doszliśmy do wyjaśnienia tej sytuacji: od pierwszego momentu, w którym było widać, że coś się nie zgadza, przez hipotezy i eksperymenty, aż po decyzję o zakupie sprzętu — popartą twardymi dowodami pomiarowymi. Prezentacja będzie miała formę studium przypadku i można ją potraktować jako przedstawienie prostego protokołu badań wydajności, który można powtórzyć we własnym środowisku.
 
 ---
 
@@ -73,15 +66,7 @@ w speaker notes (w tym zastrzeżenie o TP=4).
 
 ### Speaker notes
 
-Środowisko badania: serwer laboratoryjny z dwoma procesorami Xeon
-Gold 6530 i ośmioma kartami H200 NVL po 143 GB, połączonymi magistralą PCIe 5.0. Inferencję serwuje vLLM w kontenerach Docker. Model główny to Kimi-K2.6: bilion
-parametrów, 554 GB wag — nie mieści się na mniej niż ośmiu kartach,
-więc pracuje wyłącznie w konfiguracji TP=8, z dekodowaniem
-spekulacyjnym Eagle3. Drugim modelem jest Qwen3.6-35B w roli narzędzia
-badawczego: mieści się na pojedynczej karcie, dzięki czemu umożliwia
-pomiary przy TP=1, 2 i 4 (w badaniu także TP=8). Należy zaznaczyć, że
-TP=4/8 dla modelu tej wielkości nie jest poprawną konfiguracją
-produkcyjną.
+Zanim przejdę do samego badania, krótko o środowisku. Pracujemy na serwerze laboratoryjnym: dwa Xeony Gold 6530 i osiem kart H200 NVL po 143 GB, spiętych magistralą PCIe 5.0. Całość działa na vLLM-ie, w kontenerach Docker. Główny model to Kimi-K2.6 — bilion parametrów, same wagi zajmują 554 GB, więc nie da się go uruchomić na mniej niż ośmiu kartach. Z tego powodu działa u nas wyłącznie na TP=8, z dekodowaniem spekulacyjnym Eagle3. Drugi model, Qwen3.6-35B, służy nam jako narzędzie badawcze: mieści się na jednej karcie, więc możemy robić pomiary przy TP=1, 2 i 4 — w badaniu uruchamialiśmy go też na TP=8. Od razu zastrzegę, że TP=4 czy TP=8 dla modelu tej wielkości to nie są poprawne konfiguracje produkcyjne — używamy ich tylko po to, żeby zbadać skalowanie.
 
 ---
 
@@ -108,13 +93,7 @@ oryginalnych badań ery PCIe).
 
 ### Speaker notes
 
-Punkt wyjścia badania: podczas benchmarków obciążających wszystkie
-osiem kart nvidia-smi raportował 100% GPU-Util, a jednocześnie pobór
-mocy pozostawał w okolicach 111-185 W na kartę, przy limicie 600 W.
-Wykres pokazuje przebieg mocy w całym oknie pomiarowym z oryginalnych
-badań — to stan trwały, a nie chwilowy przestój między zadaniami.
-Pierwszy krok protokołu: nie przechodzić obok takiej obserwacji —
-zanotować ją, zanim cokolwiek zaczniemy zmieniać.
+Podczas benchmarków, które obciążały wszystkie osiem kart, nvidia-smi pokazywał 100% GPU-Util, a jednocześnie karty pobierały po 111–185 W, przy limicie 600 W — 111 W to średnia dla Qwena, 185 W średnia dla Kimi. Na wykresie widać przebieg mocy w całym oknie pomiarowym z oryginalnych badań — ten stan utrzymywał się przez cały czas, więc to nie był chwilowy przestój między zadaniami. I to jest pierwszy krok protokołu: nie przechodzimy obok takiej obserwacji, tylko notujemy ją, zanim cokolwiek zaczniemy zmieniać.
 
 ---
 
@@ -146,19 +125,7 @@ zajętości.
 
 ### Speaker notes
 
-Definicja formalna, za dokumentacją NVIDIA NVML (pole
-`utilization.gpu`): GPU-Util to procent czasu w oknie próbkowania, w
-którym na karcie wykonywał się co najmniej jeden kernel. Kernel to
-pojedynczy program uruchamiany na GPU — na przykład jedno mnożenie
-macierzy, jedna operacja na pamięci albo jedna operacja komunikacji
-zbiorowej. Metryka nie rozróżnia, co ten kernel robi: kernel NCCL,
-który w pętli czeka na dane od innej karty, podnosi zajętość dokładnie
-tak samo jak kernel liczący mnożenie macierzy. W konsekwencji 100%
-GPU-Util informuje jedynie, że kolejka karty nie była pusta — kolejka
-to bufor zadań (strumienie CUDA), z którego GPU pobiera kolejne
-kernele do wykonania; dopóki czeka w niej choć jeden kernel, karta
-raportuje zajętość. Nic to nie mówi o nasyceniu jednostek
-obliczeniowych ani interfejsu pamięci.
+Zacznijmy od tego, co ta metryka w ogóle mierzy. Formalna definicja z dokumentacji NVIDIA — pole utilization.gpu w NVML — mówi, że GPU-Util to procent czasu w oknie próbkowania, w którym na karcie wykonywał się co najmniej jeden kernel. Kernel to pojedynczy program uruchamiany na GPU: jedno mnożenie macierzy, jedna operacja na pamięci albo jedna operacja komunikacji zbiorowej. I tu jest sedno: metryka nie rozróżnia, co ten kernel robi. Kernel NCCL, który w pętli czeka na dane od innej karty, podnosi zajętość dokładnie tak samo jak kernel, który liczy mnożenie macierzy. Sto procent GPU-Util mówi więc tylko tyle, że kolejka karty nie była pusta. Kolejka to bufor zadań — strumienie CUDA — z którego karta pobiera kolejne kernele; dopóki czeka w niej choć jeden, karta zgłasza zajętość. O tym, czy jednostki obliczeniowe albo interfejs pamięci są rzeczywiście nasycone, ta metryka nie mówi nic.
 
 ---
 
@@ -195,31 +162,12 @@ speaker notes.
 
 ### Speaker notes
 
-DCGM (Data Center GPU Manager) to narzędzie NVIDIA do monitoringu
-GPU; `dcgmi dmon` próbkuje liczniki profilowania na żywo z poziomu
-hosta, bez modyfikowania kontenerów z inferencją. SM (streaming
-multiprocessor) to podstawowy blok obliczeniowy GPU — karta zawiera
-ich ponad sto, a SM_ACTIVE podaje, przez jaki procent czasu bloki te
-wykonywały jakiekolwiek instrukcje. DRAM_ACTIVE analogicznie mierzy
-procent czasu, w którym pracował interfejs pamięci HBM — czyli jak
-mocno wykorzystujemy przepustowość pamięci karty. Wyniki dotyczą
-modelu produkcyjnego Kimi-K2.6 na TP=8, w dwóch oknach pomiarowych:
-jeden klient (c=1) i 64 klientów (c=64); trzecie okno — stan
-spoczynkowy — dało 0,000 na obu licznikach aktywności, co potwierdza
-poprawne odseparowanie obciążenia od tła. Przy stałym 100% GPU-Util
-moc to 170–199 W, czyli około 30% limitu, jednostki obliczeniowe
-pracują przez ~20% czasu, interfejs pamięci przez 7–9%, a magistrala
-PCIe przenosi 6–8 GB/s, czyli ~10% swojej przepustowości — żaden
-zasób nie zbliża się do nasycenia. Zastrzeżenie: profil zależy od
-modelu i
-konfiguracji — testowy Qwen przy TP=1 i c=64 osiągał SMACT 0,68 i
-DRAM_ACTIVE 0,39 na swojej jedynej karcie; anomalia dotyczy właśnie
-konfiguracji wielokartowych. Zgodnie z krokiem 4 protokołu wszystkie
-odczyty zapisujemy liczbowo, z datą i pełną konfiguracją — będą
-podstawą porównań w kolejnych krokach. (Pełne identyfikatory:
-`DCGM_FI_DEV_POWER_USAGE`, `DCGM_FI_PROF_SM_ACTIVE`,
-`DCGM_FI_PROF_DRAM_ACTIVE`, `DCGM_FI_PROF_PCIE_RX_BYTES` /
-`_TX_BYTES`.)
+Do pomiaru nasycenia używamy DCGM, czyli narzędzia NVIDIA do monitoringu kart. Konkretnie: dcgmi dmon, uruchomione z poziomu hosta. Próbkowanie było ustawione na jedną sekundę, więc nie zmienialiśmy konfiguracji serwera, vLLM-a ani kontenerów. To był pomiar obserwacyjny: patrzymy, co robi sprzęt podczas normalnej pracy modelu.
+Dwa słowa o licznikach. SM_ACTIVE mówi, przez jaką część czasu aktywne były multiprocesory strumieniowe GPU, czyli bloki wykonujące pracę na karcie. To nie jest to samo co „ile czasu GPU liczyło macierze”. Aktywny może być też kernel komunikacyjny albo kernel czekający na dane. Dlatego SM_ACTIVE traktujemy jako licznik aktywności SM-ów, a nie jako czysty udział obliczeń modelu.
+DRAM_ACTIVE dotyczy interfejsu pamięci HBM. Pokazuje, przez jaką część czasu aktywny był ruch do albo z pamięci karty. Jeżeli dekodowanie byłoby ograniczone przepustowością HBM, spodziewalibyśmy się wysokich wartości tego licznika, rzędu kilkudziesięciu procent bliżej górnego zakresu, a nie pojedynczych procentów.
+Mierzyliśmy Kimi-K2.6 w konfiguracji produkcyjnej: TP=8, EAGLE3 włączone, osiem kart H200. Pomiar podzieliliśmy na trzy okna. Pierwsze to stan spoczynkowy: model załadowany, ale bez zapytań. Tam SM_ACTIVE i DRAM_ACTIVE wyszły 0,000, więc tło nie zakłócało pomiaru. Drugie okno to jeden klient, trzecie to 64 klientów. Obciążenie generował vllm bench serve, a wyniki uśredniamy na jedną kartę z aktywnej części okna.
+I teraz kluczowy wynik: przy GPU-Util raportowanym jako 100% karty wcale nie były blisko nasycenia. Pobór mocy wynosił około 170–199 W na kartę przy limicie 600 W. SM_ACTIVE było w okolicach 20%, DRAM_ACTIVE tylko 7–9%, a PCIe przenosiło około 6–8 GB/s. Innymi słowy: GPU formalnie cały czas „coś robiło”, ale żaden z obserwowanych zasobów nie pracował blisko granicy.
+Ważne zastrzeżenie: to nie jest ogólna cecha H200 ani każdego modelu LLM. To profil konkretnej konfiguracji: Kimi-K2.6 rozłożony na osiem kart. Dla porównania testowy Qwen uruchomiony na jednej karcie przy c=64 miał dużo wyższe liczniki: SM_ACTIVE około 0,68 i DRAM_ACTIVE około 0,39. Problem nie polega więc na tym, że H200 nie da się obciążyć. Problem pojawia się w tej wielokartowej konfiguracji, gdzie czas kroku zaczyna znikać w komunikacji i synchronizacji między kartami.
 
 ---
 
@@ -255,22 +203,7 @@ pokrywa cały krok z konstrukcji, nie ze zgadywania.
 
 ### Speaker notes
 
-Hipotezy nie są dowolne — wynikają z rozkładu czasu kroku generowania
-na trzy składniki wzoru: stały narzut silnika `F_host`, komunikację
-`N_rounds × r` (liczba synchronicznych rund scalania razy czas jednej
-rundy, zależny od łącza i liczby kart) oraz obliczenia i pamięć
-`W_silicon`. Suma składników to cały krok, więc
-przestrzeń hipotez jest z konstrukcji kompletna; H4 to wariant
-topologiczny H2 — pytanie nie „czy komunikacja", ale „która trasa".
-Dwa pojęcia: all-reduce to synchroniczne scalanie wyników częściowych
-z wszystkich kart — przy podziale modelu (tensor parallelism) trzeba
-scalać ~2 razy na warstwę, co dla 61 warstw Kimi daje ~122 scalenia
-na każdy krok, a żadna karta nie rusza dalej, dopóki nie skończy
-ostatnia. UPI to łącze między dwoma procesorami serwera — karty
-podpięte pod różne CPU komunikują się właśnie przez nie. Kluczowy
-element kroku 6: do każdej hipotezy z góry zapisujemy ślad, jaki
-musiałaby zostawić w danych — dzięki temu wynik pomiaru będzie
-rozstrzygał, a nie ilustrował.
+Hipotezy nie są dowolne — wynikają wprost z rozkładu czasu kroku. Każdy krok generowania składa się z trzech części: stałego narzutu silnika F_host, komunikacji — czyli liczby synchronicznych rund scalania razy czas jednej rundy, zależny od łącza i liczby kart — oraz obliczeń i pamięci, W_silicon. Te trzy składniki sumują się do całego kroku, więc przestrzeń hipotez jest kompletna z samej konstrukcji — nie ma czwartego miejsca, w którym mógłby ginąć czas. H4 to wariant topologiczny H2: pytamy nie „czy komunikacja", tylko „która trasa". Wyjaśnię dwa pojęcia z tabeli. All-reduce to synchroniczne scalanie wyników częściowych ze wszystkich kart — przy podziale modelu trzeba scalać mniej więcej dwa razy na warstwę, co przy 61 warstwach Kimi daje około 122 scalenia w każdym kroku, i żadna karta nie ruszy dalej, dopóki ostatnia nie skończy. UPI z kolei to łącze między dwoma procesorami serwera — karty podpięte pod różne CPU komunikują się właśnie przez nie. I najważniejsza rzecz w kroku szóstym: do każdej hipotezy z góry zapisujemy ślad, jaki musiałaby zostawić w danych. Dzięki temu pomiar będzie rozstrzygał, a nie ilustrował.
 
 ---
 
@@ -304,18 +237,7 @@ H1.
 
 ### Speaker notes
 
-Krok 7 to eliminacje w kolejności kosztu: zanim uruchomimy jakikolwiek
-eksperyment, konfrontujemy hipotezy z danymi już zebranymi w krokach
-3–4. H1 miała z góry zapisany ślad — aktywność interfejsu pamięci na
-poziomie 0,70–0,90 — a pomiar pokazuje 0,070–0,093, czyli o rząd
-wielkości mniej, stabilnie przez całe okno obciążenia. Zastrzeżenie
-metodyczne: próbkowanie co 1 sekundę uśrednia chwilowe skoki wewnątrz
-kroku dekodowania, więc nie jest to pełna charakterystyka pamięci HBM
-— ale przy różnicy rzędu wielkości wystarcza do werdyktu. Werdykt
-zapisujemy w formacie, który będzie wracał do końca prezentacji:
-predykcja, pomiar, rozstrzygnięcie z zakresem ważności — tu: obalona
-dla badanych scenariuszy pracy serwera. Hipoteza kosztowała nas zero
-dodatkowych pomiarów; zostały trzy, każda wymaga już eksperymentu.
+Krok siódmy to szybkie eliminacje. Zanim uruchomimy jakikolwiek eksperyment, sprawdzamy, które hipotezy padają już od danych zebranych w krokach 3 i 4. H1 miała z góry zapisany ślad: aktywność interfejsu pamięci na poziomie 0,70–0,90. Pomiar pokazuje 0,070–0,093 — o rząd wielkości mniej, i to stabilnie przez całe okno obciążenia. Trzeba uczciwie dodać, że próbkujemy co sekundę, więc chwilowe skoki wewnątrz kroku dekodowania się uśredniają — pełną charakterystyką pamięci HBM to nie jest. Ale przy różnicy rzędu wielkości do werdyktu wystarcza. Sam werdykt zapisujemy w formacie, który będzie wracał do końca prezentacji: predykcja, pomiar i rozstrzygnięcie z zakresem ważności — w tym przypadku: obalona dla badanych scenariuszy pracy serwera. Ta hipoteza nie kosztowała nas ani jednego dodatkowego pomiaru. Zostały trzy — i każda wymaga już eksperymentu.
 
 ---
 
@@ -345,21 +267,7 @@ kalibracja szumu w speaker notes.
 
 ### Speaker notes
 
-Reguła planu: każdy eksperyment zmienia dokładnie jeden element
-układu, reszta konfiguracji zostaje zamrożona — inaczej wynik nie
-wskaże przyczyny. Kolejność ustala koszt: H4 to jeden dodatkowy bieg,
-H3 to jeden profil i trzy przełączniki silnika, H2 wymaga osobnego
-startu silnika dla każdej wartości TP. Dane będą pochodzić z trzech
-niezależnych źródeł: metryk po stronie klienta (`vllm bench serve` —
-TPOT/ITL i przepustowość, każdy pomiar po rozgrzewce), liczników
-sprzętowych DCGM (`dcgmi dmon`, próbkowanie co 1 s, uśrednianie tylko
-w oknie benchmarku) oraz profilu czasowego torch profiler (rozkład
-czasu kroku na komunikację, obliczenia i przerwy) — zbieżność źródeł
-sprawdzimy osobno w kroku 15. Do tego kalibracja szumu: restarty
-silnika, których i tak wymagały warianty eksperymentów, posłużyły do
-oszacowania zmienności pomiaru — dla TP=2 wyniosła około ±0,4 ms
-między niezależnymi uruchomieniami; każdą przyszłą różnicę będziemy
-odnosić do tego pasma, zanim nazwiemy ją efektem.
+Plan eksperymentów ma jedną żelazną regułę: zmieniamy dokładnie jeden element układu naraz, a resztę konfiguracji zamrażamy — inaczej wynik nie wskaże przyczyny. Kolejność wyznacza koszt. H4 to jeden dodatkowy bieg, H3 — jeden profil i trzy przełączniki silnika, a H2 wymaga osobnego startu silnika dla każdej wartości TP, więc jest najdroższa. Dane będziemy zbierać z trzech niezależnych źródeł. Pierwsze to metryki po stronie klienta z vllm bench serve — TPOT, ITL i przepustowość, każdy pomiar po rozgrzewce. Drugie to liczniki sprzętowe DCGM — dcgmi dmon, próbkowanie co sekundę, uśrednianie tylko w oknie benchmarku. Trzecie to profil czasowy z torch profilera, który rozkłada krok na komunikację, obliczenia i przerwy. Czy te trzy źródła się zgadzają, sprawdzimy osobno w kroku 15. Została jeszcze kalibracja szumu. Warianty eksperymentów i tak wymagały restartów silnika, więc wykorzystaliśmy je do oszacowania zmienności pomiaru — przy TP=2 wyszło około ±0,4 ms między niezależnymi uruchomieniami. Każdą przyszłą różnicę będziemy najpierw odnosić do tego pasma, zanim nazwiemy ją efektem.
 
 ---
 
@@ -393,20 +301,7 @@ TP=4 c=64); subtelność „UPI pozornie lepsze = szum" w speaker notes.
 
 ### Speaker notes
 
-Konstrukcja eksperymentu: ta sama liczba kart, zmieniamy wyłącznie
-trasę komunikacji — rozmieszczenie wymusza `CUDA_VISIBLE_DEVICES`,
-a kontrolę poprawności daje pobór mocy: karty nieuczestniczące
-pozostają przy poziomie spoczynkowym ~70 W, więc obciążenie na pewno
-szło na wskazane GPU. Wyniki: przy dwóch kartach wariant przez UPI
-wyszedł 9,13 ms wobec 9,91 ms — pozornie szybszy, ale to pojedynczy
-pomiar przy zmienności ±0,4 ms między niezależnymi startami, więc
-odczytujemy go wyłącznie jako brak kary, nie jako przewagę UPI;
-analogicznie przy czterech kartach pod c=64. Werdykt: H4 obalona dla
-badanych układów w tym serwerze — najgroźniejsza topologicznie trasa
-nie kosztuje nic mierzalnego. To ważny wynik kierunkowy: skoro rodzaj
-trasy nie boli, podejrzenie przesuwa się na liczbę uczestników
-komunikacji i na stały narzut — czyli dokładnie na H2 i H3, które
-badamy dalej, wciąż w kolejności kosztu.
+Konstrukcja tego eksperymentu jest prosta: ta sama liczba kart, zmieniamy wyłącznie trasę komunikacji. Rozmieszczenie wymuszamy przez CUDA_VISIBLE_DEVICES, a poprawność kontrolujemy poborem mocy — karty, które nie biorą udziału, zostają na spoczynkowych ~70 W, więc mamy pewność, że obciążenie szło na wskazane GPU. Teraz wyniki. Przy dwóch kartach wariant przez UPI wyszedł 9,13 ms wobec 9,91 ms — na pierwszy rzut oka szybszy. Ale to pojedynczy pomiar przy zmienności ±0,4 ms między niezależnymi startami, więc czytamy go wyłącznie jako brak kary, a nie jako przewagę UPI. Przy czterech kartach pod c=64 obraz jest taki sam. Werdykt: H4 obalona dla badanych układów w tym serwerze — najgroźniejsza topologicznie trasa nie kosztuje nic mierzalnego. I to jest ważny wynik kierunkowy. Skoro rodzaj trasy nie boli, podejrzenie przesuwa się na liczbę uczestników komunikacji i na stały narzut — czyli dokładnie na H2 i H3, które badamy dalej, wciąż w kolejności kosztu.
 
 ---
 
@@ -428,9 +323,9 @@ narzutu profilera w notes.
 > kroku na czynności organizacyjne — wybór zapytań do kroku, obsługę
 > spekulacji, wymianę poleceń CPU↔GPU — niezależnie od sprzętu.
 >
-> [WYKRES W3a: słupek skumulowany — rozkład czasu profilu, Kimi TP=8,
-> c=1: **63% bez żadnej operacji GPU** | 22,5% komunikacja NCCL |
-> 9,1% obliczenia | 5,6% inne]
+[WYKRES W3: dwa słupki skumulowane — rozkład czasu profilu, Kimi TP=8:
+c=1: 63% bez żadnej operacji GPU | 22,5% komunikacja NCCL | 9,1% obliczenia | 5,6% inne;
+c=16: 10% bez żadnej operacji GPU | 83,9% komunikacja NCCL | 4,6% obliczenia | ~1,5% inne]
 >
 > Interwencje w składniki narzutu (model testowy Qwen, TP=1 — celowo
 > bez komunikacji):
@@ -457,30 +352,7 @@ narzutu profilera w notes.
 
 ### Speaker notes
 
-Tu debiutuje trzecie źródło danych — profil czasowy torch profiler,
-czyli pełna oś czasu operacji GPU; kontrola rzetelności: przebieg
-profilowany i nieprofilowany różnią się o około 5%, więc profil nie
-zniekształca obrazu. W profilu pojedynczego zapytania największym
-składnikiem jest czas bez żadnej zarejestrowanej operacji GPU — 63% —
-to właśnie stały narzut hosta. Interwencje wykonano na modelu
-testowym przy TP=1, gdzie komunikacja nie występuje, więc wynik
-przypisuje koszty wyłącznie hostowi. Dwie metryki w tabeli: czas
-kroku podajemy jako medianę ITL, czyli odstępu między kolejnymi
-porcjami wygenerowanych tokenów zwracanymi przez serwer; TPOT
-pokazuje średni czas przypadający na jeden wygenerowany token. Przy
-spekulacji MTP jeden krok może zaakceptować więcej niż jeden token,
-dlatego TPOT może pozostać podobny nawet wtedy, gdy sam krok,
-mierzony przez ITL, staje się dłuższy. Czytanie tabeli: wyłączenie
-spekulacji skraca krok z 8,93 do 5,36 ms, ale krok bez spekulacji
-daje jeden token zamiast średnio ~2,6 — na pojedynczy token spekulacja
-wygrywa (TPOT 3,39 vs 5,36 ms), a jej obsługa kosztuje 3,57 ms, czyli
-40% kroku. Wariant eager nie rozkłada kroku, lecz ujawnia koszt,
-którego konfiguracja unika: bez CUDA Graphs (mechanizmu nagrywania
-sekwencji kerneli i odtwarzania ich jednym poleceniem) krok rośnie do
-55,1 ms przy SM_ACTIVE 0,009 — karta niemal wyłącznie czeka na
-polecenia hosta. Governor CPU w trybie `performance` nic nie zmienia —
-oszczędzanie energii zostaje uniewinnione. Werdykt: H3 potwierdzona
-dla pojedynczego klienta.
+Na tym slajdzie debiutuje trzecie źródło danych — profil czasowy z torch profilera, czyli pełna oś czasu operacji GPU. Najpierw kontrola rzetelności: przebieg profilowany i nieprofilowany różnią się o około 5%, więc profiler nie zniekształca obrazu. W profilu pojedynczego zapytania największym składnikiem jest czas, w którym nie dzieje się żadna operacja GPU — 63%. To właśnie stały narzut hosta. Drugi słupek pokazuje, że to obraz tylko tego reżimu: pod obciążeniem, przy c=16, czas bez operacji GPU spada do 10%, a krok przejmuje komunikacja — do tego wrócimy przy H2. Tutaj skupiamy się na pojedynczym kliencie. Interwencje robimy na modelu testowym przy TP=1, gdzie komunikacji nie ma wcale, więc wszystkie koszty można przypisać wyłącznie hostowi. W tabeli są dwie metryki i różnica między nimi jest ważna. Czas kroku podajemy jako medianę ITL, czyli odstępu między kolejnymi porcjami tokenów zwracanymi przez serwer. TPOT z kolei to średni czas przypadający na jeden wygenerowany token. Przy spekulacji MTP jeden krok może zaakceptować więcej niż jeden token — dlatego TPOT może zostać podobny, nawet gdy sam krok, mierzony przez ITL, się wydłuża. I stąd najciekawszy wiersz tabeli: wyłączenie spekulacji skraca krok z 8,93 do 5,36 ms, ale taki krok daje jeden token zamiast średnio 2,6. Na pojedynczy token spekulacja wygrywa — TPOT 3,39 wobec 5,36 ms — a jej obsługa kosztuje 3,57 ms, czyli 40% kroku. Wariant eager działa inaczej: nie rozkłada kroku, tylko ujawnia koszt, którego nasza konfiguracja na co dzień unika. CUDA Graphs to mechanizm, który nagrywa sekwencję kerneli i odtwarza ją jednym poleceniem; bez niego krok rośnie do 55,1 ms przy SM_ACTIVE 0,009 — karta niemal wyłącznie czeka na polecenia hosta. Governor CPU w trybie performance nie zmienia nic — oszczędzanie energii zostaje uniewinnione. Werdykt: H3 potwierdzona dla pojedynczego klienta.
 
 ---
 
@@ -516,24 +388,7 @@ all-reduce w notes; slajd kończy zapisane przewidywanie.
 
 ### Speaker notes
 
-Składnik `N_rounds × r` ma dwie części o różnym pochodzeniu:
-`N_rounds` wynika z architektury modelu — po bloku uwagi i po bloku
-FFN/MoE wyniki częściowe trzeba scalić, czyli ~2 razy na warstwę, co
-przy 61 warstwach Kimi daje ~122 obowiązkowe scalenia w każdym kroku;
-`r` to czas jednej rundy, zależny od łącza i rosnący z liczbą
-uczestników. Samo scalanie realizuje biblioteka NCCL; modelem
-odniesienia jest ring all-reduce — karty tworzą logiczny pierścień,
-redukcja i rozesłanie wyniku to 2(N−1) kroków, a każda karta czeka na
-pozostałe w każdej rundzie; NCCL dobiera wariant algorytmu per
-wywołanie. Istotne dla interpretacji: sprzętowo przyspieszane ścieżki
-scalania były na tym serwerze nieaktywne — własny all-reduce vLLM
-wyłączony (nieobsługiwany dla >2 GPU w konfiguracji wyłącznie PCIe),
-multicast NVLS niedostępny — scala więc standardowe NCCL po PCIe.
-Konstrukcja eksperymentu: krzywa TP na modelu testowym, gdzie TP=1
-działa bez żadnej komunikacji i stanowi punkt odniesienia — każdą
-dodatkową milisekundę kroku przy TP=2/4/8 można przypisać wyłącznie
-zrównolegleniu. Przewidywanie zapisujemy przed pomiarem — na
-następnym slajdzie skonfrontujemy je z danymi.
+Składnik N_rounds razy r ma dwie części o różnym pochodzeniu. N_rounds wynika z architektury modelu: po bloku uwagi i po bloku FFN/MoE trzeba scalić wyniki częściowe, czyli mniej więcej dwa razy na warstwę — przy 61 warstwach Kimi to około 122 obowiązkowe scalenia w każdym kroku. r to czas jednej rundy — zależy od łącza i rośnie z liczbą uczestników. Samo scalanie wykonuje biblioteka NCCL. Punktem odniesienia jest ring all-reduce: karty tworzą logiczny pierścień, redukcja i rozesłanie wyniku to 2(N−1) kroków, a w każdej rundzie każda karta czeka na pozostałe. NCCL dobiera wariant algorytmu do każdego wywołania. Ważny szczegół dla interpretacji: na tym serwerze sprzętowo przyspieszane ścieżki scalania były nieaktywne. Własny all-reduce vLLM-a był wyłączony, bo nie jest obsługiwany dla więcej niż dwóch kart w konfiguracji czysto PCIe, a multicast NVLS był niedostępny. Scala więc standardowe NCCL po PCIe. Sam eksperyment to krzywa TP na modelu testowym. TP=1 działa bez żadnej komunikacji i jest punktem odniesienia — każdą dodatkową milisekundę kroku przy TP=2, 4 i 8 można przypisać wyłącznie zrównolegleniu. Przewidywanie zapisujemy przed pomiarem — na następnym slajdzie skonfrontujemy je z danymi.
 
 ---
 
@@ -588,28 +443,7 @@ slajd.
 
 ### Speaker notes
 
-Czytanie krzywej: TP=2 daje +17% przepustowości względem jednej karty
-(58% ideału), od TP=4 wynik spada poniżej pojedynczej karty, a TP=8
-osiąga 21% wyniku TP=1 przy efektywności skalowania 2,7%. Przyrosty
-czasu kroku odnosimy do pasma szumu ±0,4 ms: +1,56 ms przy TP=4 to
-4× pasmo, +5,18 ms przy TP=8 to 13× — efekty realne; +0,93 ms przy
-TP=2 ledwie wystaje z szumu. Liczniki potwierdzają mechanizm: moc na
-kartę spada z 436 W (TP=1) do 111 W (TP=8), SM_ACTIVE z 0,665 do
-0,053, a PCIe RX rośnie do 7,18 GB/s i we wszystkich scenariuszach
-c≥8 — u Kimi i u Qwena — zatrzymuje się w paśmie 7,2–7,9 GB/s.
-Ważne, jak to czytać: to NIE jest wysycenie łącza — nominalnie PCIe
-Gen5 x16 przenosi ~64 GB/s w jedną stronę, używamy więc ~11%.
-All-reduce składa się z wielu krótkich, synchronicznych rund, w
-których dominują czas pojedynczej wymiany między kartami (na PCIe
-~20 µs, na NVLink 2–9 µs) i czekanie na pozostałych uczestników —
-ogranicza nas czas rundy, nie przepustowość rury. Interwencja P2P:
-zgodnie z kryterium przyczynowości
-brak efektu (−0,6%) wyklucza transport jako ograniczenie przy dwóch
-kartach — koszt komunikacji rośnie z liczbą uczestników, nie z samego
-istnienia łącza. Profile domykają obraz: przy c=1 komunikacja to
-22,5% (nie dominuje — tam rządzi narzut hosta), pod obciążeniem
-równoległym 83,9% — obie hipotezy prawdziwe, każda w swoim reżimie
-pracy serwera.
+Najpierw krzywa przepustowości. TP=2 daje plus 17% względem jednej karty — to 58% ideału. Od TP=4 wynik spada poniżej pojedynczej karty, a TP=8 osiąga 21% tego, co jedna karta, przy efektywności skalowania 2,7%. Przyrosty czasu kroku odnosimy do pasma szumu ±0,4 ms: +1,56 ms przy TP=4 to cztery pasma, +5,18 ms przy TP=8 to trzynaście — to są efekty realne. Natomiast +0,93 ms przy TP=2 ledwie wystaje z szumu. Liczniki potwierdzają mechanizm. Moc na kartę spada z 436 W przy TP=1 do 111 W przy TP=8, SM_ACTIVE z 0,665 do 0,053, a PCIe RX rośnie do 7,18 GB/s — i we wszystkich scenariuszach c≥8, u Kimi i u Qwena, zatrzymuje się w paśmie 7,2–7,9 GB/s. I tu ważna rzecz: to nie jest wysycenie łącza. Nominalnie PCIe Gen5 x16 przenosi około 64 GB/s w jedną stronę, używamy więc jakichś 11%. All-reduce to wiele krótkich, synchronicznych rund, w których dominują dwie rzeczy: czas pojedynczej wymiany między kartami — na PCIe około 20 µs, na NVLinku 2–9 µs — i czekanie na pozostałych uczestników. Ogranicza nas czas rundy, nie przepustowość rury. Do tego interwencja P2P: brak efektu, minus 0,6%, zgodnie z kryterium przyczynowości wyklucza transport jako ograniczenie przy dwóch kartach. Koszt komunikacji rośnie z liczbą uczestników, a nie z samego istnienia łącza. Na koniec tabela profili — trzy wiersze, dwa reżimy pracy. Pierwszy wiersz to Kimi przy pojedynczym kliencie: 63% kroku bez żadnej operacji GPU, komunikacja 22,5%, obliczenia 9,1%. W liczbach bezwzględnych NCCL zajmuje 1,14 s z 5,06 s profilu. Ten reżim ogranicza stały narzut kroku — scheduler, uruchamianie kerneli, synchronizacje, obsługa spekulacji, sampling. Komunikacja istnieje, ale ginie na tle pustych przerw. Drugi wiersz to ten sam Kimi pod obciążeniem, przy c=16 — i różnica między 22,5% a 83,9% nie oznacza, że model nagle wykonuje inną matematykę. Zmienił się reżim pracy. Silnik ma więcej sekwencji naraz, więc lepiej wypełnia krok: przerwy spadają z 63% do 10%, narzut hosta się amortyzuje. I wtedy na wierzch wychodzi prawdziwe ograniczenie — osiem kart musi po każdej części warstwy zsynchronizować wyniki. Przy większym batchu kolektywy są większe, a na PCIe dochodzi czekanie kart na siebie; profiler liczy ten czas jako NCCL, bo kernel NCCL cały czas trwa, nawet jeśli część tego czasu to peer-wait. Stąd 83,9%. Jedno zastrzeżenie: c=16 to nasz nietypowy punkt pomiarowy — ITL 512–525 ms, niska moc, niskie SM_ACTIVE, a przy c=32 serwer zachowuje się już inaczej. Uczciwie mówimy więc: profil c=16 szczególnie mocno ujawnił koszt komunikacji, a nie: od c=16 zawsze jest 84% NCCL. Trzeci wiersz pokazuje, że mechanizm nie jest osobliwością Kimi: Qwen na TP=4 przy c=64 ma komunikację 53,3%. Obie hipotezy są więc prawdziwe, każda w swoim reżimie: przy c=1 — narzut hosta, pod obciążeniem równoległym przy TP≥4 — komunikacja.
 
 ---
 
@@ -643,20 +477,7 @@ c=16 tylko wzmianką na slajdzie, liczby w notes.
 
 ### Speaker notes
 
-Zasada kroku 15: wniosek przyjmujemy dopiero wtedy, gdy dwie
-niezależne drogi pomiarowe dają tę samą liczbę — tu metryki klienta
-(`vllm bench serve`) i profil czasowy GPU (torch profiler), czyli
-różne narzędzia patrzące na różne warstwy systemu. Logika rachunku
-krzyżowego: jeżeli komunikacja zabiera 53,3% czasu kroku, to jej
-usunięcie powinno podnieść przepustowość TP=4 do 680 ÷ (1−0,533) ≈
-1456 tok/s; na TP=2, gdzie interwencja P2P pokazała koszt komunikacji
-bliski zera, zmierzono 1404 tok/s — różnica ~4%. Zagadka c=16:
-ITL 512 ms wobec 127 ms przy c=32 — cztery razy wolniej przy
-mniejszym obciążeniu; powtórka daje 525 ms (±3%), więc to nie błąd
-pomiaru, a żaden zmierzony zasób tego nie tłumaczy. Wartość
-metodyczna parkowania: nie wszystko trzeba wyjaśnić natychmiast —
-anomalię rejestrujemy z liczbami i datą, żeby nie zgubić jej z oczu;
-jej wyjaśnienie wykracza poza zakres tej prezentacji.
+Krok 15 ma prostą zasadę: wniosek przyjmujemy dopiero wtedy, gdy dwie niezależne drogi pomiarowe dają tę samą liczbę. Tutaj to metryki klienta z vllm bench serve i profil czasowy GPU z torch profilera — różne narzędzia, patrzące na różne warstwy systemu. Pierwsza droga to czysty bench. Przy przejściu z TP=2 na TP=4 przepustowość spada z 1404 do 680 tokenów na sekundę; 680 przez 1404 to około 48%, czyli TP=4 zachowuje niecałą połowę wydajności — 52% ginie. Jeżeli tę stratę rzeczywiście powoduje komunikacja, to druga, niezależna droga — profil czasowy — powinna pokazać podobny udział komunikacji w kroku. I pokazuje: 53,3%. Rachunek krzyżowy domyka sprawdzenie: skoro komunikacja zabiera 53,3% czasu kroku, to jej usunięcie powinno podnieść przepustowość TP=4 do 680 podzielone przez 1 minus 0,533, czyli około 1456 tokenów na sekundę. A na TP=2, gdzie interwencja P2P pokazała koszt komunikacji bliski zera, zmierzyliśmy 1404. Różnica około 4%. Dwie metody, jedna liczba — wniosek o komunikacji jest wiarygodny. Została jeszcze zagadka punktu c=16: ITL 512 ms wobec 127 ms przy c=32, czyli cztery razy wolniej przy mniejszym obciążeniu. Powtórka daje 525 ms, w granicach ±3%, więc to nie jest błąd pomiaru — a żaden zmierzony zasób tego nie tłumaczy. I tu jest wartość metodyczna parkowania: nie wszystko trzeba wyjaśnić natychmiast. Anomalię rejestrujemy z liczbami i datą, żeby nie zgubić jej z oczu — jej wyjaśnienie wykracza poza zakres tej prezentacji.
 
 ---
 
@@ -707,30 +528,7 @@ z nietypowego punktu c=16 w notes.
 
 ### Speaker notes
 
-Krok 16 w tym śledztwie to nie budowa nowego modelu, lecz kalibracja
-wzoru, który prowadził nas od postawienia hipotez: każde `s` w tabeli
-wejść pochodzi z konkretnego pomiaru — z krzywej TP albo z profilu
-czasowego — i ma wskazaną podstawę. Współczynnik `capture` wynika
-z geometrii mostków: grupa do czterech kart mieści się w jednej
-wyspie NVLink (capture 1,0), przy ośmiu kartach część scaleń nadal
-przechodzi między wyspami po PCIe — przyjęto 0,75. Wariant idealny,
-`S_ideal = 1/(1 − s·capture)`, to górna granica dla łącza, które
-usuwa całą objętą komunikację; wariant realny dodaje czynnik
-1 − 128/900 = 0,858, bo NVLink nie zeruje czasu rund, tylko go skraca
-proporcjonalnie do przepustowości (wartości nominalne z kart
-katalogowych: 128 wobec 900 GB/s dwukierunkowo). Uczciwe zastrzeżenie
-do konstrukcji modelu: stosunek przepustowości to uproszczenie —
-realny mechanizm zysku to skrócenie czasu pojedynczej rundy
-(opóźnienie wymiany i czekanie na uczestników), którego ten czynnik
-nie modeluje wprost; zobaczymy konsekwencje przy konfrontacji
-predykcji z pomiarem. Zastrzeżenie drugie:
-s = 0,839 pochodzi z profilu punktu c=16, który oznaczyliśmy jako
-nietypowy — nie reprezentuje wszystkich punktów wysokiej
-współbieżności, więc wynik 2,18× traktujemy ostrożnie. Odczyt
-decyzyjny modelu: zysk pojawia się tylko tam, gdzie komunikacja
-dominuje krok — TP≥4 pod obciążeniem równoległym (1,84–2,18×);
-dla pojedynczego klienta i dla TP=2 model przewiduje wartości poniżej
-1,2× — czyli brak uzasadnienia zakupu w tych scenariuszach.
+Krok 16 w tym śledztwie to nie jest budowa nowego modelu — to kalibracja wzoru, który prowadzi nas od momentu postawienia hipotez. Każde s w tabeli wejść pochodzi z konkretnego pomiaru, z krzywej TP albo z profilu czasowego, i ma wskazaną podstawę. Współczynnik capture bierze się z geometrii mostków: grupa do czterech kart mieści się w jednej wyspie NVLink, więc capture wynosi 1,0. Przy ośmiu kartach część scaleń nadal przechodzi między wyspami po PCIe — przyjęliśmy 0,75. Wariant idealny, S_ideal równe 1 przez 1 minus s razy capture, to górna granica dla łącza, które całą objętą komunikację po prostu usuwa. Wariant realny dodaje czynnik 1 minus 128 przez 900, czyli 0,858 — bo NVLink nie zeruje czasu rund, tylko skraca go proporcjonalnie do przepustowości. 128 i 900 GB/s to wartości nominalne z kart katalogowych. Do konstrukcji modelu mamy dwa uczciwe zastrzeżenia. Pierwsze: stosunek przepustowości to uproszczenie. Realny mechanizm zysku to skrócenie pojedynczej rundy — opóźnienia wymiany i czekania na uczestników — a tego ten czynnik wprost nie modeluje. Konsekwencje zobaczymy przy konfrontacji predykcji z pomiarem. Drugie: s równe 0,839 pochodzi z profilu punktu c=16, który oznaczyliśmy jako nietypowy — nie reprezentuje wszystkich punktów wysokiej współbieżności, więc wynik 2,18× traktujemy ostrożnie. I na koniec odczyt decyzyjny. Zysk pojawia się tylko tam, gdzie komunikacja dominuje krok, czyli przy TP≥4 pod obciążeniem równoległym: od 1,84 do 2,18 razy. Dla pojedynczego klienta i dla TP=2 model przewiduje mniej niż 1,2× — w tych scenariuszach zakup nie ma uzasadnienia.
 
 ---
 
@@ -741,6 +539,9 @@ Status: ZAAKCEPTOWANY (2026-08-09)
 Decyzje: skrócona tabela (~8 wierszy); kolumna progów falsyfikacji
 jawnie na slajdzie; bez motta u góry („nie edytuj po fakcie" w
 notes); para custom all-reduce dodana jako predykcja już tutaj.
+2026-08-10: predykcje end-to-end ujednolicone do wariantu S_nvlink
+(1,84× / 2,18×) — zgodnie z wykresem W5 (slajd 17) i analizą błędów
+(slajd 18); progi falsyfikacji bez zmian.
 
 ### Na slajdzie
 
@@ -752,30 +553,15 @@ notes); para custom all-reduce dodana jako predykcja już tutaj.
 > |---|---:|---|---|
 > | P2P w wyspie (GPU0↔GPU1) | ~25–50 GB/s | **> 100 GB/s** | < 60 → mostek nie działa |
 > | NCCL busbw, 4 karty w wyspie | plateau 7,2–7,9 GB/s | **> 100 GB/s** | < 30 → NCCL nie wybrał NVLinka |
-> | Qwen TP=4, c=64 | 680 tok/s | **~1430 tok/s** (2,1×) | < 850 → model zawyżony |
-> | Kimi TP=8, c=32 | 285 tok/s | **~770 tok/s** (2,7×, górne oszac.) | < 400 → capture 0,75 zawyżony |
+> | Qwen TP=4, c=64 | 680 tok/s | **~1250 tok/s** (S_nvlink 1,84×) | < 850 → model zawyżony |
+> | Kimi TP=8, c=32 | 285 tok/s | **~620 tok/s** (S_nvlink 2,18×, górne oszac.) | < 400 → capture 0,75 zawyżony |
 > | c=1 (oba modele) | Qwen ITL 10,54 ms; Kimi TPOT 8,7 ms | **zysk co najwyżej mały, ≤1,3×** (rządzi narzut hosta) | Qwen ITL < 8 ms lub Kimi TPOT < 5 ms → teza o narzucie upada |
 > | PCIe RX przy c≥8 | plateau 7,2–7,9 GB/s | **wyraźny spadek** | brak spadku → NCCL nie używa mostków |
 > | warning custom all-reduce (log vLLM) | aktywny u obu | **Qwen TP4: znika / Kimi TP8: zostaje** | inna para → mechanizm źle zrozumiany |
 
 ### Speaker notes
 
-Predykcje wpisano do planu sesji przed fizycznym montażem mostków,
-z adnotacją „nie zmieniaj po fakcie" — dzięki temu późniejsza
-konfrontacja jest uczciwa: nie da się dopasować oczekiwań do wyniku.
-Istota kroku 18 to kolumna progów — każda predykcja ma z góry
-określoną wartość, przy której uznamy ją za obaloną, więc model jest
-falsyfikowalny w sensie ścisłym. Predykcję Kimi traktujemy jako górne
-oszacowanie: s=0,839 pochodzi z nietypowego punktu c=16, a capture
-0,75 jest założeniem geometrycznym, nie pomiarem. Para warningów custom
-all-reduce sprawdza zrozumienie mechanizmu, nie tylko liczb: vLLM
-aktywuje własny, szybszy all-reduce tylko przy pełnej siatce NVLink
-w grupie TP, sprawdzając każdą parę kart — przy mostkach 4+4 grupa
-TP=4 w jednej wyspie ma pełną siatkę (warning powinien zniknąć),
-a TP=8 przez dwie wyspy nie ma (para GPU0↔GPU4 bez linku — warning
-powinien zostać mimo poprawnie działających mostków). Wiersz o PCIe
-RX jest sygnałem niezależnym od benchmarków i logów NCCL — pochodzi
-wprost z liczników sprzętowych.
+Te predykcje wpisaliśmy do planu sesji przed fizycznym montażem mostków, z adnotacją „nie zmieniaj po fakcie". Dzięki temu późniejsza konfrontacja jest uczciwa — nie da się dopasować oczekiwań do wyniku. Istotą kroku 18 jest kolumna progów: każda predykcja ma z góry określoną wartość, przy której uznamy ją za obaloną. Model jest więc falsyfikowalny w ścisłym sensie. Predykcję dla Kimi traktujemy jako górne oszacowanie — s równe 0,839 pochodzi z nietypowego punktu c=16, a capture 0,75 to założenie geometryczne, nie pomiar. Osobno warto omówić parę warningów custom all-reduce, bo ona sprawdza zrozumienie mechanizmu, a nie tylko liczby. vLLM aktywuje własny, szybszy all-reduce tylko wtedy, gdy w grupie TP każda para kart ma bezpośredni link NVLink. Przy mostkach 4+4 grupa TP=4 mieści się w jednej wyspie i ma pełną siatkę — więc warning powinien zniknąć. Grupa TP=8 jest rozpięta przez dwie wyspy i pełnej siatki nie ma — choćby para GPU0–GPU4 zostaje bez linku — więc warning powinien zostać, mimo poprawnie działających mostków. Jeżeli wyjdzie inna para wyników, znaczy to, że źle rozumiemy mechanizm. I jeszcze wiersz o PCIe RX: to sygnał niezależny od benchmarków i od logów NCCL, bo pochodzi wprost z liczników sprzętowych.
 
 ---
 
@@ -788,7 +574,7 @@ wykres W4 (skala log); predykcje mikro pokazane jako odhaczenia.
 
 ### Na slajdzie
 
-> ## Krok 19 (a): Interwencja — montaż i weryfikacja mikro
+> ## Krok 19 (a): Interwencja — montaż i weryfikacja
 >
 > Interwencja: mostki NVLink 4-way — dwie wyspy: GPU 0–3 i GPU 4–7
 >
@@ -810,22 +596,7 @@ wykres W4 (skala log); predykcje mikro pokazane jako odhaczenia.
 
 ### Speaker notes
 
-Krok 19 protokołu mówi: wykonaj zmianę i zmierz dokładnie to samo, co
-przed nią — ale zanim uruchomimy benchmarki end-to-end, sprawdzamy
-warstwę mikro: czy łącze fizycznie działa i czy system je widzi.
-P2P w wyspie skacze z ~25–50 do 132,8 GB/s; kontrola negatywna — para
-między wyspami zostaje przy 29,1 GB/s, co potwierdza, że mapa wysp
-jest poprawna (wzrost na tej parze oznaczałby błąd w rozpoznaniu
-topologii). NCCL busbw wewnątrz wyspy osiąga 185–333 GB/s wobec
-plateau 7,2–7,9 z ery PCIe — dwa rzędy wielkości; grupa 2+2 rozpięta
-przez obie wyspy daje tylko 24,8–31,3 GB/s, co pokazuje, że kolektyw
-działa hierarchicznie, a nie płaskim pierścieniem — to empiryczne
-wsparcie dla założenia capture z modelu. Bramka custom all-reduce
-zamknęła się dokładnie po przewidzianej parze: warning zniknął u
-Qwena (pełna siatka w wyspie przy TP=4; log potwierdza aktywację
-kernela), a został u Kimi (TP=8 przez dwie wyspy — siatka niepełna,
-mimo poprawnie działających mostków). Wszystkie predykcje warstwy
-mikro zaliczone — dopiero teraz przechodzimy do pomiaru end-to-end.
+Krok 19 protokołu mówi: wykonaj zmianę i zmierz dokładnie to samo, co przed nią. Ale zanim uruchomimy benchmarki end-to-end, sprawdzamy warstwę mikro — czy łącze fizycznie działa i czy system je widzi. P2P wewnątrz wyspy skacze z około 25–50 do 132,8 GB/s. Do tego kontrola negatywna: para między wyspami zostaje przy 29,1 GB/s. To potwierdza, że mapa wysp jest poprawna — wzrost na tej parze oznaczałby, że źle rozpoznaliśmy topologię. NCCL busbw wewnątrz wyspy osiąga 185–333 GB/s wobec plateau 7,2–7,9 z ery PCIe — dwa rzędy wielkości. A grupa 2+2 rozpięta przez obie wyspy daje tylko 24,8–31,3 GB/s. To pokazuje, że kolektyw działa hierarchicznie, a nie płaskim pierścieniem — i empirycznie wspiera założenie capture z modelu. Zamknęła się też bramka custom all-reduce, dokładnie po przewidzianej parze. U Qwena warning zniknął — TP=4 ma pełną siatkę w wyspie, a log potwierdza aktywację kernela. U Kimi został, bo TP=8 przez dwie wyspy pełnej siatki nie ma, mimo poprawnie działających mostków. Wszystkie predykcje warstwy mikro zaliczone. Dopiero teraz przechodzimy do pomiaru end-to-end.
 
 ---
 
@@ -845,7 +616,7 @@ predykcji w całości na slajdzie 18.
 >
 > [WYKRES W5: słupki przed/po — Qwen TP=4 c=64: 680 → 2022 tok/s;
 > Kimi TP=8 c=32: 285 → 594 tok/s; na każdym słupku „po" dwie linie
-> odniesienia: predykcja (~1430 / ~770) i próg falsyfikacji
+> odniesienia: predykcja (~1250 / ~620) i próg falsyfikacji
 > (850 / 400)]
 >
 > Odhaczenia progów:
@@ -861,19 +632,7 @@ predykcji w całości na slajdzie 18.
 
 ### Speaker notes
 
-Zasada kroku 19: mierzymy dokładnie te same benchmarki, na tej samej
-konfiguracji silnika, którą mierzyliśmy przed interwencją — jedyną
-zmienną są mostki, więc porównanie jest 1:1. Wyniki: Qwen TP=4 przy
-c=64 przyspiesza z 680 do 2022 tok/s (2,97×), Kimi TP=8 przy c=32
-z 285 do 594 tok/s (2,08×); przy pojedynczym kliencie TPOT spada
-o ~15–20% — mieści się w przewidzianym „poniżej 1,3×" i potwierdza, że
-w tym reżimie rządzi stały narzut hosta, którego szybsze łącze nie
-usuwa. Wykres ma dwie linie odniesienia i czytamy go względem obu:
-próg falsyfikacji mówi, czy model przeżył konfrontację, predykcja —
-jak dokładnie trafił; oba słupki przechodzą progi, ocenę dokładności
-robimy za chwilę. Kontekst decyzyjny wart odnotowania: optimum ery
-PCIe wynosiło 1404 tok/s na TP=2 — TP=4 z NVLink (2022) przebija tę
-wartość, więc konfiguracja czterokartowa przestała być karą.
+Zasada kroku 19 jest prosta: mierzymy dokładnie te same benchmarki, na tej samej konfiguracji silnika, co przed interwencją. Jedyną zmienną są mostki, więc porównanie jest jeden do jednego. Teraz wyniki. Qwen na TP=4 przy c=64 przyspiesza z 680 do 2022 tokenów na sekundę — 2,97 razy. Kimi na TP=8 przy c=32 z 285 do 594 — 2,08 razy. A przy pojedynczym kliencie TPOT spada o jakieś 15–20%, czyli mieści się w przewidzianym „poniżej 1,3×" — i potwierdza, że w tym reżimie rządzi stały narzut hosta, którego szybsze łącze nie usuwa. Wykres ma dwie linie odniesienia i czytamy go względem obu. Próg falsyfikacji mówi, czy model przeżył konfrontację. Predykcja mówi, jak dokładnie trafił. Oba słupki przechodzą progi; ocenę dokładności zrobimy za chwilę. I jeszcze jedna rzecz, ważna decyzyjnie: optimum ery PCIe to było 1404 tok/s na TP=2. TP=4 z NVLinkiem daje 2022, czyli przebija tę wartość — konfiguracja czterokartowa przestała być karą.
 
 ---
 
@@ -892,8 +651,7 @@ liczby rozdzielania wkładu custom-AR w notes.
 >
 > Oba pomiary przeszły progi — a model pomylił się w obu kierunkach.
 >
-> **Qwen: 2,97× — ponad sufit uproszczonego modelu transfer-only
-> (S_ideal 2,14×).** Dlaczego niedoszacował:
+Qwen: 2,97× — znacznie ponad predykcję (S_nvlink 1,84×), ponad nawet sufit łącza idealnego (S_ideal 2,14×). Dlaczego niedoszacował:
 > - udział komunikacji z profilu zawierał także czekanie na inne
 >   karty (peer-wait), a ono przy szybszym łączu kurczy się
 >   ponadproporcjonalnie → model był oszacowaniem **dolnym**, nie
@@ -901,7 +659,7 @@ liczby rozdzielania wkładu custom-AR w notes.
 > - interwencja nie była pojedyncza: mostki przy okazji odblokowały
 >   kernel custom all-reduce vLLM — **ukryta druga zmiana**
 >
-> **Kimi: 2,08× — poniżej predykcji (2,18–2,70×):**
+> **Kimi: 2,08× — tuż poniżej predykcji (S_nvlink 2,18×):**
 > - implikowany capture = **0,62** zamiast założonego 0,75
 >   (0,75 = 6 z 8 odcinków pierścienia all-reduce leży w wyspach;
 >   0,62 = wartość wynikająca ze zmierzonego 2,08×) — dwa odcinki
@@ -917,45 +675,10 @@ liczby rozdzielania wkładu custom-AR w notes.
 
 ### Speaker notes
 
-Krok 20 nie kończy się na „przeszło / nie przeszło" — analizujemy
-odchylenia w obu kierunkach, bo to one korygują rozumienie mechanizmu.
-Błąd w górę u Qwena ma dwie przyczyny: po pierwsze, model traktował
-czas kerneli NCCL jako czysty transfer, a profil wlicza do NCCL także
-czekanie na karty, które przy krótszej rundzie znika szybciej niż
-proporcjonalnie — wniosek przenośny: udział komunikacji z profilu to
-górna granica czasu transferu, więc zbudowany na nim model daje dolne
-oszacowanie zysku. Po drugie, kontrola pojedynczości interwencji:
-vLLM sam aktywował własny kernel all-reduce, gdy zobaczył pełną
-siatkę — zmiana sprzętowa pociągnęła za sobą zmianę software'ową.
-Późniejsza próba rozdzielenia tych wkładów: przy c=64 nierozstrzygnięta
-(porównania dają przedział 1,0–1,2× przy szumie ±6% pojedynczego
-biegu), przy c=1 wkład kernela realny, około +8% na TPOT. Błąd w dół u Kimi — skąd obie liczby: 0,75 przyjęto z geometrii
-ring all-reduce (karty tworzą logiczny pierścień 0→1→…→7→0,
-komunikacja rozkłada się równomiernie na odcinki; przy wyspach 0–3
-i 4–7 sześć z ośmiu odcinków leży wewnątrz wysp → 6/8 = 0,75);
-0,62 to wartość odwrócona z pomiaru — podstawiając zmierzone 2,08×
-i s = 0,839 do wzoru, wychodzi capture ≈ 0,62. Fizyczna
-interpretacja rozjazdu: runda scalenia jest synchroniczna, więc idzie
-w tempie najwolniejszego ogniwa — dwa odcinki między wyspami (nadal
-PCIe) zabierają większą część CZASU rundy, niż wynosi ich udział w
-LICZBIE odcinków; widać to też w pomiarze busbw grupy 2+2 przez
-wyspy (24,8–31,3 GB/s wobec 185–333 w wyspie). Pomiar end-to-end
-i profil dają zgodnie 0,62 — dwie niezależne drogi znów spotykają
-się na jednej liczbie, tym razem przy analizie błędu.
+Krok 20 nie kończy się na „przeszło albo nie przeszło". Analizujemy odchylenia w obu kierunkach, bo to one korygują rozumienie mechanizmu. Zacznijmy od Qwena, który pobił predykcję z dużym zapasem: zmierzone 2,97× wobec przewidzianych 1,84× — więcej nawet niż sufit łącza idealnego, 2,14×. To ma dwie przyczyny. Po pierwsze, model traktował czas kerneli NCCL jak czysty transfer danych. A profil wlicza do NCCL także czekanie kart na siebie — o którym mówiliśmy przy H2 — i to czekanie przy krótszej rundzie znika szybciej niż proporcjonalnie. Wniosek na przyszłość: udział komunikacji z profilu to górna granica czasu transferu, więc model zbudowany na nim daje dolne oszacowanie zysku. Po drugie, kontrola pojedynczości interwencji wykryła ukrytą drugą zmianę: vLLM sam aktywował własny kernel all-reduce, gdy zobaczył pełną siatkę. Zmiana sprzętowa pociągnęła za sobą zmianę software'ową. Próbowaliśmy później rozdzielić te wkłady. Przy c=64 się nie udało — porównania dają przedział 1,0–1,2× przy szumie ±6% pojedynczego biegu. Przy c=1 wkład kernela jest realny, około +8% na TPOT. Teraz Kimi i błąd w dół. Najpierw skąd obie liczby. 0,75 przyjęliśmy z geometrii ring all-reduce: karty tworzą logiczny pierścień, komunikacja rozkłada się równomiernie na odcinki, a przy wyspach 0–3 i 4–7 sześć z ośmiu odcinków leży wewnątrz wysp — sześć ósmych to 0,75. Z kolei 0,62 to wartość odwrócona z pomiaru: podstawiając zmierzone 2,08× i s równe 0,839 do wzoru, wychodzi capture około 0,62. Fizycznie ten rozjazd tłumaczy synchroniczność rundy. Scalenie idzie w tempie najwolniejszego ogniwa, więc dwa odcinki między wyspami — nadal po PCIe — zabierają większą część czasu rundy, niż wynosi ich udział w liczbie odcinków. Widać to zresztą w pomiarze busbw grupy 2+2 przez wyspy: 24,8–31,3 GB/s wobec 185–333 wewnątrz wyspy. Na koniec ważna zbieżność: pomiar end-to-end i profil dają zgodnie 0,62. Dwie niezależne drogi znów spotykają się na jednej liczbie — tym razem przy analizie błędu.
 
 ---
 
-## Slajd 19 — WYCIĘTY (zagadka c=16)
-
-Status: WYCIĘTY (2026-08-09) — decyzja użytkownika: temat zbyt śliski
-(mamy atrybucję interwencyjną do warstwy transportu, ale nie mamy
-wyjaśnienia mechanizmu, dlaczego patologiczny był akurat punkt c=16).
-Konsekwentnie: wiersz c=16 usunięty z tabeli predykcji (slajd 15),
-wątek zagadki na slajdzie 13 zamknięty jako „poza zakresem
-prezentacji". Wykres W6 nieużywany. Checklista przesuwa się na
-slajd 19.
-
----
 
 ## Slajd 19 — Protokół badania: do zabrania
 
@@ -986,16 +709,4 @@ podziękowanie; bez danych kontaktowych i linków.
 
 ### Speaker notes
 
-Klamra na koniec: te dziesięć punktów to skondensowany szkielet
-całej prezentacji — każdy z nich ma za sobą pokazany dziś przykład
-z pomiarów: metrykę, która nie mierzyła tego, co myśleliśmy;
-hipotezę obaloną za darmo; interwencje po jednej zmianie; pasmo
-szumu, do którego odnosiliśmy różnice; dwie niezależne metody
-spotykające się na jednej liczbie; model, który pomylił się w obie
-strony i właśnie dlatego czegoś nas nauczył. Protokół jest ogólny —
-nie zależy od vLLM, NVLink ani konkretnego serwera; zmienia się
-tylko treść hipotez i liczniki. Dziękuję za uwagę.
-Profil pokazuje też, że komunikacja została skompresowana ~2,9×
-przy praktycznie stałej reszcie kroku — stąd „cały zysk z
-komunikacji"; skoro NCCL to nadal ~61% kroku, zostaje przestrzeń na
-dalszą poprawę — wrócimy do tego w „co dalej".
+Na koniec klamra. Te dziesięć punktów to skondensowany szkielet całej prezentacji i każdy z nich ma za sobą pokazany dziś przykład z pomiarów. Metryka, która nie mierzyła tego, co myśleliśmy. Hipoteza obalona za darmo, z danych, które już mieliśmy. Interwencje po jednej zmianie naraz. Pasmo szumu, do którego odnosiliśmy każdą różnicę. Dwie niezależne metody spotykające się na jednej liczbie. I model, który pomylił się w obie strony — i właśnie dlatego czegoś nas nauczył. Sam protokół jest ogólny: nie zależy od vLLM, od NVLinka ani od konkretnego serwera. Zmienia się tylko treść hipotez i zestaw liczników. Dziękuję za uwagę.

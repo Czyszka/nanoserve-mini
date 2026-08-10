@@ -210,44 +210,37 @@ def w2_util_vs_liczniki() -> None:
     save(fig, "w2_util_vs_liczniki.svg")
 
 
-# ---------------------------------------------------------------- W3a (slajd 10)
-def w3a_profil_c1() -> None:
-    # Udzialy z podsumowania profilu (notatka §6.4, Kimi TP=8, c=1, rank 0).
-    segments = [
-        ("przerwy — bez operacji GPU", 63.0, MUTED),
-        ("komunikacja NCCL", 22.5, ORANGE),
-        ("obliczenia", 9.1, BLUE),
-        ("inne operacje GPU", 5.6, AQUA),
+# ---------------------------------------------------------------- W3 (slajd 10)
+def w3_profil() -> None:
+    # Udzialy z profili czasowych kroku (notatka §6.4; tabela trace w
+    # docs/writeups/w1/t9-bottleneck-nvlink.md) — Kimi TP=8, rank 0.
+    names = ["przerwy — bez operacji GPU", "komunikacja NCCL", "obliczenia", "inne operacje GPU"]
+    colors = [MUTED, ORANGE, BLUE, AQUA]
+    rows = [
+        ("c=1\njedno zapytanie", [63.0, 22.5, 9.1, 5.6]),
+        ("c=16\npod obciążeniem", [10.0, 83.9, 4.6, 1.5]),
     ]
-    fig, ax = new_ax(9.0, 2.6, grid_axis="")
-    left = 0.0
-    outside = [(0.45, "bottom"), (-0.45, "top")]  # male segmenty: nad / pod paskiem
-    for name, share, color in segments:
-        ax.barh(0, share, left=left, height=0.5, color=color, edgecolor=SURFACE, lw=2)
-        pct = f"{share:.1f}".replace(".", ",")
-        center = left + share / 2
-        if share > 15:
-            ax.text(center, 0, f"{name}\n{pct}%", ha="center", va="center",
-                    color=SURFACE, fontsize=10.5)
-        else:
-            dy, va = outside.pop(0)
-            ax.annotate(
-                f"{name} — {pct}%",
-                xy=(center, 0.25 if dy > 0 else -0.25),
-                xytext=(min(center, 93), dy),
-                ha="center",
-                va=va,
-                color=INK2,
-                fontsize=10,
-                arrowprops={"arrowstyle": "-", "color": BASELINE, "lw": 1.0},
-            )
-        left += share
+    fig, ax = new_ax(9.0, 3.0, grid_axis="")
+    for y, (_, shares) in enumerate(rows):
+        left = 0.0
+        for share, color in zip(shares, colors, strict=True):
+            ax.barh(y, share, left=left, height=0.52, color=color, edgecolor=SURFACE, lw=2)
+            if share >= 5:  # ponizej ~5% etykieta nie miesci sie w segmencie
+                pct = f"{share:.1f}".replace(".", ",")
+                ax.text(left + share / 2, y, f"{pct}%", ha="center", va="center",
+                        color=SURFACE, fontsize=11 if share >= 20 else 9)
+            left += share
+    ax.set_yticks(range(len(rows)), [label for label, _ in rows])
+    ax.tick_params(axis="y", labelcolor=INK)
+    ax.invert_yaxis()
     ax.set_xlim(0, 100)
-    ax.set_ylim(-0.85, 1.0)
-    ax.set_yticks([])
     ax.set_xlabel("udział w czasie profilu [%]")
-    ax.set_title("Rozkład czasu kroku — Kimi TP=8, c=1 (profil torch)")
-    save(fig, "w3a_profil_c1.svg")
+    ax.set_title("Rozkład czasu kroku — Kimi TP=8: pojedyncze zapytanie vs obciążenie")
+    handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in colors]
+    ax.legend(handles, names, frameon=False, labelcolor=INK2, fontsize=10, ncol=4,
+              loc="upper center", bbox_to_anchor=(0.5, -0.24), handlelength=1.2,
+              columnspacing=1.6, handletextpad=0.5)
+    save(fig, "w3_profil.svg")
 
 
 # ---------------------------------------------------------------- W4 (slajd 16)
@@ -304,10 +297,11 @@ def w5_przed_po() -> None:
     kimi_after = bench_throughput(
         RUNS / "2026-07-31_nvlink_install" / "kimi" / "bench" / "kimi_c32.json"
     )
-    # Predykcje i progi falsyfikacji: plan instalacji 07-31 §1 (pre-rejestrowane).
+    # Progi falsyfikacji: plan instalacji 07-31 §1 (pre-rejestrowane). Linia predykcji =
+    # model S_nvlink ze slajdu 14 (1,84x na 680 tok/s; 2,18x na 285 tok/s).
     panels = [
-        ("Qwen TP=4, c=64", qwen_before, qwen_after, 1430, 850),
-        ("Kimi TP=8, c=32", kimi_before, kimi_after, 770, 400),
+        ("Qwen TP=4, c=64", qwen_before, qwen_after, 1250, 850),
+        ("Kimi TP=8, c=32", kimi_before, kimi_after, 620, 400),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(9.0, 4.0), dpi=100)
     fig.set_facecolor(SURFACE)
@@ -322,7 +316,7 @@ def w5_przed_po() -> None:
             ax.text(rect.get_x() + rect.get_width() / 2, rect.get_height() + 28,
                     f"{val:.0f}", ha="center", color=INK, fontsize=11, fontweight="600")
         ax.axhline(pred, color=INK2, lw=1.4, ls="--")
-        ax.text(2.55, pred + 12, f"predykcja ~{pred}", ha="right", va="bottom",
+        ax.text(2.55, pred + 12, f"predykcja S_nvlink\n~{pred}", ha="right", va="bottom",
                 color=INK2, fontsize=9.5)
         ax.axhline(threshold, color=CRITICAL, lw=1.4, ls=":")
         ax.text(2.55, threshold + 12, f"próg falsyfikacji {threshold}", ha="right",
@@ -369,7 +363,7 @@ if __name__ == "__main__":
     w0_moc_w_czasie()
     w1_krzywa_tp()
     w2_util_vs_liczniki()
-    w3a_profil_c1()
+    w3_profil()
     w4_p2p_busbw()
     w5_przed_po()
     w7_dram_active()
