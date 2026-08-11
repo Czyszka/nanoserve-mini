@@ -72,11 +72,13 @@ Tag obrazu `4.5.2-4.8.1-ubuntu22.04` zweryfikowany w nvcr.io 2026-08-11
 | Cz. 3 | **bramka koegzystencji** dmon ⊕ exporter | 10 |
 | Cz. 4 | mini-load + Grafana + screenshot + cross-check NVL | 14 |
 | Cz. 5 | digesty (#49), NOTES, commit/push | 8 |
-| | **razem** | **~55** |
+| Cz. 6 | *(opcjonalna)* test `lib.sh` runbooków demo | 10 |
+| | **razem** | **~55 (+10 opc.)** |
 
-**Kolejność cięcia:** Cz. 4 screenshot/renderer → Cz. 4 mini-load (walidację
-pod realnym loadem i tak da następna sesja benchowa). **Nietykalne:** Cz. 3
-(bramka bezpieczeństwa przyszłych sesji dmon) i Cz. 5 commit.
+**Kolejność cięcia:** Cz. 6 (cała — opcjonalna, po commicie) → Cz. 4
+screenshot/renderer → Cz. 4 mini-load (walidację pod realnym loadem i tak da
+następna sesja benchowa). **Nietykalne:** Cz. 3 (bramka bezpieczeństwa
+przyszłych sesji dmon) i Cz. 5 commit.
 
 ---
 
@@ -314,6 +316,70 @@ git push -u origin main
 
 ---
 
+## Cz. 6 (opcjonalna) — test `lib.sh` runbooków demo (10 min)
+
+Cel: przetestować helpery z `serving/runbooks/lib.sh` po kolei na żywym stacku,
+zanim powstanie pierwszy gotowiec `demo-kimi-grafana.sh` (konwencje:
+`serving/runbooks/demo-conventions.md`). Wykonywać **dopiero po Cz. 5** —
+misja DCGM jest już wtedy zacommitowana i test niczym nie ryzykuje.
+
+Warunek: runbooki demo są na `main` (commit z 2026-08-11) — `git pull` z Cz. 0
+je przyniósł. Artefakty testu lądują **poza repo**
+(`~/working/nanoserve-demo/…`), do repo idzie tylko werdykt w NOTES.
+
+```bash
+# 6a. source + init (swiezy kontekst; lib nie ustawia set -e w twojej sesji)
+source serving/runbooks/lib.sh
+demo_init test-lib || echo "FAIL: demo_init"
+echo "DEMO_DIR=$DEMO_DIR"
+
+# 6b. test negatywny: funkcja ma ZWROCIC 1, nie ubic shella
+wait_http_health http://127.0.0.1:9999/nope 2 1; echo "kod=$? (oczekiwane 1), shell zyje"
+
+# 6c. idempotencja ensure_*: stack juz stoi -> zero restartow
+t_start_przed=$(docker inspect vllm --format '{{.State.StartedAt}}')
+ensure_kimi   || echo "FAIL: ensure_kimi"
+ensure_obs    || echo "FAIL: ensure_obs"
+t_start_po=$(docker inspect vllm --format '{{.State.StartedAt}}')
+[ "$t_start_przed" = "$t_start_po" ] && echo "OK: silnik NIE restartowany" \
+                                     || echo "FAIL: StartedAt sie zmienil!"
+echo "KIMI_FRESH=$KIMI_FRESH (oczekiwane 0)"
+
+# 6d. fail-fasty konfiguracji + prereqs benchowe
+check_engine_baseline || echo "FAIL: baseline"
+bench_prereqs         || echo "FAIL: prereqs"
+
+# 6e. krotkie obciazenie pokazowe (c=8, 16 promptow, ~1-2 min) + zbior wynikow
+demo_load 8 16 t1     || echo "FAIL: demo_load"
+collect_demo_bench
+# OK: bench_summary.txt ma wiersz t1.json z done=16; w Grafanie widac zajawke
+# na panelach vLLM i DCGM (bonus: extra material do walidacji Cz. 4)
+
+# 6f. strict mode: cala sciezka happy-path pod set -euo pipefail
+bash -euo pipefail -c 'source serving/runbooks/lib.sh; demo_init test-strict;
+  ensure_kimi; check_engine_baseline; echo STRICT-OK'
+# OK: konczy sie "STRICT-OK", kod 0
+
+# 6g. strict mode: sciezka bledu ma zakonczyc skrypt kodem != 0 ze STOP
+SWE=/nonexistent bash -euo pipefail -c \
+  'source serving/runbooks/lib.sh; demo_init test-fail'; echo "kod=$? (oczekiwane 1)"
+
+# 6h. werdykt do NOTES + docisk commitem
+printf '\n## Cz. 6 — test lib.sh (runbooki demo)\n6b=%s 6c=%s 6e=%s 6f=%s 6g=%s; uwagi: %s\n' \
+  "OK/FAIL" "OK/FAIL" "OK/FAIL" "OK/FAIL" "OK/FAIL" "-" >> "$RUN_DIR/NOTES.md"
+${EDITOR:-nano} "$RUN_DIR/NOTES.md"
+git add "$RUN_DIR/NOTES.md"
+git commit -m "docs: NOTES - wynik testu lib.sh runbookow demo"
+git push origin HEAD:main
+```
+
+**OK całej części:** 6b zwraca 1 bez ubicia shella; 6c bez restartu i
+`KIMI_FRESH=0`; 6e `done=16`; 6f `STRICT-OK`; 6g kod 1 ze `STOP:`. Każdy FAIL
+zapisz w NOTES z komunikatem — poprawki w `lib.sh` robimy na laptopie, nie
+podczas slotu.
+
+---
+
 ## Po sesji (laptop, poza slotem)
 
 1. #49: pin `grafana`/`prometheus`/`renderer` do wersji + digestów z
@@ -325,6 +391,9 @@ git push -u origin main
 4. Następna sesja benchowa (np. drabinka `serving/runbooks/kimi-concurrency-ladder-swe.md`)
    waliduje panele DCGM pod realnym obciążeniem — dokłada brakujący „GPU
    hardware row pod load" do #34.
+5. Na podstawie wyniku Cz. 6: pierwszy gotowiec `demo-kimi-grafana.sh` +
+   karta (kontrakt: `serving/runbooks/demo-conventions.md`) — pokaże oba
+   dashboardy (vLLM Phase 1 + korelacyjny vLLM↔DCGM).
 
 ## Świadomie pominięte
 
