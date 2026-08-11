@@ -8,14 +8,9 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `3914f46`
-- Last summarized at: 2026-08-07 (A/B drafterów: DFlash przegrywa z Eagle3 na Kimi/H200 — bramka NIE; stack przywrócony w pełnym składzie)
-- Note: prior cursor `3fd150b` sits on a pre-rewrite lineage, so `3fd150b..HEAD`
-  over-reports commits (SHA divergence); this sync used the clean tree delta
-  (7 files), not the commit list.
-- 2026-06-10 tidy: handoff-log and validation entries older than 2026-06-06
-  compacted in place (period summaries + source SHA kept inline); full history
-  via `git show 520d788:docs/operations/agent-state.md`.
+- Last summarized commit: `5a2dd3c`
+- Last summarized at: 2026-08-11 (prezentacja NVLink dostarczona; prep DCGM +
+  runbook drabinki współbieżności przed sesją serwerową 2026-08-12)
 
 ---
 
@@ -32,12 +27,12 @@ Live state:
 - OpenWebUI is running in compose, but the 2026-05-27 start snapshot showed it as unhealthy.
 - LiteLLM Proxy runs on port 4000 and routes by `model` to Kimi and DeepSeek. Smoke tests through proxy passed for both upstreams.
 - `run_bench_suite.py` has been run through LiteLLM Proxy for both Kimi K2.6 and DeepSeek-V4-Flash; results are committed.
-- Prometheus + Grafana configuration exists under `serving/compose/`, including a provisioned Phase 1 dashboard (`grafana/provisioning/dashboards/vllm-phase1.json`). Containers have been started; the dashboard panels still need validation against real metric names with live load.
+- Prometheus + Grafana configuration exists under `serving/compose/`, including provisioned dashboards: Phase 1 vLLM (`vllm-phase1.json`, panele zwalidowane pod obciążeniem 2026-06-05), GPU hardware DCGM (`dcgm-gpu.json`) i korelacyjny vLLM+DCGM (`vllm-dcgm-combined.json`) — oba DCGM czekają na deploy exportera (sesja 2026-08-12).
 - Kimi K2.6 TTFT/TPOT parsing fixed (issue #31): `measure_ttft_once.py` now records a separate `ttft_any_token_seconds` / `tpot_any_token_seconds` covering reasoning-trace text (`delta.reasoning` / `delta.reasoning_content`) while `ttft_seconds` stays final-answer-only. Verified against the committed stream-debug artifacts.
 
 Phase 1 deliverables still owed:
 
-- **Prometheus + Grafana dashboard** showing useful live vLLM metrics during load — a provisioned dashboard JSON now exists; remaining work is validating its panels against real metric names with live load.
+- **Prometheus + Grafana dashboard** — DONE (2026-06-05: walidacja nazw metryk + panele pod obciążeniem; screenshoty przed/po NVLink 2026-08-03). Rozszerzenie o DCGM w toku pod #34.
 - **W1 write-up** — DONE (2026-06-05): all 8 threads written from committed evidence with `## Evidence` provenance; index baseline table + KV-budget synthesis filled (`5fc9648`).
 
 ---
@@ -71,9 +66,10 @@ Phase 1 deliverables still owed:
   Werdykt: `results/runs/2026-08-07_kimi_dflash_ab/NOTES.md`. UWAGA metodyczna:
   historyczne Kimi c1 (7,44 ms) mierzone na SWE custom — c1-random z tej sesji
   z nim NIE porównywać.
-- **Observability compose**: `serving/compose/docker-compose.observability.yml` plus:
-  - `serving/compose/prometheus/prometheus.yml`
-  - `serving/compose/grafana/provisioning/datasources/prometheus.yml`
+- **Observability compose**: `serving/compose/docker-compose.observability.yml`
+  (Prometheus + Grafana + renderer + od 2026-08-11 `dcgm-exporter` — prep
+  laptopowy, deploy 2026-08-12) plus `serving/compose/prometheus/prometheus.yml`
+  i provisioning w `serving/compose/grafana/provisioning/`.
 - Benchmark/metrics producer scripts on `main`:
   - `benchmarks/scripts/request_once.py`
   - `benchmarks/scripts/measure_ttft_once.py`
@@ -128,7 +124,12 @@ status, not a task list. Update when work moves.
   `--trust-remote-code`; bench ran, panels fill under load). Harness is
   sequential-only, so
   single-stream benches won't light up the queue panels — hence the bench-serve
-  ramp.
+  ramp. **2026-08-11:** prep DCGM gotowy (exporter w compose + CSV liczników +
+  scrape job + dashboardy `nanoserve-dcgm-gpu` i `nanoserve-vllm-dcgm`); deploy
+  i walidacja pól wg `docs/plans/2026-08-12-dcgm-observability.md`. Caveat:
+  nazwy metryk vLLM w dashboardach weryfikowane na dumpie v0.20, Kimi jest na
+  0.26 — inwentarz nazw w planie (Cz. 4). Nowy runbook drabinki współbieżności
+  c=1/16/32/64 na SWE: `serving/runbooks/kimi-concurrency-ladder-swe.md`.
 - **#37 — W1 write-up:** 2026-05-27 evidence analyzed and written up on the
   laptop. T4 LiteLLM Proxy and T7 host-directories justifications drafted; T8
   thread file migrated to a post-evidence document; T1/T5 still pending.
@@ -393,9 +394,13 @@ status, not a task list. Update when work moves.
   ZAAKCEPTOWANE, 19/checklista w iteracji); treść zweryfikowana z notatką
   decyzyjną co do cyfry. Wykresy W0–W5+W7 wygenerowane z commitowanych danych
   (`generate_charts.py` + `charts/*.svg`; W2 odtwarza §6.1 z surowych dcgmi).
-  Zostało: akcept slajdu 19, `index.html` (19 slajdów, speaker notes pod `N`,
-  inline SVG) + ręczne diagramy D1 (topologia przed/po), D2 (oś czasu
-  zajętości), D3 (warstwa pod TP).
+  **2026-08-09/10: DOSTARCZONA** — samodzielny `index.html` (inline SVG,
+  speaker notes pod `N`), speaker notes do druku, one-pager case study W1
+  (`docs/writeups/w1/w1-case-study-onepager.md`); całość w
+  `docs/presentations/2026-07-31-nvlink-meetup/`.
+- **Drafter k=4 (plan 2026-08-10):** `docs/plans/2026-08-10-kimi-dflash-k4-swe.md`
+  napisany (DFlash k=4 vs Eagle3, całość na SWE custom, c1 bit-zgodne z 07-31);
+  wykonanie sesji nieodnotowane w repo — status do potwierdzenia u właściciela.
 - **#48 — speculative decoding methodology:** new research issue tracking a
   JarvisLabs methodology article; laptop follow-up before final T6 write-up.
 - **#49 — pin observability images:** Grafana / Prometheus / image-renderer run
@@ -511,196 +516,30 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
-2026-08-09 (laptop) prezentacja NVLink: plan v3 + treść slajdów + wykresy:
+2026-08-11 (laptop) prep DCGM + runbook drabinki + dostarczenie prezentacji:
 
 ```text
-uv run ruff check docs/presentations/.../generate_charts.py    OK (repo-wide: wcześniejsze naruszenia w download_swe_bench_lite.py i results/.../nvlink/*.py — nietknięte)
-uv run pytest    132 passed
-git diff --check    OK
-W2 sanity: filtr SMACT>=0,10 na surowych dcgmi → 168,5 W / 0,206 / 0,093 (c1) i 198,8 / 0,204 / 0,070 (c64) = notatka §6.1    OK
-W5 sanity: bench JSONy dają 2022,0 (bench_tp4_nvlink) i 594,1 (kimi c32)    OK
+git diff --check    OK (docs/config-only; no .py touched)
+tag dcgm-exporter zweryfikowany w nvcr.io; flagi -f/-c/-r potwierdzone w zrodle exportera (app.go); pola PROF = gauge B/s    OK
+zastrzezenie: nazwy metryk vLLM w dashboardach weryfikowane na dumpie v0.20; Kimi na 0.26 -> inwentarz nazw w planie sesji (Cz. 4)
 ```
 
-2026-08-07/08 (sesja A/B drafterów + analiza laptopowa):
-
-```text
-git diff --check    OK (docs/results-only; no .py touched)
-A/B wewnetrznie spojne: obie nogi util 0.65, ten sam dzien, ten sam mix workloadu    OK
-sanity akceptacji: tokens generated = steps + accepted (oba silniki, ±2%)    OK
-restore pelnego stacku potwierdzony w restore_ps.txt    OK
-wykryta niespojnosc metodyczna: c1-random vs historyczne c1-SWE — odnotowana w NOTES    OK
-```
-
-2026-08-07 (laptop + 3 sesje serwerowe) diagnoza i adopcja vLLM 0.26:
-
-```text
-git diff --check    OK (docs/compose/results-only; no .py touched)
-probe goly kernel v0.26.0 (matmul, docker run): PASS -> H1 driver/CUDA obalona    OK
-matrix izolacyjny: baseline 3xFAIL, R1 FAIL, R2 FAIL, R3 (fuzja off) PASS    OK
-powtorka R3 + start z compose repo: 2xPASS, 'fuse_allreduce_rms': False w configu    OK
-bramka wydajnosciowa: c32 cold 645 / warm 676 tok/s vs 594 (prog >=559)    OK
-```
-
-2026-08-03 (laptop) sesje NVLink domknięte + docs:
-
-```text
-git diff --check    OK (docs/compose-only; no .py touched)
-przywrocenie artefaktow gap-fill z 7c91f3d: epoch c64 = 1785735431    OK
-trace overhead control: profiled ITL -9% vs unprofiled (pasmo +/-15%)    OK
-replikacja ciepla B2 2040 vs 07-31 2022/1989 (+/-2,5%)    OK
-```
-
-2026-06-14 (laptop) NVLink decision note finalized + source audit:
-
-```text
-git diff --check    OK (docs-only; one trailing space fixed pre-commit)
-source audit (5 subagents, S6/S7): every client/DCGM/trace number reconciles with raw    OK
-```
-
-2026-06-13 (laptop) paper note - GPU interconnect:
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-2026-06-12 (T9 detail + clarity passes):
-
-```text
-git diff --check    OK (docs/md only; no .py touched)
-T9 TP-curve step values cross-checked against raw bench JSONs (TP2/A4 swap corrected)    OK
-```
-
-2026-06-11/12 (NVLink boundary session analysis + verdict):
-
-```text
-git diff --check    OK (docs/md only; no .py touched)
-K2/Q4 profiler overhead controls: ITL within ~2-8% of unprofiled    OK
-c16 anomaly repeat: 512 vs 525 ms (±3%) — reproducible    OK
-Q3 placement check: CUDA_VISIBLE_DEVICES=0,1,4,5 in engine env    OK
-cross-method convergence: Q4 NCCL share 53.3% vs 52% efficiency loss    OK
-```
-
-2026-06-11 (close-out) Kimi TP8 profile analysis + session wrap:
-
-```text
-git diff --check    OK (docs/md only; no .py touched)
-profiler control: profiled vs unprofiled request ~5% apart (gaps real)    OK
-restore check: no profiler-config in Cmd, smoke completed=True    OK
-```
-
-2026-06-11 (PM) Qwen TP-curve analysis (laptop-side, docs/results only):
-
-```text
-git diff --check    OK (md only; no .py touched)
-runtime verifies: verify_tp{2,4,8,2x04}.txt all match requested TP    OK
-placement check: non-participant GPUs at idle power in every window    OK
-bench completion: 40/40 (c1) and 600/600 (c64) in every run    OK
-```
-
-2026-06-11 TP-mismatch diagnosis + plan secret redaction:
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-secret audit: no engine_env_* file ever committed; no HF token in results/ or docs/    OK
-```
-
-2026-06-10 bottleneck follow-up plan + Qwen compose prep:
-
-```text
-git diff --check    OK (docs/config only; no .py touched)
-docker compose -f serving/compose/docker-compose.qwen3.6.yml config    OK
-docker compose -f serving/compose/docker-compose.qwen3.6.yml -f qwen-nop2p.yml config    OK
-docker compose -f serving/compose/docker-compose.kimi-k2.6.yml -f kimi-profiler.yml config    OK
-QWEN_TP=2 QWEN_CUDA_VISIBLE_DEVICES=0,4 compose interpolation    OK
-```
-
-Note: Kimi compose validation needs dummy `HF_TOKEN` and `LITELLM_MASTER_KEY`
-locally because the file intentionally requires them; no GPU commands were run
-on the laptop.
-
-2026-06-10 W1 article — 2026-06-10 evidence integrated (P0 + P2):
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-`docs/writeups/w1-article.md` updated from
-`results/runs/2026-06-10_w1_article_evidence/` (commits `e8ce1d7`/`8b8d457`):
-Inv 5 counters table + HBM-bound refutation, Inv 3 R1 attribution table + ~37 ms
-hop cost, Inv 2 client-vs-server isolation closed, Inv 4 rationale rephrased,
-closing gaps list + postscript. The commit also carries the previously
-uncommitted "five numbers" article rewrite (working tree since 2026-06-09).
-No `ruff` / `pytest` (docs-only).
-
-2026-06-09 W1 article deepening plan + 2026-06-10 server session plan:
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-New `docs/plans/2026-06-09-w1-article-deepening.md` (approved critique +
-outline + laptop/Etap roadmap) and `docs/plans/2026-06-10-server-session.md`
-(P0 GPU counters idle/c1/c64 with tiered dcgmi→exporter→dmon tooling + P2 hop
-attribution via `metrics_delta.py`; zero engine restarts). No `ruff` / `pytest`
-(docs-only).
-
-2026-06-09 W1 portfolio article written:
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-New file `docs/writeups/w1-article.md` — ~2700-word standalone portfolio article
-synthesizing all 8 W1 threads into one readable piece for GitHub. Also added
-`results/runs/2026-06-05_w1_evidence/eagle3_horizontal_flow.png` (298 KB).
-
-2026-06-08 T6 Eagle3 VRAM closed + PCIe topology confirmed:
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-New evidence `2026-06-08_w1_evidence_extra/t6_eagle/kimi_log_eagle3_on.txt`
-(committed `131d573`) supplied the Eagle3-ON loading phase. Updated T6 (draft VRAM
-**0.76 GiB/GPU** measured; embedding-sharing mechanism; KV caveat) and T5 (PCIe-only
-interconnect — no NVLink/NVSwitch — as hard evidence). Resolved the Eagle3-VRAM
-open question; corrected the #34 topology note + posted a #34 correction comment.
-No `ruff` / `pytest` (docs-only).
-
-2026-06-07 W1 deep-review pass (T5–T8) + ops:
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-Docs-only: hardened T5–T8 against committed evidence (commits `8e299ae` T5,
-`ac13782` T6, `0db3593` T7, `afd478b` T8); created issue #49 (pin observability
-images) and added a #34 research comment (GPU-util↔HBM / NVLink study). No `ruff`
-/ `pytest` run.
-
-2026-06-06 W1 deep-review pass (T1–T4):
-
-```text
-git diff --check    OK (docs-only; no .py touched)
-```
-
-Docs-only: hardened the four published W1 threads against vLLM source + primary
-external sources (commits `9473660` T1, `887ebe7` T2, `6f3474d` T3, `0f635d9`
-T4). No `ruff` / `pytest` run.
-
-> Pre-2026-06-06 validation entries compacted 2026-06-10. Source: `520d7883127452cc5ef50dca52fecfdb2e62fabf`.
-> Full history: `git show 520d7883127452cc5ef50dca52fecfdb2e62fabf:docs/operations/agent-state.md`.
-> Summary (2026-05-19 → 2026-06-05): docs/config-only changes validated with
-> `git diff --check`; `.py` changes (#31 parser fix, bench-suite launcher)
-> with `uv run ruff check .` + `uv run pytest` (113→121 passed); server
-> slots validated live (direct endpoints, LiteLLM proxy, bench suite for both
-> models, observability bootstrap, 2026-06-05 evidence commits).
+> Starsze bloki walidacji skompaktowane 2026-08-11 (szablon sync-state: tylko
+> najnowszy blok). Pelna historia: `git show 5a2dd3c:docs/operations/agent-state.md`.
 
 ---
 
 ## Handoff log
 
 Newest entry first.
+
+### 2026-08-11 - Prezentacja dostarczona + prep DCGM/runbook przed sesją 08-12
+
+- Why: domknięcie materiałów meetupowych i laptopowe przygotowanie rozszerzenia monitoringu o DCGM przed jutrzejszym slotem serwerowym.
+- Did: samodzielny deck `index.html` + speaker notes do druku + one-pager W1; plan sesji k=4 (2026-08-10) dopisany; runbook drabinki c=1/16/32/64 na SWE; prep dcgm-exporter (compose + CSV liczników + scrape job + dashboard per-GPU i korelacyjny vLLM↔DCGM) z planem sesji 2026-08-12 (bramka koegzystencji PROF, pull obrazu w tle, rollback <2 min).
+- Range: `3914f46..5a2dd3c` (11 commits; 10 logged + 1 własny sync)
+- Validation: OK
+- Next: sesja serwerowa wg `docs/plans/2026-08-12-dcgm-observability.md`.
 
 ### 2026-08-07/08 - A/B drafterów Kimi: DFlash odrzucony, Eagle3 zostaje
 
