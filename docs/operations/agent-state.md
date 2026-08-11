@@ -8,9 +8,9 @@ and current. Maintained by the `sync-state` / `tidy-docs` routines (see
 
 ## Summary cursor
 
-- Last summarized commit: `5a2dd3c`
-- Last summarized at: 2026-08-11 (prezentacja NVLink dostarczona; prep DCGM +
-  runbook drabinki współbieżności przed sesją serwerową 2026-08-12)
+- Last summarized commit: `0d05227`
+- Last summarized at: 2026-08-11 (prezentacja dostarczona; prep DCGM + runbook
+  drabinki; wieczorem: porządki repo i runbooki demo — przed sesją 2026-08-12)
 
 ---
 
@@ -108,6 +108,11 @@ status, not a task list. Update when work moves.
   weryfikowane na v0.20, Kimi na 0.26 — inwentarz w planie (Cz. 4). Runbooki:
   `serving/runbooks/load-test-and-grafana.md` oraz
   `serving/runbooks/kimi-concurrency-ladder-swe.md` (drabinka c=1/16/32/64).
+- **Runbooki demo (gotowce):** decyzja 2026-08-11 — bash `lib.sh` + `demo-*.sh`
+  wg kontraktu `serving/runbooks/demo-conventions.md` (read-only wobec stacku,
+  artefakty poza repo); lib przetestowany na laptopie (strict mode, fail-fasty),
+  test serwerowy = opcjonalna Cz. 6 planu 08-12; pierwszy gotowiec
+  `demo-kimi-grafana.sh` po sesji DCGM.
 - **W1 (#37 + artykuł + T9):** write-up 8 wątków, artykuł, T9 i notatka
   decyzyjna NVLink — COMPLETE; one-pager case study dodany 2026-08-10.
   Otwarte: T2/T5/T8 nie niosą wierszy z dowodami 2026-06-10 (P0/P2).
@@ -245,6 +250,7 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 git diff --check    OK (docs/config-only; no .py touched)
 tag dcgm-exporter zweryfikowany w nvcr.io; flagi -f/-c/-r potwierdzone w zrodle exportera (app.go); pola PROF = gauge B/s    OK
 zastrzezenie: nazwy metryk vLLM w dashboardach weryfikowane na dumpie v0.20; Kimi na 0.26 -> inwentarz nazw w planie sesji (Cz. 4)
+bash -n + smoke lib.sh (source pod strict mode, sciezka negatywna, fail-fast bez .env)    OK
 ```
 
 > Starsze bloki walidacji skompaktowane 2026-08-11 (szablon sync-state: tylko
@@ -259,8 +265,8 @@ Newest entry first.
 ### 2026-08-11 - Prezentacja dostarczona + prep DCGM/runbook przed sesją 08-12
 
 - Why: domknięcie materiałów meetupowych i laptopowe przygotowanie rozszerzenia monitoringu o DCGM przed jutrzejszym slotem serwerowym.
-- Did: samodzielny deck `index.html` + speaker notes do druku + one-pager W1; plan sesji k=4 (2026-08-10) dopisany; runbook drabinki c=1/16/32/64 na SWE; prep dcgm-exporter (compose + CSV liczników + scrape job + dashboard per-GPU i korelacyjny vLLM↔DCGM) z planem sesji 2026-08-12 (bramka koegzystencji PROF, pull obrazu w tle, rollback <2 min).
-- Range: `3914f46..5a2dd3c` (11 commits; 10 logged + 1 własny sync)
+- Did: samodzielny deck `index.html` + speaker notes do druku + one-pager W1; plan sesji k=4 (2026-08-10) dopisany; runbook drabinki c=1/16/32/64 na SWE; prep dcgm-exporter (compose + CSV liczników + scrape job + dashboard per-GPU i korelacyjny vLLM↔DCGM) z planem sesji 2026-08-12 (bramka koegzystencji PROF, pull obrazu w tle, rollback <2 min); wieczorem: porządki repo (sync+tidy, agent-state 56→20 KB, `_cv/` w lokalnym exclude), konwencje runbooków demo + `lib.sh` + opcjonalna Cz. 6 (test lib) w planie sesji.
+- Range: `3914f46..0d05227` (15 commits, w tym 2 własne sync/tidy)
 - Validation: OK
 - Next: sesja serwerowa wg `docs/plans/2026-08-12-dcgm-observability.md`.
 
