@@ -49,6 +49,33 @@ services:
     networks:
       - nanoserve-net
 
+  dcgm-exporter:
+    # Tag zweryfikowany w nvcr.io 2026-08-11 (DCGM 4.5.2 / exporter 4.8.1).
+    # Wbudowany hostengine w kontenerze; pola PROF wymagaja CAP_SYS_ADMIN
+    # (celowo cap_add, NIE privileged). Koegzystencja z host-side `dcgmi dmon`
+    # testowana w docs/plans/2026-08-12-dcgm-observability.md (Cz. 3).
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:4.5.2-4.8.1-ubuntu22.04
+    container_name: dcgm-exporter
+    hostname: dcgm-exporter
+    restart: unless-stopped
+    cap_add:
+      - SYS_ADMIN
+    ports:
+      - "${DCGM_EXPORTER_HOST_PORT:-9400}:9400"
+    volumes:
+      - ./dcgm/dcgm-counters.csv:/etc/dcgm-exporter/nanoserve-counters.csv:ro
+    # -c 5000 = interwal zbierania 5 s, spojny z scrape_interval Prometheusa
+    command: ["-f", "/etc/dcgm-exporter/nanoserve-counters.csv", "-c", "5000"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - nanoserve-net
+
 networks:
   nanoserve-net:
     external: true
