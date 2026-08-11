@@ -253,13 +253,16 @@ i średnie z `load_dmon_nvl.txt` zgadzają się co do rzędu wielkości.
 momentu minęło dużo więcej):
 
 ```bash
-curl -s -u "admin:${GRAFANA_ADMIN_PASSWORD:-admin}" \
-  http://127.0.0.1:3001/api/dashboards/uid/nanoserve-dcgm-gpu \
-  | jq -r '.dashboard.title // "BRAK - dashboard niesprovisionowany"'
+for uid in nanoserve-dcgm-gpu nanoserve-vllm-dcgm; do
+  curl -s -u "admin:${GRAFANA_ADMIN_PASSWORD:-admin}" \
+    "http://127.0.0.1:3001/api/dashboards/uid/$uid" \
+    | jq -r --arg u "$uid" '($u + ": ") + (.dashboard.title // "BRAK - niesprovisionowany")'
+done
 ```
 
-**OK:** `GPU hardware (DCGM) — nanoserve-mini`. `BRAK` → sprawdź
-`docker logs grafana | grep -i provision` (JSON przeszedł `jq .` na laptopie,
+**OK:** oba uid-y zwracają tytuły (`GPU hardware (DCGM) …` i
+`Serving ↔ GPU hardware (vLLM + DCGM) …`). `BRAK` → sprawdź
+`docker logs grafana | grep -i provision` (JSON-y przeszły `jq .` na laptopie,
 więc podejrzany jest mount/pull, nie składnia).
 
 Potem UI: `http://<serwer>:3001` → dashboard **GPU hardware (DCGM) —
