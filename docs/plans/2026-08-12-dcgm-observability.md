@@ -91,23 +91,30 @@ COMPOSE="serving/compose/docker-compose.kimi-k2.6.yml"
 mkdir -p "$RUN_DIR/session"
 set -a; source .env; set +a
 
+# obraz exportera (~1 GB) ciagnij W TLE od razu - nie pal slotu na pull w Cz. 1
+docker compose -f "$OBS" pull -q dcgm-exporter & PULL_PID=$!
+
 git rev-parse HEAD > "$RUN_DIR/session/start_commit.txt"
 nvidia-smi > "$RUN_DIR/session/nvidia_smi_start.txt"
 nvidia-smi -L > "$RUN_DIR/gpu_uuid_map.txt"          # mapa gpu-index <-> UUID do joinow w analizie
-pgrep -a nv-hostengine | tee "$RUN_DIR/session/host_hostengine.txt" \
-  || echo "(brak nv-hostengine host-side)" | tee "$RUN_DIR/session/host_hostengine.txt"
+{ pgrep -a nv-hostengine || echo "(brak nv-hostengine host-side)"; } \
+  | tee "$RUN_DIR/session/host_hostengine.txt"
+ss -ltn | grep -q ':9400 ' && echo "UWAGA: port 9400 zajety - sprawdz przed up"
 docker compose -f "$COMPOSE" ps | tee "$RUN_DIR/session/ps_serving_start.txt"
 docker compose -f "$OBS" ps     | tee "$RUN_DIR/session/ps_obs_start.txt"
 ```
 
 **OK:** pull przeszedł (prep commit z 08-11 jest na main); serving stack stoi
 (healthy) — nie jest warunkiem deployu, ale predykcja FB_USED go zakłada.
+Brak `nv-hostengine` NIE blokuje deployu — patrz kontyngencja w Cz. 3.
 
 ---
 
 ## Cz. 1 — deploy (10 min)
 
 ```bash
+wait "$PULL_PID" && echo "obraz exportera pobrany"
+
 # 1) prometheus MUSI byc force-recreated (single-file bind mount nie widzi
 #    podmiany pliku po git pull; /-/reload przeladowalby STARY plik)
 docker compose -f "$OBS" up -d --force-recreate prometheus
@@ -182,6 +189,12 @@ sanity bez flag. Pola NVL **muszą** być obecne — to główny cel W2/#34.
 Przyszłe sesje benchowe używają `dcgmi dmon` z hosta. Sprawdzamy, czy obie
 sesje profilowania żyją równolegle — na spokojnym stacku, nie w środku benchu.
 
+**Kontyngencja:** jeśli Cz. 0 pokazała brak `nv-hostengine`, najpierw
+`sudo systemctl start nvidia-dcgm` (tier-1 z 06-10 działał, więc serwis jest
+zainstalowany); jeśli i to nie wstaje — bramka „NIETESTOWALNA DZIŚ" w NOTES,
+a polityką domyślną dla przyszłych sesji dmon zostaje wariant ostrożny
+(stop exportera na okna dmon) do czasu przetestowania.
+
 ```bash
 # dmon dokladnie we wzorcu z infrastructure.md, 10 probek
 dcgmi dmon -e 155,1002,1005,1011,1012 -d 1000 -c 10 | tee "$RUN_DIR/coexist_dmon.txt"
@@ -236,10 +249,22 @@ grep -E '^DCGM_FI_(DEV_POWER_USAGE|PROF_SM_ACTIVE|PROF_NVLINK_TX_BYTES)\{' \
 **OK:** Power/SMACT/NVL wyraźnie nad idle na wszystkich 8 GPU; NVL exportera
 i średnie z `load_dmon_nvl.txt` zgadzają się co do rzędu wielkości.
 
-**Grafana:** `http://<serwer>:3001` → dashboard **GPU hardware (DCGM) —
-nanoserve-mini** (powinien już być na liście — provisioning z pulla), zakres
-Last 30 minutes. Screenshot ręczny (`Win+Shift+S` przez RDP) →
-`$RUN_DIR/grafana_dcgm.png`. Wariant headless:
+**Grafana — jawny check provisioningu** (provider skanuje co 30 s, do tego
+momentu minęło dużo więcej):
+
+```bash
+curl -s -u "admin:${GRAFANA_ADMIN_PASSWORD:-admin}" \
+  http://127.0.0.1:3001/api/dashboards/uid/nanoserve-dcgm-gpu \
+  | jq -r '.dashboard.title // "BRAK - dashboard niesprovisionowany"'
+```
+
+**OK:** `GPU hardware (DCGM) — nanoserve-mini`. `BRAK` → sprawdź
+`docker logs grafana | grep -i provision` (JSON przeszedł `jq .` na laptopie,
+więc podejrzany jest mount/pull, nie składnia).
+
+Potem UI: `http://<serwer>:3001` → dashboard **GPU hardware (DCGM) —
+nanoserve-mini**, zakres Last 30 minutes. Screenshot ręczny (`Win+Shift+S`
+przez RDP) → `$RUN_DIR/grafana_dcgm.png`. Wariant headless:
 
 ```bash
 DS_UID=$(curl -s -u "admin:${GRAFANA_ADMIN_PASSWORD:-admin}" \
@@ -318,6 +343,12 @@ jq . serving/compose/grafana/provisioning/dashboards/dcgm-gpu.json           OK
 git diff --check                                                             OK
 tag 4.5.2-4.8.1-ubuntu22.04 obecny w nvcr.io (tags/list)                     OK
 pola PROF *_BYTES = gauge B/s wg default-counters.csv exportera              OK
+flagi CLI potwierdzone w zrodle exportera (pkg/cmd/app.go):
+  -f/--collectors (plik CSV), -c/--collect-interval (MILISEKUNDY, def. 30000) OK
+snippet sanity Cz. 2 przetestowany na fixture (8 serii, notacja naukowa)     OK
+przeglad 08-11: naprawiony pgrep|tee (tee maskowal exit code), pull obrazu
+  przeniesiony w tlo do Cz. 0, kontyngencja nv-hostengine w Cz. 3,
+  jawny check provisioningu dashboardu przez API                             OK
 ```
 
 ## Checklista artefaktów (commit do repo)
