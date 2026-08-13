@@ -1,0 +1,5 @@
+NAME                     IMAGE                                                      COMMAND                  SERVICE         CREATED         STATUS                 PORTS
+dcgm-exporter            nvcr.io/nvidia/k8s/dcgm-exporter:4.5.2-4.8.1-ubuntu22.04   "/usr/local/dcgm/dcg…"   dcgm-exporter   3 seconds ago   Up 2 seconds           0.0.0.0:9400->9400/tcp, [::]:9400->9400/tcp
+grafana                  grafana/grafana:latest                                     "/run.sh"                grafana         2 months ago    Up 12 days             0.0.0.0:3001->3000/tcp, [::]:3001->3000/tcp
+grafana-image-renderer   grafana/grafana-image-renderer:latest                      "tini -- /usr/bin/gr…"   renderer        2 months ago    Up 12 days (healthy)   8081/tcp
+prometheus               prom/prometheus:v3                                         "/bin/prometheus --c…"   prometheus      4 seconds ago   Up 3 seconds           0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp

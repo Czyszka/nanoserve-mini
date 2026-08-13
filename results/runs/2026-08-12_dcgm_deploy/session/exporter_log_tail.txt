@@ -1,0 +1,20 @@
+time=2026-08-13T05:29:25.530Z level=INFO msg="DCGM successfully initialized!"
+time=2026-08-13T05:29:25.850Z level=INFO msg="Successfully queried DCGM profiling metric groups" reload_id=0 count=2 gpu_model="NVIDIA H200 NVL"
+time=2026-08-13T05:29:25.850Z level=INFO msg="Building registry for current GPU topology"
+time=2026-08-13T05:29:25.850Z level=INFO msg="Falling back to metric file '/etc/dcgm-exporter/nanoserve-counters.csv'"
+time=2026-08-13T05:29:25.850Z level=INFO msg="Initializing system entities of type 'GPU'"
+time=2026-08-13T05:29:27.795Z level=INFO msg="Initializing system entities of type 'NvSwitch'"
+time=2026-08-13T05:29:27.795Z level=INFO msg="Not collecting NvSwitch metrics; no switches to monitor"
+time=2026-08-13T05:29:27.795Z level=INFO msg="Initializing system entities of type 'NvLink'"
+time=2026-08-13T05:29:27.796Z level=WARN msg="Failed to initialize NvSwitch/NvLink info" error="no switches to monitor"
+time=2026-08-13T05:29:29.618Z level=INFO msg="Initializing system entities of type 'CPU'"
+time=2026-08-13T05:29:31.413Z level=INFO msg="Not collecting CPU metrics; error retrieving DCGM CPU hierarchy: This request is serviced by a module of DCGM that is not currently loaded"
+time=2026-08-13T05:29:31.413Z level=INFO msg="Initializing system entities of type 'CPU Core'"
+time=2026-08-13T05:29:31.413Z level=INFO msg="Not collecting CPU Core metrics; error retrieving DCGM CPU hierarchy: This request is serviced by a module of DCGM that is not currently loaded"
+time=2026-08-13T05:29:31.463Z level=INFO msg="Registry built successfully" collector_count=1
+time=2026-08-13T05:29:31.464Z level=INFO msg="Profiling endpoints enabled at /debug/pprof/"
+time=2026-08-13T05:29:31.464Z level=INFO msg="HTTP server started - ready to serve metrics"
+time=2026-08-13T05:29:31.464Z level=INFO msg="Watching for changes in file" file=/etc/dcgm-exporter/nanoserve-counters.csv debounce=200ms
+time=2026-08-13T05:29:31.464Z level=INFO msg="Starting webserver"
+time=2026-08-13T05:29:31.465Z level=INFO msg="Listening on" address=[::]:9400
+time=2026-08-13T05:29:31.465Z level=INFO msg="TLS is disabled." http2=false address=[::]:9400

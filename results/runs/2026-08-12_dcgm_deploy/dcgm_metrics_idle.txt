@@ -1,0 +1,110 @@
+# HELP DCGM_FI_DEV_GPU_TEMP GPU temperature (in C).
+# TYPE DCGM_FI_DEV_GPU_TEMP gauge
+DCGM_FI_DEV_GPU_TEMP{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 34
+DCGM_FI_DEV_GPU_TEMP{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 33
+DCGM_FI_DEV_GPU_TEMP{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 34
+DCGM_FI_DEV_GPU_TEMP{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 35
+DCGM_FI_DEV_GPU_TEMP{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 35
+DCGM_FI_DEV_GPU_TEMP{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 34
+DCGM_FI_DEV_GPU_TEMP{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 34
+DCGM_FI_DEV_GPU_TEMP{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 35
+# HELP DCGM_FI_DEV_POWER_USAGE Power draw (in W).
+# TYPE DCGM_FI_DEV_POWER_USAGE gauge
+DCGM_FI_DEV_POWER_USAGE{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 71.827000
+DCGM_FI_DEV_POWER_USAGE{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 72.330000
+DCGM_FI_DEV_POWER_USAGE{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 71.461000
+DCGM_FI_DEV_POWER_USAGE{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 71.514000
+DCGM_FI_DEV_POWER_USAGE{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 71.568000
+DCGM_FI_DEV_POWER_USAGE{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 73.949000
+DCGM_FI_DEV_POWER_USAGE{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 73.612000
+DCGM_FI_DEV_POWER_USAGE{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 73.282000
+# HELP DCGM_FI_DEV_FB_FREE Framebuffer memory free (in MiB).
+# TYPE DCGM_FI_DEV_FB_FREE gauge
+DCGM_FI_DEV_FB_FREE{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+DCGM_FI_DEV_FB_FREE{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 143141
+# HELP DCGM_FI_DEV_FB_USED Framebuffer memory used (in MiB).
+# TYPE DCGM_FI_DEV_FB_USED gauge
+DCGM_FI_DEV_FB_USED{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+DCGM_FI_DEV_FB_USED{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 16
+# HELP DCGM_FI_PROF_SM_ACTIVE Ratio of cycles at least one warp is active on a multiprocessor.
+# TYPE DCGM_FI_PROF_SM_ACTIVE gauge
+DCGM_FI_PROF_SM_ACTIVE{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_SM_ACTIVE{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+# HELP DCGM_FI_PROF_PIPE_TENSOR_ACTIVE Ratio of cycles the tensor (HMMA) pipe is active.
+# TYPE DCGM_FI_PROF_PIPE_TENSOR_ACTIVE gauge
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000000
+# HELP DCGM_FI_PROF_DRAM_ACTIVE Ratio of cycles the device memory interface is active.
+# TYPE DCGM_FI_PROF_DRAM_ACTIVE gauge
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+DCGM_FI_PROF_DRAM_ACTIVE{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0.000004
+# HELP DCGM_FI_PROF_PCIE_TX_BYTES PCIe TX rate incl. protocol headers (bytes/s).
+# TYPE DCGM_FI_PROF_PCIE_TX_BYTES gauge
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2759274
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2824106
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2866223
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2227644
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2113664
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2810569
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2335929
+DCGM_FI_PROF_PCIE_TX_BYTES{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2765797
+# HELP DCGM_FI_PROF_PCIE_RX_BYTES PCIe RX rate incl. protocol headers (bytes/s).
+# TYPE DCGM_FI_PROF_PCIE_RX_BYTES gauge
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2291620
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2354364
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2400257
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 1818386
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 1723863
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2333791
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 1918810
+DCGM_FI_PROF_PCIE_RX_BYTES{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 2305722
+# HELP DCGM_FI_PROF_NVLINK_TX_BYTES NVLink TX rate (bytes/s).
+# TYPE DCGM_FI_PROF_NVLINK_TX_BYTES gauge
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_TX_BYTES{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+# HELP DCGM_FI_PROF_NVLINK_RX_BYTES NVLink RX rate (bytes/s).
+# TYPE DCGM_FI_PROF_NVLINK_RX_BYTES gauge
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="0",UUID="GPU-48c39a71-a81c-84ad-d2b2-7edaeaaec4d0",pci_bus_id="00000000:1D:00.0",device="nvidia0",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="1",UUID="GPU-9a6e7f52-c9d5-a1df-788d-5a1447c0a08c",pci_bus_id="00000000:1E:00.0",device="nvidia1",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="2",UUID="GPU-ae42eb9c-d39e-8651-9300-411fa5d48e60",pci_bus_id="00000000:40:00.0",device="nvidia2",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="3",UUID="GPU-da529bc7-9195-1812-3337-5bc798c38376",pci_bus_id="00000000:41:00.0",device="nvidia3",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="4",UUID="GPU-1ba28f1a-1b9c-a847-d091-d1e126a58f76",pci_bus_id="00000000:AA:00.0",device="nvidia4",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="5",UUID="GPU-7148151c-8bf3-d252-209f-68c16de5dc6e",pci_bus_id="00000000:AB:00.0",device="nvidia5",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="6",UUID="GPU-253c7c1f-ef02-5c3e-9f52-28ae40bffe26",pci_bus_id="00000000:BB:00.0",device="nvidia6",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0
+DCGM_FI_PROF_NVLINK_RX_BYTES{gpu="7",UUID="GPU-446efb15-890c-94b9-837b-ed21a0a5133a",pci_bus_id="00000000:BC:00.0",device="nvidia7",modelName="NVIDIA H200 NVL",Hostname="dcgm-exporter"} 0

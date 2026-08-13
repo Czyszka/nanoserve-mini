@@ -1,0 +1,20 @@
+{
+  "job": "dcgm",
+  "health": "up",
+  "lastError": ""
+}
+{
+  "job": "litellm",
+  "health": "down",
+  "lastError": "Get \"http://litellm-proxy:4000/metrics\": dial tcp: lookup litellm-proxy on 127.0.0.11:53: server misbehaving"
+}
+{
+  "job": "vllm-kimi",
+  "health": "down",
+  "lastError": "Get \"http://vllm:8000/metrics\": dial tcp: lookup vllm on 127.0.0.11:53: server misbehaving"
+}
+{
+  "job": "vllm-small-deepseek",
+  "health": "down",
+  "lastError": "Get \"http://vllm-small:8004/metrics\": dial tcp: lookup vllm-small on 127.0.0.11:53: server misbehaving"
+}
