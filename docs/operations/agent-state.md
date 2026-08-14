@@ -124,6 +124,14 @@ status, not a task list. Update when work moves.
   artefakty leżą na serwerze, dociągnąć przy okazji sesji 08-12; inaczej wynik
   pozostaje nieudokumentowany (plan:
   `docs/plans/2026-08-10-kimi-dflash-k4-swe.md`).
+- **Benchmark Ollamy po LAN (firmowy PoC 2×A6000):** samodzielny, przenośny
+  tool `benchmarks/ollama_lan_bench/` (2026-08-14, branch
+  `claude/ollama-benchmark-script-uv-z2od5s`) — sekwencyjne zapytania do
+  OpenAI-compat `/v1` Ollamy, start o zadanej godzinie (`--start-at`),
+  prompt literal lub dataset SWE (`--dataset-offset` dla rozłącznych wycinków
+  per klient), metryki TTFT/TPOT/E2E/throughput; własny projekt uv + PEP 723
+  (kopiowalny na klientów bez repo), logika pomiarowa vendorowana z
+  `benchmarks/scripts/`. Do zebrania: pierwsze realne runy z klientów.
 - **#48 — speculative decoding methodology:** research issue otwarte; laptopowy
   follow-up przed finalnym T6.
 - **#49 — pin observability images:** floating tagi (`latest`/`v3`); zrzut
@@ -244,13 +252,15 @@ curl -s http://127.0.0.1:9090/api/v1/targets \
 
 ## Last validation
 
-2026-08-11 (laptop) prep DCGM + runbook drabinki + dostarczenie prezentacji:
+2026-08-14 (remote) standalone benchmark Ollamy `benchmarks/ollama_lan_bench/`:
 
 ```text
-git diff --check    OK (docs/config-only; no .py touched)
-tag dcgm-exporter zweryfikowany w nvcr.io; flagi -f/-c/-r potwierdzone w zrodle exportera (app.go); pola PROF = gauge B/s    OK
-zastrzezenie: nazwy metryk vLLM w dashboardach weryfikowane na dumpie v0.20; Kimi na 0.26 -> inwentarz nazw w planie sesji (Cz. 4)
-bash -n + smoke lib.sh (source pod strict mode, sciezka negatywna, fail-fast bez .env)    OK
+cd benchmarks/ollama_lan_bench && uv sync --extra dev && uv run pytest    26 passed
+cd benchmarks/ollama_lan_bench && uv run ruff check .    OK
+uv sync --extra dev && uv run ruff check benchmarks/ollama_lan_bench    OK (root config)
+uv run pytest (root)    132 passed (regresja bez zmian)
+smoke bez serwera (port zamkniety): wiersz z error=ConnectError, exit 0, JSON poprawny
+zastane bledy root ruff w download_swe_bench_lite.py i results/runs/2026-07-31_*/nvlink/*.py — nietkniete
 ```
 
 > Starsze bloki walidacji skompaktowane 2026-08-11 (szablon sync-state: tylko
@@ -261,6 +271,14 @@ bash -n + smoke lib.sh (source pod strict mode, sciezka negatywna, fail-fast bez
 ## Handoff log
 
 Newest entry first.
+
+### 2026-08-14 - Samodzielny benchmark Ollamy po LAN (ollama_lan_bench)
+
+- Why: firmowy PoC na Ollamie (2×A6000) nie ma żadnych liczb (TTFT/TPOT/throughput — patrz `docs/project/company-ai-support-h200-plan.md`); potrzebny przenośny skrypt odpalany z klientów w sieci o zadanej godzinie.
+- Did: nowy samodzielny katalog `benchmarks/ollama_lan_bench/` (bench_ollama.py z nagłówkiem PEP 723 + własny pyproject/uv.lock + 26 testów na MockTransport + README z instrukcjami uv i koordynacją wielu klientów). Sekwencyjne streamingowe zapytania do OpenAI-compat `/v1/chat/completions` (normalizacja base-url łyka też `/v1`), `--start-at HH:MM|ISO` (najbliższe wystąpienie, chunki sleep 30 s), `--prompt` lub `--dataset` (SWE JSONL) + `--dataset-offset`, warmup poza statystykami, wiersz błędu zamiast przerwania runu, artefakty results.jsonl + summary.json z blokiem `client` (hostname, scheduled/actual start). Logika pomiarowa vendorowana 1:1 z `benchmarks/scripts/` (bez importów — przenośność). Odpowiedź na pytanie o `vllm bench serve` vs Ollama w README.
+- Range: branch `claude/ollama-benchmark-script-uv-z2od5s`
+- Validation: OK (blok wyżej)
+- Next: skopiować katalog + dataset SWE na klientów, pierwszy realny run na endpoint Ollamy; potem ewentualnie agregacja wyników wielu klientów.
 
 ### 2026-08-11 - Prezentacja dostarczona + prep DCGM/runbook przed sesją 08-12
 
