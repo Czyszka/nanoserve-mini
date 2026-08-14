@@ -135,6 +135,17 @@ status, not a task list. Update when work moves.
   jedynej maszynie z internetem) składa `dist/ollama_bench_kit.zip`:
   embeddable CPython (pin 3.12.10) + skrypt + dataset SWE + run_bench.bat
   (CRLF) + README_KIT.txt. Do zebrania: pierwsze realne runy z klientów.
+- **Claude Code na klientach offline (osobny stack):**
+  `benchmarks/claude_code_kit/` (2026-08-14) — `build_kit.py` składa z
+  istniejącego katalogu narzędzi offline (Node.js, npm z
+  @anthropic-ai/claude-code, Python 3.12, opcjonalnie uv, userdir `.claude`;
+  autodetekcja kotwic + flagi override) kit dla Windows: `claude.bat`
+  (ANTHROPIC_BASE_URL/TOKEN/MODEL wpisane przy budowie, env per-sesja,
+  telemetria/autoupdate off) + `setup.bat`/`setup_client.py` (kopiа `.claude`
+  do profilu z backupem, opcjonalny `--persist` setx, smoke test
+  `claude --model <m> -p "Zaplanuj pracę"`). Docelowo gateway
+  Anthropic-compat (LiteLLM→Ollama) w LAN. Do zrobienia: konfiguracja
+  gatewaya i realny smoke na Windowsie.
 - **#48 — speculative decoding methodology:** research issue otwarte; laptopowy
   follow-up przed finalnym T6.
 - **#49 — pin observability images:** floating tagi (`latest`/`v3`); zrzut
@@ -277,6 +288,14 @@ zastane bledy root ruff w download_swe_bench_lite.py i results/runs/2026-07-31_*
 ## Handoff log
 
 Newest entry first.
+
+### 2026-08-14 (3) - claude_code_kit: pakiet startowy Claude Code dla klientów offline
+
+- Why: kolejny etap testów w sieci klientów (osobny stack) — uruchomienie Claude Code na offline'owych Windowsach przez gateway LAN; użytkownik ma gotowy katalog narzędzi offline (uv, python3.12, nodejs, npm z claude, userdir .claude), kit ma z niego składać paczkę bez pobierania czegokolwiek.
+- Did: nowy `benchmarks/claude_code_kit/` — `build_kit.py` (stdlib-only; autodetekcja kotwic node.exe / cli.js / python.exe / uv.exe / .claude z flagami override, walidacja + błędy przy niejednoznaczności; generuje claude.bat z wpisaną konfiguracją gatewaya i wyłączoną telemetrią/autoupdate, setup.bat, kit_config.json, README_KIT.txt — wszystko CRLF; zip w dist/). `setup_client.py` (odpalany kitowym pythonem): kopia `.claude` do profilu z backupem timestampowanym, `--persist` przez setx (runner wstrzykiwalny), smoke test `claude --model <m> -p "Zaplanuj pracę"` z timeoutem 600 s i diagnozą. 22 testy na atrapach; własny pyproject (deps []).
+- Range: branch `claude/ollama-benchmark-script-uv-z2od5s`, po FF również `main`
+- Validation: kit 22 passed + ruff OK (oba configi), root pytest 132 passed.
+- Next: postawić gateway Anthropic-compat (LiteLLM→Ollama) w sieci klientów, zbudować kit z realnego katalogu narzędzi, smoke na Windowsie; potem pomiary agentowe (`claude -p --output-format json` + logi LiteLLM).
 
 ### 2026-08-14 (2) - ollama_lan_bench: stdlib-only + offline'owy kit dla Windows
 
