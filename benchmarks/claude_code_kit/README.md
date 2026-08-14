@@ -5,10 +5,12 @@ LAN. Osobny stack względem benchmarku Ollamy (`../ollama_lan_bench/`), ale ten
 sam wzorzec: kit składany z gotowych narzędzi na maszynie mającej do nich
 dostęp, przenoszony pendrive'em, zero instalacji i zero internetu na kliencie.
 
-Architektura docelowa:
+Architektura docelowa — **bez żadnego pośrednika**: Ollama od v0.14.0
+natywnie wystawia Anthropic Messages API (`/v1/messages`), więc Claude Code
+celuje bezpośrednio w serwer Ollamy:
 
 ```text
-klient Windows (Claude Code) → gateway w LAN (Anthropic-compat /v1/messages, np. LiteLLM) → Ollama
+klient Windows (Claude Code) → Ollama w LAN (natywne /v1/messages, v0.14.0+)
 ```
 
 ## Budowa kitu
@@ -21,10 +23,12 @@ oraz userdir z `.claude`.
 ```bash
 python3 build_kit.py \
     --tools-dir /sciezka/do/narzedzi-offline \
-    --base-url http://<adres-gatewaya>:4000 \
-    --auth-token <klucz> \
-    --model <nazwa-modelu-w-gatewayu>
+    --base-url http://<adres-ollamy>:11434 \
+    --model <tag-modelu>
 ```
+
+`--auth-token` jest opcjonalny (default `ollama`): Claude Code wymaga
+ustawionego `ANTHROPIC_AUTH_TOKEN`, ale Ollama ignoruje jego wartość.
 
 Skrypt sam znajduje w `--tools-dir` kotwice: `node.exe`,
 `node_modules/@anthropic-ai/claude-code/cli.js`, `python.exe`, `uv.exe`
@@ -55,11 +59,12 @@ osoby przy kliencie).
 
 ## Uwagi operacyjne
 
-- Gateway musi wystawiać endpoint zgodny z Anthropic Messages API
-  (`/v1/messages`) — LiteLLM Proxy to potrafi, tłumacząc na backend Ollamy.
+- Wymagana **Ollama v0.14.0+** (natywny endpoint `/v1/messages`); serwer musi
+  nasłuchiwać na sieci (`OLLAMA_HOST=0.0.0.0`).
 - Na serwerze Ollamy podnieś okno kontekstu (`num_ctx` /
   `OLLAMA_CONTEXT_LENGTH`): system prompt Claude Code to dziesiątki tysięcy
-  tokenów — domyślne kilka tysięcy utnie prompt i wyniki będą bezużyteczne.
+  tokenów, zalecane minimum 32k — domyślne kilka tysięcy utnie prompt
+  i wyniki będą bezużyteczne.
 - Jakość pracy agentowej zależy od tool-callingu modelu; smoke test `-p`
   sprawdza łączność i generację, nie pełną pętlę narzędziową.
 - Smoke test i budowa kitu są w pełni przetestowane na atrapach (`uv run

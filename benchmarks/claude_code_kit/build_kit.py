@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Build the offline Windows starter kit for Claude Code behind a LAN gateway.
+"""Build the offline Windows starter kit for Claude Code talking to Ollama over LAN.
+
+Ollama v0.14.0+ natively exposes the Anthropic Messages API (/v1/messages),
+so Claude Code points straight at the Ollama server — no proxy or gateway.
 
 Run this next to the user's directory of offline tools (no downloads — the
 tools are already there): Node.js for Windows, an npm tree with
@@ -13,7 +16,7 @@ tools are already there): Node.js for Windows, an npm tree with
       python/                python.exe (runs setup_client.py on the client)
       userdir/.claude/       user configuration to install on the client
       uv/uv.exe              (only if found in the tools dir)
-      claude.bat             session env (gateway URL, token, model) + runs cli.js
+      claude.bat             session env (server URL, token, model) + runs cli.js
       setup.bat              runs setup_client.py with the bundled python
       setup_client.py        client-side setup: .claude, optional setx, smoke test
       kit_config.json        values baked at build time (also used by setup)
@@ -249,9 +252,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Directory with the offline tools (Node.js, npm tree with "
         "@anthropic-ai/claude-code, Python 3.12, optional uv.exe, .claude).",
     )
-    parser.add_argument("--base-url", required=True, help="Gateway URL, e.g. http://gw:4000")
-    parser.add_argument("--auth-token", required=True, help="Gateway auth token.")
-    parser.add_argument("--model", required=True, help="Model name as exposed by the gateway.")
+    parser.add_argument(
+        "--base-url",
+        required=True,
+        help="Anthropic-compatible endpoint, e.g. http://<ollama-host>:11434 "
+        "(Ollama v0.14.0+ serves /v1/messages natively).",
+    )
+    parser.add_argument(
+        "--auth-token",
+        default="ollama",
+        help="ANTHROPIC_AUTH_TOKEN value; Claude Code requires it but Ollama "
+        'ignores it (default: "ollama").',
+    )
+    parser.add_argument("--model", required=True, help="Model tag as known to the server.")
     parser.add_argument(
         "--small-fast-model",
         default=None,

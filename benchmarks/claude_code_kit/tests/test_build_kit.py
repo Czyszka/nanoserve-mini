@@ -78,6 +78,25 @@ def test_claude_bat_contains_config_and_crlf(tmp_path):
     ) in text
 
 
+def test_auth_token_defaults_to_ollama(tmp_path):
+    tools = _make_tools_tree(tmp_path / "tools")
+    code = build_kit.main(
+        [
+            "--tools-dir",
+            str(tools),
+            "--dist",
+            str(tmp_path / "dist"),
+            "--base-url",
+            "http://ollama:11434",
+            "--model",
+            "qwen-coder",
+        ]
+    )
+    assert code == 0
+    text = (tmp_path / "dist" / "claude_code_kit" / "claude.bat").read_text(encoding="utf-8")
+    assert 'set "ANTHROPIC_AUTH_TOKEN=ollama"' in text
+
+
 def test_small_fast_model_override(tmp_path):
     _code, kit = _build(tmp_path, extra=["--small-fast-model", "phi-mini"])
     text = (kit / "claude.bat").read_text(encoding="utf-8")
