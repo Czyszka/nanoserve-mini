@@ -3,9 +3,7 @@ name = "ollama-lan-bench"
 version = "0.1.0"
 description = "Standalone sequential LAN benchmark for a remote Ollama server (OpenAI-compatible API)."
 requires-python = ">=3.12"
-dependencies = [
-    "httpx>=0.27.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [

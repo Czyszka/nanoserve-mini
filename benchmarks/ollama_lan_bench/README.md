@@ -2,8 +2,9 @@
 
 Samodzielny benchmark sekwencyjny dla zdalnego serwera **Ollama** w sieci LAN.
 Jeden klient → jeden endpoint Ollamy (OpenAI-compatible `/v1/chat/completions`).
-Katalog jest przenośny: skopiuj go (albo sam `bench_ollama.py`) na dowolny
-komputer-klient z zainstalowanym [uv](https://docs.astral.sh/uv/) i uruchamiaj.
+`bench_ollama.py` jest **czysty stdlib** (zero zależności) — działa z dowolnym
+Pythonem 3.12+, także z wbudowanym Pythonem w zestawie offline (niżej), albo
+przez [uv](https://docs.astral.sh/uv/) na maszynie deweloperskiej.
 
 ## Co mierzy
 
@@ -19,23 +20,49 @@ komputer-klient z zainstalowanym [uv](https://docs.astral.sh/uv/) i uruchamiaj.
 Agregaty: `count / min / p50 / p95 / max / mean`. Definicje metryk są zgodne z
 `docs/operations/benchmark-methodology.md` w repo nanoserve-mini.
 
-## Instalacja
+## Klienci offline (Windows) — zestaw bez Pythona i bez internetu
+
+Gdy komputery-klienci nie mają internetu, Pythona ani uv, zbuduj przenośny kit
+na maszynie z internetem (np. serwer Linux):
+
+```bash
+python3 build_kit.py          # albo: uv run build_kit.py
+```
+
+Skrypt pobiera oficjalny *embeddable package* CPythona z python.org (wersja
+pinowana w `build_kit.py`, obecnie 3.12.10), waliduje go strukturalnie, drukuje SHA256
+(przypnij go przy kolejnych buildach: `--expected-sha256 <hash>`) i składa
+`dist/ollama_bench_kit.zip` (~15 MB): wbudowany Python + `bench_ollama.py` +
+dataset SWE + `run_bench.bat` + instrukcja `README_KIT.txt`.
+
+Przenieś zip pendrive'em na klienta, rozpakuj w dowolne miejsce i uruchom
+z cmd — bez żadnej instalacji:
+
+```bat
+run_bench.bat --base-url http://192.168.1.50:11434 --model llama3.3:70b ^
+    --dataset swe_bench_vllm.jsonl --num-requests 10 --start-at 08:30
+```
+
+Przydatne flagi buildu: `--embed-zip PATH` (użyj już pobranej paczki, np. przy
+budowaniu w środowisku bez dostępu do python.org), `--dataset PATH|none`,
+`--dist DIR`.
+
+## Uruchamianie z uv (maszyna deweloperska z internetem)
 
 1. Zainstaluj uv:
    - Windows (PowerShell): `winget install astral-sh.uv`
    - Linux/macOS: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-2. Ścieżka minimalna — wystarczy sam plik skryptu; uv sam doinstaluje `httpx`
-   z nagłówka PEP 723:
+2. Ścieżka minimalna — wystarczy sam plik skryptu (zero zależności do
+   pobrania):
 
    ```bash
    uv run bench_ollama.py --base-url http://192.168.1.50:11434 --model llama3.3:70b
    ```
 
-3. Ścieżka pełna (cały katalog, środowisko z locka; potrzebna do testów):
+3. Ścieżka pełna (cały katalog; potrzebna do testów):
 
    ```bash
-   uv sync                 # tylko httpx
-   uv sync --extra dev     # + pytest, ruff
+   uv sync --extra dev     # pytest, ruff (runtime nie ma zależności)
    uv run pytest
    uv run python bench_ollama.py --base-url ... --model ...
    ```

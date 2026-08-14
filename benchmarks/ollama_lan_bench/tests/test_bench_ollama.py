@@ -1,8 +1,9 @@
 """Tests for bench_ollama.py — no network, no real sleeping.
 
-Mocking follows the repo pattern: ``httpx.MockTransport`` plus monkeypatching
-``bench_ollama.httpx.Client`` so the script's own streaming code runs end to
-end against canned SSE bytes.
+The script is stdlib-only; its HTTP layer is a single injectable ``transport``
+callable (``post_stream``). Tests monkeypatch ``bench_ollama.post_stream``
+with a canned SSE line stream so the script's own parsing and measurement
+code runs end to end.
 """
 
 from __future__ import annotations
@@ -11,7 +12,6 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import httpx
 import pytest
 
 import bench_ollama
@@ -19,38 +19,38 @@ import bench_ollama
 _NOW = datetime(2026, 8, 14, 10, 0, 0)
 
 _SSE_NO_USAGE = (
-    b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
-    b'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'
-    b'data: {"choices":[{"delta":{"content":" world"}}]}\n\n'
-    b"data: [DONE]\n\n"
+    'data: {"choices":[{"delta":{"role":"assistant"}}]}\n'
+    '\n'
+    'data: {"choices":[{"delta":{"content":"Hello"}}]}\n'
+    '\n'
+    'data: {"choices":[{"delta":{"content":" world"}}]}\n'
+    '\n'
+    "data: [DONE]\n"
 )
 
 _SSE_WITH_USAGE = (
-    b'data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
-    b'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n'
-    b'data: {"choices":[{"delta":{"content":" world"}}]}\n\n'
-    b'data: {"choices":[],"usage":{"prompt_tokens":4,"completion_tokens":6}}\n\n'
-    b"data: [DONE]\n\n"
+    'data: {"choices":[{"delta":{"role":"assistant"}}]}\n'
+    '\n'
+    'data: {"choices":[{"delta":{"content":"Hello"}}]}\n'
+    '\n'
+    'data: {"choices":[{"delta":{"content":" world"}}]}\n'
+    '\n'
+    'data: {"choices":[],"usage":{"prompt_tokens":4,"completion_tokens":6}}\n'
+    '\n'
+    "data: [DONE]\n"
 )
 
 
-def _mock_streaming_client(monkeypatch, *, sse: bytes, seen_requests: list | None = None):
-    def handler(request: httpx.Request) -> httpx.Response:
+def _fake_transport(monkeypatch, *, sse: str, seen_requests: list | None = None):
+    lines = sse.splitlines(keepends=True)
+
+    def transport(url, payload, headers, timeout):
         if seen_requests is not None:
-            seen_requests.append(json.loads(request.content.decode("utf-8")))
-        assert request.url.path == "/v1/chat/completions"
-        return httpx.Response(
-            200, content=sse, headers={"content-type": "text/event-stream"}
-        )
+            seen_requests.append({"url": url, "payload": payload, "headers": headers})
+        assert url.endswith("/v1/chat/completions")
+        yield from lines
 
-    transport = httpx.MockTransport(handler)
-    real_client_cls = httpx.Client
-
-    def fake_client(*args, **kwargs):
-        kwargs.pop("timeout", None)
-        return real_client_cls(transport=transport)
-
-    monkeypatch.setattr(bench_ollama.httpx, "Client", fake_client)
+    monkeypatch.setattr(bench_ollama, "post_stream", transport)
 
 
 # ---------------------------------------------------------------------------
@@ -162,7 +162,48 @@ def test_load_prompts_errors_on_malformed_row(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# main() end-to-end against mocked SSE
+# post_stream (urllib transport)
+# ---------------------------------------------------------------------------
+
+
+def test_post_stream_posts_json_and_yields_lines(monkeypatch):
+    captured: dict = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def __iter__(self):
+            return iter([b"data: [DONE]\n"])
+
+    def fake_urlopen(request, timeout=None):
+        captured["url"] = request.full_url
+        captured["body"] = json.loads(request.data.decode("utf-8"))
+        captured["content_type"] = request.get_header("Content-type")
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr(bench_ollama.urllib.request, "urlopen", fake_urlopen)
+    lines = list(
+        bench_ollama.post_stream(
+            "http://h:11434/v1/chat/completions",
+            {"a": 1},
+            {"Content-Type": "application/json"},
+            5.0,
+        )
+    )
+    assert lines == ["data: [DONE]\n"]
+    assert captured["url"] == "http://h:11434/v1/chat/completions"
+    assert captured["body"] == {"a": 1}
+    assert captured["content_type"] == "application/json"
+    assert captured["timeout"] == 5.0
+
+
+# ---------------------------------------------------------------------------
+# main() end-to-end against canned SSE
 # ---------------------------------------------------------------------------
 
 
@@ -188,7 +229,7 @@ def _run_main(tmp_path, extra_args: list[str]) -> tuple[int, dict, list[dict]]:
 
 
 def test_main_with_usage_chunk_computes_tokens(monkeypatch, tmp_path):
-    _mock_streaming_client(monkeypatch, sse=_SSE_WITH_USAGE)
+    _fake_transport(monkeypatch, sse=_SSE_WITH_USAGE)
     code, summary, rows = _run_main(tmp_path, ["--num-requests", "2", "--warmup", "1"])
     assert code == 0
     measured = [r for r in rows if r["phase"] == "measured"]
@@ -209,7 +250,7 @@ def test_main_with_usage_chunk_computes_tokens(monkeypatch, tmp_path):
 
 
 def test_main_without_usage_falls_back_to_chars(monkeypatch, tmp_path):
-    _mock_streaming_client(monkeypatch, sse=_SSE_NO_USAGE)
+    _fake_transport(monkeypatch, sse=_SSE_NO_USAGE)
     code, summary, rows = _run_main(tmp_path, ["--num-requests", "1", "--warmup", "0"])
     assert code == 0
     (row,) = rows
@@ -223,7 +264,7 @@ def test_main_without_usage_falls_back_to_chars(monkeypatch, tmp_path):
 
 def test_main_dataset_mode_varies_prompts(monkeypatch, tmp_path):
     seen: list[dict] = []
-    _mock_streaming_client(monkeypatch, sse=_SSE_WITH_USAGE, seen_requests=seen)
+    _fake_transport(monkeypatch, sse=_SSE_WITH_USAGE, seen_requests=seen)
     dataset = tmp_path / "d.jsonl"
     _write_dataset(dataset, ["p0", "p1", "p2"])
     code, _summary, rows = _run_main(
@@ -240,7 +281,7 @@ def test_main_dataset_mode_varies_prompts(monkeypatch, tmp_path):
         ],
     )
     assert code == 0
-    sent = [req["messages"][0]["content"] for req in seen]
+    sent = [entry["payload"]["messages"][0]["content"] for entry in seen]
     assert sent == ["p1", "p2"]
     assert [(r["prompt_index"], r["prompt_chars"]) for r in rows] == [(1, 2), (2, 2)]
 
@@ -280,7 +321,7 @@ def test_run_prompts_continues_after_error(monkeypatch):
 
 
 def test_main_start_at_is_wired(monkeypatch, tmp_path):
-    _mock_streaming_client(monkeypatch, sse=_SSE_WITH_USAGE)
+    _fake_transport(monkeypatch, sse=_SSE_WITH_USAGE)
     captured: list[datetime] = []
     monkeypatch.setattr(
         bench_ollama, "wait_until", lambda target, **kwargs: captured.append(target)
@@ -315,25 +356,27 @@ def test_prompt_and_dataset_mutually_exclusive():
 
 def test_no_include_usage_omits_stream_options(monkeypatch, tmp_path):
     seen: list[dict] = []
-    _mock_streaming_client(monkeypatch, sse=_SSE_NO_USAGE, seen_requests=seen)
+    _fake_transport(monkeypatch, sse=_SSE_NO_USAGE, seen_requests=seen)
     code, _summary, _rows = _run_main(
         tmp_path, ["--num-requests", "1", "--warmup", "0", "--no-include-usage"]
     )
     assert code == 0
-    assert all("stream_options" not in req for req in seen)
+    assert all("stream_options" not in entry["payload"] for entry in seen)
 
 
 def test_include_usage_sends_stream_options(monkeypatch, tmp_path):
     seen: list[dict] = []
-    _mock_streaming_client(monkeypatch, sse=_SSE_WITH_USAGE, seen_requests=seen)
+    _fake_transport(monkeypatch, sse=_SSE_WITH_USAGE, seen_requests=seen)
     _run_main(tmp_path, ["--num-requests", "1", "--warmup", "0"])
-    assert all(req["stream_options"] == {"include_usage": True} for req in seen)
+    assert all(
+        entry["payload"]["stream_options"] == {"include_usage": True} for entry in seen
+    )
 
 
 def test_summary_client_block_and_row_hostname(monkeypatch, tmp_path):
     import socket
 
-    _mock_streaming_client(monkeypatch, sse=_SSE_WITH_USAGE)
+    _fake_transport(monkeypatch, sse=_SSE_WITH_USAGE)
     _code, summary, rows = _run_main(tmp_path, ["--num-requests", "1", "--warmup", "0"])
     hostname = socket.gethostname()
     assert summary["schema"] == bench_ollama.SCHEMA_SUMMARY

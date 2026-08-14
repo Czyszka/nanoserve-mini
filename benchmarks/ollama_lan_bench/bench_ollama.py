@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["httpx>=0.27.0"]
+# dependencies = []
 # ///
 """Standalone sequential LAN benchmark against a remote Ollama server.
 
@@ -25,11 +25,14 @@ of that local system time (today or tomorrow); a full ISO timestamp
 per line, e.g. the repo's SWE-bench Lite export); ``--dataset-offset`` lets
 several client machines take disjoint slices of the same dataset.
 
-This file is intentionally self-contained (single file + httpx) so it can be
-copied to any LAN client and run with ``uv run bench_ollama.py ...`` — uv reads
-the inline metadata above and installs httpx automatically. The measurement
-logic mirrors ``benchmarks/scripts/`` in the nanoserve-mini repo (same metric
-definitions); if the methodology changes there, update both places.
+This file is intentionally self-contained and **stdlib-only** (no third-party
+packages) so it runs on offline clients with any Python 3.12+ — including the
+Windows "embeddable package" shipped in the offline kit (see build_kit.py) —
+or via ``uv run bench_ollama.py ...`` on a dev machine. HTTP uses
+``urllib.request``; note its ``timeout`` bounds each socket operation
+(connect / single read), not the whole response. The measurement logic mirrors
+``benchmarks/scripts/`` in the nanoserve-mini repo (same metric definitions);
+if the methodology changes there, update both places.
 
 Example:
 
@@ -48,14 +51,13 @@ import re
 import socket
 import sys
 import time
+import urllib.request
 import uuid
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
-
-import httpx
 
 _SCRIPT_NAME = "bench_ollama.py"
 SCHEMA_SUMMARY = "ollama-lan-bench.v1"
@@ -64,7 +66,8 @@ _DEFAULT_PROMPT = "Say hi in one short sentence."
 _MAX_SLEEP_CHUNK_SECONDS = 30.0
 
 # ---------------------------------------------------------------------------
-# HTTP client (vendored from benchmarks/scripts/_client.py)
+# HTTP client (protocol vendored from benchmarks/scripts/_client.py,
+# transport rewritten on stdlib urllib so offline clients need no packages)
 # ---------------------------------------------------------------------------
 
 
@@ -110,46 +113,64 @@ def _endpoint(base_url: str) -> str:
     return base_url.rstrip("/") + "/v1/chat/completions"
 
 
-def _headers(req: CompletionRequest) -> dict[str, str] | None:
-    if req.api_key is None:
-        return None
-    return {"Authorization": f"Bearer {req.api_key}"}
+def _headers(req: CompletionRequest) -> dict[str, str]:
+    headers = {"Content-Type": "application/json"}
+    if req.api_key is not None:
+        headers["Authorization"] = f"Bearer {req.api_key}"
+    return headers
+
+
+def post_stream(
+    url: str,
+    payload: dict[str, Any],
+    headers: dict[str, str],
+    timeout: float,
+) -> Iterator[str]:
+    """POST JSON and yield decoded response lines (stdlib urllib transport).
+
+    ``urllib.error.HTTPError`` (4xx/5xx), ``URLError`` and ``TimeoutError``
+    propagate to the caller. ``timeout`` bounds each socket operation, not the
+    whole response.
+    """
+    request = urllib.request.Request(
+        url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST"
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        for raw_line in response:
+            yield raw_line.decode("utf-8", errors="replace")
 
 
 def chat_completion_stream(
     req: CompletionRequest,
     *,
-    client: httpx.Client | None = None,
     timeout: float = 300.0,
     include_usage: bool = True,
+    transport: Callable[[str, dict[str, Any], dict[str, str], float], Iterator[str]]
+    | None = None,
 ) -> Iterator[dict[str, Any]]:
     """Streaming call. Yields each parsed SSE chunk; ``[DONE]`` is not yielded.
 
     With ``include_usage`` (default) the request carries
     ``stream_options.include_usage = true`` so a modern Ollama emits a final
     chunk with a populated ``usage`` block. Older Ollama versions ignore the
-    field — callers must tolerate ``usage`` never arriving.
+    field — callers must tolerate ``usage`` never arriving. ``transport`` is
+    resolved at call time (module-level ``post_stream`` by default) so tests
+    can substitute a canned stream.
     """
     payload = build_payload(req, stream=True)
     if include_usage and "stream_options" not in payload:
         payload["stream_options"] = {"include_usage": True}
     url = _endpoint(req.base_url)
-
-    owns_client = client is None
-    http = client if client is not None else httpx.Client(timeout=timeout)
-    try:
-        with http.stream("POST", url, json=payload, headers=_headers(req)) as response:
-            response.raise_for_status()
-            for line in response.iter_lines():
-                if not line or not line.startswith("data:"):
-                    continue
-                data = line[len("data:") :].strip()
-                if data == "[DONE]":
-                    return
-                yield json.loads(data)
-    finally:
-        if owns_client:
-            http.close()
+    if transport is None:
+        transport = post_stream
+    for raw_line in transport(url, payload, _headers(req), timeout):
+        line = raw_line.strip()
+        if not line or not line.startswith("data:"):
+            continue
+        data = line[len("data:") :].strip()
+        if data == "[DONE]":
+            return
+        yield json.loads(data)
 
 
 def extract_stream_delta_text(chunk: dict[str, Any]) -> str:
