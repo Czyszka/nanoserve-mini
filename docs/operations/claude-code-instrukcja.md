@@ -1,61 +1,53 @@
-# Claude Code — instalacja z paczki i podstawy użycia
+# Claude Code na klientach — uruchomienie z kitu i podstawy użycia
 
-## 1. Instalacja na stanowisku
+Kit: `benchmarks/claude_code_kit/` → `dist/claude_code_kit.zip` (budowany
+`build_kit.py`, szczegóły w tamtejszym README). Klient działa **offline** —
+Claude Code łączy się z Ollamą w LAN (natywne Anthropic Messages API), bez
+konta Anthropic i bez internetu.
+
+## 1. Uruchomienie na komputerze klienckim
 
 ### Wymagania wstępne
 
-- Node.js ≥ 18 (`node --version`) — tylko dla instalacji z paczki npm.
-- Git na `PATH`.
-- Konto claude.ai (Pro/Max) **albo** klucz API Anthropic.
-- Dostęp sieciowy do `api.anthropic.com` (sam klient po instalacji nie potrzebuje npm).
+- Windows 10/11; brak instalacji — wszystko (Node, Claude Code, Python) jest w zipie.
+- Dostęp LAN do serwera Ollamy **v0.14.0+** (adres wpisany w kit przy budowie).
+- Po stronie serwera (jednorazowo, nie na kliencie): `OLLAMA_HOST=0.0.0.0`
+  i kontekst ≥ 32k (`OLLAMA_CONTEXT_LENGTH`) — mniejszy utnie system prompt
+  Claude Code i wyniki będą bezużyteczne.
 
-### Instalacja z przygotowanej paczki
+### Kroki
 
-Paczka: `claude-code-<wersja>.tgz` (tarball npm).
+1. Rozpakuj `claude_code_kit.zip` w dowolne miejsce, np. `C:\claude_kit`.
+2. Uruchom `setup.bat` — kopiuje konfigurację `.claude` do profilu użytkownika
+   (istniejąca dostaje backup), na końcu odpala smoke test połączenia z Ollamą.
+   Opcje: `--persist` (zmienne środowiskowe na stałe), `--skip-smoke`.
+3. Pracujesz przez **`claude.bat`** (nie `claude` z PATH) — ustawia na czas
+   sesji `ANTHROPIC_BASE_URL`/model/token i startuje klienta z kitu.
 
-1. Skopiuj paczkę na dysk, np. `C:\narzedzia\` (Windows) lub `~/narzedzia/` (Linux).
-2. Zainstaluj globalnie:
+Smoke test przeszedł = łączność i generacja działają. Nie testuje pełnej pętli
+narzędziowej — ta zależy od jakości tool-callingu modelu na Ollamie.
 
-   ```bash
-   npm install -g C:\narzedzia\claude-code-<wersja>.tgz     # Windows
-   npm install -g ~/narzedzia/claude-code-<wersja>.tgz      # Linux
-   ```
+### Typowe problemy
 
-3. Weryfikacja: `claude --version`.
-
-Alternatywa online (gdy maszyna ma dostęp do internetu):
-
-```powershell
-irm https://claude.ai/install.ps1 | iex        # Windows PowerShell
-```
-
-```bash
-curl -fsSL https://claude.ai/install.sh | bash  # Linux/macOS
-```
-
-### Pierwsze uruchomienie i logowanie
-
-1. Wejdź do katalogu projektu i uruchom `claude`.
-2. Przy pierwszym starcie wybierz logowanie: konto claude.ai (przeglądarka)
-   lub klucz API (`ANTHROPIC_API_KEY` w zmiennych środowiska).
-3. Zatwierdź zaufanie do katalogu projektu, gdy klient zapyta.
-
-Konfiguracja trzymana jest w `~/.claude/` (globalna) i `.claude/` w repo
-(projektowa — commitowana, wspólna dla zespołu).
+| Objaw | Przyczyna |
+|---|---|
+| smoke timeout | serwer Ollamy nie nasłuchuje na LAN albo zły adres w kicie |
+| odpowiedzi od rzeczy / obcięte | za małe okno kontekstu na serwerze (<32k) |
+| klient prosi o logowanie | uruchomiony `claude` z PATH zamiast `claude.bat` |
 
 ## 2. Podstawy pracy
 
 ### Zasady ogólne
 
-- Uruchamiaj `claude` **w katalogu głównym repo** — klient widzi wtedy strukturę
-  projektu, `CLAUDE.md` i ustawienia zespołowe.
+- Uruchamiaj `claude.bat` **w katalogu głównym projektu** — klient widzi wtedy
+  strukturę repo i plik `CLAUDE.md`.
 - Jedno zadanie = jedno polecenie. Zamiast „popraw projekt": „napraw test
-  `test_parser_ttft` w `benchmarks/scripts_tests/`".
-- Czytaj diffy przed zatwierdzeniem edycji; klient pyta o zgodę przed zapisem
-  plików i komendami.
-- `CLAUDE.md` w repo to stałe instrukcje projektu (konwencje, komendy
-  walidacji) — klient czyta go na starcie każdej sesji. Nowy projekt: `/init`
-  wygeneruje szkielet.
+  `test_parser` w `tests/`".
+- Czytaj diffy przed zatwierdzeniem — klient pyta o zgodę przed zapisem plików
+  i uruchamianiem komend.
+- `CLAUDE.md` w repo = stałe instrukcje projektu (konwencje, komendy
+  walidacji); czytany na starcie każdej sesji. Nowy projekt: `/init` generuje
+  szkielet.
 
 ### Typowe zadania
 
@@ -63,27 +55,26 @@ Konfiguracja trzymana jest w `~/.claude/` (globalna) i `.claude/` w repo
 |---|---|
 | Analiza projektu | „opisz architekturę tego repo", „gdzie jest obsługa X?" |
 | Bugfix | wklej błąd/traceback + „napraw"; klient sam znajdzie pliki |
-| Nowa funkcja | najpierw tryb planu (`Shift+Tab`): klient proponuje plan, akceptujesz, potem wykonuje |
-| Refaktor | wskaż plik/funkcję i cel; poproś o uruchomienie testów po zmianie |
+| Nowa funkcja | najpierw tryb planu (`Shift+Tab`): akceptujesz plan, potem wykonuje |
+| Refaktor | wskaż plik/funkcję i cel; po zmianie poproś o uruchomienie testów |
 | Testy | „uruchom testy i napraw czerwone" |
-| Git | „zrób commit", „przygotuj PR" — opisy generuje z diffa |
-| Review | „zrób code review zmian na tym branchu" |
+| Git | „zrób commit" — opis wygeneruje z diffa |
 
-### Przydatne komendy w sesji
+### Komendy w sesji
 
 | Komenda | Działanie |
 |---|---|
 | `/help` | lista komend |
 | `/init` | generuje `CLAUDE.md` dla projektu |
-| `/model` | zmiana modelu |
 | `/clear` | nowa rozmowa (czysty kontekst) |
-| `/compact` | kompresja długiej rozmowy (gdy sesja spuchła) |
-| `Shift+Tab` | przełączanie trybu planu / auto-akceptacji edycji |
+| `/compact` | kompresja długiej rozmowy |
+| `Shift+Tab` | tryb planu / auto-akceptacja edycji |
 | `Esc` | przerwanie bieżącej odpowiedzi |
 
 ### Higiena sesji
 
-- Długa rozmowa degraduje jakość — po zamkniętym temacie `/clear`.
-- Rzeczy, które klient ma pamiętać na stałe (konwencje, pułapki), dopisuj do
-  `CLAUDE.md`, nie powtarzaj w każdej sesji.
-- Sekrety: klient nie potrzebuje `.env` — nie wklejaj tokenów do rozmowy.
+- Po zamkniętym temacie `/clear` — długi kontekst degraduje jakość, a na
+  modelu z Ollamy szczególnie (okno 32k wyczerpuje się szybko).
+- Rzeczy do zapamiętania na stałe dopisuj do `CLAUDE.md`, nie powtarzaj
+  w każdej sesji.
+- Nie wklejaj sekretów do rozmowy; klient nie potrzebuje `.env`.
