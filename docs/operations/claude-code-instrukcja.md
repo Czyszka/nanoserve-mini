@@ -18,11 +18,22 @@ konta Anthropic i bez internetu.
 ### Kroki
 
 1. Rozpakuj `claude_code_kit.zip` w dowolne miejsce, np. `C:\claude_kit`.
-2. Uruchom `setup.bat` — kopiuje konfigurację `.claude` do profilu użytkownika
-   (istniejąca dostaje backup), na końcu odpala smoke test połączenia z Ollamą.
-   Opcje: `--persist` (zmienne środowiskowe na stałe), `--skip-smoke`.
-3. Pracujesz przez **`claude.bat`** (nie `claude` z PATH) — ustawia na czas
-   sesji `ANTHROPIC_BASE_URL`/model/token i startuje klienta z kitu.
+2. Uruchom `setup.bat --persist` — kopiuje konfigurację `.claude` do profilu
+   użytkownika (istniejąca dostaje backup), zapisuje zmienne środowiskowe na
+   stałe (`setx`) i odpala smoke test połączenia z Ollamą. Inne opcje:
+   `--skip-smoke`, `--skip-userdir`.
+3. Dodaj katalog kitu do PATH użytkownika (PowerShell):
+
+   ```powershell
+   [Environment]::SetEnvironmentVariable("Path",
+     [Environment]::GetEnvironmentVariable("Path","User") + ";C:\claude_kit", "User")
+   ```
+
+   Uwaga: nie używaj `setx PATH "%PATH%;..."` — skleja PATH systemowy
+   z użytkownika i tnie do 1024 znaków.
+4. **Otwórz nowe okno** cmd/terminala. Od teraz w dowolnym katalogu projektu
+   działa po prostu `claude` (rozwiązuje się do `claude.bat` z kitu, który
+   sam ustawia adres serwera/model/token na czas sesji).
 
 Smoke test przeszedł = łączność i generacja działają. Nie testuje pełnej pętli
 narzędziowej — ta zależy od jakości tool-callingu modelu na Ollamie.
@@ -33,13 +44,14 @@ narzędziowej — ta zależy od jakości tool-callingu modelu na Ollamie.
 |---|---|
 | smoke timeout | serwer Ollamy nie nasłuchuje na LAN albo zły adres w kicie |
 | odpowiedzi od rzeczy / obcięte | za małe okno kontekstu na serwerze (<32k) |
-| klient prosi o logowanie | uruchomiony `claude` z PATH zamiast `claude.bat` |
+| `claude` nierozpoznane w cmd | katalog kitu nie jest w PATH albo stare okno terminala (otwórz nowe) |
+| klient prosi o logowanie | w PATH jest inna, globalna instalacja Claude Code przed kitem (`where claude` pokaże kolejność) |
 
 ## 2. Podstawy pracy
 
 ### Zasady ogólne
 
-- Uruchamiaj `claude.bat` **w katalogu głównym projektu** — klient widzi wtedy
+- Uruchamiaj `claude` **w katalogu głównym projektu** — klient widzi wtedy
   strukturę repo i plik `CLAUDE.md`.
 - Jedno zadanie = jedno polecenie. Zamiast „popraw projekt": „napraw test
   `test_parser` w `tests/`".
