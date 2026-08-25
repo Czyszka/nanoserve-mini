@@ -1,0 +1,84 @@
+{
+  "schema": "ollama-lan-bench.v1",
+  "controls": {
+    "run_id": "2026-08-19_085841",
+    "run_uuid": "860a63d42b2043f38e29dd146fb282d9",
+    "script_name": "bench_ollama.py",
+    "model": "qwen3-coder:30b-a3b-q4_K_M",
+    "base_url": "http://172.18.1.118:11434",
+    "max_tokens": 256,
+    "temperature": 0.0,
+    "timeout_seconds": 300.0,
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "arrival_process": "sequential",
+    "include_usage": true,
+    "notes": null
+  },
+  "client": {
+    "hostname": "DESKTOP1",
+    "base_url": "http://172.18.1.118:11434",
+    "scheduled_start_local": null,
+    "actual_start_local": "2026-08-19T08:58:41",
+    "actual_start_utc": "2026-08-19T06:58:41.313444+00:00",
+    "start_delay_seconds": null,
+    "dataset_path": null,
+    "dataset_offset": null,
+    "prompt_source": "literal"
+  },
+  "requests": {
+    "warmup": 0,
+    "measured": 1,
+    "measured_ok": 1,
+    "measured_errors": 0
+  },
+  "metrics": {
+    "ttft_seconds": {
+      "count": 1,
+      "min": 0.38011809999989055,
+      "p50": 0.38011809999989055,
+      "p95": 0.38011809999989055,
+      "max": 0.38011809999989055,
+      "mean": 0.38011809999989055
+    },
+    "e2e_seconds": {
+      "count": 1,
+      "min": 0.6130146000000423,
+      "p50": 0.6130146000000423,
+      "p95": 0.6130146000000423,
+      "max": 0.6130146000000423,
+      "mean": 0.6130146000000423
+    },
+    "tpot_seconds": {
+      "count": 1,
+      "min": 0.07763216666671724,
+      "p50": 0.07763216666671724,
+      "p95": 0.07763216666671724,
+      "max": 0.07763216666671724,
+      "mean": 0.07763216666671724
+    },
+    "prompt_tokens": {
+      "count": 1,
+      "min": 15.0,
+      "p50": 15.0,
+      "p95": 15.0,
+      "max": 15.0,
+      "mean": 15.0
+    },
+    "completion_tokens": {
+      "count": 1,
+      "min": 4.0,
+      "p50": 4.0,
+      "p95": 4.0,
+      "max": 4.0,
+      "mean": 4.0
+    }
+  },
+  "throughput": {
+    "measured_wall_clock_seconds": 0.6138851999999133,
+    "request_throughput": 1.6289690645745185,
+    "output_chars_per_second": 14.660721581170666,
+    "output_tokens_per_second": 6.515876258298074
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "ollama-lan-bench.v1",
+  "controls": {
+    "run_id": "2026-08-19_105800",
+    "run_uuid": "dbecfa3b5b264dbf9073aea583c01a46",
+    "script_name": "bench_ollama.py",
+    "model": "qwen3-coder:30b-a3b-q4_K_M",
+    "base_url": "http://172.18.1.118:11434",
+    "max_tokens": 256,
+    "temperature": 0.0,
+    "timeout_seconds": 300.0,
+    "warmup_runs": 1,
+    "measured_runs": 100,
+    "concurrency": 1,
+    "arrival_process": "sequential",
+    "include_usage": true,
+    "notes": null
+  },
+  "client": {
+    "hostname": "w26",
+    "base_url": "http://172.18.1.118:11434",
+    "scheduled_start_local": "2026-08-19T10:58:00",
+    "actual_start_local": "2026-08-19T10:58:00",
+    "actual_start_utc": "2026-08-19T08:58:00.014708+00:00",
+    "start_delay_seconds": 0.014708,
+    "dataset_path": "swe_bench_vllm.jsonl",
+    "dataset_offset": 0,
+    "prompt_source": "dataset_jsonl"
+  },
+  "requests": {
+    "warmup": 1,
+    "measured": 100,
+    "measured_ok": 100,
+    "measured_errors": 0
+  },
+  "metrics": {
+    "ttft_seconds": {
+      "count": 100,
+      "min": 0.15301339980214834,
+      "p50": 0.3089986005797982,
+      "p95": 0.7249349149875343,
+      "max": 1.2968171006068587,
+      "mean": 0.3726508989837021
+    },
+    "e2e_seconds": {
+      "count": 100,
+      "min": 2.695388799533248,
+      "p50": 2.910388349555433,
+      "p95": 3.4300531392917035,
+      "max": 4.149223600514233,
+      "mean": 2.9846575229987504
+    },
+    "tpot_seconds": {
+      "count": 100,
+      "min": 0.009775194116667205,
+      "p50": 0.010215465098108147,
+      "p95": 0.010631313649024449,
+      "max": 0.011185907842774017,
+      "mean": 0.010243163231431563
+    },
+    "prompt_tokens": {
+      "count": 100,
+      "min": 83.0,
+      "p50": 529.0,
+      "p95": 1833.4499999999996,
+      "max": 3659.0,
+      "mean": 713.7
+    },
+    "completion_tokens": {
+      "count": 100,
+      "min": 256.0,
+      "p50": 256.0,
+      "p95": 256.0,
+      "max": 256.0,
+      "mean": 256.0
+    }
+  },
+  "throughput": {
+    "measured_wall_clock_seconds": 298.5395224997774,
+    "request_throughput": 0.3349640247383814,
+    "output_chars_per_second": 355.45712377187556,
+    "output_tokens_per_second": 85.75079033302563
+  }
+}

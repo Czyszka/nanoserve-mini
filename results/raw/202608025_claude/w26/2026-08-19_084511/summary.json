@@ -1,0 +1,84 @@
+{
+  "schema": "ollama-lan-bench.v1",
+  "controls": {
+    "run_id": "2026-08-19_084511",
+    "run_uuid": "caccd5af6bed4846a381c0beb0ff1dfc",
+    "script_name": "bench_ollama.py",
+    "model": "qwen3-coder:30b-a3b-q4_K_M",
+    "base_url": "http://172.18.1.118:11434",
+    "max_tokens": 256,
+    "temperature": 0.0,
+    "timeout_seconds": 300.0,
+    "warmup_runs": 0,
+    "measured_runs": 1,
+    "concurrency": 1,
+    "arrival_process": "sequential",
+    "include_usage": true,
+    "notes": null
+  },
+  "client": {
+    "hostname": "w26",
+    "base_url": "http://172.18.1.118:11434",
+    "scheduled_start_local": null,
+    "actual_start_local": "2026-08-19T08:45:11",
+    "actual_start_utc": "2026-08-19T06:45:11.839024+00:00",
+    "start_delay_seconds": null,
+    "dataset_path": null,
+    "dataset_offset": null,
+    "prompt_source": "literal"
+  },
+  "requests": {
+    "warmup": 0,
+    "measured": 1,
+    "measured_ok": 1,
+    "measured_errors": 0
+  },
+  "metrics": {
+    "ttft_seconds": {
+      "count": 1,
+      "min": 7.039167300797999,
+      "p50": 7.039167300797999,
+      "p95": 7.039167300797999,
+      "max": 7.039167300797999,
+      "mean": 7.039167300797999
+    },
+    "e2e_seconds": {
+      "count": 1,
+      "min": 7.0799288004636765,
+      "p50": 7.0799288004636765,
+      "p95": 7.0799288004636765,
+      "max": 7.0799288004636765,
+      "mean": 7.0799288004636765
+    },
+    "tpot_seconds": {
+      "count": 1,
+      "min": 0.01358716655522585,
+      "p50": 0.01358716655522585,
+      "p95": 0.01358716655522585,
+      "max": 0.01358716655522585,
+      "mean": 0.01358716655522585
+    },
+    "prompt_tokens": {
+      "count": 1,
+      "min": 15.0,
+      "p50": 15.0,
+      "p95": 15.0,
+      "max": 15.0,
+      "mean": 15.0
+    },
+    "completion_tokens": {
+      "count": 1,
+      "min": 4.0,
+      "p50": 4.0,
+      "p95": 4.0,
+      "max": 4.0,
+      "mean": 4.0
+    }
+  },
+  "throughput": {
+    "measured_wall_clock_seconds": 7.080605399794877,
+    "request_throughput": 0.14123086142167585,
+    "output_chars_per_second": 1.2710777527950827,
+    "output_tokens_per_second": 0.5649234456867034
+  }
+}
