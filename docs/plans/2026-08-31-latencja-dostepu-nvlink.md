@@ -2,7 +2,8 @@
 
 **Status:** draft → aktywny w dniu sesji
 **Maszyna:** ubuntusrv2 (8×H200 NVL, NVLink 4-way: wyspy GPU 0-3 / 4-7)
-**Slot (założenie):** ~5 h. 10 startów silnika (9× Qwen + restore Kimi).
+**Slot (założenie):** ~7 h, w tym **2 h burn-in bez nadzoru na końcu** (część
+aktywna ~5 h). 10 startów silnika (9× Qwen + restore Kimi).
 **Kontekst:** issue #50 (mechanizm `share × capture`, implikowany capture 0,62),
 prezentacja meetupowa (slajd 12: „ogranicza nas czas rundy, nie przepustowość
 rury" — dotąd twierdzenie z literatury, nie z pomiaru), sesje
@@ -43,6 +44,12 @@ Cztery cele:
    skaluje się z TP i c po NVLinku.
 4. **Spójność:** czy `2L × r_micro` odtwarza przyrosty ITL przy c=1, a udział
    NCCL z profilu — spadki throughput (dwie niezależne drogi, jedna liczba).
+5. **Burn-in termiczny:** ≥ 2 h pracy wszystkich 8 kart na ~3/4 limitu mocy
+   (450 W z 600 W) z ciągłym logiem temperatur GPU/HBM z DCGM — walidacja
+   chłodzenia i stabilności pod długim obciążeniem. Metoda: power cap
+   `nvidia-smi -pl 450` + saturujący GEMM (inferencja nie nadaje się jako
+   obciążenie — comms-bound daje 111–200 W przy TP≥4). Burn idzie **na końcu
+   sesji**, żeby heat-soak nie skaził pomiarów latencji.
 
 **Założenia (jawne, przyjęte przy pisaniu planu):**
 
@@ -105,6 +112,17 @@ c64 1202 / 1404 / 680 / 257 tok/s; NVLink TP4 c64: 2022/1989; busbw wyspa
 | monotonia w c (każde TP) | teoria: większy batch → dłuższe wiadomości → udział NCCL rośnie | **NCCL% rośnie z c** | spada z c → latencja rund stała a compute rośnie wolniej niż span — zanotować, nie naciągać |
 | kontrola narzutu profilera | 08-03: ±5% (Kimi) | profilowany ITL w **±15%** nieprofilowanego | poza → trace jakościowy, nie ilościowy |
 
+### Warstwa burn-in (2 h @ 450 W)
+
+| pomiar | odniesienie | predykcja | falsyfikacja |
+|---|---|---|---|
+| moc per GPU w oknie | cap 450 W | **445–455 W stabilnie na 8 kartach** (GEMM saturuje, cap trzyma) | < 430 W na którejś karcie → obciążenie nie saturuje (sprawdź proces) albo throttle inny niż power cap |
+| temp GPU | progi z `-q -d TEMPERATURE` (odczytać na starcie) | **plateau ≤ 30 min od startu, poniżej progu slowdown** | trend rosnący bez plateau po 60 min → chłodzenie nie nadąża, PRZERWIJ burn |
+| temp HBM (pole 140) | — | plateau, **≤ 95 °C** | > 95 °C → margines pamięci zbyt mały dla pracy ciągłej @450 W |
+| throttle reasons (pole 112) | — | **tylko SW Power Cap** (to jest mechanizm testu — norma) | jakikolwiek HW Thermal / HW Slowdown → wynik negatywny testu chłodzenia, zanotuj kartę i czas |
+| dmesg po burn | — | **zero Xid** | Xid → wpisz do issue, karta podejrzana |
+| rozrzut temp między kartami | — | ≤ 10 °C między najcieplejszą a najchłodniejszą | > 15 °C → nierówny airflow (pozycja w obudowie) — zanotuj mapę |
+
 ---
 
 ## 2. Budżet czasu i kolejność cięcia
@@ -120,8 +138,9 @@ c64 1202 / 1404 / 680 / 257 tok/s; NVLink TP4 c64: 2022/1989; busbw wyspa
 | Cz. 5 | Qwen TP8: grid + profile | 40 |
 | Cz. 6 | cross: TP2 (0,4) + TP4 (0,1,4,5), grid bez profili | 40 |
 | Cz. 7 | nop2p: TP2 + TP4 + TP8, grid bez profili | 55 |
-| Cz. 8 | podsumowania traców, restore Kimi, commit | 20 |
-| | **razem** | **295** |
+| Cz. 8 | **burn-in 2 h @ 450 W** + log temperatur DCGM (bez nadzoru po starcie) | 130 |
+| Cz. 9 | odczyt burn, podsumowania traców, restore Kimi, commit | 25 |
+| | **razem** | **430** (aktywnie ~300) |
 
 **Kolejność cięcia przy poślizgu:**
 
@@ -133,7 +152,9 @@ c64 1202 / 1404 / 680 / 257 tok/s; NVLink TP4 c64: 2022/1989; busbw wyspa
 
 **Nietykalne:** Cz. 0, **Cz. 1** (główny cel — latencja), Cz. 2 i Cz. 4 w
 całości (TP1 = punkt odniesienia; TP4 wyspa = replikacja + profil), Cz. 5
-c32+c64, Cz. 7 TP8-nop2p c32, Cz. 8 restore + commit.
+c32+c64, Cz. 7 TP8-nop2p c32, **Cz. 8** (burn-in — po starcie nie kosztuje
+uwagi; przy dużym poślizgu można skrócić do 90 min, NIGDY poniżej — krzywa
+temperatury musi objąć plateau), Cz. 9 restore + commit.
 
 ---
 
@@ -627,9 +648,121 @@ head -3 "$QOUT/tp8nop2p_c32_dcgmi.txt"
 
 ---
 
-## Cz. 8 — podsumowania traców + restore + commit (20 min)
+## Cz. 8 — burn-in 2 h @ ~3/4 mocy + log temperatur DCGM (130 min) — NIETYKALNA
 
-### 8a. Szybkie podsumowania rank0 wszystkich profili
+**Metoda:** cap mocy 450 W (3/4 z 600) + saturujący GEMM fp16 na wszystkich
+8 kartach. GEMM chce >450 W, cap trzyma równo 450 → stabilny punkt pracy;
+throttle „SW Power Cap" jest wtedy **normą** (to mechanizm testu), alarmem
+jest wyłącznie HW Thermal. Dlaczego nie inferencja: comms-bound daje
+111–200 W przy TP≥4 — nie dojedzie do 3/4 mocy. Dlaczego ostatnia część:
+2 h heat-soak nie może poprzedzać pomiarów latencji.
+
+**Po starcie bloku „POMIAR" można odejść od klawiatury** — burn i sampler
+kończą się same po ~125 min; wróć na Cz. 9.
+
+```bash
+BOUT="$RUN_DIR/burnin"; mkdir -p "$BOUT"
+docker compose -f "$QWEN_COMPOSE" down    # GPU muszą być wolne
+
+# progi termiczne i stan wyjściowy limitu mocy (do restore!):
+nvidia-smi -q -d TEMPERATURE > "$BOUT/temp_thresholds.txt"
+nvidia-smi -q -d POWER | grep -E "Current Power Limit|Default Power Limit" \
+  | tee "$BOUT/power_limits_before.txt"
+sudo nvidia-smi -pl 450 | tee "$BOUT/set_pl_450.txt"
+nvidia-smi --query-gpu=index,power.limit --format=csv | tee -a "$BOUT/set_pl_450.txt"
+# wszystkie 8 kart mają pokazać 450.00 W — inaczej NIE startuj burna
+
+# skrypt obciążenia: GEMM fp16 per GPU, czas trwania w minutach jako arg
+cat > "$BOUT/burn_gemm.py" <<'PYEOF'
+import sys, time, torch, torch.multiprocessing as mp
+
+def burn(i, minutes):
+    torch.cuda.set_device(i)
+    n = 8192
+    a = torch.randn(n, n, dtype=torch.float16, device="cuda")
+    b = torch.randn(n, n, dtype=torch.float16, device="cuda")
+    c = torch.empty(n, n, dtype=torch.float16, device="cuda")
+    t_end = time.time() + minutes * 60
+    it = 0
+    while time.time() < t_end:
+        torch.matmul(a, b, out=c)
+        it += 1
+        if it % 5000 == 0:
+            torch.cuda.synchronize()
+            print(f"gpu{i} iter {it} t={time.strftime('%H:%M:%S')}", flush=True)
+    torch.cuda.synchronize()
+    print(f"gpu{i} DONE iters={it}", flush=True)
+
+if __name__ == "__main__":
+    minutes = float(sys.argv[1]) if len(sys.argv) > 1 else 120
+    mp.set_start_method("spawn")
+    procs = [mp.Process(target=burn, args=(i, minutes))
+             for i in range(torch.cuda.device_count())]
+    [p.start() for p in procs]
+    [p.join() for p in procs]
+PYEOF
+
+# ── POMIAR: sampler temperatur w tle + burn 120 min ──────────────────────
+# pola: 150=GPU_TEMP, 140=MEMORY_TEMP(HBM), 155=POWER, 100=SM_CLOCK,
+# 112=CLOCK_THROTTLE_REASONS; próbka co 5 s, sufit 125 min = 1500 próbek.
+# Probe nagłówka: jeśli 140/112 nieobsługiwane — usuń je z listy i ponów.
+dcgmi dmon -e 150,140,155,100,112 -d 5000 -c 2 > "$BOUT/dcgmi_probe.txt" 2>&1
+head -3 "$BOUT/dcgmi_probe.txt"
+
+date +%s > "$BOUT/burn_start_epoch.txt"
+dcgmi dmon -e 150,140,155,100,112 -d 5000 -c 1500 > "$BOUT/burn_dcgmi.txt" 2>&1 &
+BURN_SAMPLE_PID=$!
+
+# snapshoty nvidia-smi co 10 min (niezależne źródło, 12 klatek):
+( for _ in $(seq 1 12); do
+    date -Is >> "$BOUT/nvidia_smi_snapshots.txt"
+    nvidia-smi >> "$BOUT/nvidia_smi_snapshots.txt"
+    sleep 600
+  done ) &
+SNAP_PID=$!
+
+docker run --rm --gpus all --ipc=host --entrypoint bash \
+  -v "$PWD/$BOUT:/burn" "$IMAGE" \
+  -lc 'python3 /burn/burn_gemm.py 120' 2>&1 | tee "$BOUT/burn_stdout.txt"
+
+date +%s > "$BOUT/burn_end_epoch.txt"
+kill "$SNAP_PID" 2>/dev/null || true
+pkill -TERM -P "$BURN_SAMPLE_PID" 2>/dev/null || true; wait "$BURN_SAMPLE_PID" 2>/dev/null
+
+# ── RESTORE limitu mocy — OBOWIĄZKOWE, przed czymkolwiek innym ──────────
+sudo nvidia-smi -pl 600 | tee "$BOUT/restore_pl_600.txt"
+nvidia-smi --query-gpu=index,power.limit --format=csv | tee -a "$BOUT/restore_pl_600.txt"
+# wartość docelowa = Default Power Limit z power_limits_before.txt (oczekiwane 600 W)
+
+# kontrole po burnie:
+sudo dmesg -T | grep -iE "xid|nvrm|thermal" | tail -40 > "$BOUT/dmesg_after_burn.txt"
+[ -s "$BOUT/dmesg_after_burn.txt" ] || echo "# dmesg $(date -Is): zero wpisow xid/nvrm/thermal" > "$BOUT/dmesg_after_burn.txt"
+grep -ci "xid" "$BOUT/dmesg_after_burn.txt" && echo "UWAGA: Xid po burnie — do issue" || echo "zero Xid — OK"
+```
+
+**Szybki odczyt (kolumny sprawdź w nagłówku `burn_dcgmi.txt` — nie zgaduj):**
+
+```bash
+# max/avg temperatury i mocy per burn-okno (przykład dla układu kolumn
+# GPU TMPTR MMTMP POWER SMCLK ...; POPRAW indeksy wg nagłówka):
+awk 'NR>2 && $1=="GPU" {t[$2]=($3>t[$2])?$3:t[$2]; m[$2]=($4>m[$2])?$4:m[$2]; p+=$5; n++}
+     END {for (g in t) printf "GPU%s  Tmax=%s  HBMmax=%s\n", g, t[g], m[g];
+          if (n) printf "moc avg (wszystkie GPU): %.0f W\n", p/n}' "$BOUT/burn_dcgmi.txt" \
+  | tee "$BOUT/burn_quick_readout.txt"
+```
+
+Werdykt wg §1 „Warstwa burn-in": moc ~450 W stabilnie, temperatury z plateau
+poniżej progów, throttle wyłącznie SW Power Cap, zero Xid → serwer zaliczony
+na pracę ciągłą @3/4 mocy. Fallback, gdyby `sudo nvidia-smi -pl` było
+zablokowane: `sudo nvidia-smi -lgc <MHz>` (lock zegara dobrany tak, by moc
+≈450 W — wymaga 2–3 prób kalibracji po 2 min) albo duty-cycle w skrypcie
+(matmul + sleep) — mniej stabilne, oznaczyć w artefaktach.
+
+---
+
+## Cz. 9 — odczyt burn + podsumowania traców + restore + commit (25 min)
+
+### 9a. Szybkie podsumowania rank0 wszystkich profili
 
 ```bash
 summarize_trace () {  # $1=plik tracu $2=etykieta
@@ -662,10 +795,11 @@ done
 echo "$TRACE_BASE" > "$PROF/trace_local_path.txt"
 ```
 
-### 8b. Restore Kimi + stack
+### 9b. Restore Kimi + stack
 
 ```bash
-docker compose -f "$QWEN_COMPOSE" down
+nvidia-smi --query-gpu=index,power.limit --format=csv   # 600 W wszędzie? (po Cz. 8)
+docker compose -f "$QWEN_COMPOSE" down 2>/dev/null || true
 unset QWEN_TP QWEN_CUDA_VISIBLE_DEVICES QWEN_EXTRA_ARGS
 docker compose -f "$COMPOSE" up -d --force-recreate vllm    # plain, bez overlayów
 wait_http_health http://127.0.0.1:8000/health 360 5 || echo "KIMI RESTORE FAILED"
@@ -682,7 +816,7 @@ nvidia-smi > "$RUN_DIR/session/nvidia_smi_end.txt"
 git rev-parse HEAD > "$RUN_DIR/session/end_commit.txt"
 ```
 
-### 8c. Commit
+### 9c. Commit
 
 ```bash
 git status
@@ -690,7 +824,7 @@ du -sh "$RUN_DIR"    # traców w repo NIE ma (tylko summary/listing/ścieżka)
 find "$RUN_DIR" -name 'engine_env_*' -exec grep -l "HUGGING_FACE_HUB_TOKEN=hf_" {} \; \
   && echo "STOP: token w artefaktach — popraw redakcję przed commitem"
 git add "$RUN_DIR"
-git commit -m "bench: latencja all-reduce (mikro) + grid Qwen TP1-8 x c x lacze + profile TP1-8"
+git commit -m "bench: latencja all-reduce (mikro) + grid Qwen TP1-8 x c x lacze + profile TP1-8 + burn-in 2h @450W"
 git push -u origin main
 ```
 
@@ -706,7 +840,11 @@ git push -u origin main
    capture 0,62 w #50.
 3. **Profile:** macierz NCCL%/gaps%/compute% TP×c → czy komunikacja dominuje
    dopiero od TP≥4 i c≥16 także u Qwena po NVLinku (symetria z Kimi 61,1%).
-4. Docs: `benchmark-methodology.md` (metoda pomiaru latencji rundy),
+4. **Burn-in:** wykres temperatura/moc w czasie z `burn_dcgmi.txt` (plateau,
+   rozrzut między kartami), krótkie podsumowanie do
+   `results/summaries/` + wiersz do `infrastructure.md` (serwer zwalidowany
+   na pracę ciągłą @450 W/kartę, data, warunki).
+5. Docs: `benchmark-methodology.md` (metoda pomiaru latencji rundy),
    T9/notatka decyzyjna (sekcja `r` zmierzone vs implikowane), komentarz #50,
    ewentualny materiał do prezentacji (slajd 12 speaker notes: własne liczby
    zamiast literaturowych), `sync-state`.
