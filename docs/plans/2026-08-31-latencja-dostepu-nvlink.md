@@ -122,6 +122,9 @@ c64 1202 / 1404 / 680 / 257 tok/s; NVLink TP4 c64: 2022/1989; busbw wyspa
 | throttle reasons (pole 112) | — | **tylko SW Power Cap** (to jest mechanizm testu — norma) | jakikolwiek HW Thermal / HW Slowdown → wynik negatywny testu chłodzenia, zanotuj kartę i czas |
 | dmesg po burn | — | **zero Xid** | Xid → wpisz do issue, karta podejrzana |
 | rozrzut temp między kartami | — | ≤ 10 °C między najcieplejszą a najchłodniejszą | > 15 °C → nierówny airflow (pozycja w obudowie) — zanotuj mapę |
+| **Inlet Temp** (IPMI, czujnik potwierdzony) | spec platformy SYS-521GE-TNRT: praca 10–35 °C | **< 35 °C przez całe okno** (test w specyfikacji) | ≥ 35 °C → burn poza spec — wynik termiczny GPU nieinterpretowalny, odnotuj i skróć |
+| delta T_GPU − T_inlet | — | **stabilna po plateau (±3 °C)** — chłodzenie nadąża niezależnie od wahań otoczenia | delta rośnie monotonicznie → radiator/airflow nie odbiera 450 W ciągłego |
+| System Temp (wnętrze obudowy) | — | plateau; wzrost względem startu zanotować | brak plateau po 60 min → wnętrze się nasyca, sprawdź wyciąg z serwerowni |
 
 ---
 
@@ -664,6 +667,14 @@ kończą się same po ~125 min; wróć na Cz. 9.
 BOUT="$RUN_DIR/burnin"; mkdir -p "$BOUT"
 docker compose -f "$QWEN_COMPOSE" down    # GPU muszą być wolne
 
+# temperatura otoczenia z BMC (czujniki potwierdzone na tym hoście:
+# "Inlet Temp" = wlot obudowy, "System Temp" = wnętrze). ipmitool to czysty
+# odczyt SDR — bez wpływu na serwis; przy braku /dev/ipmi0: modprobe niżej.
+command -v ipmitool >/dev/null || sudo apt install -y ipmitool
+[ -e /dev/ipmi0 ] || sudo modprobe ipmi_devintf ipmi_si
+sudo ipmitool sensor reading "Inlet Temp" "System Temp" \
+  | tee "$BOUT/ambient_check.txt"     # obie linie z liczbą? inaczej NIE licz na log
+
 # progi termiczne i stan wyjściowy limitu mocy (do restore!):
 nvidia-smi -q -d TEMPERATURE > "$BOUT/temp_thresholds.txt"
 nvidia-smi -q -d POWER | grep -E "Current Power Limit|Default Power Limit" \
@@ -721,12 +732,21 @@ BURN_SAMPLE_PID=$!
   done ) &
 SNAP_PID=$!
 
+# temperatura otoczenia do logu, próbka co 60 s (Inlet = wlot, System = wnętrze):
+( while true; do
+    echo "$(date -Is) | $(sudo ipmitool sensor reading 'Inlet Temp' 'System Temp' \
+      | tr '\n' ';')"
+    sleep 60
+  done ) >> "$BOUT/ambient_ipmi.txt" 2>&1 &
+AMB_PID=$!
+
 docker run --rm --gpus all --ipc=host --entrypoint bash \
   -v "$PWD/$BOUT:/burn" "$IMAGE" \
   -lc 'python3 /burn/burn_gemm.py 120' 2>&1 | tee "$BOUT/burn_stdout.txt"
 
 date +%s > "$BOUT/burn_end_epoch.txt"
 kill "$SNAP_PID" 2>/dev/null || true
+kill "$AMB_PID" 2>/dev/null || true
 pkill -TERM -P "$BURN_SAMPLE_PID" 2>/dev/null || true; wait "$BURN_SAMPLE_PID" 2>/dev/null
 
 # ── RESTORE limitu mocy — OBOWIĄZKOWE, przed czymkolwiek innym ──────────
@@ -738,6 +758,9 @@ nvidia-smi --query-gpu=index,power.limit --format=csv | tee -a "$BOUT/restore_pl
 sudo dmesg -T | grep -iE "xid|nvrm|thermal" | tail -40 > "$BOUT/dmesg_after_burn.txt"
 [ -s "$BOUT/dmesg_after_burn.txt" ] || echo "# dmesg $(date -Is): zero wpisow xid/nvrm/thermal" > "$BOUT/dmesg_after_burn.txt"
 grep -ci "xid" "$BOUT/dmesg_after_burn.txt" && echo "UWAGA: Xid po burnie — do issue" || echo "zero Xid — OK"
+# log zdarzeń BMC — niezależne od dmesg źródło zdarzeń termicznych/zasilania:
+sudo ipmitool sel list | tail -40 > "$BOUT/ipmi_sel_after_burn.txt" 2>&1
+[ -s "$BOUT/ipmi_sel_after_burn.txt" ] || echo "# SEL pusty $(date -Is) — zero zdarzen" > "$BOUT/ipmi_sel_after_burn.txt"
 ```
 
 **Szybki odczyt (kolumny sprawdź w nagłówku `burn_dcgmi.txt` — nie zgaduj):**
@@ -840,8 +863,9 @@ git push -u origin main
    capture 0,62 w #50.
 3. **Profile:** macierz NCCL%/gaps%/compute% TP×c → czy komunikacja dominuje
    dopiero od TP≥4 i c≥16 także u Qwena po NVLinku (symetria z Kimi 61,1%).
-4. **Burn-in:** wykres temperatura/moc w czasie z `burn_dcgmi.txt` (plateau,
-   rozrzut między kartami), krótkie podsumowanie do
+4. **Burn-in:** wykres temperatura/moc w czasie z `burn_dcgmi.txt` + Inlet/System
+   z `ambient_ipmi.txt` (plateau, delta T_GPU−T_inlet, rozrzut między kartami),
+   krótkie podsumowanie do
    `results/summaries/` + wiersz do `infrastructure.md` (serwer zwalidowany
    na pracę ciągłą @450 W/kartę, data, warunki).
 5. Docs: `benchmark-methodology.md` (metoda pomiaru latencji rundy),
