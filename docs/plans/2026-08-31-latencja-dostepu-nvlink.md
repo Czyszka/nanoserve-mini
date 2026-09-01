@@ -297,7 +297,12 @@ nccl_lat_run 0,1,2,3,4,5,6,7   8 all8_nop2p    1
 
 # szybka tabela zbiorcza (µs/op @ 16 KB — reżim dekodowania c=1):
 for f in "$NOUT"/nccl_lat_*.json; do
-  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(f"{sys.argv[1].split(chr(47))[-1]:32s} 16KB: {d[\"16384B\"][\"lat_us\"]:8.2f} us  8MB busbw: {d[\"8388608B\"][\"busbw_GBps\"]:7.1f} GB/s")' "$f"
+  python3 - "$f" <<'PYEOF'
+import json, os, sys
+d = json.load(open(sys.argv[1]))
+name = os.path.basename(sys.argv[1])
+print(f"{name:32s} 16KB: {d['16384B']['lat_us']:8.2f} us  8MB busbw: {d['8388608B']['busbw_GBps']:7.1f} GB/s")
+PYEOF
 done | tee "$NOUT/lat_summary_quick.txt"
 ```
 
