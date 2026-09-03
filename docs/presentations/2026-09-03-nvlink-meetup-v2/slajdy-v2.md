@@ -68,6 +68,32 @@ Rekomendacja: **B** — zachowuje Twoje sformułowanie jako podtytuł, a hasło
 z v1 jako hak. Odpowiedź na tytule (jedno zdanie) — nadal rekomenduję,
 skoro nie będzie slajdu podsumowania.
 
+**Burza mózgów tytułu (runda 2).** Punkt wyjścia użytkownika: „100%
+zajętości GPU, a tylko 30% mocy?". Uwaga do liczby: zmierzone 111–199 W
+z 600 W to 18–33%; dla Kimi (170–199 W) „30%" jest uczciwe, „1/3" też —
+30% brzmi konkretniej. Uwaga do słowa „moc": laik czyta „moc" jako „moc
+obliczeniowa", inżynier jako waty — ta dwuznaczność działa na korzyść
+haka, ale na slajdzie 2 trzeba od razu pokazać, że chodzi o waty.
+
+| # | tytuł | styl | ocena |
+|---|---|---|---|
+| T1 | **100% zajętości GPU, a tylko 30% mocy?** | pytanie-paradoks (Twoja) | mocny hak, po polsku; „zajętość" mniej precyzyjne niż „GPU-Util", ale zrozumiałe dla wszystkich |
+| T2 | **GPU-Util 100%, pobór mocy 30%. Gdzie zniknęło 70%?** | paradoks + pytanie | dwie liczby i pytanie, na które prezentacja odpowiada wprost (odp.: w czekaniu na inne karty); dla sali IT „GPU-Util" jest rozpoznawalne |
+| T3 | **Osiem kart H200 na 100% — i tylko jedna trzecia mocy** | obrazowy | nazywa sprzęt (dobre na listę wystąpień), trochę długi |
+| T4 | **Karty pracują na 100%. Serwer nie.** | krótki, prowokacyjny | najkrótszy; nie mówi nic o LLM ani NVLink — wymaga podtytułu |
+| T5 | **Więcej kart = wolniej?** | paradoks nr 2 | hak ze slajdu 4 zamiast ze slajdu 2; celny dla ludzi od inferencji, mniej obrazowy dla reszty |
+| T6 | **Dlaczego 8 kart H200 czekało na siebie** | odpowiedź w tytule | zdradza puentę — dobre, jeśli chcemy, żeby sala od początku wiedziała, dokąd idziemy |
+| T7 | **Sto procent, które nic nie znaczy** | literacki | ładny, ale niejasny bez podtytułu; ryzyko „o czym to?" |
+
+Podtytuł (wspólny dla wszystkich): *badania wydajnościowe serwera
+8×H200 i ich efekty — studium przypadku NVLink*. Z podtytułem każdy z T1–T7
+niesie komplet: hak + sprzęt + efekt.
+
+Moja kolejność: **T2 > T1 > T6 > T3**. T2 ma to, czego brakowało v1:
+pytanie, na które ostatni slajd odpowiada jednym zdaniem („70% zniknęło
+w czekaniu kart na siebie; mostki oddały z tego 2–3× przepustowości").
+Jeśli wolisz czystą polszczyznę bez „GPU-Util" — T1 z podtytułem.
+
 ---
 
 ### 1. Stanowisko pomiarowe
@@ -391,7 +417,36 @@ klientów naraz przy c=32/64). Pojedynczy użytkownik odczuwa co innego:
 | jeden z 32 użytkowników naraz (Kimi c=32) | ITL med | 127 → ~90 ms | tokeny płyną **~30% szybciej** |
 | operator serwera (c=32) | tok/s łącznie | 285 → 594 | **2× więcej użytkowników** przy tej samej prędkości odpowiedzi |
 
-Uczciwe przełożenie na użytkownika końcowego to więc jedno z dwóch:
+**Aktualizacja (runda 2) — przełożenie na użytkownika końcowego z danych
+w repo.** Metryka odczuwana przez użytkownika to **TPOT** (czas na jeden
+wygenerowany token, medianą), nie ITL — przy spekulacji Eagle3 jedna
+porcja (ITL) niesie ~2,6 tokena, więc ITL zaniża odczuwany zysk. Kimi TP8,
+ta sama praca (SWE custom, 256 tokenów odpowiedzi), przed = 2026-06-11
+(PCIe), po = 2026-07-31/08-03 (NVLink):
+
+| użytkowników naraz | TPOT przed → po (ms/token) | odpowiedź 256 tok. przed → po | ile razy szybciej | źródło |
+|---:|---|---|---:|---|
+| 1 | 8,7 → 7,44 | 2,2 s → 1,9 s | **1,2×** | `kimi_ramp/bench/kimi_c1.json`; 07-31 |
+| 8 | 78,5 → 17,5 | 20 s → 4,5 s | **4,5×** | `kimi_c8.json`; `…domkniecie_grafana/grafana/bench/ramp_c8.json` (jeden bieg) |
+| 16 | 190,5 → 26,0 | 49 s → 6,7 s | **7,3×** | `kimi_c16.json` (anomalia c16, potwierdzona powtórką); `…gap_fill/kimi/bench/kimi_c16.json` |
+| 32 | 94,1 → 44,9 | 24 s → 11,5 s | **2,1×** | `kimi_c32.json`; `…gap_fill/kimi/bench/kimi_c32.json` |
+| przepustowość serwera (c=32) | 285 → 608 tok/s | — | **2,1×** | jw. |
+
+Wniosek: „2×" z przepustowości **jest** tym, co odczuwa użytkownik przy 32
+osobach naraz (24 s → 11,5 s na odpowiedź), a przy 8–16 osobach zysk jest
+większy (4–7×), bo w erze PCIe ten zakres był patologiczny (c=16: 49 s na
+odpowiedź — serwer z 8 kart obsługiwał 16 osób wolniej niż jedną). Przy
+jednej osobie na pustym serwerze: 1,2×. To jest gotowy materiał na slajd
+10: cztery wiersze „ilu użytkowników → ile sekund na odpowiedź przed/po".
+
+Zastrzeżenia do wypowiedzenia ustnie: (a) 256 tokenów to krótka odpowiedź
+(~150–200 słów) — dłuższe skalują liniowo; (b) wiersz c=8 „po" to jeden
+bieg z rampu 08-03, bez powtórki; (c) 4,5× i 7,3× to w części zniknięcie
+anomalii c=16 — ale T9 §14 pokazał, że anomalia była transportowa, więc
+to legalnie zasługa NVLinka; (d) wszystkie „po" ciepłe (po wygrzewce).
+
+Poprzednie sformułowanie (ITL, „~30%") — zastąpione powyższym; ITL zostaje
+w notes jako metryka techniczna. Wcześniejsza alternatywa:
 „przy 32 osobach naraz każda dostaje tekst ~30% szybciej" **albo** „ta sama
 maszyna obsłuży 2× więcej osób bez spowolnienia". Zdanie „odpowiedź 2×
 szybciej" trzeba wykreślić. Propozycja na slajd: dwa krótkie wiersze —
