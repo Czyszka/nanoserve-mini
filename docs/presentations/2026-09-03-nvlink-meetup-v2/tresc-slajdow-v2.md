@@ -132,17 +132,16 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ---
 
-## Slajd 3 — Zasoby GPU: zajęte w 100%, wykorzystane w 20% (2 min)
+## Slajd 3 — Wykorzystanie zasobów GPU (2 min)
 
-Status: W ITERACJI (2026-09-03; GPU-Util Qwen 100% wg użytkownika). Rola slajdu: pierwszy ruch diagnosty —
+Status: ZAAKCEPTOWANY (2026-09-03; tytuł użytkownika; GPU-Util Qwen 100%
+wg obserwacji). Rola slajdu: pierwszy ruch diagnosty —
 klasyczni podejrzani (obliczenia, pamięć) odpadają; narzędzie + wynik,
-bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb. Tytuł —
-wariant 1 (do potwierdzenia; alternatywy: „Zasoby GPU pod lupą: co
-naprawdę pracuje?", „Które zasoby GPU pracują?").
+bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 
 ### Na slajdzie
 
-> ## Zasoby GPU: zajęte w 100%, wykorzystane w 20%
+> ## Wykorzystanie zasobów GPU
 >
 > Narzędzie: **DCGM** — liczniki sprzętowe NVIDIA, odczyt z hosta co 1 s
 >
