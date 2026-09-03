@@ -350,23 +350,18 @@ compute 4,6%); c=1 — sesja 06-10 (v1 slajd 10); Qwen TP4 c64 — Q4.
 
 ---
 
-## Slajd 7 — Badany składnik wzoru: liczba rund × czas jednej rundy (2,5 min)
+## Slajd 7 — Komunikacja między kartami: liczba rund × czas jednej rundy (2,5 min)
 
-Status: W ITERACJI (2026-09-03; wg uwag użytkownika: tytuł = badany
-składnik wzoru z podkreśloną liczbą rund; tylko rundy, bez kart/łącza —
+Status: W ITERACJI (2026-09-03; wg uwag użytkownika: tytuł „Komunikacja
+między kartami: …" z podkreśloną liczbą rund; tabela z kolumną czasu
+zmierzonego (źródło na slajdzie), wiersz 8 użytkowników wycięty; tylko rundy, bez kart/łącza —
 łącze i koszt stały/przesył przechodzą na slajdy 8–9; „token"; wzrost
 ilości danych z liczbą użytkowników pokazany; puenta o liczbie rund
 i rosnących danych; pasek z warstwami zostaje; bez analogii).
 
-Uwaga do tytułu: użytkownik zaproponował zapis symboliczny
-„N_rounds × r(łącze, liczba kart)"; na slajdzie 5 wzór jest słowami
-(symbole tylko w Q&A), więc dla spójności tytuł słowami — ten sam
-fragment ramki ze slajdu 5, z podkreśloną „liczbą rund". Jeśli wolisz
-symbole, zmieniamy oba slajdy naraz.
-
 ### Na slajdzie
 
-> ## Badany składnik wzoru: <u>liczba rund</u> × czas jednej rundy
+> ## Komunikacja między kartami: <u>liczba rund</u> × czas jednej rundy
 >
 > [GRAFIKA G3: przepływ jednej warstwy od lewej do prawej: „wejście
 > warstwy k" → 4 karty w rzędzie, każda liczy swój kawałek bloku „uwaga" →
@@ -378,17 +373,17 @@ symbole, zmieniamy oba slajdy naraz.
 > ostatnia".]
 >
 > Ile danych scala jedna runda? Po jednym wektorze na każdego użytkownika
-> obsługiwanego naraz — a rund jest 122 na token i ~256 tokenów na odpowiedź:
+> obsługiwanego naraz — a rund jest 122 na token i 256 tokenów na odpowiedź:
 >
-> | użytkowników naraz | na jedną rundę | na jeden token (×122) | na jedną odpowiedź (×256) |
+> | użytkowników naraz | na jedną rundę | na jedną odpowiedź (× 122 × 256) | zmierzony czas odpowiedzi* |
 > |---:|---:|---:|---:|
-> | 1 | 14 KB | 1,7 MB | 0,4 GB |
-> | 8 | 115 KB | 14 MB | 3,6 GB |
-> | 32 | 460 KB | 56 MB | **14 GB** |
+> | 1 | 14 KB | 0,4 GB | 2,2 s |
+> | 32 | 460 KB | **14 GB** | **24 s** |
 >
-> **Przy 32 użytkownikach na jedną odpowiedź karty scalają między sobą
-> 14 GB — w 31 tysiącach małych porcji, a po każdej wszystkie czekają na
-> najwolniejszą.**
+> \* benchmark, Kimi na 8 kartach, przed modernizacją: czas na token × 256 tokenów
+>
+> **Ta sama liczba rund, 33× więcej danych w każdej — i odpowiedź 11×
+> dłuższa. Ile trwa jedna runda i od czego to zależy — to pytanie o łącze.**
 
 ### Notes
 
@@ -407,14 +402,18 @@ użytkownika obsługiwanego w tym kroku. Jeden użytkownik to czternaście
 kilobajtów na rundę — nic. Trzydziestu dwóch: prawie pół megabajta — też
 niewiele, każdy z nas kopiuje takie pliki bez zastanowienia. Różnica
 robi się widoczna, gdy pomnożymy przez to, co już wiemy. Sto dwadzieścia
-dwie rundy na token: przy jednym użytkowniku niecałe dwa megabajty na
-token, przy trzydziestu dwóch — pięćdziesiąt sześć. I dwieście
-pięćdziesiąt sześć tokenów na odpowiedź: czterysta megabajtów wobec
-czternastu gigabajtów. Czternaście gigabajtów na jedną odpowiedź — dysk
-skopiuje tyle w kilkanaście sekund, ale w jednym ciągu. Tu te czternaście
-gigabajtów jest pocięte na trzydzieści jeden tysięcy małych porcji, a po
-każdej porcji wszystkie karty czekają na najwolniejszą. To jest to, co
-profiler policzył jako osiemdziesiąt cztery procent. Ile trwa jedna taka runda i od czego to
+dwie rundy na token i dwieście pięćdziesiąt sześć tokenów na odpowiedź:
+przy jednym użytkowniku czterysta megabajtów na odpowiedź, przy trzydziestu
+dwóch — czternaście gigabajtów. Dysk skopiuje tyle w kilkanaście sekund,
+ale w jednym ciągu. Tu te czternaście gigabajtów jest pocięte na
+trzydzieści jeden tysięcy małych porcji, a po każdej porcji wszystkie
+karty czekają na najwolniejszą. I ostatnia kolumna, zmierzona w
+benchmarku przed modernizacją: odpowiedź dla jednego użytkownika trwała
+dwie sekundy, dla każdego z trzydziestu dwóch — dwadzieścia cztery. Ta
+sama liczba rund, trzydzieści trzy razy więcej danych w każdej, odpowiedź
+jedenaście razy dłuższa. To jest to, co profiler policzył jako
+osiemdziesiąt cztery procent. Żeby użytkownik widział płynny tekst,
+każda z tych rund miałaby na wszystko poniżej milisekundy. Ile trwa jedna taka runda i od czego to
 zależy — to już pytanie o łącze między kartami. Następne dwa slajdy.
 
 Q&A (nie na głos): dane na rundę = liczba zapytań × hidden_size (7168) ×
@@ -425,7 +424,10 @@ kroków, każdy w tempie najwolniejszego odcinka. Koszt stały rundy
 (~30 µs) i przesył — na slajdzie 9, gdzie są zmierzone.
 
 Źródło: notatka decyzyjna §4 (122 scalenia, 14 KiB); rozmiary wiadomości
-policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
+policzone z hidden 7168 × 2 B × c; HF config Kimi K2. Czas odpowiedzi:
+TPOT med × 256 — `2026-06-11_nvlink_boundary/kimi_ramp/bench/kimi_c1.json`
+(8,7 ms → 2,2 s) i `kimi_c32.json` (94,1 ms → 24,1 s); te same liczby
+wracają na slajdzie 10 jako „przed".
 
 ---
 
