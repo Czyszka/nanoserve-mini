@@ -352,13 +352,10 @@ compute 4,6%); c=1 — sesja 06-10 (v1 slajd 10); Qwen TP4 c64 — Q4.
 
 ## Slajd 7 — Komunikacja między kartami: liczba rund × czas jednej rundy (2,5 min)
 
-Status: W ITERACJI (2026-09-03; wg uwag użytkownika: tytuł „Komunikacja
-między kartami: …" z podkreśloną liczbą rund; tabela runda → token →
-odpowiedź, bez kolumny czasu, wiersze 1 i 32; puenta „14 GB w sensownym
-czasie"; linijka koszt stały + przesył — OPCJONALNA, do decyzji; tylko rundy, bez kart/łącza —
-łącze i koszt stały/przesył przechodzą na slajdy 8–9; „token"; wzrost
-ilości danych z liczbą użytkowników pokazany; puenta o liczbie rund
-i rosnących danych; pasek z warstwami zostaje; bez analogii).
+Status: W ITERACJI (2026-09-03; runda 6: tabela runda → token → odpowiedź,
+bez czasu; puenta „14 GB w sensownym czasie"; linijka koszt stały +
+przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
+31 tys. porcji, co znaczy „sensowny czas").
 
 ### Na slajdzie
 
@@ -374,20 +371,21 @@ i rosnących danych; pasek z warstwami zostaje; bez analogii).
 > ostatnia".]
 >
 > Ile danych scala jedna runda? Po jednym wektorze na każdego użytkownika
-> obsługiwanego naraz — a rund jest 122 na token i 256 tokenów na odpowiedź:
+> obsługiwanego naraz. Rund jest 122 na token; krótka odpowiedź to 256
+> tokenów (~150 słów):
 >
-> | użytkowników naraz | na jedną rundę | na jeden token (× 122) | na jedną odpowiedź (× 256) |
+> | użytkowników naraz | na jedną rundę | na jeden token (× 122 rund) | na jedną odpowiedź (× 256 tokenów) |
 > |---:|---:|---:|---:|
 > | 1 | 14 KB | 1,7 MB | 0,4 GB |
 > | 32 | 460 KB | 56 MB | **14 GB** |
 >
-> [OPCJONALNIE — jedna linijka pod tabelą, do decyzji: „Każda runda
-> kosztuje: **stałe** (start, uzgodnienie, czekanie na najwolniejszą —
-> niezależnie od ilości danych) **+ przesył** (zależy od ilości danych
-> i od łącza)".]
+> Każda runda kosztuje: **stałe** (start, uzgodnienie, czekanie na
+> najwolniejszą kartę — niezależnie od ilości danych) **+ przesył**
+> (zależy od ilości danych i od łącza)
 >
-> **Przy 32 użytkownikach mamy do zsynchronizowania 14 GB na jedną
-> odpowiedź — w 31 tysiącach porcji, w czasie sensownym dla użytkownika.**
+> **Przy 32 użytkownikach na jedną krótką odpowiedź trzeba zsynchronizować
+> 14 GB — w 31 tysiącach rund (122 × 256), każda ze stałym kosztem —
+> a użytkownik ma widzieć płynny tekst.**
 
 ### Notes
 
@@ -404,26 +402,45 @@ rundy na każdy wygenerowany token. I każda runda jest synchroniczna:
 Teraz: ile danych scala jedna runda. Po jednym wektorze na każdego
 użytkownika obsługiwanego w tym kroku. Jeden użytkownik to czternaście
 kilobajtów na rundę — nic. Trzydziestu dwóch: prawie pół megabajta — też
-niewiele, każdy z nas kopiuje takie pliki bez zastanowienia. Różnica
-robi się widoczna, gdy pomnożymy przez to, co już wiemy. Sto dwadzieścia
-dwie rundy na token i dwieście pięćdziesiąt sześć tokenów na odpowiedź:
-przy jednym użytkowniku czterysta megabajtów na odpowiedź, przy trzydziestu
-dwóch — czternaście gigabajtów. Dysk skopiuje tyle w kilkanaście sekund,
-ale w jednym ciągu. Tu te czternaście gigabajtów jest pocięte na
-trzydzieści jeden tysięcy małych porcji, a po każdej porcji wszystkie
-karty czekają na najwolniejszą. I to wszystko musi się
-zmieścić w czasie, który użytkownik uzna za sensowny — żeby widział płynny
-tekst, każda z tych rund ma na wszystko poniżej milisekundy. To jest to,
-co profiler policzył jako osiemdziesiąt cztery procent. Ile trwa jedna
-runda i od czego to zależy — to już pytanie o łącze między kartami. Ile trwa jedna taka runda i od czego to
-zależy — to już pytanie o łącze między kartami. Następne dwa slajdy.
+niewiele, każdy z nas kopiuje takie pliki bez zastanowienia. Różnica robi
+się widoczna, gdy pomnożymy przez to, co już wiemy. Sto dwadzieścia dwie
+rundy na token. I tokeny na odpowiedź: w tabeli liczymy dwieście
+pięćdziesiąt sześć, czyli około stu pięćdziesięciu słów — to jest krótka
+odpowiedź; modele rozumujące potrafią wygenerować dziesięć razy tyle,
+zanim w ogóle zaczną odpowiadać. Wychodzi: czterysta megabajtów na
+odpowiedź dla jednego użytkownika, czternaście gigabajtów przy trzydziestu
+dwóch. Dysk skopiuje czternaście gigabajtów w kilkanaście sekund, ale w
+jednym ciągu. Tu jest inaczej: sto dwadzieścia dwie rundy razy dwieście
+pięćdziesiąt sześć tokenów to trzydzieści jeden tysięcy osobnych rund
+na jedną odpowiedź, i w każdej wszystkie karty zatrzymują się, czekają na
+najwolniejszą i dopiero ruszają dalej.
+
+Stąd dwa koszty każdej rundy. Pierwszy jest stały: uruchomić operację,
+uzgodnić, że wszystkie karty są gotowe, poczekać na najwolniejszą —
+płacimy go zawsze, przy czternastu kilobajtach tak samo jak przy pół
+megabajcie. Drugi to sam przesył: zależy od tego, ile danych i jak
+szybkie łącze. Jeden użytkownik płaci sto dwadzieścia dwa razy koszt
+stały. Trzydziestu dwóch płaci to samo plus sto dwadzieścia dwa razy
+przesył pół megabajta.
+
+I to wszystko ma się zmieścić w czasie sensownym dla użytkownika. Co to
+znaczy: tekst ma płynąć tak, żeby dało się go czytać na bieżąco — mniej
+więcej dziesięć tokenów na sekundę, czyli sto milisekund na token. Sto
+milisekund podzielone przez sto dwadzieścia dwie rundy: na jedną rundę,
+razem z liczeniem, zostaje poniżej milisekundy. To jest to, co profiler
+policzył jako osiemdziesiąt cztery procent. Ile trwa jedna runda i od
+czego to zależy — to już pytanie o łącze między kartami. Następne dwa
+slajdy.
 
 Q&A (nie na głos): dane na rundę = liczba zapytań × hidden_size (7168) ×
 2 bajty (bf16); to ilość danych DO SCALENIA, nie ruch na łączu (ring na
-8 kartach przepuszcza przez każdą kartę ~2× tyle); 31 tys. = 122 × 256; 61 warstw i 2 all-reduce/warstwę — z konfiguracji Kimi
-i implementacji Megatron-style TP w vLLM; ring all-reduce = 2(N−1)
-kroków, każdy w tempie najwolniejszego odcinka. Koszt stały rundy
-(~30 µs) i przesył — na slajdzie 9, gdzie są zmierzone.
+8 kartach przepuszcza przez każdą kartę ~2× tyle); 31 tys. = 122 × 256;
+61 warstw i 2 all-reduce/warstwę — z konfiguracji Kimi i implementacji
+Megatron-style TP w vLLM; ring all-reduce = 2(N−1) kroków, każdy w tempie
+najwolniejszego odcinka. Koszt stały (~30 µs) i przesył — zmierzone na
+slajdzie 9. „10 tok/s" to próg czytania na bieżąco (typowe SLO 50–100 ms
+TPOT); przy jednym użytkowniku mierzyliśmy 8,7 ms/token, przy 32 — 94 ms
+(era PCIe), czyli 32 użytkowników siedziało na granicy tego progu.
 
 Źródło: notatka decyzyjna §4 (122 scalenia, 14 KiB); rozmiary wiadomości
 policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
