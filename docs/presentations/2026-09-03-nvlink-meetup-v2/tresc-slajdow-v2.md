@@ -367,8 +367,7 @@ przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
 > te same 4 karty, każda swój kawałek bloku „FFN/MoE" → drugie scalenie →
 > „wejście warstwy k+1". Z boku licznik: „2 scalenia × 61 warstw =
 > **122 rundy na każdy token**". Pod spodem: „scalenie jest warunkiem
-> przejścia dalej — żadna karta nie liczy warstwy k+1, dopóki nie skończy
-> ostatnia".]
+> przejścia dalej — bez niego żadna karta nie policzy warstwy k+1".]
 >
 > Ile danych scala jedna runda? Po jednym wektorze na każdego użytkownika
 > obsługiwanego naraz. Rund jest 122 na token; krótka odpowiedź to 256
@@ -383,9 +382,12 @@ przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
 > najwolniejszą kartę — niezależnie od ilości danych) **+ przesył**
 > (zależy od ilości danych i od łącza)
 >
+> Płynny tekst dla użytkownika ≈ 10 tokenów/s → **100 ms na token** →
+> 100 ms / 122 rund = **< 1 ms na rundę** (razem z liczeniem)
+>
 > **Przy 32 użytkownikach na jedną krótką odpowiedź trzeba zsynchronizować
-> 14 GB — w 31 tysiącach rund (122 × 256), każda ze stałym kosztem —
-> a użytkownik ma widzieć płynny tekst.**
+> 14 GB — w 31 tysiącach rund (122 × 256), każda ze stałym kosztem i każda
+> w czasie poniżej milisekundy.**
 
 ### Notes
 
@@ -409,11 +411,14 @@ pięćdziesiąt sześć, czyli około stu pięćdziesięciu słów — to jest k
 odpowiedź; modele rozumujące potrafią wygenerować dziesięć razy tyle,
 zanim w ogóle zaczną odpowiadać. Wychodzi: czterysta megabajtów na
 odpowiedź dla jednego użytkownika, czternaście gigabajtów przy trzydziestu
-dwóch. Dysk skopiuje czternaście gigabajtów w kilkanaście sekund, ale w
-jednym ciągu. Tu jest inaczej: sto dwadzieścia dwie rundy razy dwieście
-pięćdziesiąt sześć tokenów to trzydzieści jeden tysięcy osobnych rund
-na jedną odpowiedź, i w każdej wszystkie karty zatrzymują się, czekają na
-najwolniejszą i dopiero ruszają dalej.
+dwóch. Czternaście gigabajtów jako jeden plik dysk skopiuje w kilkanaście
+sekund. Ale czternaście gigabajtów w plikach po kilkaset kilobajtów
+każdy to zupełnie inna sprawa — każdy, kto kopiował katalog z tysiącami
+małych plików, wie, że trwa to wielokrotnie dłużej, bo każdy plik ma
+swój narzut. Tu jest dokładnie tak: sto dwadzieścia dwie rundy razy
+dwieście pięćdziesiąt sześć tokenów to trzydzieści jeden tysięcy
+osobnych rund na jedną odpowiedź, i w każdej wszystkie karty zatrzymują
+się, czekają na najwolniejszą i dopiero ruszają dalej.
 
 Stąd dwa koszty każdej rundy. Pierwszy jest stały: uruchomić operację,
 uzgodnić, że wszystkie karty są gotowe, poczekać na najwolniejszą —
@@ -423,11 +428,14 @@ szybkie łącze. Jeden użytkownik płaci sto dwadzieścia dwa razy koszt
 stały. Trzydziestu dwóch płaci to samo plus sto dwadzieścia dwa razy
 przesył pół megabajta.
 
-I to wszystko ma się zmieścić w czasie sensownym dla użytkownika. Co to
-znaczy: tekst ma płynąć tak, żeby dało się go czytać na bieżąco — mniej
-więcej dziesięć tokenów na sekundę, czyli sto milisekund na token. Sto
-milisekund podzielone przez sto dwadzieścia dwie rundy: na jedną rundę,
-razem z liczeniem, zostaje poniżej milisekundy. To jest to, co profiler
+I to wszystko ma się zmieścić w czasie sensownym dla użytkownika.
+Wyliczenie jest na slajdzie: tekst ma płynąć tak, żeby dało się go czytać
+na bieżąco — mniej więcej dziesięć tokenów na sekundę, czyli sto
+milisekund na jeden token. W tych stu milisekundach musi się zmieścić sto
+dwadzieścia dwie rundy plus całe liczenie. Na jedną rundę zostaje
+poniżej milisekundy. Dla porównania: skopiowanie jednego pliku z dysku
+na dysk to zwykle kilka milisekund samego narzutu — my mamy na całą rundę,
+ze scaleniem między ośmioma kartami, mniej niż jedną. To jest to, co profiler
 policzył jako osiemdziesiąt cztery procent. Ile trwa jedna runda i od
 czego to zależy — to już pytanie o łącze między kartami. Następne dwa
 slajdy.
