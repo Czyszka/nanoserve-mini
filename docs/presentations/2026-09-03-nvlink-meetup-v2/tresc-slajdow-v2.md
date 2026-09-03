@@ -134,7 +134,7 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ## Slajd 3 — Zasoby GPU: zajęte w 100%, wykorzystane w 20% (2 min)
 
-Status: W ITERACJI (2026-09-03). Rola slajdu: pierwszy ruch diagnosty —
+Status: W ITERACJI (2026-09-03; GPU-Util Qwen 100% wg użytkownika). Rola slajdu: pierwszy ruch diagnosty —
 klasyczni podejrzani (obliczenia, pamięć) odpadają; narzędzie + wynik,
 bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb. Tytuł —
 wariant 1 (do potwierdzenia; alternatywy: „Zasoby GPU pod lupą: co
@@ -151,10 +151,8 @@ naprawdę pracuje?", „Które zasoby GPU pracują?").
 > „jednostki liczące (SM) — % czasu aktywne" · „pamięć HBM — % czasu
 > aktywna". W każdej grupie dwa słupki: **niebieski Kimi, 8 kart** i
 > **zielony Qwen, 1 karta** (kolory jak na slajdzie 2). Wartości nad
-> słupkami. Grupa GPU-Util: tylko słupek Kimi (100%); miejsce Qwena
-> puste z małym podpisem „nie rejestrowano". Kimi: 100 / 30 / 20 / 8;
-> Qwen: — / ~72 / ~65 / ~38 (liczby Qwena do policzenia z aktywnej części
-> okna).]
+> słupkami. Kimi: 100 / 30 / 20 / 8; Qwen: 100 / ~72 / ~65 / ~38 (liczby
+> mocy/SM/HBM Qwena do policzenia z aktywnej części okna).]
 >
 > **Skoro nic nie pracuje blisko granicy — co karta robi przez 100% czasu?**
 
@@ -169,8 +167,8 @@ liczące, czyli bloki na karcie, które mnożą macierze: aktywne przez
 dwadzieścia procent czasu. Pamięć karty: aktywna przez osiem procent
 czasu. Zielone słupki to model testowy na jednej karcie: moc ponad
 siedemdziesiąt procent, jednostki liczące ponad sześćdziesiąt, pamięć
-prawie czterdzieści. Czyli kartę da się obciążyć — i ten sam nvidia-smi
-pokazałby dla niej też sto procent. Wniosek z tego slajdu: dwaj klasyczni
+prawie czterdzieści. I GPU-Util dla niej: też sto procent — ta metryka
+w ogóle nie rozróżnia obu przypadków. Czyli kartę da się obciążyć. Wniosek z tego slajdu: dwaj klasyczni
 podejrzani, za mało mocy obliczeniowej i za wolna pamięć, odpadają. Nic na
 karcie nie pracuje blisko granicy. A mimo to karta jest „zajęta" przez
 sto procent czasu. Co ona wtedy robi? To jest pytanie na następne dwa
@@ -180,10 +178,9 @@ slajdy.
 (v1 W2: 199 W, SM 0,20, DRAM 0,070; c=1 niemal identycznie: 170 W, 0,21,
 0,093); GPU-Util 100% — zrzut nvidia-smi. Qwen — `2026-08-31_latencja_dostepu/qwen/tp1_c64_dcgmi.txt`,
 GPU0, część aktywna (czerwcowe active-filtered: 436 W, 0,665, 0,385 —
-kontrola zgodności). GPU-Util Qwena pod obciążeniem nie było zapisane
-(nvidia-smi tylko idle/start) — na wykresie jawnie „nie rejestrowano",
-w notes zdanie „pokazałby też sto procent" jako stwierdzenie ogólne o
-metryce, nie pomiar. PCIe RX/TX celowo poza slajdem (wraca na slajdzie 8).
+kontrola zgodności). GPU-Util Qwena TP1 pod obciążeniem = 100% —
+obserwacja prelegenta z sesji (nvidia-smi na żywo); w repo brak zapisanego
+zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celowo poza slajdem (wraca na slajdzie 8).
 
 ---
 
