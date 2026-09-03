@@ -143,7 +143,8 @@ bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 
 > ## Wykorzystanie zasobów GPU
 >
-> Narzędzie: **DCGM** — liczniki sprzętowe NVIDIA, odczyt z hosta co 1 s
+> Pomiar: **DCGM** — liczniki sprzętowe NVIDIA, `dcgmi dmon` z hosta,
+> próbka co 1 s, bez zmian w kontenerach i bez zatrzymywania serwera
 >
 > [WYKRES W2': pionowe słupki grupowane, oś Y 0–100%. Cztery grupy:
 > „GPU-Util (nvidia-smi)" · „pobór mocy (z limitu 600 W)" ·
