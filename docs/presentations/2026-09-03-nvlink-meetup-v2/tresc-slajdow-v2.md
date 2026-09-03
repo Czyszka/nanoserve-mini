@@ -231,47 +231,71 @@ zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celow
 
 ---
 
-## Slajd 5 — Z czego składa się krok i co liczy GPU-Util (2,5 min)
+## Slajd 5 — Jeden token = jeden krok. Z czego składa się krok? (2,5 min)
 
-Status: SZKIC. Decyzja 3: definicja GPU-Util tutaj.
+Status: W ITERACJI (2026-09-03): wzór słowami w kolorach składników
+(życzenie użytkownika; symbole tylko w Q&A), definicja GPU-Util tutaj
+(decyzja 3), puenta użytkownika. Kolory składników — ustalone raz, wracają
+na slajdach 6 i 7: obliczenia ciemnoszary · komunikacja pomarańczowy ·
+przerwy jasnoszary (nie niebieski/zielony — te znaczą Kimi/Qwen).
 
 ### Na slajdzie
 
 > ## Jeden token = jeden krok. Z czego składa się krok?
 >
-> [GRAFIKA G2: oś czasu jednego kroku (~10–100 ms) jako pasek podzielony
-> na odcinki w trzech kolorach: **obliczenia** (mnożenia macierzy) ·
-> **komunikacja** (karty wymieniają wyniki — i czekają na siebie) ·
-> **przerwy** (silnik na CPU przygotowuje następny krok);
-> pod paskiem klamra na całą długość: „GPU-Util = 100%, bo *cokolwiek*
-> trwało"]
+> [GRAFIKA G2: pozioma oś czasu jednego kroku jako pasek. Odcinki w trzech
+> kolorach, w realistycznej kolejności: przerwa · obliczenia · komunikacja ·
+> obliczenia · komunikacja · … · przerwa. Legenda pod paskiem:
+> **obliczenia** (mnożenia macierzy) · **komunikacja** (karty wymieniają
+> wyniki i czekają na siebie) · **przerwy** (silnik na CPU przygotowuje
+> następny krok). Nad paskiem klamra TYLKO nad odcinkami obliczeń i
+> komunikacji, podpis: „kernele — dla GPU-Util wszystko to = zajęte".]
 >
-> - model generuje tekst token po tokenie; każdy token to jeden **krok**
-> - krok to ciąg małych programów na karcie (**kerneli**): obliczenia,
->   komunikacja, kopie
-> - **GPU-Util** liczy, przez jaki % czasu *jakikolwiek* kernel trwał —
->   nie, co robił
+> ┌──────────────────────────────────────────────────────────────────┐
+> │ **czas kroku = przerwy (silnik na CPU)**                         │
+> │ **+ komunikacja (liczba rund × czas jednej rundy)**              │
+> │ **+ obliczenia**                                                 │
+> └──────────────────────────────────────────────────────────────────┘
+> (każdy składnik w kolorze swojego odcinka na pasku)
 >
-> **Kernel, który czeka na inną kartę, liczy się do 100% tak samo jak
-> kernel, który liczy.**
+> GPU-Util liczy, przez jaki % czasu na karcie trwał *jakikolwiek* kernel —
+> nie, co ten kernel robił.
+>
+> Kernel, który czeka na synchronizację danych, i kernel, który wykonuje
+> obliczenia — dla GPU-Util **oba liczą się do zajętości**.
 
 ### Notes
 
 Żeby zrozumieć obie anomalie, trzeba zajrzeć do środka jednego kroku.
-Model generuje odpowiedź token po tokenie; każdy token to jeden krok, u nas
-od kilku do stu milisekund. Krok nie jest jedną operacją — to setki małych
-programów uruchamianych na karcie po kolei, nazywanych kernelami. Część
-z nich liczy: mnożenia macierzy. Część komunikuje: karty wymieniają się
-wynikami i czekają, aż wszystkie skończą. A między nimi są przerwy, kiedy
-karta nie robi nic, bo silnik na procesorze przygotowuje następny krok.
-I teraz definicja: GPU-Util z nvidia-smi to procent czasu, w którym na
-karcie trwał jakikolwiek kernel. Metryka nie rozróżnia, co kernel robi.
-Kernel, który w pętli czeka na dane od sąsiedniej karty, podnosi ją
-dokładnie tak samo jak kernel liczący macierz. Stąd sto procent przy
-trzydziestu procentach mocy: karta cały czas „coś robiła", ale tym czymś
-mogło być czekanie. Który z trzech kolorów dominuje — pokaże pomiar.
+Model generuje odpowiedź token po tokenie; każdy token to jeden krok,
+u nas od kilku do stu milisekund. Krok nie jest jedną operacją — to setki
+małych programów uruchamianych na karcie po kolei, nazywanych kernelami.
+Część z nich liczy: mnożenia macierzy. Część komunikuje: karty wymieniają
+się wynikami częściowymi i czekają, aż wszystkie skończą — i to powtarza
+się wiele razy w jednym kroku, stąd w ramce „liczba rund razy czas rundy".
+A między nimi są przerwy, kiedy karta nie robi nic, bo silnik na
+procesorze przygotowuje następny krok. Te trzy składniki sumują się do
+czasu kroku; nie ma czwartego miejsca, w którym mógłby ginąć czas.
 
-Źródło: v1 slajd 4 (definicja NVML), grafika D2.
+I teraz definicja, na którą czekamy od drugiego slajdu. GPU-Util z
+nvidia-smi to procent czasu, w którym na karcie trwał jakikolwiek kernel.
+Metryka nie rozróżnia, co kernel robi. Kernel, który w pętli czeka na dane
+od sąsiedniej karty, podnosi ją dokładnie tak samo jak kernel liczący
+macierz. Stąd sto procent przy trzydziestu procentach mocy: karta cały czas
+„coś robiła", ale tym czymś mogło być czekanie. Który z trzech składników
+dominuje — pokaże pomiar na następnym slajdzie.
+
+Q&A (nie na głos): zapis z notatki decyzyjnej: T(krok) = F_host +
+N_rounds × r(łącze, liczba kart) + W_silicon. Przerwy formalnie obniżają
+GPU-Util, ale przy próbkowaniu nvidia-smi krótkie przerwy giną. Definicja
+NVML: utilization.gpu = % czasu w oknie próbkowania, w którym wykonywał
+się co najmniej jeden kernel.
+
+Układ: ramka ze wzorem = element dominujący (większa czcionka); definicja
+i puenta zwykłym tekstem, pogrubione tylko „oba liczą się do zajętości".
+Jeśli trzeba ciąć: definicja GPU-Util schodzi do podpisu klamry na G2.
+
+Źródło: v1 slajdy 4 i 6 (D2, wzór); kolory — decyzja 2026-09-03.
 
 ---
 
@@ -525,7 +549,7 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | G1 | 1 | serwer + 8 kart, Kimi na 8 / Qwen na 1 | — |
 | W2' | 4 | słupki pionowe grupowane: 4 liczniki × (Qwen 1, Qwen 8, Kimi 8) | v1 W2 + qwen-tp-curve |
 | W1' | 3 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
-| G2 | 5 | oś czasu kroku, 3 kolory, klamra GPU-Util | v1 D2 |
+| G2 | 5 | oś czasu kroku, 3 kolory (szary/pomarańcz/jasnoszary), klamra nad kernelami + ramka wzoru | v1 D2 |
 | W3' | 6 | 2 słupki skumulowane Kimi c1 / c16 | v1 W3 |
 | G3 | 7 | 4 karty, all-reduce, licznik 122 | v1 D3 (uproszczony) |
 | G4 / G4' | 8 / 9 | topologia przed / po (ten sam rysunek + mostki) | v1 D1 / D1-PO |
