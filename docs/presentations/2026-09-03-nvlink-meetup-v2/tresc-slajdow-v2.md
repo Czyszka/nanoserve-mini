@@ -368,24 +368,27 @@ symbole, zmieniamy oba slajdy naraz.
 
 > ## Badany składnik wzoru: <u>liczba rund</u> × czas jednej rundy
 >
-> [GRAFIKA G3: 4 karty w rzędzie; nad nimi pasek „jedna warstwa modelu"
-> podzielony na dwa bloki: „uwaga" i „FFN/MoE"; po każdym bloku strzałki
-> między wszystkimi kartami z podpisem „scalenie wyników (all-reduce)";
-> z boku licznik: „2 scalenia × 61 warstw = **122 rundy na każdy token**".
-> Pod spodem mały pasek: „…i żadna karta nie liczy dalej, dopóki nie
-> skończy ostatnia".]
+> [GRAFIKA G3: przepływ jednej warstwy od lewej do prawej: „wejście
+> warstwy k" → 4 karty w rzędzie, każda liczy swój kawałek bloku „uwaga" →
+> strzałki między wszystkimi kartami „scalenie wyników (all-reduce)" →
+> te same 4 karty, każda swój kawałek bloku „FFN/MoE" → drugie scalenie →
+> „wejście warstwy k+1". Z boku licznik: „2 scalenia × 61 warstw =
+> **122 rundy na każdy token**". Pod spodem: „scalenie jest warunkiem
+> przejścia dalej — żadna karta nie liczy warstwy k+1, dopóki nie skończy
+> ostatnia".]
 >
-> Ile danych scala jedna runda? Tyle, ile wyników częściowych czeka na
-> dodanie — czyli rośnie z liczbą użytkowników obsługiwanych naraz:
+> Ile danych scala jedna runda? Po jednym wektorze na każdego użytkownika
+> obsługiwanego naraz — a rund jest 122 na token i ~256 tokenów na odpowiedź:
 >
-> | użytkowników naraz | dane na jedną rundę |
-> |---:|---:|
-> | 1 | ~14 KB |
-> | 8 | ~115 KB |
-> | 32 | ~460 KB |
+> | użytkowników naraz | na jedną rundę | na jeden token (×122) | na jedną odpowiedź (×256) |
+> |---:|---:|---:|---:|
+> | 1 | 14 KB | 1,7 MB | 0,4 GB |
+> | 8 | 115 KB | 14 MB | 3,6 GB |
+> | 32 | 460 KB | 56 MB | **14 GB** |
 >
-> **Rund jest dużo — 122 na każdy token — a im więcej użytkowników,
-> tym więcej danych do scalenia w każdej z nich.**
+> **Przy 32 użytkownikach na jedną odpowiedź karty scalają między sobą
+> 14 GB — w 31 tysiącach małych porcji, a po każdej wszystkie czekają na
+> najwolniejszą.**
 
 ### Notes
 
@@ -399,18 +402,24 @@ scalenia na warstwę, sześćdziesiąt jeden warstw: sto dwadzieścia dwie
 rundy na każdy wygenerowany token. I każda runda jest synchroniczna:
 żadna karta nie liczy dalej, dopóki nie skończy ostatnia.
 
-Teraz: ile danych scala jedna runda. Tyle, ile jest wyników częściowych
-do dodania — po jednym wektorze na każde zapytanie obsługiwane w tym
-kroku. Jeden użytkownik to około czternastu kilobajtów na rundę. Ośmiu:
-sto piętnaście. Trzydziestu dwóch: prawie pół megabajta. Czyli liczba
-rund jest stała i duża, a ilość danych w każdej rundzie rośnie wprost
-z liczbą użytkowników. Te dwie rzeczy razem — sto dwadzieścia dwie rundy
-i coraz większa paczka w każdej — to jest to, co profiler policzył jako
-osiemdziesiąt cztery procent. Ile trwa jedna taka runda i od czego to
+Teraz: ile danych scala jedna runda. Po jednym wektorze na każdego
+użytkownika obsługiwanego w tym kroku. Jeden użytkownik to czternaście
+kilobajtów na rundę — nic. Trzydziestu dwóch: prawie pół megabajta — też
+niewiele, każdy z nas kopiuje takie pliki bez zastanowienia. Różnica
+robi się widoczna, gdy pomnożymy przez to, co już wiemy. Sto dwadzieścia
+dwie rundy na token: przy jednym użytkowniku niecałe dwa megabajty na
+token, przy trzydziestu dwóch — pięćdziesiąt sześć. I dwieście
+pięćdziesiąt sześć tokenów na odpowiedź: czterysta megabajtów wobec
+czternastu gigabajtów. Czternaście gigabajtów na jedną odpowiedź — dysk
+skopiuje tyle w kilkanaście sekund, ale w jednym ciągu. Tu te czternaście
+gigabajtów jest pocięte na trzydzieści jeden tysięcy małych porcji, a po
+każdej porcji wszystkie karty czekają na najwolniejszą. To jest to, co
+profiler policzył jako osiemdziesiąt cztery procent. Ile trwa jedna taka runda i od czego to
 zależy — to już pytanie o łącze między kartami. Następne dwa slajdy.
 
 Q&A (nie na głos): dane na rundę = liczba zapytań × hidden_size (7168) ×
-2 bajty (bf16); 61 warstw i 2 all-reduce/warstwę — z konfiguracji Kimi
+2 bajty (bf16); to ilość danych DO SCALENIA, nie ruch na łączu (ring na
+8 kartach przepuszcza przez każdą kartę ~2× tyle); 31 tys. = 122 × 256; 61 warstw i 2 all-reduce/warstwę — z konfiguracji Kimi
 i implementacji Megatron-style TP w vLLM; ring all-reduce = 2(N−1)
 kroków, każdy w tempie najwolniejszego odcinka. Koszt stały rundy
 (~30 µs) i przesył — na slajdzie 9, gdzie są zmierzone.
