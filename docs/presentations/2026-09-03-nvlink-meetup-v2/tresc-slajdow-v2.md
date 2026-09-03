@@ -134,9 +134,9 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ## Slajd 3 — Druga anomalia: więcej kart = wolniej (2 min)
 
-Status: W ITERACJI (2026-09-03; decyzje: tytuł OK, „zapytania od 64
-użytkowników naraz", TP na slajdzie, jeden kolor, bez efektywności, notes
-bez Kimi; PUENTA do wyboru). Rola: druga obserwacja, kieruje podejrzenie
+Status: ZAAKCEPTOWANY (2026-09-03; tytuł, „zapytania od 64 użytkowników
+naraz", TP na slajdzie, jeden kolor, bez efektywności, notes bez Kimi,
+puenta użytkownika). Rola: druga obserwacja, kieruje podejrzenie
 „między karty"; slajd 4 (DCGM) potem eliminuje kartę. Era PCIe.
 
 ### Na slajdzie
@@ -151,7 +151,8 @@ bez Kimi; PUENTA do wyboru). Rola: druga obserwacja, kieruje podejrzenie
 > podpis „zapytania od 64 użytkowników naraz": 1 karta **1202** ·
 > 2 karty **1404** · 4 karty **680** · 8 kart **257**]
 >
-> **[PUENTA — do wyboru, patrz niżej]**
+> **Dokładanie kart nie zawsze zwiększa przepustowość — od czterech ją
+> zmniejsza.**
 
 ### Notes
 
