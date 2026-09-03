@@ -1,0 +1,8 @@
+nccl_lat_all8.json               16KB:    36.13 us  8MB busbw:    14.9 GB/s
+nccl_lat_all8_nop2p.json         16KB:    59.50 us  8MB busbw:    15.4 GB/s
+nccl_lat_cross2.json             16KB:    29.27 us  8MB busbw:    18.7 GB/s
+nccl_lat_cross4.json             16KB:    30.15 us  8MB busbw:    27.4 GB/s
+nccl_lat_island2.json            16KB:    27.94 us  8MB busbw:    84.7 GB/s
+nccl_lat_island2_nop2p.json      16KB:    28.68 us  8MB busbw:    14.1 GB/s
+nccl_lat_island4.json            16KB:    53.81 us  8MB busbw:   197.5 GB/s
+nccl_lat_island4_nop2p.json      16KB:    30.55 us  8MB busbw:    13.8 GB/s

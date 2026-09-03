@@ -1,0 +1,1 @@
+# dmesg 2026-08-31T14:53:31+02:00: zero wpisow xid/nvrm/thermal

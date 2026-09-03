@@ -1,0 +1,40 @@
+  9c | 11.05.2026 | 08:20:25 CEST | Power Supply #0xc7 | Presence detected () | Asserted
+  9d | 11.05.2026 | 08:20:25 CEST | Power Supply #0xc6 | Presence detected () | Asserted
+  9e | 11.05.2026 | 08:20:25 CEST | Power Supply #0xc5 | Presence detected () | Asserted
+  9f | 11.05.2026 | 08:20:25 CEST | Power Supply #0xc4 | Presence detected () | Asserted
+  a0 | 19.05.2026 | 06:51:10 CEST | Unknown #0xff |  | Asserted
+  a1 | 19.05.2026 | 06:55:32 CEST | Power Supply #0xc7 | Presence detected () | Asserted
+  a2 | 19.05.2026 | 06:55:32 CEST | Power Supply #0xc6 | Presence detected () | Asserted
+  a3 | 19.05.2026 | 06:55:32 CEST | Power Supply #0xc5 | Presence detected () | Asserted
+  a4 | 19.05.2026 | 06:55:32 CEST | Power Supply #0xc4 | Presence detected () | Asserted
+  a5 | 19.05.2026 | 11:46:08 CEST | Unknown #0xff |  | Asserted
+  a6 | 19.05.2026 | 11:51:01 CEST | Power Supply #0xc4 | Presence detected () | Asserted
+  a7 | 19.05.2026 | 11:51:01 CEST | Power Supply #0xc5 | Presence detected () | Asserted
+  a8 | 19.05.2026 | 11:51:01 CEST | Power Supply #0xc6 | Presence detected () | Asserted
+  a9 | 19.05.2026 | 11:51:01 CEST | Power Supply #0xc7 | Presence detected () | Asserted
+  aa | 27.05.2026 | 09:23:42 CEST | Unknown #0xff |  | Asserted
+  ab | 27.05.2026 | 09:28:04 CEST | Power Supply #0xc4 | Presence detected () | Asserted
+  ac | 27.05.2026 | 09:28:04 CEST | Power Supply #0xc5 | Presence detected () | Asserted
+  ad | 27.05.2026 | 09:28:04 CEST | Power Supply #0xc6 | Presence detected () | Asserted
+  ae | 27.05.2026 | 09:28:04 CEST | Power Supply #0xc7 | Presence detected () | Asserted
+  af | 27.05.2026 | 09:32:53 CEST | Power Supply #0xc6 | Failure detected () | Asserted
+  b0 | 27.05.2026 | 09:32:53 CEST | Power Supply #0xc6 | Power Supply AC lost () | Asserted
+  b1 | 27.05.2026 | 09:32:53 CEST | Power Supply #0xc7 | Failure detected () | Asserted
+  b2 | 27.05.2026 | 09:32:53 CEST | Power Supply #0xc7 | Power Supply AC lost () | Asserted
+  b3 | 27.05.2026 | 09:32:59 CEST | Power Supply #0xc6 | Failure detected () | Deasserted
+  b4 | 27.05.2026 | 09:32:59 CEST | Power Supply #0xc6 | Power Supply AC lost () | Deasserted
+  b5 | 27.05.2026 | 09:32:59 CEST | Power Supply #0xc7 | Failure detected () | Deasserted
+  b6 | 27.05.2026 | 09:32:59 CEST | Power Supply #0xc7 | Power Supply AC lost () | Deasserted
+  b7 | 27.05.2026 | 09:46:29 CEST | Power Supply #0xc7 | Failure detected () | Asserted
+  b8 | 27.05.2026 | 09:46:29 CEST | Power Supply #0xc7 | Power Supply AC lost () | Asserted
+  b9 | 27.05.2026 | 09:46:38 CEST | Power Supply #0xc7 | Failure detected () | Deasserted
+  ba | 27.05.2026 | 09:46:38 CEST | Power Supply #0xc7 | Power Supply AC lost () | Deasserted
+  bb | 27.05.2026 | 09:46:47 CEST | Power Supply #0xc6 | Failure detected () | Asserted
+  bc | 27.05.2026 | 09:46:47 CEST | Power Supply #0xc6 | Power Supply AC lost () | Asserted
+  bd | 27.05.2026 | 09:46:53 CEST | Power Supply #0xc6 | Failure detected () | Deasserted
+  be | 27.05.2026 | 09:46:53 CEST | Power Supply #0xc6 | Power Supply AC lost () | Deasserted
+  bf | 31.07.2026 | 10:34:41 CEST | Unknown #0xff |  | Asserted
+  c0 | 31.07.2026 | 10:38:55 CEST | Power Supply #0xc7 | Presence detected () | Asserted
+  c1 | 31.07.2026 | 10:38:55 CEST | Power Supply #0xc6 | Presence detected () | Asserted
+  c2 | 31.07.2026 | 10:38:55 CEST | Power Supply #0xc5 | Presence detected () | Asserted
+  c3 | 31.07.2026 | 10:38:56 CEST | Power Supply #0xc4 | Presence detected () | Asserted

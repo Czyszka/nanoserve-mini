@@ -1,0 +1,4 @@
+span 8.45s  kernel-time 6.97s  gaps 1.48s (18%)
+  other                  3.83s   45.3% of span
+  compute                1.61s   19.1% of span
+  comms                  1.53s   18.1% of span

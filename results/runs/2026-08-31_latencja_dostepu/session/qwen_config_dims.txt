@@ -1,0 +1,4 @@
+/home/ubuntusrv2/.vllm/models/hub/models--Qwen--Qwen3.6-35B-A3B/snapshots/995ad96eacd98c81ed38be0c5b274b04031597b0/config.json
+{'hidden_size': None, 'num_hidden_layers': None, 'num_key_value_heads': None, 'moe_intermediate_size': None}
+/home/ubuntusrv2/.vllm/models/hub/models--z-lab--Qwen3.6-35B-A3B-DFlash/snapshots/f181eece646affea2c38b2765f1aaa01a9734ccd/config.json
+{'hidden_size': 2048, 'num_hidden_layers': 6, 'num_key_value_heads': 8, 'moe_intermediate_size': None}

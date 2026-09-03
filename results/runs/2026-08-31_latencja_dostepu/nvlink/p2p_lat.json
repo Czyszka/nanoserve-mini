@@ -1,0 +1,32 @@
+[
+  {
+    "src": 0,
+    "dst": 1,
+    "peer_access": true,
+    "lat_us": 12.87
+  },
+  {
+    "src": 0,
+    "dst": 2,
+    "peer_access": true,
+    "lat_us": 12.88
+  },
+  {
+    "src": 0,
+    "dst": 3,
+    "peer_access": true,
+    "lat_us": 24.34
+  },
+  {
+    "src": 0,
+    "dst": 4,
+    "peer_access": true,
+    "lat_us": 25.93
+  },
+  {
+    "src": 3,
+    "dst": 4,
+    "peer_access": true,
+    "lat_us": 16.06
+  }
+]

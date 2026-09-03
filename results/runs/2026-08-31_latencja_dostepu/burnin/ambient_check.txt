@@ -1,0 +1,2 @@
+Inlet Temp       | 22
+System Temp      | 24

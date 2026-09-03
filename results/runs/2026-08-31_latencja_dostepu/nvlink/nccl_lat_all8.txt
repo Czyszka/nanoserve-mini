@@ -1,0 +1,876 @@
+W0901 06:23:42.932000 1 torch/distributed/run.py:851] 
+W0901 06:23:42.932000 1 torch/distributed/run.py:851] *****************************************
+W0901 06:23:42.932000 1 torch/distributed/run.py:851] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0901 06:23:42.932000 1 torch/distributed/run.py:851] *****************************************
+8e4a643208ed:74:74 [0] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:74:74 [0] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:81:81 [7] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:78:78 [4] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:81:81 [7] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:78:78 [4] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:79:79 [5] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:79:79 [5] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:75:75 [1] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:80:80 [6] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:75:75 [1] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:80:80 [6] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:77:77 [3] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:77:77 [3] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:76:76 [2] NCCL INFO ENV/Plugin: Could not find: libnccl-env.so
+8e4a643208ed:76:76 [2] NCCL INFO cudaDriverVersion 13020
+8e4a643208ed:78:78 [4] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:79:79 [5] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:80:80 [6] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:77:77 [3] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:74:74 [0] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:81:81 [7] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:75:75 [1] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:76:76 [2] NCCL INFO NCCL version 2.28.9+cuda13.0
+8e4a643208ed:81:81 [7] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:81:81 [7] NCCL INFO NET/IB : No device found.
+8e4a643208ed:81:81 [7] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:81:81 [7] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:81:81 [7] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:81:81 [7] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:81:81 [7] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:81:81 [7] NCCL INFO Using network Socket
+8e4a643208ed:74:74 [0] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:74:74 [0] NCCL INFO NET/IB : No device found.
+8e4a643208ed:74:74 [0] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:74:74 [0] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:74:74 [0] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:74:74 [0] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:74:74 [0] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:74:74 [0] NCCL INFO Using network Socket
+8e4a643208ed:77:77 [3] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:77:77 [3] NCCL INFO NET/IB : No device found.
+8e4a643208ed:77:77 [3] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:77:77 [3] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:77:77 [3] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:77:77 [3] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:77:77 [3] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:77:77 [3] NCCL INFO Using network Socket
+8e4a643208ed:75:75 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:75:75 [1] NCCL INFO NET/IB : No device found.
+8e4a643208ed:75:75 [1] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:75:75 [1] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:75:75 [1] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:75:75 [1] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:75:75 [1] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:75:75 [1] NCCL INFO Using network Socket
+8e4a643208ed:78:78 [4] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:78:78 [4] NCCL INFO NET/IB : No device found.
+8e4a643208ed:78:78 [4] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:78:78 [4] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:78:78 [4] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:78:78 [4] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:78:78 [4] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:78:78 [4] NCCL INFO Using network Socket
+8e4a643208ed:80:80 [6] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:80:80 [6] NCCL INFO NET/IB : No device found.
+8e4a643208ed:80:80 [6] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:80:80 [6] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:80:80 [6] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:80:80 [6] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:80:80 [6] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:80:80 [6] NCCL INFO Using network Socket
+8e4a643208ed:79:79 [5] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:79:79 [5] NCCL INFO NET/IB : No device found.
+8e4a643208ed:79:79 [5] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:79:79 [5] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:79:79 [5] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:79:79 [5] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:79:79 [5] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:79:79 [5] NCCL INFO Using network Socket
+8e4a643208ed:76:76 [2] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+8e4a643208ed:76:76 [2] NCCL INFO NET/IB : No device found.
+8e4a643208ed:76:76 [2] NCCL INFO NET/IB : Using [RO]; OOB eth0:172.17.0.2<0>
+8e4a643208ed:76:76 [2] NCCL INFO Failed to initialize NET plugin IB
+8e4a643208ed:76:76 [2] NCCL INFO NET/Socket : Using [0]eth0:172.17.0.2<0>
+8e4a643208ed:76:76 [2] NCCL INFO Initialized NET plugin Socket
+8e4a643208ed:76:76 [2] NCCL INFO Assigned NET plugin Socket to comm
+8e4a643208ed:76:76 [2] NCCL INFO Using network Socket
+8e4a643208ed:74:74 [0] NCCL INFO ncclCommInitRankConfig comm 0x10a9ccc0 rank 0 nranks 8 cudaDev 0 nvmlDev 0 busId 1d000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:78:78 [4] NCCL INFO ncclCommInitRankConfig comm 0x1ceca5e0 rank 4 nranks 8 cudaDev 4 nvmlDev 4 busId aa000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:76:76 [2] NCCL INFO ncclCommInitRankConfig comm 0x22023900 rank 2 nranks 8 cudaDev 2 nvmlDev 2 busId 40000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:75:75 [1] NCCL INFO ncclCommInitRankConfig comm 0x3c3a8410 rank 1 nranks 8 cudaDev 1 nvmlDev 1 busId 1e000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:75:75 [1] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:81:81 [7] NCCL INFO ncclCommInitRankConfig comm 0x4745f650 rank 7 nranks 8 cudaDev 7 nvmlDev 7 busId bc000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:74:74 [0] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:77:77 [3] NCCL INFO ncclCommInitRankConfig comm 0x1d9bc620 rank 3 nranks 8 cudaDev 3 nvmlDev 3 busId 41000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:77:77 [3] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:76:76 [2] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:79:79 [5] NCCL INFO ncclCommInitRankConfig comm 0x1049f690 rank 5 nranks 8 cudaDev 5 nvmlDev 5 busId ab000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:78:78 [4] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:80:80 [6] NCCL INFO ncclCommInitRankConfig comm 0x286ad800 rank 6 nranks 8 cudaDev 6 nvmlDev 6 busId bb000 commId 0x6592bec1a1cf9c34 - Init START
+8e4a643208ed:80:80 [6] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:81:81 [7] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:79:79 [5] NCCL INFO RAS client listening socket at ::1<28028>
+8e4a643208ed:78:78 [4] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:78:78 [4] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:74:74 [0] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:74:74 [0] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:75:75 [1] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:77:77 [3] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:77:77 [3] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:75:75 [1] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:80:80 [6] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:80:80 [6] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:79:79 [5] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:79:79 [5] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:81:81 [7] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:81:81 [7] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:76:76 [2] NCCL INFO TOPO/NET : Importing network plugins to topology
+8e4a643208ed:76:76 [2] NCCL INFO ncclTopoPopulateNics : Filled eth0 in topo with pciPath=(null) keep=1 coll=(null)
+8e4a643208ed:79:79 [5] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:79:79 [5] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:79:79 [5] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:79:79 [5] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:79:79 [5] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:79:79 [5] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:79:79 [5] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:79:79 [5] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:79:79 [5] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:79:79 [5] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:79:79 [5] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:79:79 [5] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:79:79 [5] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:79:79 [5] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:79:79 [5] NCCL INFO ==========================================
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:79:79 [5] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 5 is 32-47,96-111. (GPU affinity = 32-47,96-111 ; CPU affinity = 0-127).
+8e4a643208ed:79:79 [5] NCCL INFO NVLS multicast support is not available on dev 5 (NVLS_NCHANNELS 0)
+8e4a643208ed:78:78 [4] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:78:78 [4] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:78:78 [4] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:78:78 [4] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:78:78 [4] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:80:80 [6] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:78:78 [4] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:80:80 [6] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:74:74 [0] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:80:80 [6] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:74:74 [0] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:78:78 [4] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:80:80 [6] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:74:74 [0] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:74:74 [0] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:74:74 [0] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:74:74 [0] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:78:78 [4] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:78:78 [4] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:78:78 [4] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:80:80 [6] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:78:78 [4] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:80:80 [6] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:80:80 [6] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:74:74 [0] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:78:78 [4] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:74:74 [0] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:74:74 [0] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:78:78 [4] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:78:78 [4] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:78:78 [4] NCCL INFO ==========================================
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:80:80 [6] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:74:74 [0] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:80:80 [6] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:80:80 [6] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:80:80 [6] NCCL INFO ==========================================
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:74:74 [0] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO ==========================================
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:78:78 [4] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 4 is 32-47,96-111. (GPU affinity = 32-47,96-111 ; CPU affinity = 0-127).
+8e4a643208ed:80:80 [6] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:74:74 [0] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:80:80 [6] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 6 is 32-47,96-111. (GPU affinity = 32-47,96-111 ; CPU affinity = 0-127).
+8e4a643208ed:74:74 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is 0-15,64-79. (GPU affinity = 0-15,64-79 ; CPU affinity = 0-127).
+8e4a643208ed:74:74 [0] NCCL INFO NVLS multicast support is not available on dev 0 (NVLS_NCHANNELS 0)
+8e4a643208ed:81:81 [7] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:77:77 [3] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:81:81 [7] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:81:81 [7] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:77:77 [3] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:81:81 [7] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:77:77 [3] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:81:81 [7] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:77:77 [3] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:81:81 [7] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:77:77 [3] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:77:77 [3] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:81:81 [7] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:77:77 [3] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:81:81 [7] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:81:81 [7] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:81:81 [7] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:77:77 [3] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:77:77 [3] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:77:77 [3] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:81:81 [7] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:81:81 [7] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:81:81 [7] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:77:77 [3] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:81:81 [7] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:81:81 [7] NCCL INFO ==========================================
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:77:77 [3] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:77:77 [3] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO ==========================================
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:81:81 [7] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 7 is 32-47,96-111. (GPU affinity = 32-47,96-111 ; CPU affinity = 0-127).
+8e4a643208ed:77:77 [3] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:77:77 [3] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 3 is 0-15,64-79. (GPU affinity = 0-15,64-79 ; CPU affinity = 0-127).
+8e4a643208ed:77:77 [3] NCCL INFO NVLS multicast support is not available on dev 3 (NVLS_NCHANNELS 0)
+8e4a643208ed:76:76 [2] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:76:76 [2] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:76:76 [2] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:76:76 [2] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:76:76 [2] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:76:76 [2] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:76:76 [2] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:76:76 [2] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:76:76 [2] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:76:76 [2] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:76:76 [2] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:76:76 [2] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:76:76 [2] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:76:76 [2] NCCL INFO ==========================================
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:76:76 [2] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 2 is 0-15,64-79. (GPU affinity = 0-15,64-79 ; CPU affinity = 0-127).
+8e4a643208ed:75:75 [1] NCCL INFO === System : maxBw 123.6 totalBw 370.8 ===
+8e4a643208ed:75:75 [1] NCCL INFO CPU/0-0 (1/1/4)
+8e4a643208ed:75:75 [1] NCCL INFO + PCI[5000.0] - NIC/0-0
+8e4a643208ed:75:75 [1] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:75:75 [1] NCCL INFO                 + NET[1.2] - NET/0-0 (0/0/0/1.250000)
+8e4a643208ed:75:75 [1] NCCL INFO + PCI[48.0] - PCI/0-1b000 (1000c03015d91d24)
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-1d000 (0)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-1e000 (1)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:75:75 [1] NCCL INFO + PCI[48.0] - PCI/0-3e000 (1000c03015d91d24)
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-40000 (2)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-41000 (3)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+8e4a643208ed:75:75 [1] NCCL INFO + SYS[40.0] - CPU/0-2
+8e4a643208ed:75:75 [1] NCCL INFO CPU/0-2 (1/1/4)
+8e4a643208ed:75:75 [1] NCCL INFO + PCI[48.0] - PCI/0-a8000 (1000c03015d91d24)
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-aa000 (4)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-ab000 (5)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:75:75 [1] NCCL INFO + PCI[48.0] - PCI/0-b8000 (1000c03015d91d24)
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-bb000 (6)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-bc000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:75:75 [1] NCCL INFO               + PCI[48.0] - GPU/0-bc000 (7)
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-bb000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-ab000
+8e4a643208ed:75:75 [1] NCCL INFO                             + NVL[123.6] - GPU/0-aa000
+8e4a643208ed:75:75 [1] NCCL INFO + SYS[40.0] - CPU/0-0
+8e4a643208ed:75:75 [1] NCCL INFO ==========================================
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) GPU/0-aa000 (5/40.0/SYS) GPU/0-ab000 (5/40.0/SYS) GPU/0-bb000 (5/40.0/SYS) GPU/0-bc000 (5/40.0/SYS) CPU/0-0 (2/48.0/PHB) CPU/0-2 (3/40.0/SYS) NET/0-0 (4/1.2/PHB) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-aa000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (0/5000.0/LOC) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-ab000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (0/5000.0/LOC) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-bb000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (0/5000.0/LOC) GPU/0-bc000 (1/123.6/NVL) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO GPU/0-bc000 :GPU/0-1d000 (5/40.0/SYS) GPU/0-1e000 (5/40.0/SYS) GPU/0-40000 (5/40.0/SYS) GPU/0-41000 (5/40.0/SYS) GPU/0-aa000 (1/123.6/NVL) GPU/0-ab000 (1/123.6/NVL) GPU/0-bb000 (1/123.6/NVL) GPU/0-bc000 (0/5000.0/LOC) CPU/0-0 (3/40.0/SYS) CPU/0-2 (2/48.0/PHB) NET/0-0 (5/1.2/SYS) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO NET/0-0 :GPU/0-1d000 (4/1.2/PHB) GPU/0-1e000 (4/1.2/PHB) GPU/0-40000 (4/1.2/PHB) GPU/0-41000 (4/1.2/PHB) GPU/0-aa000 (5/1.2/SYS) GPU/0-ab000 (5/1.2/SYS) GPU/0-bb000 (5/1.2/SYS) GPU/0-bc000 (5/1.2/SYS) CPU/0-0 (2/1.2/PHB) CPU/0-2 (3/1.2/SYS) NET/0-0 (0/5000.0/LOC) NET/0-0 (0/0.0/DIS) 
+8e4a643208ed:75:75 [1] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is 0-15,64-79. (GPU affinity = 0-15,64-79 ; CPU affinity = 0-127).
+8e4a643208ed:78:78 [4] NCCL INFO NVLS multicast support is not available on dev 4 (NVLS_NCHANNELS 0)
+8e4a643208ed:76:76 [2] NCCL INFO NVLS multicast support is not available on dev 2 (NVLS_NCHANNELS 0)
+8e4a643208ed:75:75 [1] NCCL INFO NVLS multicast support is not available on dev 1 (NVLS_NCHANNELS 0)
+8e4a643208ed:80:80 [6] NCCL INFO NVLS multicast support is not available on dev 6 (NVLS_NCHANNELS 0)
+8e4a643208ed:81:81 [7] NCCL INFO NVLS multicast support is not available on dev 7 (NVLS_NCHANNELS 0)
+8e4a643208ed:81:81 [7] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:81:81 [7] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:81:81 [7] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:81:81 [7] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:81:81 [7] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:81:81 [7] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:75:75 [1] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:75:75 [1] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:75:75 [1] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:77:77 [3] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:75:75 [1] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:75:75 [1] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:75:75 [1] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:77:77 [3] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:77:77 [3] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:77:77 [3] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:78:78 [4] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:78:78 [4] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:78:78 [4] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:78:78 [4] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:78:78 [4] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:78:78 [4] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:74:74 [0] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:74:74 [0] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:80:80 [6] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:80:80 [6] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:80:80 [6] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:79:79 [5] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:79:79 [5] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:79:79 [5] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:76:76 [2] NCCL INFO Pattern 4, crossNic 0, nChannels 2, bw 20.000000/20.000000, type SYS/PIX, sameChannels 1
+8e4a643208ed:76:76 [2] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:76:76 [2] NCCL INFO  1 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:74:74 [0] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:74:74 [0] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:80:80 [6] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:80:80 [6] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:80:80 [6] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:79:79 [5] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:79:79 [5] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:79:79 [5] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:76:76 [2] NCCL INFO Pattern 1, crossNic 0, nChannels 2, bw 40.000000/40.000000, type SYS/PIX, sameChannels 0
+8e4a643208ed:76:76 [2] NCCL INFO  0 : GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000 GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000
+8e4a643208ed:76:76 [2] NCCL INFO  1 : GPU/0-aa000 GPU/0-ab000 GPU/0-bb000 GPU/0-bc000 GPU/0-1d000 GPU/0-1e000 GPU/0-40000 GPU/0-41000
+8e4a643208ed:81:81 [7] NCCL INFO comm 0x4745f650 rank 7 nRanks 8 nNodes 1 localRanks 8 localRank 7 MNNVL 0
+8e4a643208ed:80:80 [6] NCCL INFO comm 0x286ad800 rank 6 nRanks 8 nNodes 1 localRanks 8 localRank 6 MNNVL 0
+8e4a643208ed:74:74 [0] NCCL INFO comm 0x10a9ccc0 rank 0 nRanks 8 nNodes 1 localRanks 8 localRank 0 MNNVL 0
+8e4a643208ed:76:76 [2] NCCL INFO comm 0x22023900 rank 2 nRanks 8 nNodes 1 localRanks 8 localRank 2 MNNVL 0
+8e4a643208ed:75:75 [1] NCCL INFO comm 0x3c3a8410 rank 1 nRanks 8 nNodes 1 localRanks 8 localRank 1 MNNVL 0
+8e4a643208ed:79:79 [5] NCCL INFO comm 0x1049f690 rank 5 nRanks 8 nNodes 1 localRanks 8 localRank 5 MNNVL 0
+8e4a643208ed:78:78 [4] NCCL INFO comm 0x1ceca5e0 rank 4 nRanks 8 nNodes 1 localRanks 8 localRank 4 MNNVL 0
+8e4a643208ed:74:74 [0] NCCL INFO Tree 0 : -1 -> 0 -> 1/-1/-1
+8e4a643208ed:75:75 [1] NCCL INFO Tree 0 : 0 -> 1 -> 2/-1/-1
+8e4a643208ed:74:74 [0] NCCL INFO Tree 2 : -1 -> 0 -> 1/-1/-1
+8e4a643208ed:77:77 [3] NCCL INFO comm 0x1d9bc620 rank 3 nRanks 8 nNodes 1 localRanks 8 localRank 3 MNNVL 0
+8e4a643208ed:75:75 [1] NCCL INFO Tree 2 : 0 -> 1 -> 2/-1/-1
+8e4a643208ed:81:81 [7] NCCL INFO Ring 00 : 6 -> 7 -> 0
+8e4a643208ed:79:79 [5] NCCL INFO Tree 1 : 4 -> 5 -> 6/-1/-1
+8e4a643208ed:81:81 [7] NCCL INFO Ring 01 : 6 -> 7 -> 0
+8e4a643208ed:80:80 [6] NCCL INFO Ring 00 : 5 -> 6 -> 7
+8e4a643208ed:79:79 [5] NCCL INFO Tree 3 : 4 -> 5 -> 6/-1/-1
+8e4a643208ed:78:78 [4] NCCL INFO Tree 1 : -1 -> 4 -> 5/-1/-1
+8e4a643208ed:81:81 [7] NCCL INFO Ring 02 : 6 -> 7 -> 0
+8e4a643208ed:80:80 [6] NCCL INFO Ring 01 : 5 -> 6 -> 7
+8e4a643208ed:81:81 [7] NCCL INFO Ring 03 : 6 -> 7 -> 0
+8e4a643208ed:78:78 [4] NCCL INFO Tree 3 : -1 -> 4 -> 5/-1/-1
+8e4a643208ed:80:80 [6] NCCL INFO Ring 02 : 5 -> 6 -> 7
+8e4a643208ed:81:81 [7] NCCL INFO Trees [0] -1/-1/-1->7->6 [1] 0/-1/-1->7->6 [2] -1/-1/-1->7->6 [3] 0/-1/-1->7->6
+8e4a643208ed:80:80 [6] NCCL INFO Ring 03 : 5 -> 6 -> 7
+8e4a643208ed:80:80 [6] NCCL INFO Trees [0] 7/-1/-1->6->5 [1] 7/-1/-1->6->5 [2] 7/-1/-1->6->5 [3] 7/-1/-1->6->5
+8e4a643208ed:81:81 [7] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:74:74 [0] NCCL INFO Channel 00/04 : 0 1 2 3 4 5 6 7
+8e4a643208ed:80:80 [6] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:79:79 [5] NCCL INFO Ring 00 : 4 -> 5 -> 6
+8e4a643208ed:76:76 [2] NCCL INFO Ring 00 : 1 -> 2 -> 3
+8e4a643208ed:74:74 [0] NCCL INFO Channel 01/04 : 0 1 2 3 4 5 6 7
+8e4a643208ed:79:79 [5] NCCL INFO Ring 01 : 4 -> 5 -> 6
+8e4a643208ed:76:76 [2] NCCL INFO Ring 01 : 1 -> 2 -> 3
+8e4a643208ed:78:78 [4] NCCL INFO Ring 00 : 3 -> 4 -> 5
+8e4a643208ed:74:74 [0] NCCL INFO Channel 02/04 : 0 1 2 3 4 5 6 7
+8e4a643208ed:79:79 [5] NCCL INFO Ring 02 : 4 -> 5 -> 6
+8e4a643208ed:76:76 [2] NCCL INFO Ring 02 : 1 -> 2 -> 3
+8e4a643208ed:75:75 [1] NCCL INFO Ring 00 : 0 -> 1 -> 2
+8e4a643208ed:74:74 [0] NCCL INFO Channel 03/04 : 0 1 2 3 4 5 6 7
+8e4a643208ed:78:78 [4] NCCL INFO Ring 01 : 3 -> 4 -> 5
+8e4a643208ed:79:79 [5] NCCL INFO Ring 03 : 4 -> 5 -> 6
+8e4a643208ed:77:77 [3] NCCL INFO Ring 00 : 2 -> 3 -> 4
+8e4a643208ed:75:75 [1] NCCL INFO Ring 01 : 0 -> 1 -> 2
+8e4a643208ed:76:76 [2] NCCL INFO Ring 03 : 1 -> 2 -> 3
+8e4a643208ed:74:74 [0] NCCL INFO Ring 00 : 7 -> 0 -> 1
+8e4a643208ed:77:77 [3] NCCL INFO Ring 01 : 2 -> 3 -> 4
+8e4a643208ed:78:78 [4] NCCL INFO Ring 02 : 3 -> 4 -> 5
+8e4a643208ed:79:79 [5] NCCL INFO Trees [0] 6/-1/-1->5->4 [1] 6/-1/-1->5->4 [2] 6/-1/-1->5->4 [3] 6/-1/-1->5->4
+8e4a643208ed:76:76 [2] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1 [2] 3/-1/-1->2->1 [3] 3/-1/-1->2->1
+8e4a643208ed:75:75 [1] NCCL INFO Ring 02 : 0 -> 1 -> 2
+8e4a643208ed:74:74 [0] NCCL INFO Ring 01 : 7 -> 0 -> 1
+8e4a643208ed:77:77 [3] NCCL INFO Ring 02 : 2 -> 3 -> 4
+8e4a643208ed:78:78 [4] NCCL INFO Ring 03 : 3 -> 4 -> 5
+8e4a643208ed:79:79 [5] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:74:74 [0] NCCL INFO Ring 02 : 7 -> 0 -> 1
+8e4a643208ed:76:76 [2] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:78:78 [4] NCCL INFO Trees [0] 5/-1/-1->4->3 [1] 5/-1/-1->4->-1 [2] 5/-1/-1->4->3 [3] 5/-1/-1->4->-1
+8e4a643208ed:75:75 [1] NCCL INFO Ring 03 : 0 -> 1 -> 2
+8e4a643208ed:77:77 [3] NCCL INFO Ring 03 : 2 -> 3 -> 4
+8e4a643208ed:74:74 [0] NCCL INFO Ring 03 : 7 -> 0 -> 1
+8e4a643208ed:78:78 [4] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:75:75 [1] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0 [2] 2/-1/-1->1->0 [3] 2/-1/-1->1->0
+8e4a643208ed:77:77 [3] NCCL INFO Trees [0] 4/-1/-1->3->2 [1] -1/-1/-1->3->2 [2] 4/-1/-1->3->2 [3] -1/-1/-1->3->2
+8e4a643208ed:74:74 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->7 [2] 1/-1/-1->0->-1 [3] 1/-1/-1->0->7
+8e4a643208ed:75:75 [1] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:77:77 [3] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:74:74 [0] NCCL INFO P2P Chunksize set to 131072
+8e4a643208ed:81:81 [7] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:81:81 [7] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:78:78 [4] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:78:78 [4] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:76:76 [2] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:79:79 [5] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:79:79 [5] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:76:76 [2] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:75:75 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:75:75 [1] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:81:81 [7] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:78:78 [4] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:76:76 [2] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:79:79 [5] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:75:75 [1] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:80:80 [6] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:80:80 [6] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:74:74 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:74:74 [0] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:80:80 [6] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:77:77 [3] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+8e4a643208ed:77:77 [3] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 0 isAllCudaP2p 1
+8e4a643208ed:81:131 [0] NCCL INFO [Proxy Service] Device 7 CPU core 42
+8e4a643208ed:78:132 [0] NCCL INFO [Proxy Service] Device 4 CPU core 38
+8e4a643208ed:75:140 [0] NCCL INFO [Proxy Service UDS] Device 1 CPU core 64
+8e4a643208ed:78:136 [0] NCCL INFO [Proxy Service UDS] Device 4 CPU core 103
+8e4a643208ed:74:74 [0] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:77:77 [3] NCCL INFO ncclP2pSchedule: group size used is 8
+8e4a643208ed:76:134 [0] NCCL INFO [Proxy Service] Device 2 CPU core 11
+8e4a643208ed:79:135 [0] NCCL INFO [Proxy Service] Device 5 CPU core 39
+8e4a643208ed:75:137 [0] NCCL INFO [Proxy Service] Device 1 CPU core 77
+8e4a643208ed:81:133 [0] NCCL INFO [Proxy Service UDS] Device 7 CPU core 45
+8e4a643208ed:79:139 [0] NCCL INFO [Proxy Service UDS] Device 5 CPU core 104
+8e4a643208ed:76:138 [0] NCCL INFO [Proxy Service UDS] Device 2 CPU core 14
+8e4a643208ed:74:145 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 71
+8e4a643208ed:80:141 [0] NCCL INFO [Proxy Service] Device 6 CPU core 46
+8e4a643208ed:77:144 [0] NCCL INFO [Proxy Service] Device 3 CPU core 5
+8e4a643208ed:74:143 [0] NCCL INFO [Proxy Service] Device 0 CPU core 8
+8e4a643208ed:77:146 [0] NCCL INFO [Proxy Service UDS] Device 3 CPU core 79
+8e4a643208ed:80:142 [0] NCCL INFO [Proxy Service UDS] Device 6 CPU core 97
+8e4a643208ed:81:81 [7] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:81:81 [7] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:81:81 [7] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:74:74 [0] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:74:74 [0] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:74:74 [0] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:77:77 [3] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:77:77 [3] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:77:77 [3] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:78:78 [4] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:78:78 [4] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:78:78 [4] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:75:75 [1] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:75:75 [1] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:75:75 [1] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:79:79 [5] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:79:79 [5] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:79:79 [5] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:76:76 [2] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:76:76 [2] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:76:76 [2] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:74:74 [0] NCCL INFO CC Off, workFifoBytes 1048576
+8e4a643208ed:80:80 [6] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so
+8e4a643208ed:80:80 [6] NCCL INFO threadThresholds 8/8/64 | 64/8/64 | 512 | 512
+8e4a643208ed:80:80 [6] NCCL INFO 4 coll channels, 4 collnet channels, 0 nvls channels, 4 p2p channels, 2 p2p channels per peer
+8e4a643208ed:77:77 [3] NCCL INFO ncclCommInitRankConfig comm 0x1d9bc620 rank 3 nranks 8 cudaDev 3 nvmlDev 3 busId 41000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:81:81 [7] NCCL INFO ncclCommInitRankConfig comm 0x4745f650 rank 7 nranks 8 cudaDev 7 nvmlDev 7 busId bc000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:81:81 [7] NCCL INFO Init timings - ncclCommInitRankConfig: rank 7 nranks 8 total 32.85 (kernels 0.94, alloc 31.44, bootstrap 0.15, allgathers 0.06, topo 0.16, graphs 0.08, connections 0.01, rest 0.02)
+8e4a643208ed:79:79 [5] NCCL INFO ncclCommInitRankConfig comm 0x1049f690 rank 5 nranks 8 cudaDev 5 nvmlDev 5 busId ab000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:77:77 [3] NCCL INFO Init timings - ncclCommInitRankConfig: rank 3 nranks 8 total 32.85 (kernels 0.95, alloc 31.50, bootstrap 0.08, allgathers 0.04, topo 0.16, graphs 0.10, connections 0.02, rest 0.00)
+8e4a643208ed:75:75 [1] NCCL INFO ncclCommInitRankConfig comm 0x3c3a8410 rank 1 nranks 8 cudaDev 1 nvmlDev 1 busId 1e000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:79:79 [5] NCCL INFO Init timings - ncclCommInitRankConfig: rank 5 nranks 8 total 32.85 (kernels 1.04, alloc 31.42, bootstrap 0.06, allgathers 0.00, topo 0.15, graphs 0.14, connections 0.03, rest 0.00)
+8e4a643208ed:75:75 [1] NCCL INFO Init timings - ncclCommInitRankConfig: rank 1 nranks 8 total 32.85 (kernels 0.95, alloc 30.99, bootstrap 0.58, allgathers 0.04, topo 0.16, graphs 0.09, connections 0.02, rest 0.01)
+8e4a643208ed:74:74 [0] NCCL INFO ncclCommInitRankConfig comm 0x10a9ccc0 rank 0 nranks 8 cudaDev 0 nvmlDev 0 busId 1d000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:74:74 [0] NCCL INFO Init timings - ncclCommInitRankConfig: rank 0 nranks 8 total 32.85 (kernels 0.95, alloc 30.15, bootstrap 1.43, allgathers 0.00, topo 0.16, graphs 0.14, connections 0.03, rest 0.00)
+8e4a643208ed:78:78 [4] NCCL INFO ncclCommInitRankConfig comm 0x1ceca5e0 rank 4 nranks 8 cudaDev 4 nvmlDev 4 busId aa000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:78:78 [4] NCCL INFO Init timings - ncclCommInitRankConfig: rank 4 nranks 8 total 32.85 (kernels 0.96, alloc 30.40, bootstrap 1.16, allgathers 0.01, topo 0.16, graphs 0.13, connections 0.02, rest 0.01)
+8e4a643208ed:76:76 [2] NCCL INFO ncclCommInitRankConfig comm 0x22023900 rank 2 nranks 8 cudaDev 2 nvmlDev 2 busId 40000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:80:80 [6] NCCL INFO ncclCommInitRankConfig comm 0x286ad800 rank 6 nranks 8 cudaDev 6 nvmlDev 6 busId bb000 commId 0x6592bec1a1cf9c34 - Init COMPLETE
+8e4a643208ed:76:76 [2] NCCL INFO Init timings - ncclCommInitRankConfig: rank 2 nranks 8 total 32.85 (kernels 1.30, alloc 30.35, bootstrap 0.87, allgathers 0.00, topo 0.16, graphs 0.14, connections 0.03, rest 0.01)
+8e4a643208ed:80:80 [6] NCCL INFO Init timings - ncclCommInitRankConfig: rank 6 nranks 8 total 32.85 (kernels 1.02, alloc 31.51, bootstrap 0.00, allgathers 0.00, topo 0.16, graphs 0.14, connections 0.03, rest 0.01)
+8e4a643208ed:75:75 [1] NCCL INFO Channel 00/0 : 1[1] -> 2[2] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 00/0 : 6[6] -> 7[7] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 01/0 : 1[1] -> 2[2] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 01/0 : 6[6] -> 7[7] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 02/0 : 1[1] -> 2[2] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 02/0 : 6[6] -> 7[7] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 03/0 : 6[6] -> 7[7] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 03/0 : 1[1] -> 2[2] via P2P/CUMEM
+8e4a643208ed:79:79 [5] NCCL INFO Channel 00/0 : 5[5] -> 6[6] via P2P/CUMEM
+8e4a643208ed:79:79 [5] NCCL INFO Channel 01/0 : 5[5] -> 6[6] via P2P/CUMEM
+8e4a643208ed:81:81 [7] NCCL INFO Channel 00 : 7[7] -> 0[0] via SHM/direct/direct
+8e4a643208ed:79:79 [5] NCCL INFO Channel 02/0 : 5[5] -> 6[6] via P2P/CUMEM
+8e4a643208ed:79:79 [5] NCCL INFO Channel 03/0 : 5[5] -> 6[6] via P2P/CUMEM
+8e4a643208ed:81:81 [7] NCCL INFO Channel 01 : 7[7] -> 0[0] via SHM/direct/direct
+8e4a643208ed:81:81 [7] NCCL INFO Channel 02 : 7[7] -> 0[0] via SHM/direct/direct
+8e4a643208ed:74:74 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] via P2P/CUMEM
+8e4a643208ed:81:81 [7] NCCL INFO Channel 03 : 7[7] -> 0[0] via SHM/direct/direct
+8e4a643208ed:74:74 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 00 : 3[3] -> 4[4] via SHM/direct/direct
+8e4a643208ed:74:74 [0] NCCL INFO Channel 02/0 : 0[0] -> 1[1] via P2P/CUMEM
+8e4a643208ed:78:78 [4] NCCL INFO Channel 00/0 : 4[4] -> 5[5] via P2P/CUMEM
+8e4a643208ed:74:74 [0] NCCL INFO Channel 03/0 : 0[0] -> 1[1] via P2P/CUMEM
+8e4a643208ed:78:78 [4] NCCL INFO Channel 01/0 : 4[4] -> 5[5] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 01 : 3[3] -> 4[4] via SHM/direct/direct
+8e4a643208ed:78:78 [4] NCCL INFO Channel 02/0 : 4[4] -> 5[5] via P2P/CUMEM
+8e4a643208ed:76:76 [2] NCCL INFO Channel 00/0 : 2[2] -> 3[3] via P2P/CUMEM
+8e4a643208ed:78:78 [4] NCCL INFO Channel 03/0 : 4[4] -> 5[5] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 02 : 3[3] -> 4[4] via SHM/direct/direct
+8e4a643208ed:76:76 [2] NCCL INFO Channel 01/0 : 2[2] -> 3[3] via P2P/CUMEM
+8e4a643208ed:76:76 [2] NCCL INFO Channel 02/0 : 2[2] -> 3[3] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 03 : 3[3] -> 4[4] via SHM/direct/direct
+8e4a643208ed:76:76 [2] NCCL INFO Channel 03/0 : 2[2] -> 3[3] via P2P/CUMEM
+8e4a643208ed:79:79 [5] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:78:78 [4] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:81:81 [7] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:80:80 [6] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:74:74 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:77:77 [3] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:76:76 [2] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+8e4a643208ed:75:75 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+/usr/local/lib/python3.12/dist-packages/torch/distributed/c10d_logger.py:83: UserWarning: barrier(): using the device under current context. You can specify `device_id` in `init_process_group` to mute this warning.
+  return func(*args, **kwargs)
+     4096 B     41.07 us/op  busbw    0.17 GB/s
+    16384 B     36.13 us/op  busbw    0.79 GB/s
+    65536 B     69.53 us/op  busbw    1.65 GB/s
+   524288 B    141.63 us/op  busbw    6.48 GB/s
+8e4a643208ed:79:79 [5] NCCL INFO Channel 00/0 : 5[5] -> 4[4] via P2P/CUMEM
+8e4a643208ed:78:78 [4] NCCL INFO Channel 00 : 4[4] -> 3[3] via SHM/direct/direct
+8e4a643208ed:79:79 [5] NCCL INFO Channel 01/0 : 5[5] -> 4[4] via P2P/CUMEM
+8e4a643208ed:76:76 [2] NCCL INFO Channel 00/0 : 2[2] -> 1[1] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 00/0 : 1[1] -> 0[0] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 00/0 : 6[6] -> 5[5] via P2P/CUMEM
+8e4a643208ed:76:76 [2] NCCL INFO Channel 01/0 : 2[2] -> 1[1] via P2P/CUMEM
+8e4a643208ed:79:79 [5] NCCL INFO Channel 02/0 : 5[5] -> 4[4] via P2P/CUMEM
+8e4a643208ed:79:79 [5] NCCL INFO Channel 03/0 : 5[5] -> 4[4] via P2P/CUMEM
+8e4a643208ed:81:81 [7] NCCL INFO Channel 00/0 : 7[7] -> 6[6] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 01/0 : 1[1] -> 0[0] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 01/0 : 6[6] -> 5[5] via P2P/CUMEM
+8e4a643208ed:76:76 [2] NCCL INFO Channel 02/0 : 2[2] -> 1[1] via P2P/CUMEM
+8e4a643208ed:74:74 [0] NCCL INFO Channel 01 : 0[0] -> 7[7] via SHM/direct/direct
+8e4a643208ed:76:76 [2] NCCL INFO Channel 03/0 : 2[2] -> 1[1] via P2P/CUMEM
+8e4a643208ed:78:78 [4] NCCL INFO Channel 02 : 4[4] -> 3[3] via SHM/direct/direct
+8e4a643208ed:81:81 [7] NCCL INFO Channel 01/0 : 7[7] -> 6[6] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 02/0 : 1[1] -> 0[0] via P2P/CUMEM
+8e4a643208ed:74:74 [0] NCCL INFO Channel 03 : 0[0] -> 7[7] via SHM/direct/direct
+8e4a643208ed:77:77 [3] NCCL INFO Channel 00/0 : 3[3] -> 2[2] via P2P/CUMEM
+8e4a643208ed:75:75 [1] NCCL INFO Channel 03/0 : 1[1] -> 0[0] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 02/0 : 6[6] -> 5[5] via P2P/CUMEM
+8e4a643208ed:81:81 [7] NCCL INFO Channel 02/0 : 7[7] -> 6[6] via P2P/CUMEM
+8e4a643208ed:81:81 [7] NCCL INFO Channel 03/0 : 7[7] -> 6[6] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 01/0 : 3[3] -> 2[2] via P2P/CUMEM
+8e4a643208ed:80:80 [6] NCCL INFO Channel 03/0 : 6[6] -> 5[5] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 02/0 : 3[3] -> 2[2] via P2P/CUMEM
+8e4a643208ed:77:77 [3] NCCL INFO Channel 03/0 : 3[3] -> 2[2] via P2P/CUMEM
+8e4a643208ed:74:74 [0] NCCL INFO Connected all trees
+8e4a643208ed:81:81 [7] NCCL INFO Connected all trees
+8e4a643208ed:78:78 [4] NCCL INFO Connected all trees
+8e4a643208ed:80:80 [6] NCCL INFO Connected all trees
+8e4a643208ed:79:79 [5] NCCL INFO Connected all trees
+8e4a643208ed:75:75 [1] NCCL INFO Connected all trees
+8e4a643208ed:77:77 [3] NCCL INFO Connected all trees
+8e4a643208ed:76:76 [2] NCCL INFO Connected all trees
+  8388608 B    986.78 us/op  busbw   14.88 GB/s
+8e4a643208ed:74:74 [0] NCCL INFO comm 0x10a9ccc0 rank 0 nranks 8 cudaDev 0 busId 1d000 - Destroy COMPLETE
+8e4a643208ed:79:79 [5] NCCL INFO comm 0x1049f690 rank 5 nranks 8 cudaDev 5 busId ab000 - Destroy COMPLETE
+8e4a643208ed:76:76 [2] NCCL INFO comm 0x22023900 rank 2 nranks 8 cudaDev 2 busId 40000 - Destroy COMPLETE
+8e4a643208ed:80:80 [6] NCCL INFO comm 0x286ad800 rank 6 nranks 8 cudaDev 6 busId bb000 - Destroy COMPLETE
+8e4a643208ed:75:75 [1] NCCL INFO comm 0x3c3a8410 rank 1 nranks 8 cudaDev 1 busId 1e000 - Destroy COMPLETE
+8e4a643208ed:78:78 [4] NCCL INFO comm 0x1ceca5e0 rank 4 nranks 8 cudaDev 4 busId aa000 - Destroy COMPLETE
+8e4a643208ed:81:81 [7] NCCL INFO comm 0x4745f650 rank 7 nranks 8 cudaDev 7 busId bc000 - Destroy COMPLETE
+8e4a643208ed:77:77 [3] NCCL INFO comm 0x1d9bc620 rank 3 nranks 8 cudaDev 3 busId 41000 - Destroy COMPLETE
+8e4a643208ed:76:76 [2] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:81:81 [7] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:74:74 [0] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:75:75 [1] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:78:78 [4] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:77:77 [3] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:79:79 [5] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault
+8e4a643208ed:80:80 [6] NCCL INFO ENV/Plugin: Closing env plugin ncclEnvDefault

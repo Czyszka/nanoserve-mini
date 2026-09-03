@@ -1,0 +1,20 @@
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-41000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+f6e70d29e30f:76:76 [2] NCCL INFO                             + NVL[123.6] - GPU/0-1d000
+f6e70d29e30f:76:76 [2] NCCL INFO GPU/0-1d000 :GPU/0-1d000 (0/5000.0/LOC) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) CPU/0-0 (2/48.0/PHB) NET/0-0 (4/1.2/PHB) 
+f6e70d29e30f:76:76 [2] NCCL INFO GPU/0-1e000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (0/5000.0/LOC) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (1/123.6/NVL) CPU/0-0 (2/48.0/PHB) NET/0-0 (4/1.2/PHB) 
+f6e70d29e30f:76:76 [2] NCCL INFO GPU/0-40000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (0/5000.0/LOC) GPU/0-41000 (1/123.6/NVL) CPU/0-0 (2/48.0/PHB) NET/0-0 (4/1.2/PHB) 
+f6e70d29e30f:76:76 [2] NCCL INFO GPU/0-41000 :GPU/0-1d000 (1/123.6/NVL) GPU/0-1e000 (1/123.6/NVL) GPU/0-40000 (1/123.6/NVL) GPU/0-41000 (0/5000.0/LOC) CPU/0-0 (2/48.0/PHB) NET/0-0 (4/1.2/PHB) 
+f6e70d29e30f:76:76 [2] NCCL INFO NVLS multicast support is not available on dev 2 (NVLS_NCHANNELS 0)
+f6e70d29e30f:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-1e000
+f6e70d29e30f:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-40000
+f6e70d29e30f:74:74 [0] NCCL INFO                             + NVL[123.6] - GPU/0-41000

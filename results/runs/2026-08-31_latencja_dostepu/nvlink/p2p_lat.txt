@@ -1,0 +1,5 @@
+GPU0->GPU1  peer=True   12.87 us/op
+GPU0->GPU2  peer=True   12.88 us/op
+GPU0->GPU3  peer=True   24.34 us/op
+GPU0->GPU4  peer=True   25.93 us/op
+GPU3->GPU4  peer=True   16.06 us/op
