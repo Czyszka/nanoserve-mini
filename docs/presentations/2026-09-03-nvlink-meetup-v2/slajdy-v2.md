@@ -296,6 +296,73 @@ ostatnia karta. Ring all-reduce, NCCL — w notes.
 
 ---
 
+#### Slajd 7 — SZKIC treści (runda 4, po dyskusji o mechanizmie)
+
+Status: SZKIC. Zastępuje tezę v1 „liczy się latencja, nie przepustowość".
+Zasada: zero mikrosekund na slajdzie, jedna analogia, trzy zdania.
+
+**Na slajdzie:**
+
+> ## Gdzie znika czas: karty muszą się dogadać 122 razy na każde słowo
+>
+> [OBRAZEK: 4 karty w rzędzie; nad nimi klamra „jedna warstwa modelu";
+> po każdej warstwie strzałki między wszystkimi kartami z podpisem
+> „dodajemy wyniki"; z boku licznik „× 61 warstw × 2 = 122 razy na token"]
+>
+> Każde takie „dogadanie się" kosztuje:
+>
+> - **stałe ~30 µs** — start, uzgodnienie, czekanie na najwolniejszą kartę
+>   (zawsze, nawet dla 1 użytkownika)
+> - **+ przesył danych** — tym dłuższy, im więcej użytkowników naraz
+>   i im wolniejsze łącze
+>
+> **1 użytkownik → prawie sam koszt stały. 32 użytkowników → przesył
+> dominuje. Szybsze łącze skraca tylko przesył.**
+
+**Speaker notes (do przeczytania na głos, ~2 min):**
+
+Wróćmy do slajdu z krokiem. Model jest pocięty na osiem kart, więc po
+każdej warstwie karty muszą dodać do siebie swoje wyniki częściowe. To
+jest operacja all-reduce. Warstw jest 61, dodawanie robi się dwa razy na
+warstwę, więc na jeden wygenerowany token karty dogadują się 122 razy. I
+żadna nie może liczyć dalej, dopóki nie skończy ostatnia.
+
+Każde takie dogadanie ma dwa koszty. Pierwszy jest stały: uruchomić
+operację, ustalić między kartami, że wszystkie są gotowe, poczekać na
+najwolniejszą. To około trzydziestu mikrosekund i płacimy je zawsze,
+niezależnie od tego, czy przesyłamy 10 kilobajtów, czy pół megabajta.
+Drugi koszt to sam przesył danych, i ten zależy od dwóch rzeczy: ile
+danych i jak szybkie łącze.
+
+Teraz kluczowe: ile danych zależy od tego, ilu użytkowników obsługujemy
+naraz. Jeden użytkownik to kilkanaście kilobajtów na dogadanie —
+przesył trwa mikrosekundę, ginie w koszcie stałym. Trzydziestu dwóch
+użytkowników to pół megabajta — przesył trwa dziesiątki mikrosekund,
+tyle co koszt stały albo więcej.
+
+I stąd cała reszta prezentacji. Dla jednego użytkownika czas kroku to
+122 razy koszt stały, którego żadne łącze nie skraca — dlatego NVLink dał
+tam tylko 20%. Dla wielu użytkowników czas kroku to głównie przesył —
+i tam szybsze łącze skraca krok dwa razy. To samo tłumaczy pusty licznik
+PCIe: przez większość czasu karty nie przesyłają, tylko czekają.
+
+**Analogia (opcjonalnie, jeśli sala nie techniczna):** 122 kursy
+kurierem na jedno słowo. Każdy kurs to wsiadanie do auta (stałe) plus
+jazda (zależy od ładunku i drogi). Z małą paczką szybsza droga nic nie
+daje — cały czas to wsiadanie. Z ciężarówką pełną paczek droga zaczyna
+się liczyć.
+
+**Co idzie do slajdu 9 (po topologii):** tabela z sesji 08-31 w formie
+dwóch wierszy: „koszt stały: PCIe ~30 µs / NVLink ~30 µs — bez zmian";
+„przesył 8 MB: 14 GB/s / 197 GB/s — 14× szybciej". Plus zdanie o wyspach:
+NVLink łączy 4 karty; Kimi na 8 kartach ma dwa wolne odcinki między
+wyspami, dlatego 2×, a Qwen na 4 kartach 3×. Custom all-reduce — notes.
+
+**Decyzja 5 do rewizji:** busbw (GB/s) wraca na slajd 9 jako „przesył",
+bo to on jest mechanizmem zysku.
+
+---
+
 ### 8. Topologia sprzętowa przed NVLink, parametry PCIe
 
 **Propozycja użytkownika:** topologia sprzętowa przed nvlink, parametry
