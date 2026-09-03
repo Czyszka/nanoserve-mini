@@ -299,42 +299,53 @@ Jeśli trzeba ciąć: definicja GPU-Util schodzi do podpisu klamry na G2.
 
 ---
 
-## Slajd 6 — Rozkład czasu kroku: profil (2 min)
+## Slajd 6 — Rozkład czasu kroku (2 min)
 
-Status: SZKIC. Dane: profil Kimi ery PCIe (ilościowy); seria Qwen TP1→8
-po NVLinku jako slajd zapasowy (jakościowy).
+Status: W ITERACJI (2026-09-03): jeden pasek — Kimi 8 kart pod
+obciążeniem (profil c=16 z 06-11, bez podawania liczby użytkowników);
+definicja profilera przeredagowana („oś czasu" wycięte). Tytuł neutralny
+jak na slajdach 3–4 — do potwierdzenia. Kolory składników jak na slajdzie 5.
 
 ### Na slajdzie
 
-> ## Pomiar: w kroku dominuje czekanie na inne karty
+> ## Rozkład czasu kroku
 >
-> Narzędzie: **torch profiler** — rejestrator osi czasu karty: co dokładnie
-> i jak długo wykonywała w każdej milisekundzie
+> Pomiar: **torch profiler** — nagrywa każdą operację karty razem z czasem
+> jej trwania; z nagrania sumujemy, ile zajął każdy składnik kroku
 >
-> [WYKRES W3': dwa poziome słupki skumulowane 0–100%, Kimi na 8 kartach:
-> **1 użytkownik:** przerwy (silnik) 63% · komunikacja 23% · obliczenia 9%
-> **16 użytkowników:** przerwy 10% · **komunikacja 84%** · obliczenia 5%]
+> [WYKRES W3': jeden szeroki poziomy pasek 0–100%, podpis „Kimi, 8 kart,
+> serwer pod obciążeniem". Odcinki w kolorach ze slajdu 5:
+> przerwy (silnik) **10%** · **komunikacja 84%** · obliczenia **5%** ·
+> wąski szary odcinek „inne" bez liczby. Pod paskiem ta sama ramka wzoru
+> co na slajdzie 5, w tych samych kolorach, bez zmian — pasek jest jej
+> wypełnieniem liczbami.]
 >
-> **Pod obciążeniem karty przez 84% kroku czekają na siebie.
+> **Karty przez 84% kroku wymieniają wyniki i czekają na siebie.
 > Liczą przez 5%.**
 
 ### Notes
 
-Torch profiler to rejestrator: włączamy go na kilkadziesiąt sekund
-i dostajemy pełną oś czasu każdej karty. Potem sumujemy, ile czasu zajął
-każdy kolor z poprzedniego slajdu. Dwa pomiary Kimi na ośmiu kartach.
-Pierwszy: jeden użytkownik. Największa część kroku to przerwy — sześćdziesiąt
-trzy procent czasu karta nie wykonuje nic, czeka na silnik. Komunikacja
-dwadzieścia trzy procent, obliczenia dziewięć. Drugi pomiar: szesnastu
-użytkowników naraz. Przerwy prawie znikają — silnik ma co robić — i na
-wierzch wychodzi komunikacja: osiemdziesiąt cztery procent kroku karty
-wymieniają wyniki i czekają na siebie. Obliczenia: pięć procent. To jest
-odpowiedź na obraz z nvidia-smi: sto procent zajętości, bo kernel
-komunikacyjny trwa; trzydzieści procent mocy, bo czekanie nie grzeje.
-Zostaje pytanie, dlaczego komunikacja jest aż tak droga.
+Torch profiler to rejestrator: włączamy go na kilkadziesiąt sekund pracy
+serwera i dostajemy nagranie każdej operacji na każdej karcie, z czasem
+jej trwania. Potem sumujemy, ile czasu zajął każdy z trzech składników
+z poprzedniego slajdu. Pasek to Kimi na ośmiu kartach, serwer pod
+obciążeniem, wielu użytkowników naraz. Przerwy: dziesięć procent — silnik
+ma co robić, karta rzadko czeka na procesor. Obliczenia: pięć procent.
+I komunikacja: osiemdziesiąt cztery procent kroku karty wymieniają wyniki
+częściowe i czekają, aż wszystkie skończą. To jest odpowiedź na obraz
+z nvidia-smi: sto procent zajętości, bo kernel komunikacyjny trwa;
+trzydzieści procent mocy, bo czekanie nie grzeje. Zostaje pytanie,
+dlaczego komunikacja jest aż tak droga.
 
-Źródło: v1 slajdy 10/12 (`2026-06-11-nvlink-boundary-verdict.md` K2;
-trace c16 narzut ~2%). W notes NIE mówimy o anomalii c=16.
+Q&A (nie na głos): profil przy 16 równoległych zapytaniach, era PCIe
+(06-11); kontrola narzutu profilera: ITL profilowany vs nie ±2%. Dla
+jednego użytkownika rozkład jest inny: 63% przerwy / 23% komunikacja /
+9% obliczenia — wtedy rządzi silnik, nie łącze (wraca na slajdzie 10 jako
+„1 użytkownik: 1,2×"). Ten sam mechanizm u Qwena na 4 kartach przy 64
+użytkownikach: 53% komunikacja.
+
+Źródło: `2026-06-11-nvlink-boundary-verdict.md` K2 (NCCL 83,9%, gaps 10%,
+compute 4,6%); c=1 — sesja 06-10 (v1 slajd 10); Qwen TP4 c64 — Q4.
 
 ---
 
@@ -550,7 +561,7 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | W2' | 4 | słupki pionowe grupowane: 4 liczniki × (Qwen 1, Qwen 8, Kimi 8) | v1 W2 + qwen-tp-curve |
 | W1' | 3 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
 | G2 | 5 | oś czasu kroku, 3 kolory (szary/pomarańcz/jasnoszary), klamra nad kernelami + ramka wzoru | v1 D2 |
-| W3' | 6 | 2 słupki skumulowane Kimi c1 / c16 | v1 W3 |
+| W3' | 6 | 1 pasek skumulowany Kimi 8 kart pod obciążeniem (c16) + ramka wzoru | v1 W3 |
 | G3 | 7 | 4 karty, all-reduce, licznik 122 | v1 D3 (uproszczony) |
 | G4 / G4' | 8 / 9 | topologia przed / po (ten sam rysunek + mostki) | v1 D1 / D1-PO |
 | W5a | 10 | Kimi: sekundy przed/po dla 1/8/16/32 | nowy |
