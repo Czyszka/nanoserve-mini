@@ -16,19 +16,19 @@ Konwencja: **Na slajdzie** = dokładny tekst; **Notes** = narracja na głos;
 
 ## Slajd 0 — Tytuł (1 min)
 
-Status: tytuł ZAAKCEPTOWANY; reszta SZKIC.
+Status: ZAAKCEPTOWANY (2026-09-03). Decyzje: podtytuł bez NVLink; bez danych prelegenta/daty/linków.
 
 ### Na slajdzie
 
 > # 100% GPU-Util, a tylko 30% limitu mocy.
 > # Co jest wąskim gardłem?
 >
-> Badania wydajnościowe serwera 8×H200 i ich efekty — studium przypadku NVLink
+> Badania wydajnościowe serwera 8×H200 i ich efekty — studium przypadku
 
 ### Notes
 
 To jest prawdziwy odczyt z naszego serwera: osiem kart H200, każda pokazuje
-sto procent obciążenia, a pobiera jedną trzecią mocy. Przez kilka tygodni
+sto procent obciążenia, a pobiera około trzydziestu procent mocy. Przez kilka tygodni
 szukaliśmy, co jest wąskim gardłem. Opowiem, co znaleźliśmy, co zmieniliśmy
 w serwerze i ile to dało — w sekundach, dla użytkownika. Odpowiedź na
 pytanie z tytułu będzie na ostatnim slajdzie, w jednym zdaniu.
