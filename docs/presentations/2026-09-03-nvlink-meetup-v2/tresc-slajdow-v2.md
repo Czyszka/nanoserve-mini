@@ -134,8 +134,8 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ## Slajd 3 — Wykorzystanie zasobów GPU (2 min)
 
-Status: ZAAKCEPTOWANY (2026-09-03; tytuł użytkownika; GPU-Util Qwen 100%
-wg obserwacji). Rola slajdu: pierwszy ruch diagnosty —
+Status: ZAAKCEPTOWANY (2026-09-03; tytuł i puenta użytkownika z redakcją;
+GPU-Util Qwen 100% wg obserwacji; liczby Qwena czerwcowe). Rola slajdu: pierwszy ruch diagnosty —
 klasyczni podejrzani (obliczenia, pamięć) odpadają; narzędzie + wynik,
 bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 
@@ -151,10 +151,10 @@ bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 > „jednostki liczące (SM) — % czasu aktywne" · „pamięć HBM — % czasu
 > aktywna". W każdej grupie dwa słupki: **niebieski Kimi, 8 kart** i
 > **zielony Qwen, 1 karta** (kolory jak na slajdzie 2). Wartości nad
-> słupkami. Kimi: 100 / 30 / 20 / 8; Qwen: 100 / ~72 / ~65 / ~38 (liczby
-> mocy/SM/HBM Qwena do policzenia z aktywnej części okna).]
+> słupkami. Kimi: 100 / 30 / 20 / 8; Qwen: 100 / 73 / 67 / 39.]
 >
-> **Skoro nic nie pracuje blisko granicy — co karta robi przez 100% czasu?**
+> **Żaden element karty nie pracuje na granicy możliwości — więc żaden
+> z nich nie jest wąskim gardłem.**
 
 ### Notes
 
@@ -165,20 +165,20 @@ odpowiadają na pytanie „czy karta jest zajęta naprawdę". Niebieskie słupki
 to Kimi na ośmiu kartach. Moc: trzydzieści procent limitu. Jednostki
 liczące, czyli bloki na karcie, które mnożą macierze: aktywne przez
 dwadzieścia procent czasu. Pamięć karty: aktywna przez osiem procent
-czasu. Zielone słupki to model testowy na jednej karcie: moc ponad
-siedemdziesiąt procent, jednostki liczące ponad sześćdziesiąt, pamięć
-prawie czterdzieści. I GPU-Util dla niej: też sto procent — ta metryka
+czasu. Zielone słupki to model testowy na jednej karcie: moc siedemdziesiąt
+trzy procent, jednostki liczące sześćdziesiąt siedem, pamięć trzydzieści
+dziewięć. I GPU-Util dla niej: też sto procent — ta metryka
 w ogóle nie rozróżnia obu przypadków. Czyli kartę da się obciążyć. Wniosek z tego slajdu: dwaj klasyczni
-podejrzani, za mało mocy obliczeniowej i za wolna pamięć, odpadają. Nic na
-karcie nie pracuje blisko granicy. A mimo to karta jest „zajęta" przez
-sto procent czasu. Co ona wtedy robi? To jest pytanie na następne dwa
+podejrzani, za mało mocy obliczeniowej i za wolna pamięć, odpadają. Żaden element
+karty nie pracuje na granicy możliwości, więc żaden nie jest wąskim
+gardłem. A mimo to karta jest „zajęta" przez sto procent czasu. Co ona wtedy robi? To jest pytanie na następne dwa
 slajdy.
 
 Źródło: Kimi — `2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
 (v1 W2: 199 W, SM 0,20, DRAM 0,070; c=1 niemal identycznie: 170 W, 0,21,
-0,093); GPU-Util 100% — zrzut nvidia-smi. Qwen — `2026-08-31_latencja_dostepu/qwen/tp1_c64_dcgmi.txt`,
-GPU0, część aktywna (czerwcowe active-filtered: 436 W, 0,665, 0,385 —
-kontrola zgodności). GPU-Util Qwena TP1 pod obciążeniem = 100% —
+0,093); GPU-Util 100% — zrzut nvidia-smi. Qwen — `2026-06-11-qwen-tp-curve.md` (TP1 c64
+active-filtered: 436 W = 73%, SM 0,665, DRAM 0,385); decyzja: liczby
+czerwcowe, bez liczenia nowych z 08-31 (zbieżne). GPU-Util Qwena TP1 pod obciążeniem = 100% —
 obserwacja prelegenta z sesji (nvidia-smi na żywo); w repo brak zapisanego
 zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celowo poza slajdem (wraca na slajdzie 8).
 
