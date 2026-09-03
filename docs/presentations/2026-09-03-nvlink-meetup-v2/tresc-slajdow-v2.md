@@ -233,7 +233,7 @@ zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celow
 
 ## Slajd 5 — Jeden token = jeden krok. Z czego składa się krok? (2,5 min)
 
-Status: W ITERACJI (2026-09-03): wzór słowami w kolorach składników
+Status: ZAAKCEPTOWANY (2026-09-03): wzór słowami w kolorach składników
 (życzenie użytkownika; symbole tylko w Q&A), definicja GPU-Util tutaj
 (decyzja 3), puenta użytkownika. Kolory składników — ustalone raz, wracają
 na slajdach 6 i 7: obliczenia ciemnoszary · komunikacja pomarańczowy ·
