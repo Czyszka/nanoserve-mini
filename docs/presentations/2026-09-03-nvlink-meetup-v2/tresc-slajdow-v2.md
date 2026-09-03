@@ -132,41 +132,58 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ---
 
-## Slajd 3 — Pomiary DCGM: żaden zasób nie pracuje (2 min)
+## Slajd 3 — Zasoby GPU: zajęte w 100%, wykorzystane w 20% (2 min)
 
-Status: SZKIC.
+Status: W ITERACJI (2026-09-03). Rola slajdu: pierwszy ruch diagnosty —
+klasyczni podejrzani (obliczenia, pamięć) odpadają; narzędzie + wynik,
+bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb. Tytuł —
+wariant 1 (do potwierdzenia; alternatywy: „Zasoby GPU pod lupą: co
+naprawdę pracuje?", „Które zasoby GPU pracują?").
 
 ### Na slajdzie
 
-> ## Żaden zasób karty nie jest wykorzystany
+> ## Zasoby GPU: zajęte w 100%, wykorzystane w 20%
 >
-> Narzędzie: **DCGM** (liczniki sprzętowe NVIDIA, odczyt z hosta, co 1 s)
+> Narzędzie: **DCGM** — liczniki sprzętowe NVIDIA, odczyt z hosta co 1 s
 >
-> [WYKRES W2': cztery poziome paski 0–100%, Kimi pod obciążeniem:
-> GPU-Util **100%** · pobór mocy **30%** limitu · jednostki liczące (SM)
-> aktywne **20%** czasu · pamięć karty (HBM) aktywna **8%** czasu;
-> szary pasek odniesienia: „ten sam typ karty, model na 1 karcie:
-> moc 73%, SM 68%, HBM 39%"]
+> [WYKRES W2': pionowe słupki grupowane, oś Y 0–100%. Cztery grupy:
+> „GPU-Util (nvidia-smi)" · „pobór mocy (z limitu 600 W)" ·
+> „jednostki liczące (SM) — % czasu aktywne" · „pamięć HBM — % czasu
+> aktywna". W każdej grupie dwa słupki: **niebieski Kimi, 8 kart** i
+> **zielony Qwen, 1 karta** (kolory jak na slajdzie 2). Wartości nad
+> słupkami. Grupa GPU-Util: tylko słupek Kimi (100%); miejsce Qwena
+> puste z małym podpisem „nie rejestrowano". Kimi: 100 / 30 / 20 / 8;
+> Qwen: — / ~72 / ~65 / ~38 (liczby Qwena do policzenia z aktywnej części
+> okna).]
 >
-> **GPU-Util mówi 100%. Liczniki mówią: nic nie jest nasycone.**
+> **Skoro nic nie pracuje blisko granicy — co karta robi przez 100% czasu?**
 
 ### Notes
 
 nvidia-smi ma jedną metrykę obciążenia. DCGM, drugie narzędzie NVIDIA, ma
 kilkadziesiąt liczników sprzętowych — czytamy je z hosta, co sekundę, bez
-ingerencji w kontenery. Trzy z nich odpowiadają na pytanie „czy karta jest
-zajęta naprawdę". Moc: trzydzieści procent limitu. Jednostki liczące,
-czyli te bloki na karcie, które mnożą macierze: aktywne przez dwadzieścia
-procent czasu. Pamięć karty: aktywna przez osiem procent czasu. Dla
-porównania szary pasek: ten sam typ karty, ale model, który mieści się na
-jednej karcie — moc siedemdziesiąt procent, jednostki liczące prawie
-siedemdziesiąt. Czyli kartę da się obciążyć. Tylko w tej konfiguracji,
-z modelem rozłożonym na osiem kart, nic na karcie nie pracuje blisko
-granicy. To nie jest wąskie gardło w klasycznym sensie — żaden zasób nie
-jest wysycony. Musimy szukać gdzie indziej.
+ingerencji w kontenery i bez zatrzymywania serwera. Trzy z nich
+odpowiadają na pytanie „czy karta jest zajęta naprawdę". Niebieskie słupki
+to Kimi na ośmiu kartach. Moc: trzydzieści procent limitu. Jednostki
+liczące, czyli bloki na karcie, które mnożą macierze: aktywne przez
+dwadzieścia procent czasu. Pamięć karty: aktywna przez osiem procent
+czasu. Zielone słupki to model testowy na jednej karcie: moc ponad
+siedemdziesiąt procent, jednostki liczące ponad sześćdziesiąt, pamięć
+prawie czterdzieści. Czyli kartę da się obciążyć — i ten sam nvidia-smi
+pokazałby dla niej też sto procent. Wniosek z tego slajdu: dwaj klasyczni
+podejrzani, za mało mocy obliczeniowej i za wolna pamięć, odpadają. Nic na
+karcie nie pracuje blisko granicy. A mimo to karta jest „zajęta" przez
+sto procent czasu. Co ona wtedy robi? To jest pytanie na następne dwa
+slajdy.
 
-Źródło: v1 slajd 5 (Kimi TP8 c64: 199 W, SM 0,20, DRAM 0,070); odniesienie
-Qwen TP1 c64 era PCIe (436 W, SM 0,665, DRAM 0,39).
+Źródło: Kimi — `2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
+(v1 W2: 199 W, SM 0,20, DRAM 0,070; c=1 niemal identycznie: 170 W, 0,21,
+0,093); GPU-Util 100% — zrzut nvidia-smi. Qwen — `2026-08-31_latencja_dostepu/qwen/tp1_c64_dcgmi.txt`,
+GPU0, część aktywna (czerwcowe active-filtered: 436 W, 0,665, 0,385 —
+kontrola zgodności). GPU-Util Qwena pod obciążeniem nie było zapisane
+(nvidia-smi tylko idle/start) — na wykresie jawnie „nie rejestrowano",
+w notes zdanie „pokazałby też sto procent" jako stwierdzenie ogólne o
+metryce, nie pomiar. PCIe RX/TX celowo poza slajdem (wraca na slajdzie 8).
 
 ---
 
@@ -497,7 +514,7 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | id | slajd | treść | dane |
 |---|---|---|---|
 | G1 | 1 | serwer + 8 kart, Kimi na 8 / Qwen na 1 | — |
-| W2' | 3 | 4 paski % (util/moc/SM/HBM) + pasek odniesienia | v1 W2 |
+| W2' | 3 | słupki pionowe grupowane: 4 liczniki × (Kimi 8 kart, Qwen 1 karta) | v1 W2 + 08-31 tp1_c64 |
 | W1' | 4 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
 | G2 | 5 | oś czasu kroku, 3 kolory, klamra GPU-Util | v1 D2 |
 | W3' | 6 | 2 słupki skumulowane Kimi c1 / c16 | v1 W3 |
