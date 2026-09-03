@@ -6,6 +6,20 @@ co mamy z v1 / z sesji 2026-08-31, moje uwagi krytyczne i pytania do
 rozstrzygnięcia. Sekcja B: terminy i gdzie je definiujemy. Sekcja C:
 budżet czasu. Sekcja D: uwagi do całości.
 
+## Decyzje użytkownika (2026-09-03, runda 1)
+
+| # | decyzja | konsekwencja |
+|---|---|---|
+| 1 | TP definiujemy na **slajdzie 4**, nie 1 | slajd 1 mówi słowami: „Kimi wymaga 8 kart, Qwen mieści się na jednej" — bez skrótu „TP" |
+| 2 | slajd 4 = **era PCIe**; cel: „wraz ze wzrostem TP przepustowość Qwena w pewnym momencie spada" (wykres W1 z v1 slajd 12) | grid po NVLinku z 08-31 → slajd 10 / backup |
+| 3 | definicja GPU-Util zostaje na **slajdzie 5** (jedno miejsce: z czego składa się krok + co GPU-Util liczy jako 100%) | slajd 2 pokazuje tylko paradoks i pytanie do sali — bez sugestii „metryka kłamie"; slajd 3 mówi „żaden zasób nie pracuje" i nie tłumaczy dlaczego |
+| 4 | slajd 6: dane z sesji 08-31 (w toku) | fallback z v1 zostaje zapisany |
+| 5 | slajd 9: **custom all-reduce → notes**; ze slajdu wypada busbw w GB/s | slajd stoi na tabeli latencji µs (pomiar 08-31) |
+| 6 | slajd 9: latencje z sesji 08-31 | jw. |
+| 7 | koszt: **2 mostki** (2 szt. × ~4,5 tys. zł ≈ 9 tys. zł); zysk pokazać obrazowo dla użytkownika końcowego | **patrz uwaga do slajdu 10 — „2× przepustowości" ≠ „odpowiedź 2× szybciej"** |
+| 8 | **bez slajdu 11** — slajd 10 jest podsumowaniem | ostatnie zdanie prezentacji = zdanie-komunikat slajdu 10; propozycja 11 zostaje w pliku jako odrzucona |
+| tytuł | propozycja: „Badania wydajnościowe i ich efekty", podtytuł „studium przypadku" | uwaga niżej przy slajdzie 0 |
+
 Konwencja pracy (jak w v1): slajd po slajdzie → pytania → decyzje → tekst
 „na slajdzie" + speaker notes → status SZKIC / W ITERACJI / ZAAKCEPTOWANY.
 
@@ -35,8 +49,24 @@ linków GitHub.
   przepustowości pod obciążeniem, ~0 dla pojedynczego czatu"). Słuchacz
   wie wtedy, dokąd zmierzamy — v1 trzymała odpowiedź do slajdu 17.
 
-**Pytania:** czy zostawiamy hasło „100% GPU-Util, a tylko 1/3 mocy"
-(sprawdzone, obrazowe)? Czy odpowiedź na tytule, czy dopiero na końcu?
+**Uwaga do propozycji „Badania wydajnościowe i ich efekty / studium
+przypadku" (runda 1):** to tytuł, który pasuje do każdej prezentacji o
+czymkolwiek — nie mówi *czego* badania, *jakiego* sprzętu ani *jaki* efekt.
+Na liście wystąpień meetupu nikt go nie wybierze, a sala nie wie, na co
+czeka. Sam rdzeń jest dobry (to faktycznie jest „badania → efekt"), brakuje
+konkretu. Trzy warianty do wyboru, od najbliższego Twojej propozycji:
+
+- A. **Badania wydajnościowe serwera 8×H200 i ich efekt: mostki NVLink** —
+  podtytuł: *studium przypadku: od 100% GPU-Util przy 1/3 mocy do 2–3×
+  przepustowości*
+- B. **100% GPU-Util, a tylko 1/3 mocy** — podtytuł: *badania wydajnościowe
+  serwera 8×H200 i ich efekty — studium przypadku*
+- C. **Dlaczego 8 kart H200 czekało na siebie** — podtytuł: *badania
+  wydajnościowe i ich efekty — studium przypadku NVLink*
+
+Rekomendacja: **B** — zachowuje Twoje sformułowanie jako podtytuł, a hasło
+z v1 jako hak. Odpowiedź na tytule (jedno zdanie) — nadal rekomenduję,
+skoro nie będzie slajdu podsumowania.
 
 ---
 
@@ -347,14 +377,38 @@ tylko przy TP≥4 pod obciążeniem; c=1 ≤1,3×; TP≤2 ≈ 0.
   dwie wyspy, część scaleń nadal po PCIe (notes; na slajdzie jedno
   zdanie „Kimi na 8 kartach przekracza granicę wysp — mniejszy zysk").
 
-**Pytania:** liczba sztuk mostków i cena całkowita; czy pokazujemy koszt
-serwera jako odniesienie (jeśli tak — skąd liczba)?
+**Pytania:** czy pokazujemy koszt serwera jako odniesienie (jeśli tak —
+skąd liczba)?
+
+**Uwaga do decyzji 7 („zysk 2× ⇒ użytkownik dostaje odpowiedź 2×
+szybciej") — to jest nieprawda i sala z vLLM-em to wychwyci.**
+Zmierzone 2,08× / 2,97× to **przepustowość serwera** (tok/s dla wszystkich
+klientów naraz przy c=32/64). Pojedynczy użytkownik odczuwa co innego:
+
+| kto | co mierzymy | przed → po | odczucie |
+|---|---|---|---|
+| jeden użytkownik, serwer pusty (c=1) | TPOT Kimi | 8,7 → 7,44 ms | odpowiedź **~15% szybciej** (Qwen: 20%) |
+| jeden z 32 użytkowników naraz (Kimi c=32) | ITL med | 127 → ~90 ms | tokeny płyną **~30% szybciej** |
+| operator serwera (c=32) | tok/s łącznie | 285 → 594 | **2× więcej użytkowników** przy tej samej prędkości odpowiedzi |
+
+Uczciwe przełożenie na użytkownika końcowego to więc jedno z dwóch:
+„przy 32 osobach naraz każda dostaje tekst ~30% szybciej" **albo** „ta sama
+maszyna obsłuży 2× więcej osób bez spowolnienia". Zdanie „odpowiedź 2×
+szybciej" trzeba wykreślić. Propozycja na slajd: dwa krótkie wiersze —
+dla użytkownika (−30% czasu na token pod obciążeniem, −15% przy pustym
+serwerze) i dla operatora (2–3× przepustowości za ~9 tys. zł, czyli ~0,3%
+ceny serwera — jeśli zgodzisz się podać rząd wielkości ceny serwera).
+Liczby ITL do potwierdzenia na danych 08-31 (Kimi c32 po NVLinku:
+90,2 ms nieprofilowany, `2026-08-03-nvlink-day-summary.md` §2).
 
 ---
 
-### 11. (Propozycja dodatkowa) Podsumowanie / do zabrania
+### 11. (Propozycja dodatkowa) Podsumowanie / do zabrania — ODRZUCONA (decyzja 8)
 
-**Brak w liście użytkownika.** Mieścimy się w „10/11 slajdów".
+Użytkownik: slajd 10 jest sam w sobie podsumowaniem. Konsekwencja: zdanie
+u góry slajdu 10 musi być zdaniem, z którym sala wychodzi; slajd 10 nie
+może kończyć się liczbą kosztu. Budżet czasu §C: 0,5 min z 11 przechodzi
+na slajd 10. Treść poniżej zostaje jako materiał na to zdanie.
 
 **Uzasadnienie:** 20-minutowa prezentacja bez slajdu końcowego kończy się
 na wykresie kosztów, a ostatnie zdanie prelegenta zapamiętują wszyscy.
@@ -374,9 +428,9 @@ Bez protokołu 10 punktów z v1. Bez „Dziękuję" jako osobnego slajdu.
 
 | termin | slajd | forma |
 |---|---|---|
-| TP (podział modelu na N kart) | 1 | grafika + 1 zdanie |
+| TP (podział modelu na N kart) | 4 (decyzja 1) | 1 zdanie + podpis osi; slajd 1 mówi „wymaga 8 kart" |
 | c (równoległe zapytania) | 1 lub 4 | podpis |
-| GPU-Util | 2 (rekomendacja) lub 5 | 1 zdanie |
+| GPU-Util | 5 (decyzja 3) | oś czasu kroku |
 | DCGM, SM, HBM | 3 | podpisy osi |
 | tok/s, krok / ITL | 4 | podpis osi; ITL tylko jeśli pokażemy c=1 |
 | krok generowania, kernel/operacja | 5 | oś czasu |
@@ -403,8 +457,7 @@ wymaga wyrzucenia innego.
 | 7 all-reduce | 2,0 | |
 | 8 topologia przed | 1,0 | schemat + 2 liczby |
 | 9 topologia po + latencje | 2,0 | tabela µs |
-| 10 wyniki + koszt | 2,0 | |
-| 11 podsumowanie | 0,5 | |
+| 10 wyniki + koszt + podsumowanie | 2,5 | ostatnie zdanie prezentacji |
 | **razem** | **20,0** | zapas 0 — realnie trzeba ciąć do ~18 na próbie |
 
 ## D. Uwagi do całości
