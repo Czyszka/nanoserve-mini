@@ -350,53 +350,73 @@ compute 4,6%); c=1 — sesja 06-10 (v1 slajd 10); Qwen TP4 c64 — Q4.
 
 ---
 
-## Slajd 7 — Dlaczego komunikacja: 122 dogadania na token (2,5 min)
+## Slajd 7 — Badany składnik wzoru: liczba rund × czas jednej rundy (2,5 min)
 
-Status: SZKIC (wersja z rundy 4, bez zmian).
+Status: W ITERACJI (2026-09-03; wg uwag użytkownika: tytuł = badany
+składnik wzoru z podkreśloną liczbą rund; tylko rundy, bez kart/łącza —
+łącze i koszt stały/przesył przechodzą na slajdy 8–9; „token"; wzrost
+ilości danych z liczbą użytkowników pokazany; puenta o liczbie rund
+i rosnących danych; pasek z warstwami zostaje; bez analogii).
+
+Uwaga do tytułu: użytkownik zaproponował zapis symboliczny
+„N_rounds × r(łącze, liczba kart)"; na slajdzie 5 wzór jest słowami
+(symbole tylko w Q&A), więc dla spójności tytuł słowami — ten sam
+fragment ramki ze slajdu 5, z podkreśloną „liczbą rund". Jeśli wolisz
+symbole, zmieniamy oba slajdy naraz.
 
 ### Na slajdzie
 
-> ## Gdzie znika czas: karty muszą się dogadać 122 razy na każde słowo
+> ## Badany składnik wzoru: <u>liczba rund</u> × czas jednej rundy
 >
-> [GRAFIKA G3: 4 karty w rzędzie; klamra „jedna warstwa modelu"; po warstwie
-> strzałki między wszystkimi kartami z podpisem „dodajemy wyniki
-> (all-reduce)"; licznik „× 61 warstw × 2 = **122 razy na token**"]
+> [GRAFIKA G3: 4 karty w rzędzie; nad nimi pasek „jedna warstwa modelu"
+> podzielony na dwa bloki: „uwaga" i „FFN/MoE"; po każdym bloku strzałki
+> między wszystkimi kartami z podpisem „scalenie wyników (all-reduce)";
+> z boku licznik: „2 scalenia × 61 warstw = **122 rundy na każdy token**".
+> Pod spodem mały pasek: „…i żadna karta nie liczy dalej, dopóki nie
+> skończy ostatnia".]
 >
-> Każde dogadanie kosztuje:
+> Ile danych scala jedna runda? Tyle, ile wyników częściowych czeka na
+> dodanie — czyli rośnie z liczbą użytkowników obsługiwanych naraz:
 >
-> - **stałe ~30 µs** — start, uzgodnienie, czekanie na najwolniejszą kartę
->   (zawsze, nawet dla 1 użytkownika)
-> - **+ przesył danych** — tym dłuższy, im więcej użytkowników naraz
->   i im wolniejsze łącze
+> | użytkowników naraz | dane na jedną rundę |
+> |---:|---:|
+> | 1 | ~14 KB |
+> | 8 | ~115 KB |
+> | 32 | ~460 KB |
 >
-> **1 użytkownik → prawie sam koszt stały. 32 użytkowników → przesył
-> dominuje. Szybsze łącze skraca tylko przesył.**
+> **Rund jest dużo — 122 na każdy token — a im więcej użytkowników,
+> tym więcej danych do scalenia w każdej z nich.**
 
 ### Notes
 
-Model jest pocięty na osiem kart, więc po każdej warstwie karty muszą dodać
-do siebie swoje wyniki częściowe — to operacja all-reduce, wykonuje ją
-biblioteka NCCL. Warstw jest sześćdziesiąt jeden, dodawanie robi się dwa
-razy na warstwę, więc na jeden token karty dogadują się sto dwadzieścia
-dwa razy. I żadna nie może liczyć dalej, dopóki nie skończy ostatnia.
+Wracamy do ramki ze slajdu piątego i bierzemy pod lupę środkowy składnik:
+liczba rund razy czas jednej rundy. Najpierw: co to jest runda. Model jest
+pocięty na karty, więc każda karta liczy tylko swój kawałek każdej
+warstwy. Po bloku uwagi i po bloku FFN karty muszą dodać do siebie swoje
+wyniki częściowe — inaczej następna warstwa nie ma na czym pracować. To
+dodawanie nazywa się all-reduce, wykonuje je biblioteka NCCL. Dwa
+scalenia na warstwę, sześćdziesiąt jeden warstw: sto dwadzieścia dwie
+rundy na każdy wygenerowany token. I każda runda jest synchroniczna:
+żadna karta nie liczy dalej, dopóki nie skończy ostatnia.
 
-Każde dogadanie ma dwa koszty. Pierwszy jest stały: uruchomić operację,
-ustalić, że wszystkie karty są gotowe, poczekać na najwolniejszą. Około
-trzydziestu mikrosekund, niezależnie od tego, ile danych przesyłamy.
-Drugi koszt to sam przesył — zależy od tego, ile danych i jak szybkie
-łącze. A ile danych zależy od liczby użytkowników: jeden użytkownik to
-kilkanaście kilobajtów na dogadanie, przesył trwa mikrosekundę i ginie w
-koszcie stałym. Trzydziestu dwóch użytkowników to pół megabajta — przesył
-trwa dziesiątki mikrosekund, tyle co koszt stały albo więcej.
+Teraz: ile danych scala jedna runda. Tyle, ile jest wyników częściowych
+do dodania — po jednym wektorze na każde zapytanie obsługiwane w tym
+kroku. Jeden użytkownik to około czternastu kilobajtów na rundę. Ośmiu:
+sto piętnaście. Trzydziestu dwóch: prawie pół megabajta. Czyli liczba
+rund jest stała i duża, a ilość danych w każdej rundzie rośnie wprost
+z liczbą użytkowników. Te dwie rzeczy razem — sto dwadzieścia dwie rundy
+i coraz większa paczka w każdej — to jest to, co profiler policzył jako
+osiemdziesiąt cztery procent. Ile trwa jedna taka runda i od czego to
+zależy — to już pytanie o łącze między kartami. Następne dwa slajdy.
 
-Stąd cała reszta. Dla jednego użytkownika krok to sto dwadzieścia dwa razy
-koszt stały, którego żadne łącze nie skraca. Dla wielu użytkowników krok
-to głównie przesył — i tu szybsze łącze może pomóc. To samo tłumaczy
-niski ruch na PCIe, o którym za chwilę: przez większość rundy karty nie
-przesyłają, tylko czekają.
+Q&A (nie na głos): dane na rundę = liczba zapytań × hidden_size (7168) ×
+2 bajty (bf16); 61 warstw i 2 all-reduce/warstwę — z konfiguracji Kimi
+i implementacji Megatron-style TP w vLLM; ring all-reduce = 2(N−1)
+kroków, każdy w tempie najwolniejszego odcinka. Koszt stały rundy
+(~30 µs) i przesył — na slajdzie 9, gdzie są zmierzone.
 
-Źródło: koszt stały — sesja 08-31 (28–54 µs, wyspa/nop2p); 122 —
-notatka decyzyjna §4; rozmiar wiadomości c × 7168 × 2 B.
+Źródło: notatka decyzyjna §4 (122 scalenia, 14 KiB); rozmiary wiadomości
+policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ---
 
@@ -563,7 +583,7 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | W1' | 3 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
 | G2 | 5 | oś czasu kroku, 3 kolory (szary/pomarańcz/jasnoszary), klamra nad kernelami + ramka wzoru | v1 D2 |
 | W3' | 6 | 1 pasek skumulowany Kimi 8 kart pod obciążeniem (c16) + ramka wzoru | v1 W3 |
-| G3 | 7 | 4 karty, all-reduce, licznik 122 | v1 D3 (uproszczony) |
+| G3 | 7 | 4 karty, warstwa (uwaga/FFN), 2 scalenia, licznik 122 + tabelka danych/rundę | v1 D3 (uproszczony) |
 | G4 / G4' | 8 / 9 | topologia przed / po (ten sam rysunek + mostki) | v1 D1 / D1-PO |
 | W5a | 10 | Kimi: sekundy przed/po dla 1/8/16/32 | nowy |
 | W5b | 10 | Qwen TP4 c64 przed/po tok/s | v1 W5 (połowa) |
