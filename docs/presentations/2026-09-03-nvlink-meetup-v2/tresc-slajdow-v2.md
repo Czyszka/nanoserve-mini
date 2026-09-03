@@ -132,11 +132,49 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ---
 
-## Slajd 3 — Wykorzystanie zasobów GPU (2 min)
+## Slajd 3 — Więcej kart = wolniej (2 min)
+
+Status: SZKIC (po zamianie kolejności 3↔4, 2026-09-03). Decyzja 1: tu
+definicja TP i c. Rola: druga obserwacja, kieruje podejrzenie „między
+karty"; slajd 4 (DCGM) potem eliminuje kartę.
+
+### Na slajdzie
+
+> ## Druga anomalia: więcej kart = wolniej
+>
+> Model za duży na jedną kartę tniemy na N kart — każda liczy swój kawałek
+> (**tensor parallelism, TP=N**). Qwen mieści się na jednej, więc możemy
+> go uruchomić na 1, 2, 4 i 8 kartach i porównać.
+>
+> [WYKRES W1': cztery słupki, tokeny/s dla 64 równoległych zapytań (**c=64**):
+> 1 karta **1202** · 2 karty **1404** · 4 karty **680** · 8 kart **257**]
+>
+> **Cztery karty są 2× wolniejsze niż jedna. Osiem — 5× wolniejsze.**
+> Coś między kartami zjada czas.
+
+### Notes
+
+Druga obserwacja jest jeszcze dziwniejsza. Bierzemy model testowy, który
+mieści się na jednej karcie, i uruchamiamy go na jednej, dwóch, czterech
+i ośmiu. Miara: ile tokenów na sekundę serwer produkuje dla 64 równoległych
+zapytań. Dwie karty dają siedemnaście procent więcej niż jedna — słabo,
+ale w górę. Cztery karty: o połowę mniej niż jedna. Osiem: pięć razy mniej.
+Dokładanie sprzętu spowalnia. Dla Kimi nie możemy zrobić takiej krzywej —
+działa tylko na ośmiu — ale to właśnie tam siedzimy na co dzień: na prawym
+końcu tego wykresu. Pytanie, na które musimy odpowiedzieć: co takiego
+dzieje się między kartami, że im więcej ich jest, tym gorzej.
+
+Źródło: v1 slajd 12 / W1 (`2026-06-11-qwen-tp-curve.md`). Uwaga w Q&A:
+TP=4/8 dla Qwena to konfiguracje badawcze, nie produkcyjne.
+
+---
+
+## Slajd 4 — Wykorzystanie zasobów GPU (2 min)
 
 Status: ZAAKCEPTOWANY (2026-09-03; tytuł i puenta użytkownika z redakcją;
-GPU-Util Qwen 100% wg obserwacji; liczby Qwena czerwcowe). Rola slajdu: pierwszy ruch diagnosty —
-klasyczni podejrzani (obliczenia, pamięć) odpadają; narzędzie + wynik,
+GPU-Util Qwen 100% wg obserwacji; liczby Qwena czerwcowe). Rola slajdu (po zamianie kolejności 3↔4,
+2026-09-03): eliminacja — klasyczni podejrzani (obliczenia, pamięć)
+odpadają, zostaje „między kartami" ze slajdu 3; narzędzie + wynik,
 bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 
 ### Na slajdzie
@@ -170,8 +208,8 @@ dziewięć. I GPU-Util dla niej: też sto procent — ta metryka
 w ogóle nie rozróżnia obu przypadków. Czyli kartę da się obciążyć. Wniosek z tego slajdu: dwaj klasyczni
 podejrzani, za mało mocy obliczeniowej i za wolna pamięć, odpadają. Żaden element
 karty nie pracuje na granicy możliwości, więc żaden nie jest wąskim
-gardłem. A mimo to karta jest „zajęta" przez sto procent czasu. Co ona wtedy robi? To jest pytanie na następne dwa
-slajdy.
+gardłem. Na karcie nic. Zostaje to, co między kartami — i to jest temat
+następnych trzech slajdów.
 
 Źródło: Kimi — `2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
 (v1 W2: 199 W, SM 0,20, DRAM 0,070; c=1 niemal identycznie: 170 W, 0,21,
@@ -180,41 +218,6 @@ active-filtered: 436 W = 73%, SM 0,665, DRAM 0,385); decyzja: liczby
 czerwcowe, bez liczenia nowych z 08-31 (zbieżne). GPU-Util Qwena TP1 pod obciążeniem = 100% —
 obserwacja prelegenta z sesji (nvidia-smi na żywo); w repo brak zapisanego
 zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celowo poza slajdem (wraca na slajdzie 8).
-
----
-
-## Slajd 4 — Więcej kart = wolniej (2 min)
-
-Status: SZKIC. Decyzja 1: tu definicja TP i c.
-
-### Na slajdzie
-
-> ## Druga anomalia: więcej kart = wolniej
->
-> Model za duży na jedną kartę tniemy na N kart — każda liczy swój kawałek
-> (**tensor parallelism, TP=N**). Qwen mieści się na jednej, więc możemy
-> go uruchomić na 1, 2, 4 i 8 kartach i porównać.
->
-> [WYKRES W1': cztery słupki, tokeny/s dla 64 równoległych zapytań (**c=64**):
-> 1 karta **1202** · 2 karty **1404** · 4 karty **680** · 8 kart **257**]
->
-> **Cztery karty są 2× wolniejsze niż jedna. Osiem — 5× wolniejsze.**
-> Coś między kartami zjada czas.
-
-### Notes
-
-Druga obserwacja jest jeszcze dziwniejsza. Bierzemy model testowy, który
-mieści się na jednej karcie, i uruchamiamy go na jednej, dwóch, czterech
-i ośmiu. Miara: ile tokenów na sekundę serwer produkuje dla 64 równoległych
-zapytań. Dwie karty dają siedemnaście procent więcej niż jedna — słabo,
-ale w górę. Cztery karty: o połowę mniej niż jedna. Osiem: pięć razy mniej.
-Dokładanie sprzętu spowalnia. Dla Kimi nie możemy zrobić takiej krzywej —
-działa tylko na ośmiu — ale to właśnie tam siedzimy na co dzień: na prawym
-końcu tego wykresu. Pytanie, na które musimy odpowiedzieć: co takiego
-dzieje się między kartami, że im więcej ich jest, tym gorzej.
-
-Źródło: v1 slajd 12 / W1 (`2026-06-11-qwen-tp-curve.md`). Uwaga w Q&A:
-TP=4/8 dla Qwena to konfiguracje badawcze, nie produkcyjne.
 
 ---
 
@@ -510,8 +513,8 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | id | slajd | treść | dane |
 |---|---|---|---|
 | G1 | 1 | serwer + 8 kart, Kimi na 8 / Qwen na 1 | — |
-| W2' | 3 | słupki pionowe grupowane: 4 liczniki × (Kimi 8 kart, Qwen 1 karta) | v1 W2 + 08-31 tp1_c64 |
-| W1' | 4 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
+| W2' | 4 | słupki pionowe grupowane: 4 liczniki × (Kimi 8 kart, Qwen 1 karta) | v1 W2 + 08-31 tp1_c64 |
+| W1' | 3 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
 | G2 | 5 | oś czasu kroku, 3 kolory, klamra GPU-Util | v1 D2 |
 | W3' | 6 | 2 słupki skumulowane Kimi c1 / c16 | v1 W3 |
 | G3 | 7 | 4 karty, all-reduce, licznik 122 | v1 D3 (uproszczony) |
@@ -521,5 +524,5 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 
 ## Budżet czasu
 
-0: 1 · 1: 1,5 · 2: 1,5 · 3: 2 · 4: 2 · 5: 2,5 · 6: 2 · 7: 2,5 · 8: 1 ·
+0: 1 · 1: 1,5 · 2: 1,5 · 3 (krzywa TP): 2 · 4 (DCGM): 2 · 5: 2,5 · 6: 2 · 7: 2,5 · 8: 1 ·
 9: 2 · 10: 2,5 = **20,5 min** → na próbie ciąć notes slajdów 3 i 6.

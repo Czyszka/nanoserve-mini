@@ -18,6 +18,7 @@ budżet czasu. Sekcja D: uwagi do całości.
 | 6 | slajd 9: latencje z sesji 08-31 | jw. |
 | 7 | koszt: **2 mostki** (2 szt. × ~4,5 tys. zł ≈ 9 tys. zł); zysk pokazać obrazowo dla użytkownika końcowego | **patrz uwaga do slajdu 10 — „2× przepustowości" ≠ „odpowiedź 2× szybciej"** |
 | 8 | **bez slajdu 11** — slajd 10 jest podsumowaniem | ostatnie zdanie prezentacji = zdanie-komunikat slajdu 10; propozycja 11 zostaje w pliku jako odrzucona |
+| 9 | **Zamiana kolejności (2026-09-03):** slajd 3 = krzywa TP (druga anomalia), slajd 4 = DCGM (eliminacja karty) | obserwacja → obserwacja → eliminacja → wyjaśnienie; zielony słupek „Qwen 1 karta" na DCGM czytelny po krzywej TP |
 | tytuł | **ZAAKCEPTOWANY (runda 3):** „100% GPU-Util, a tylko 30% limitu mocy. Co jest wąskim gardłem?" — podtytuł: *badania wydajnościowe serwera 8×H200 i ich efekty — studium przypadku NVLink* | ostatni slajd odpowiada na pytanie z tytułu jednym zdaniem („żaden zasób — czekanie kart na siebie"); przy limicie długości na liście meetupu: pierwsze zdanie = tytuł, pytanie → podtytuł. Burza mózgów T1–T7 niżej = historia |
 
 Konwencja pracy (jak w v1): slajd po slajdzie → pytania → decyzje → tekst
