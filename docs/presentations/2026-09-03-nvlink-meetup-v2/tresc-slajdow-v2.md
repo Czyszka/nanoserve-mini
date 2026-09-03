@@ -91,12 +91,13 @@ wykres mocy w czasie zostaje). Decyzja 3: bez definicji GPU-Util.
 > [ZRZUT: nvidia-smi — 8 wierszy, kolumny GPU-Util 100% i moc ~175 W / 600 W;
 > `../2026-07-31-nvlink-meetup/nvidia_smi_crop.png`]
 >
-> [WYKRES W0': pobór mocy 8 kart w czasie całego okna benchmarku, pozioma
-> linia limitu 600 W; przebieg płaski w paśmie 111–185 W — z v1 W0,
-> bez zmian poza większymi fontami]
+> [WYKRES W0': pobór mocy w czasie okna benchmarku, pozioma linia limitu
+> 600 W. Osiem cienkich linii (Kimi na 8 kartach) płasko w paśmie
+> 111–185 W. Jedna gruba linia w kontrastowym kolorze: „model testowy na
+> JEDNEJ karcie" — 400–590 W. Legenda dwuwierszowa.]
 >
-> **Osiem kart: 100% obciążenia — a pobór mocy 111–185 W z 600 W,
-> przez cały benchmark.**
+> **Osiem kart z Kimi: 100% obciążenia — a pobór mocy 111–185 W z 600 W,
+> przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.**
 >
 > Kto widział coś takiego u siebie?
 
@@ -107,12 +108,21 @@ nvidia-smi, narzędzie, na które każdy patrzy pierwsze, pokazuje sto
 procent na każdej karcie. A w kolumnie mocy: sto kilkadziesiąt watów, przy
 limicie sześciuset. Wykres pod spodem pokazuje, że to nie był chwilowy
 przestój między zadaniami: przez cały benchmark karty trzymały się w
-paśmie od stu jedenastu do stu osiemdziesięciu pięciu watów. Karta, która
-naprawdę liczy, ciągnie czterysta, pięćset watów. Zapamiętajmy ten obraz —
-wrócimy do niego, kiedy będziemy wiedzieli, co te karty właściwie robiły.
+paśmie od stu jedenastu do stu osiemdziesięciu pięciu watów. Dla skali
+gruba linia: ten sam typ karty, model testowy uruchomiony na jednej karcie,
+bez rozkładania na inne — czterysta do sześciuset watów, blisko limitu. Tak
+wygląda karta, która naprawdę liczy. Zapamiętajmy ten obraz — wrócimy do
+niego, kiedy będziemy wiedzieli, co te osiem kart właściwie robiło.
 
-Źródło: zrzut — rekonstrukcja 08-03 (172–181 W); wykres i pasmo 111–185 W
-— dcgmi 06-11 (v1 W0, `generate_charts.py`). W notes nie rozróżniamy
+Źródło: zrzut — rekonstrukcja 08-03 (172–181 W); wykres 8 linii i pasmo
+111–185 W — `2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
+(v1 W0, `generate_charts.py`); linia „1 karta" —
+`2026-08-31_latencja_dostepu/qwen/tp1_c64_dcgmi.txt`, GPU0 (98 próbek,
+średnia całego okna 404 W, część aktywna ~430–450 W, max 592 W; do
+wykresu tylko część aktywna, przycięta do długości okna Kimi). TP=1 nie
+używa łącza między kartami, więc pomiar po NVLinku jest ważny jako
+odniesienie. Q&A: to inny model (Qwen), ale ta sama karta i ten sam
+benchmark — pokazujemy, że kartę da się obciążyć. W notes nie rozróżniamy
 pochodzenia zrzutu i wykresu; Q&A: zrzut z późniejszej rekonstrukcji
 tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
