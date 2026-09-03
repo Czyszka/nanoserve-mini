@@ -538,3 +538,90 @@ wymaga wyrzucenia innego.
    nie na slajdach. Warto mieć 2–3 slajdy zapasowe *po* podsumowaniu
    (backup: profil Kimi po NVLinku 61% NCCL; tabela decyzyjna z notatki;
    krzywa TP po NVLinku z 08-31) — pokazywane tylko w Q&A.
+
+## E. Dane z sesji 2026-08-31 (commit `8d7ef5b`) — co zmieniają w v2
+
+Pierwszy odczyt surowych plików (`results/runs/2026-08-31_latencja_dostepu/`),
+bez podsumowania sesji — liczby do zweryfikowania przy pisaniu slajdów.
+
+### E.1 Mikro-latencje (all-reduce 16 KB ≈ reżim c=1; `nvlink/lat_summary_quick.txt`)
+
+| grupa | NVLink (µs/op) | nop2p (µs/op) | busbw @8 MB NVLink / nop2p (GB/s) |
+|---|---:|---:|---|
+| wyspa-2 (0,1) | 27,9 | 28,7 | 84,7 / 14,1 |
+| wyspa-4 (0–3) | **53,8** | 30,6 | 197,5 / 13,8 |
+| cross-2 (0,4) | 29,3 | — | 18,7 |
+| cross-4 (0,1,4,5) | 30,2 | — | 27,4 |
+| all-8 | 36,1 | 59,5 | 14,9 / 15,4 |
+
+P2P (`p2p_lat.txt`): w wyspie 12,9 µs (0→1, 0→2), 24,3 µs (0→3), cross
+0→4 25,9 µs, 3→4 16,1 µs.
+
+**Konsekwencja dla slajdów 7–9 (poważna):** przy małych wiadomościach
+NVLink **nie skraca rundy** — wyspa-2 27,9 vs nop2p 28,7 µs, wyspa-4 jest
+nawet wolniejsza (53,8 vs 30,6; do wyjaśnienia — NVLS niedostępny wg
+`nccl_path_island4.txt`, może wybór algorytmu). Predykcje planu „NCCL
+wyspa-4 10–35 µs" i „nop2p ≥ 3× NVLink" — **obalone**. Teza v1 ze slajdu
+12 („ogranicza nas czas rundy, nie przepustowość") **nie przeżyła
+pomiaru** i nie może być tezą slajdu 7/9. Nowa, uczciwa wersja: przy c=1
+liczy się latencja rundy (~30 µs niezależnie od łącza) i NVLink nie
+pomaga — zgodne z e2e (Qwen TP4 c1 ITL wyspa 10,15 vs nop2p 8,71 ms;
+Kimi c1 tylko 1,2×); pod obciążeniem wiadomość rośnie (c × hidden × 2 B →
+setki KB) i wtedy liczy się **przepustowość** (197 vs 14 GB/s) — stąd
+2–7× przy c≥8. To lepiej tłumaczy podział „pusty serwer / pod
+obciążeniem" ze slajdu 10 niż teza latencyjna. Tabela latencji na slajdzie
+9 zostaje, ale z odwróconym komunikatem; busbw wraca na slajd (decyzja 5
+do rewizji).
+
+### E.2 Grid Qwen po NVLinku (nieprofilowane; tok/s, `qwen/bench_*/`)
+
+| TP / wariant | c=1 | c=16 | c=32 | c=64 |
+|---|---:|---:|---:|---:|
+| TP1 | 255 | 1438 | 2015 | 1710 |
+| TP2 wyspa | 263 | 1620 | 2467 | 2050 |
+| TP4 wyspa | 265 | 1851 | **2990** | 2129 |
+| TP8 (2 wyspy) | 232 | 1426 | 1974 | 1625 |
+| TP2 cross / TP4 cross | 267 / 233 | 1427 / 1314 | 2058 / 1928 | 1689 / 1472 |
+| TP2 / TP4 / TP8 nop2p | 276 / 275 / 217 | 1170 / 1164 / 825 | 1674 / 1556 / 1041 | 1985 / 1784 / 1248 |
+
+- Replikacja TP4 c64: 2129 vs 2022/1989 (+5%, w paśmie).
+- Krzywa TP po NVLinku (c=32): 2015 / 2467 / 2990 / 1974 — **TP4 skaluje
+  (1,48× vs TP1)**, TP8 nadal spada. Para do slajdu 4 (PCIe c=64: 1202 /
+  1404 / 680 / 257) → materiał na „po" na slajdzie 10 (Qwen).
+- c=64 < c=32 we wszystkich wariantach — do wyjaśnienia przed użyciem
+  (prefill-burst? `max-num-seqs`?). Na slajdach używać c=32.
+- nop2p przy TP4 c64 = 1784, nie 680 — potwierdza, że nop2p NIE jest
+  rekonstrukcją ery PCIe (08-03); „przed" na slajdach = pomiary 06-11.
+- Kara cross-island TP4 c32: 1928 vs 2990 (64% wyspy) — zgodna z predykcją
+  „≤ 60%" w granicach; TP2 cross ≈ wyspa (H4 trzyma).
+
+### E.3 Profile Qwen po NVLinku (udział w spanie; `profile/trace_summary_*`)
+
+| TP | c=1: comms / compute / gaps | c=16 | c=32 |
+|---|---|---|---|
+| TP1 | 0 / 24 / 28% | 0 / 41 / 23% | 0 / 45 / 19% |
+| TP2 wyspa | 0,7 / 12 / 60% | 2,8 / 22 / 48% | **12 / 28 / 17%** |
+| TP4 wyspa | 2,9 / 15 / 33% | 1,5 / 12 / 69% | **18 / 19 / 18%** |
+| TP8 | **69 / 8 / 5%** | 36 / 6 / 47% | **58 / 11 / 13%** |
+
+- Slajd 6, jeden wykres: c=32, TP1→TP8, komunikacja 0 → 12 → 18 → 58%.
+  Dokładnie „dokładanie kart = coraz więcej czekania".
+- **Kontrola narzutu profilera NIE przeszła:** bench profilowany TP4 c32
+  961 tok/s vs 2990 nieprofilowany (−68%; plan: ±15%). Trace'y są
+  **jakościowe**, nie ilościowe — na slajdzie 6 mówić „udziały
+  orientacyjne", w notes podać przyczynę. Kimi 08-03 (−9%) pozostaje
+  jedynym ilościowym profilem.
+- Bucket „other" 17–50% spanu — sprawdzić, co w nim siedzi (sampling?
+  MoE routing? kopie), zanim pokażemy słupki; inaczej sala zapyta.
+- TP8 c=1: 69% comms przy 5% gaps — Qwen na 8 kartach jest comms-bound
+  nawet przy jednym kliencie (inaczej niż Kimi: 63% gaps). Notes do
+  slajdu 10 (dlaczego Kimi c=1 zyskał tylko 1,2×).
+
+### E.4 Do zrobienia przed pisaniem slajdów 6–10
+
+1. Podsumowanie sesji 08-31 (`results/summaries/`) z werdyktami predykcji —
+   sesja miała predykcje pre-rejestrowane; kilka padło (E.1) i to musi
+   być zapisane, zanim trafi na slajd.
+2. Wyjaśnić: wyspa-4 53,8 µs; c=64 < c=32; bucket „other"; narzut
+   profilera −68%.
+3. Aktualizacja `agent-state.md` (dane 08-31 SĄ w repo; sync-state).
