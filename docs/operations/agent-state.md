@@ -119,6 +119,11 @@ status, not a task list. Update when work moves.
 - **Prezentacja meetupowa NVLink: DOSTARCZONA (2026-08-09/10)** — samodzielny
   `index.html`, speaker notes do druku, wykresy W0–W7;
   `docs/presentations/2026-07-31-nvlink-meetup/`.
+  **v2 w toku (od 2026-09-03):** v1 uznana za zbyt skomplikowaną; nowa
+  wersja ~20 min / 10–11 slajdów, od ogółu do szczegółu, katalog roboczy
+  `docs/presentations/2026-09-03-nvlink-meetup-v2/` (README + `slajdy-v2.md`
+  ze szkieletem, uwagami krytycznymi i fallbackami). Slajdy 4/6/9 czekają
+  na dane z sesji `2026-08-31-latencja-dostepu-nvlink` (nie ma ich w repo).
 - **Drafter k=4 (plan 2026-08-10):** sesja wykonana (wg właściciela, 08-11),
   ale danych nie ma w repo — najpewniej nie zebrane albo nie wrzucone. Jeśli
   artefakty leżą na serwerze, dociągnąć przy okazji sesji 08-12; inaczej wynik
