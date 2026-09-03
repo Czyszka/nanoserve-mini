@@ -132,40 +132,39 @@ tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ---
 
-## Slajd 3 — Więcej kart = wolniej (2 min)
+## Slajd 3 — Druga anomalia: więcej kart = wolniej (2 min)
 
-Status: SZKIC (po zamianie kolejności 3↔4, 2026-09-03). Decyzja 1: tu
-definicja TP i c. Rola: druga obserwacja, kieruje podejrzenie „między
-karty"; slajd 4 (DCGM) potem eliminuje kartę.
+Status: W ITERACJI (2026-09-03; decyzje: tytuł OK, „zapytania od 64
+użytkowników naraz", TP na slajdzie, jeden kolor, bez efektywności, notes
+bez Kimi; PUENTA do wyboru). Rola: druga obserwacja, kieruje podejrzenie
+„między karty"; slajd 4 (DCGM) potem eliminuje kartę. Era PCIe.
 
 ### Na slajdzie
 
 > ## Druga anomalia: więcej kart = wolniej
 >
 > Model za duży na jedną kartę tniemy na N kart — każda liczy swój kawałek
-> (**tensor parallelism, TP=N**). Qwen mieści się na jednej, więc możemy
-> go uruchomić na 1, 2, 4 i 8 kartach i porównać.
+> (**tensor parallelism, TP=N**). Qwen mieści się na jednej, więc możemy go
+> uruchomić na 1, 2, 4 i 8 kartach i porównać.
 >
-> [WYKRES W1': cztery słupki, tokeny/s dla 64 równoległych zapytań (**c=64**):
-> 1 karta **1202** · 2 karty **1404** · 4 karty **680** · 8 kart **257**]
+> [WYKRES W1': cztery słupki w jednym kolorze, oś Y „tokeny/s łącznie";
+> podpis „zapytania od 64 użytkowników naraz": 1 karta **1202** ·
+> 2 karty **1404** · 4 karty **680** · 8 kart **257**]
 >
-> **Cztery karty są 2× wolniejsze niż jedna. Osiem — 5× wolniejsze.**
-> Coś między kartami zjada czas.
+> **[PUENTA — do wyboru, patrz niżej]**
 
 ### Notes
 
 Druga obserwacja jest jeszcze dziwniejsza. Bierzemy model testowy, który
 mieści się na jednej karcie, i uruchamiamy go na jednej, dwóch, czterech
-i ośmiu. Miara: ile tokenów na sekundę serwer produkuje dla 64 równoległych
-zapytań. Dwie karty dają siedemnaście procent więcej niż jedna — słabo,
-ale w górę. Cztery karty: o połowę mniej niż jedna. Osiem: pięć razy mniej.
-Dokładanie sprzętu spowalnia. Dla Kimi nie możemy zrobić takiej krzywej —
-działa tylko na ośmiu — ale to właśnie tam siedzimy na co dzień: na prawym
-końcu tego wykresu. Pytanie, na które musimy odpowiedzieć: co takiego
-dzieje się między kartami, że im więcej ich jest, tym gorzej.
+i ośmiu. Miara: ile tokenów na sekundę serwer produkuje, gdy pyta go 64
+użytkowników naraz. Dwie karty dają siedemnaście procent więcej niż jedna
+— słabo, ale w górę. Cztery karty: o połowę mniej niż jedna. Osiem: pięć
+razy mniej. Dokładanie sprzętu spowalnia. Pytanie, które stąd wynika: co
+takiego dzieje się między kartami, że im więcej ich jest, tym gorzej.
 
-Źródło: v1 slajd 12 / W1 (`2026-06-11-qwen-tp-curve.md`). Uwaga w Q&A:
-TP=4/8 dla Qwena to konfiguracje badawcze, nie produkcyjne.
+Źródło: `2026-06-11-qwen-tp-curve.md` / v1 W1 (bez linii efektywności).
+Q&A: TP=4/8 dla Qwena to konfiguracje badawcze, nie produkcyjne.
 
 ---
 
