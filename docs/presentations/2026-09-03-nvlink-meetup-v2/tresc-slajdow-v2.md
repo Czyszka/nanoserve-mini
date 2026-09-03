@@ -373,7 +373,7 @@ przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
 > obsługiwanego naraz. Rund jest 122 na token; krótka odpowiedź to 256
 > tokenów (~150 słów):
 >
-> | użytkowników naraz | na jedną rundę | na jeden token (× 122 rund) | na jedną odpowiedź (× 256 tokenów) |
+> | użytkowników naraz | na jedną rundę | na jeden token (× 122 rund) | na wszystkie odpowiedzi naraz (× 256 tokenów) |
 > |---:|---:|---:|---:|
 > | 1 | 14 KB | 1,7 MB | 0,4 GB |
 > | 32 | 460 KB | 56 MB | **14 GB** |
@@ -385,9 +385,9 @@ przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
 > Płynny tekst dla użytkownika ≈ 10 tokenów/s → **100 ms na token** →
 > 100 ms / 122 rund = **< 1 ms na rundę** (razem z liczeniem)
 >
-> **Przy 32 użytkownikach na jedną krótką odpowiedź trzeba zsynchronizować
-> 14 GB — w 31 tysiącach rund (122 × 256), każda ze stałym kosztem i każda
-> w czasie poniżej milisekundy.**
+> **Przy 32 użytkownikach, zanim każdy dostanie krótką odpowiedź, karty
+> muszą zsynchronizować 14 GB — w 31 tysiącach rund (122 × 256), każda ze
+> stałym kosztem i każda w czasie poniżej milisekundy.**
 
 ### Notes
 
@@ -412,9 +412,10 @@ się widoczna, gdy pomnożymy przez to, co już wiemy. Sto dwadzieścia dwie
 rundy na token. I tokeny na odpowiedź: w tabeli liczymy dwieście
 pięćdziesiąt sześć, czyli około stu pięćdziesięciu słów — to jest krótka
 odpowiedź; modele rozumujące potrafią wygenerować dziesięć razy tyle,
-zanim w ogóle zaczną odpowiadać. Wychodzi: czterysta megabajtów na
-odpowiedź dla jednego użytkownika, czternaście gigabajtów przy trzydziestu
-dwóch. Czternaście gigabajtów jako jeden plik dysk skopiuje w kilkanaście
+zanim w ogóle zaczną odpowiadać. Wychodzi: czterysta megabajtów, zanim
+jeden użytkownik dostanie odpowiedź; czternaście gigabajtów, zanim
+dostanie ją każdy z trzydziestu dwóch — bo runda niesie ich wszystkich
+naraz. Czternaście gigabajtów jako jeden plik dysk skopiuje w kilkanaście
 sekund. Ale czternaście gigabajtów w plikach po kilkaset kilobajtów
 każdy to zupełnie inna sprawa — każdy, kto kopiował katalog z tysiącami
 małych plików, wie, że trwa to wielokrotnie dłużej, bo każdy plik ma
@@ -458,12 +459,11 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ---
 
-## Slajd 8 — Topologia kart GPU: PCIe (1 min)
+## Slajd 8 — Topologia kart GPU: PCIe (1,5 min)
 
-Status: W ITERACJI (2026-09-03; decyzje: tytuł „Topologia kart GPU: PCIe",
-bez wyróżniania tras, UPI podpisane bez wyróżnienia, liczby tylko
-zmierzone + średnia z próbkowania 1 s; „25–50 GB/s" z v1 wycięte — to był
-szacunek, nie pomiar).
+Status: W ITERACJI (2026-09-03, runda 3: slajd tłumaczy, dlaczego runda na
+tej topologii jest wolna — dwa mechanizmy + mnożnik 31 tys.; liczby tylko
+zmierzone; bez wyróżnień tras; UPI podpisane).
 
 ### Na slajdzie
 
@@ -473,38 +473,69 @@ szacunek, nie pomiar).
 > pod każdym CPU 2 switche PCIe 5.0; pod switchami pary kart (0,1)(2,3)
 > | (4,5)(6,7). Wszystkie połączenia w jednym stylu, bez wyróżnień.]
 >
-> - przesył karta↔karta, zmierzony (trasa przez procesory): **29 GB/s**
-> - ruch na łączu pod obciążeniem, średnia z próbek co 1 s: **~7 GB/s**
+> Dlaczego jedna runda na tej topologii trwa długo:
 >
-> **Łącze osiągało pełną prędkość tylko w krótkich chwilach przesyłu;
-> przez resztę każdej rundy stało puste — stąd niska średnia.**
+> 1. **Runda to łańcuch przekazań między kartami** (8 kart → 14 przekazań
+>    po kolei). Najwolniejsze przekazanie — przez UPI między procesorami —
+>    narzuca tempo całej rundzie.
+>    Zmierzone, runda w izolacji, porcja 0,5 MB: **0,16 ms**
+> 2. **Runda nie rusza, dopóki nie dotrze ostatnia karta.** W pracującym
+>    serwerze karty kończą swoje liczenie w różnych momentach — siedem
+>    czeka na ósmą.
+>    Zmierzone w serwerze (profil): **~0,9 ms na rundę**
+>
+> Łącze przez ten czas stoi: ruch na PCIe pod obciążeniem, średnia z próbek
+> co 1 s: **~7 GB/s** z 29 możliwych.
+>
+> **Milisekunda czekania × 31 tysięcy rund = sekundy. Wąskim gardłem nie
+> jest przepustowość PCIe, tylko czas, jaki każda runda spędza na
+> najdłuższej trasie i na czekaniu na ostatnią kartę.**
 
 ### Notes
 
-Tak wyglądała droga danych między kartami na starcie. Każda karta wisi
-pod switchem PCIe, switche pod procesorami, a dwa procesory łączy UPI.
+Tak wyglądała droga danych między kartami na starcie: każda karta pod
+switchem PCIe, switche pod procesorami, procesory połączone przez UPI.
 Runda scalenia między kartą zero a kartą cztery przechodzi przez switch,
-procesor, UPI, drugi procesor i drugi switch. Dwie liczby. Pierwsza:
-zmierzyliśmy, ile da się przesłać między dwiema kartami tą trasą —
-dwadzieścia dziewięć gigabajtów na sekundę. Druga: ile łącze przenosiło
-naprawdę pod obciążeniem, uśrednione co sekundę — siedem. Czyli łącze
-nie było zapchane. Pracowało z pełną prędkością tylko w krótkich
-momentach, gdy jechała porcja danych, a przez resztę każdej rundy stało
-puste — karty płaciły koszt stały, czekały na siebie. Średnia z całej
-sekundy pokazuje więc niski ruch, mimo że każda pojedyncza porcja jechała
-najszybciej, jak ta trasa pozwala. Wąskim gardłem nie jest przepustowość
-łącza w ogóle, tylko czas jednej porcji w każdej ze stu dwudziestu dwóch
-rund.
+procesor, UPI, drugi procesor i drugi switch.
 
-Q&A (nie na głos): PCIe 5.0 x16 nominalnie 64 GB/s w jedną stronę
-(128 dwukierunkowo); 29,1 GB/s — `2026-07-31_nvlink_install/nvlink/p2p_bw.txt`
-(GPU0→GPU4, trasa PCIe/UPI, zmierzona po montażu, ale mostki jej nie
-dotyczą); w wyspie przed montażem nie mierzyliśmy P2P; ~7 GB/s —
-DCGM PCIE_RX, 7,2–7,9 GB/s przy c≥8 u Kimi i Qwena (06-11); NCCL busbw
-dla grupy 2+2 przez wyspy: 24,8–31,3 GB/s (07-31). Platforma Supermicro
-SYS-521GE-TNRT, dual-root PCIe.
+Dlaczego jedna runda trwa tu długo — dwa powody. Pierwszy: scalanie
+ośmiu kart to nie jeden przesył, tylko łańcuch. Karty podają sobie
+kawałki wyniku po kolei, czternaście przekazań, każde dopiero po
+poprzednim. Jedno z tych przekazań idzie przez UPI — najwolniejszą trasę
+w serwerze — i cała runda idzie w jego tempie. Zmierzyliśmy taką rundę
+w izolacji, z porcją pół megabajta, jak przy trzydziestu dwóch
+użytkownikach: sto sześćdziesiąt mikrosekund.
 
-Źródło: `infrastructure.md` §2.2 (schemat); p2p_bw 07-31; K1/Q1 06-11.
+Drugi powód: w prawdziwym serwerze runda nie zaczyna się, dopóki nie
+dotrze ostatnia karta. Każda karta przychodzi do rundy, gdy skończy swój
+kawałek liczenia i dostanie polecenie startu od swojego procesu — a to
+dzieje się w ośmiu różnych momentach. Siedem kart stoi w kernelu
+komunikacji i czeka na ósmą; nic nie płynie, a profiler liczy to jako
+komunikację. Z profilu wychodzi około dziewięć dziesiątych milisekundy na
+rundę w serwerze — pięć razy więcej niż ta sama runda w izolacji.
+
+Łącze w tym czasie stoi. Zmierzona prędkość trasy PCIe to dwadzieścia
+dziewięć gigabajtów na sekundę, a średni ruch pod obciążeniem —
+siedem. Łącze pracuje przez ułamek każdej rundy, resztę czeka.
+
+I mnożnik: milisekunda na rundę razy trzydzieści jeden tysięcy rund
+to sekundy na jedną odpowiedź. Wąskim gardłem nie jest przepustowość
+PCIe. Jest nim czas, jaki każda z tych rund spędza na najdłuższej
+trasie i na czekaniu na ostatnią kartę. To dokładnie ten składnik,
+w który celuje modernizacja.
+
+Q&A (nie na głos): 0,16 ms — `2026-08-31` nccl_lat cross-4 (0,1,4,5)
+@512 KB = 162 µs (dwie pary za UPI; nop2p wyspa-4 @512 KB: 130 µs);
+~0,9 ms — Kimi c=32 PCIe: ITL 127 ms × udział NCCL 0,84 (profil c=16;
+c=32 nie profilowany w erze PCIe) / 122 rund; rzędy wielkości, nie
+dokładna kalibracja. 14 przekazań = ring all-reduce 2(N−1) dla N=8.
+29,1 GB/s — p2p_bw GPU0→GPU4 (07-31); ~7 GB/s — DCGM PCIE_RX 7,2–7,9
+przy c≥8 (06-11). Rozrzutu dotarcia kart do rundy nie mierzyliśmy osobno —
+„czekanie" to różnica między rundą w serwerze a rundą w izolacji.
+PCIe 5.0 x16 nominalnie 64 GB/s w jedną stronę.
+
+Źródło: `infrastructure.md` §2.2; `2026-08-31-latencja-dostepu-summary.md`
+§1; `2026-06-11-nvlink-boundary-verdict.md` K1/K2; p2p_bw 07-31.
 
 ---
 
@@ -642,5 +673,5 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 
 ## Budżet czasu
 
-0: 1 · 1: 1,5 · 2: 1,5 · 3 (krzywa TP): 2 · 4 (DCGM): 2 · 5: 2,5 · 6: 2 · 7: 2,5 · 8: 1 ·
-9: 2 · 10: 2,5 = **20,5 min** → na próbie ciąć notes slajdów 3 i 6.
+0: 1 · 1: 1,5 · 2: 1,5 · 3 (krzywa TP): 2 · 4 (DCGM): 2 · 5: 2,5 · 6: 2 · 7: 2,5 · 8: 1,5 ·
+9: 2 · 10: 2,5 = **21 min** → na próbie ciąć notes slajdów 3 i 6.
