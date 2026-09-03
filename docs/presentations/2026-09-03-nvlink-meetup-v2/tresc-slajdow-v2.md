@@ -188,9 +188,10 @@ bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 > „GPU-Util (nvidia-smi)" · „pobór mocy (z limitu 600 W)" ·
 > „jednostki liczące (SM) — % czasu aktywne" · „pamięć HBM — % czasu
 > aktywna". W każdej grupie trzy słupki, w tej kolejności:
-> **Qwen, 1 karta** (zielony) · **Qwen, 8 kart** (jaśniejszy zielony) ·
-> **Kimi, 8 kart** (niebieski) — zieleń = Qwen, niebieski = Kimi jak na
-> slajdach 2–3. Legenda w jednym wierszu nad wykresem, wartości nad
+> **Qwen, 1 karta** (zielony KRESKOWANY, rzadkie kreski, zielony obrys —
+> odniesienie) · **Qwen, 8 kart** (zielony pełny) · **Kimi, 8 kart**
+> (niebieski pełny) — pełne słupki = przypadki anomalii, kreskowany =
+> skala; zieleń = Qwen, niebieski = Kimi jak na slajdach 2–3. Legenda w jednym wierszu nad wykresem, wartości nad
 > słupkami, bez siatki. Qwen 1: 100 / 73 / 67 / 39; Qwen 8: 100 / 19 / 5 / 3;
 > Kimi 8: 100 / 30 / 20 / 8.]
 >
