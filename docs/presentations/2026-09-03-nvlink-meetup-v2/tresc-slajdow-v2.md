@@ -458,39 +458,53 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ---
 
-## Slajd 8 — Jak karty były połączone: PCIe (1 min)
+## Slajd 8 — Topologia kart GPU: PCIe (1 min)
 
-Status: SZKIC.
+Status: W ITERACJI (2026-09-03; decyzje: tytuł „Topologia kart GPU: PCIe",
+bez wyróżniania tras, UPI podpisane bez wyróżnienia, liczby tylko
+zmierzone + średnia z próbkowania 1 s; „25–50 GB/s" z v1 wycięte — to był
+szacunek, nie pomiar).
 
 ### Na slajdzie
 
-> ## Stan wyjściowy: karty rozmawiają przez PCIe i procesory
+> ## Topologia kart GPU: PCIe
 >
-> [GRAFIKA G4: 2 CPU połączone łączem; pod każdym CPU 2 switche PCIe;
-> pod switchami pary kart (0,1)(2,3) | (4,5)(6,7); wyróżniona trasa
-> GPU0 → switch → CPU0 → CPU1 → switch → GPU4]
+> [GRAFIKA G4: 2 procesory (CPU0, CPU1) połączone łączem podpisanym „UPI";
+> pod każdym CPU 2 switche PCIe 5.0; pod switchami pary kart (0,1)(2,3)
+> | (4,5)(6,7). Wszystkie połączenia w jednym stylu, bez wyróżnień.]
 >
-> - PCIe 5.0 x16: nominalnie 128 GB/s (obie strony); zmierzony przesył
->   karta↔karta **25–50 GB/s**
-> - średnie użycie łącza pod obciążeniem: **~7 GB/s**
+> - przesył karta↔karta, zmierzony (trasa przez procesory): **29 GB/s**
+> - ruch na łączu pod obciążeniem, średnia z próbek co 1 s: **~7 GB/s**
 >
-> **Łącze nie było zapchane. Było wolne, kiedy już coś nim jechało —
-> a przez resztę rundy stało puste.**
+> **Łącze osiągało pełną prędkość tylko w krótkich chwilach przesyłu;
+> przez resztę każdej rundy stało puste — stąd niska średnia.**
 
 ### Notes
 
-Tak wyglądała droga danych między kartami na starcie: przez switch PCIe,
-czasem przez procesor, a między połówkami serwera przez łącze między dwoma
-procesorami. Dwie liczby. Zmierzony przesył między dwiema kartami: od
-dwudziestu pięciu do pięćdziesięciu gigabajtów na sekundę, zależnie od
-trasy. Średnie użycie łącza pod obciążeniem: siedem gigabajtów na sekundę.
-Czyli łącze nie było zapchane — przez większość czasu stało puste, bo
-karty czekały na koszt stały. Ale kiedy pół megabajta już jechało, jechało
-wolno. Wąskim gardłem nie jest przepustowość „na papierze", tylko czas
-przesyłu jednej porcji w każdej ze stu dwudziestu dwóch rund.
+Tak wyglądała droga danych między kartami na starcie. Każda karta wisi
+pod switchem PCIe, switche pod procesorami, a dwa procesory łączy UPI.
+Runda scalenia między kartą zero a kartą cztery przechodzi przez switch,
+procesor, UPI, drugi procesor i drugi switch. Dwie liczby. Pierwsza:
+zmierzyliśmy, ile da się przesłać między dwiema kartami tą trasą —
+dwadzieścia dziewięć gigabajtów na sekundę. Druga: ile łącze przenosiło
+naprawdę pod obciążeniem, uśrednione co sekundę — siedem. Czyli łącze
+nie było zapchane. Pracowało z pełną prędkością tylko w krótkich
+momentach, gdy jechała porcja danych, a przez resztę każdej rundy stało
+puste — karty płaciły koszt stały, czekały na siebie. Średnia z całej
+sekundy pokazuje więc niski ruch, mimo że każda pojedyncza porcja jechała
+najszybciej, jak ta trasa pozwala. Wąskim gardłem nie jest przepustowość
+łącza w ogóle, tylko czas jednej porcji w każdej ze stu dwudziestu dwóch
+rund.
 
-Źródło: `infrastructure.md` §2.2 (schemat); P2P 25–50 GB/s (v1 slajd 15
-baseline), 7,2–7,9 GB/s (K1/Q1 06-11). UPI bez nazwy na slajdzie.
+Q&A (nie na głos): PCIe 5.0 x16 nominalnie 64 GB/s w jedną stronę
+(128 dwukierunkowo); 29,1 GB/s — `2026-07-31_nvlink_install/nvlink/p2p_bw.txt`
+(GPU0→GPU4, trasa PCIe/UPI, zmierzona po montażu, ale mostki jej nie
+dotyczą); w wyspie przed montażem nie mierzyliśmy P2P; ~7 GB/s —
+DCGM PCIE_RX, 7,2–7,9 GB/s przy c≥8 u Kimi i Qwena (06-11); NCCL busbw
+dla grupy 2+2 przez wyspy: 24,8–31,3 GB/s (07-31). Platforma Supermicro
+SYS-521GE-TNRT, dual-root PCIe.
+
+Źródło: `infrastructure.md` §2.2 (schemat); p2p_bw 07-31; K1/Q1 06-11.
 
 ---
 
@@ -622,7 +636,7 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | G2 | 5 | oś czasu kroku, 3 kolory (szary/pomarańcz/jasnoszary), klamra nad kernelami + ramka wzoru | v1 D2 |
 | W3' | 6 | 1 pasek skumulowany Kimi 8 kart pod obciążeniem (c16) + ramka wzoru | v1 W3 |
 | G3 | 7 | 4 karty, warstwa (uwaga/FFN), 2 scalenia, licznik 122 + tabelka danych/rundę | v1 D3 (uproszczony) |
-| G4 / G4' | 8 / 9 | topologia przed / po (ten sam rysunek + mostki) | v1 D1 / D1-PO |
+| G4 / G4' | 8 / 9 | topologia przed / po (ten sam rysunek + mostki; bez wyróżnień tras, UPI podpisane) | v1 D1 / D1-PO |
 | W5a | 10 | Kimi: sekundy przed/po dla 1/8/16/32 | nowy |
 | W5b | 10 | Qwen TP4 c64 przed/po tok/s | v1 W5 (połowa) |
 
