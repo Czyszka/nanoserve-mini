@@ -37,34 +37,45 @@ pytanie z tytułu będzie na ostatnim slajdzie, w jednym zdaniu.
 
 ## Slajd 1 — Stanowisko pomiarowe (1,5 min)
 
-Status: SZKIC.
+Status: ZAAKCEPTOWANY (2026-09-03) — G1 wg uwag użytkownika, bez tokenów,
+CPU z nazwą, SWE-bench Lite.
 
 ### Na slajdzie
 
 > ## Stanowisko pomiarowe
 >
-> [GRAFIKA G1: serwer → 8 kart w rzędzie; nad kartami 0–7 klamra „Kimi-K2.6:
-> 1 bilion parametrów, 554 GB wag — potrzebuje wszystkich 8 kart";
-> nad kartą 0 osobno „Qwen3.6-35B — mieści się na jednej karcie (model testowy)"]
+> [GRAFIKA G1: osiem kart GPU w rzędzie (0–7). NAD kartami jedna klamra na
+> całą ósemkę: „Kimi-K2.6 — 554 GB wag → tylko na 8 kartach".
+> POD kartami cztery klamry: „1 GPU" (karta 0), „2 GPU" (0–1), „4 GPU"
+> (0–3), „8 GPU" (0–7), z podpisem: „Qwen3.6-35B — 67 GB wag → mieści się
+> na jednej karcie, więc do testów można go uruchomić na 1, 2, 4 lub 8"]
 >
-> - serwer: 2× CPU, 8× NVIDIA H200 NVL (143 GB każda), karty połączone
->   magistralą PCIe 5.0 — stan wyjściowy
+> - serwer: 2× Intel Xeon Gold 6530, 8× NVIDIA H200 NVL (143 GB każda);
+>   karty połączone magistralą PCIe 5.0 — stan wyjściowy
 > - silnik: vLLM w kontenerach Docker
-> - obciążenie: własny benchmark — zadania programistyczne (SWE), 256 tokenów
->   odpowiedzi
+> - obciążenie: własny benchmark — zadania programistyczne inspirowane
+>   SWE-bench
 
 ### Notes
 
-Środowisko to serwer laboratoryjny z ośmioma kartami H200. Na starcie karty
-rozmawiały ze sobą wyłącznie przez magistralę PCIe — tak jak dyski czy karty
-sieciowe. Główny model to Kimi, bilion parametrów; same wagi zajmują 554 GB,
-więc nie da się go uruchomić na mniej niż ośmiu kartach. Drugi model, Qwen,
-mieści się na jednej karcie — używamy go jako narzędzia badawczego, bo
-możemy go uruchamiać na jednej, dwóch, czterech albo ośmiu kartach i
-porównywać. Obciążenie generujemy własnym benchmarkiem: zadania
-programistyczne, odpowiedzi po 256 tokenów, zawsze po rozgrzewce silnika.
+Środowisko to serwer laboratoryjny: dwa Xeony i osiem kart H200. Na
+starcie karty rozmawiały ze sobą wyłącznie przez magistralę PCIe — tak jak
+dyski czy karty sieciowe. Główny model to Kimi, bilion parametrów; same
+wagi zajmują 554 GB, więc mieszczą się wyłącznie na wszystkich ośmiu
+kartach naraz. Drugi model, Qwen, ma 67 GB wag i mieści się na jednej
+karcie — dlatego służy nam jako model testowy: możemy go uruchomić na
+jednej, dwóch, czterech albo ośmiu kartach i porównać, co się dzieje, gdy
+dokładamy karty. Obciążenie generujemy własnym benchmarkiem: zadania
+programistyczne wzięte z zestawu SWE-bench Lite, zawsze po rozgrzewce
+silnika.
 
-Źródło: v1 slajd 2; `infrastructure.md` §2.2.
+Źródło: `infrastructure.md` §2.2 (Xeon Gold 6530, H200 NVL 143 GB);
+Kimi 554 GB — notatka decyzyjna §2; Qwen 67 GB — log vLLM
+(`2026-08-31_latencja_dostepu/qwen/log_tp1.txt`: „Checkpoint size
+66.97 GiB"); SWE-bench Lite 300 promptów —
+`docs/plans/2026-06-05-t5-dashboard-load.md`. Bez nazwy projektu/firmy.
+Q&A: platforma Supermicro SYS-521GE-TNRT; TP=4/8 dla Qwena to
+konfiguracje badawcze, nie produkcyjne.
 
 ---
 
