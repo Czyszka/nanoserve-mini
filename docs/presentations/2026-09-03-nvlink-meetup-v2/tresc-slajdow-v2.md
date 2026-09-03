@@ -484,8 +484,9 @@ zmierzona osobno, bez modelu"; puenta wg użytkownika).
 > | | na jedną rundę | × 23 tys. rund | skąd |
 > |---|---:|---:|---|
 > | sam przesył 0,5 MB przy 29 GB/s | 0,02 ms | 0,4 s | rachunek |
-> | cała runda zmierzona osobno, bez modelu, trasą przez UPI (start + sztafeta + przesył) | 0,16 ms | 3,7 s | pomiar |
-> | czekanie na ostatnią kartę | 0,71 ms | 16,6 s | różnica |
+> | koszt stały (start rundy, uzgodnienie kart) | 0,03 ms | 0,7 s | pomiar osobno, bez modelu, porcja 16 KB |
+> | cała runda trasą przez UPI = koszt stały + przesył + sztafeta (14 przekazań: switch → procesor → UPI → procesor → switch, każdy pośrednik odbiera i wysyła dalej) | 0,16 ms | 3,7 s | pomiar osobno, bez modelu, porcja 0,5 MB |
+> | czekanie na ostatnią kartę | 0,71 ms | 16,6 s | różnica: 0,87 − 0,16 |
 > | **= komunikacja w serwerze** | **0,87 ms** | **20,3 s** | pomiar (84% kroku) |
 > | + przerwy silnika i obliczenia | | 3,7 s | pomiar |
 > | **= odpowiedź** | | **24 s** | pomiar |
@@ -517,11 +518,16 @@ na sekundę to dwie setne milisekundy na rundę. Razy dwadzieścia trzy
 tysiące rund — cztery dziesiąte sekundy z dwudziestu czterech.
 Przepustowość łącza nie jest problemem.
 
+Koszt stały rundy — start i uzgodnienie kart, zanim popłyną dane —
+zmierzyliśmy osobno na małej porcji: trzy setne milisekundy, siedem
+dziesiątych sekundy na całą odpowiedź.
+
 Cała runda zmierzona osobno — zatrzymaliśmy model i serwer, karty
 wykonywały tylko samo scalenie, w kółko, wszystkie startując razem — trasą
-przez UPI: szesnaście setnych milisekundy. Razy dwadzieścia trzy tysiące:
-trzy i siedem dziesiątych sekundy. To jest zmierzony koszt topologii:
-start rundy, uzgodnienie kart i sztafeta przez pośredników.
+przez UPI: szesnaście setnych milisekundy. To jest koszt stały, przesył
+i sztafeta: czternaście przekazań przez switche, procesory i UPI, każdy
+pośrednik odbiera i wysyła dalej. Razy dwadzieścia trzy tysiące: trzy
+i siedem dziesiątych sekundy. Zmierzony koszt topologii.
 
 W pracującym serwerze ta sama runda trwa osiemdziesiąt siedem setnych
 milisekundy — to wynika z profilu, osiemdziesiąt cztery procent kroku na
