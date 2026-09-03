@@ -153,8 +153,7 @@ bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 > **zielony Qwen, 1 karta** (kolory jak na slajdzie 2). Wartości nad
 > słupkami. Kimi: 100 / 30 / 20 / 8; Qwen: 100 / 73 / 67 / 39.]
 >
-> **Żaden element karty nie pracuje na granicy możliwości — więc żaden
-> z nich nie jest wąskim gardłem.**
+> **Żaden element karty nie pracuje na granicy możliwości.**
 
 ### Notes
 
