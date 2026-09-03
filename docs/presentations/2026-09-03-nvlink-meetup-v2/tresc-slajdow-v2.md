@@ -479,20 +479,19 @@ zmierzona osobno, bez modelu"; puenta wg użytkownika).
 >    i rusza dopiero, gdy **dotrze ostatnia karta**.
 >
 > Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24 s**.
-> Z czego się składają?
+> Rund w tej odpowiedzi: **23 tys.** — nie 31 tys. ze slajdu 7, bo silnik
+> zgaduje tokeny z wyprzedzeniem i jeden krok daje średnio 1,35 tokena
+> (zmierzone: 127 ms na krok, 94 ms na token) → 190 kroków × 122 rundy.
 >
-> | | na jedną rundę | × 23 tys. rund | skąd |
-> |---|---:|---:|---|
-> | sam przesył 0,5 MB przy 29 GB/s | 0,02 ms | 0,4 s | rachunek |
-> | koszt stały (start rundy, uzgodnienie kart) | 0,03 ms | 0,7 s | pomiar osobno, bez modelu, porcja 16 KB |
-> | cała runda trasą przez UPI = koszt stały + przesył + sztafeta (14 przekazań: switch → procesor → UPI → procesor → switch, każdy pośrednik odbiera i wysyła dalej) | 0,16 ms | 3,7 s | pomiar osobno, bez modelu, porcja 0,5 MB |
-> | czekanie na ostatnią kartę | 0,71 ms | 16,6 s | różnica: 0,87 − 0,16 |
-> | **= komunikacja w serwerze** | **0,87 ms** | **20,3 s** | pomiar (84% kroku) |
-> | + przerwy silnika i obliczenia | | 3,7 s | pomiar |
-> | **= odpowiedź** | | **24 s** | pomiar |
->
-> 23 tys. rund = ~190 kroków × 122 rundy (dekodowanie spekulacyjne:
-> ~1,35 tokena na krok).
+> | | na jedną rundę | × 23 tys. rund |
+> |---|---:|---:|
+> | **cała runda trasą przez UPI**, zmierzona osobno, bez modelu: start i uzgodnienie kart + sztafeta (14 przekazań: switch → procesor → UPI → procesor → switch) + przesył 0,5 MB | 0,16 ms | 3,7 s |
+> | &nbsp;&nbsp;&nbsp;w tym: sam przesył 0,5 MB przy 29 GB/s (rachunek) | 0,02 ms | 0,4 s |
+> | &nbsp;&nbsp;&nbsp;w tym: koszt stały — start i uzgodnienie (zmierzone na porcji 16 KB) | 0,03 ms | 0,7 s |
+> | **+ czekanie na ostatnią kartę** (różnica: 0,87 − 0,16) | 0,71 ms | 16,6 s |
+> | **= komunikacja w serwerze** (zmierzone: 84% kroku / 122 rundy) | **0,87 ms** | **20,3 s** |
+> | + przerwy silnika i obliczenia (zmierzone) | | 3,7 s |
+> | **= odpowiedź** | | **24 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
@@ -511,7 +510,10 @@ każda karta kończy swój kawałek liczenia w innym momencie.
 
 Teraz rachunek. Przy trzydziestu dwóch użytkownikach odpowiedź na
 dwieście pięćdziesiąt sześć tokenów trwała dwadzieścia cztery sekundy —
-to jest pomiar. Rozkładamy to na składniki rundy.
+to jest pomiar. Rund było dwadzieścia trzy tysiące, nie trzydzieści jeden
+jak na poprzednim slajdzie: silnik zgaduje tokeny z wyprzedzeniem i jeden
+krok daje średnio jeden i jedną trzecią tokena, więc kroków jest mniej.
+Rozkładamy te dwadzieścia cztery sekundy na składniki rundy.
 
 Sam przesył danych: pół megabajta przy dwudziestu dziewięciu gigabajtach
 na sekundę to dwie setne milisekundy na rundę. Razy dwadzieścia trzy
