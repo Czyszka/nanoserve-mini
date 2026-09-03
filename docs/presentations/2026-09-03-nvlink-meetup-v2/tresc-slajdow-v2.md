@@ -171,8 +171,8 @@ Q&A: TP=4/8 dla Qwena to konfiguracje badawcze, nie produkcyjne.
 
 ## Slajd 4 — Wykorzystanie zasobów GPU (2 min)
 
-Status: ZAAKCEPTOWANY (2026-09-03; tytuł i puenta użytkownika z redakcją;
-GPU-Util Qwen 100% wg obserwacji; liczby Qwena czerwcowe). Rola slajdu (po zamianie kolejności 3↔4,
+Status: ZAAKCEPTOWANY (2026-09-03; tytuł i puenta użytkownika; trzy serie:
+Qwen 1 / Qwen 8 / Kimi 8 — propozycja użytkownika; liczby czerwcowe). Rola slajdu (po zamianie kolejności 3↔4,
 2026-09-03): eliminacja — klasyczni podejrzani (obliczenia, pamięć)
 odpadają, zostaje „między kartami" ze slajdu 3; narzędzie + wynik,
 bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
@@ -187,9 +187,12 @@ bez tłumaczenia dlaczego. Tylko wykres, bez tabeli liczb.
 > [WYKRES W2': pionowe słupki grupowane, oś Y 0–100%. Cztery grupy:
 > „GPU-Util (nvidia-smi)" · „pobór mocy (z limitu 600 W)" ·
 > „jednostki liczące (SM) — % czasu aktywne" · „pamięć HBM — % czasu
-> aktywna". W każdej grupie dwa słupki: **niebieski Kimi, 8 kart** i
-> **zielony Qwen, 1 karta** (kolory jak na slajdzie 2). Wartości nad
-> słupkami. Kimi: 100 / 30 / 20 / 8; Qwen: 100 / 73 / 67 / 39.]
+> aktywna". W każdej grupie trzy słupki, w tej kolejności:
+> **Qwen, 1 karta** (zielony) · **Qwen, 8 kart** (jaśniejszy zielony) ·
+> **Kimi, 8 kart** (niebieski) — zieleń = Qwen, niebieski = Kimi jak na
+> slajdach 2–3. Legenda w jednym wierszu nad wykresem, wartości nad
+> słupkami, bez siatki. Qwen 1: 100 / 73 / 67 / 39; Qwen 8: 100 / 19 / 5 / 3;
+> Kimi 8: 100 / 30 / 20 / 8.]
 >
 > **Żaden element karty nie pracuje na granicy możliwości.**
 
@@ -205,13 +208,19 @@ dwadzieścia procent czasu. Pamięć karty: aktywna przez osiem procent
 czasu. Zielone słupki to model testowy na jednej karcie: moc siedemdziesiąt
 trzy procent, jednostki liczące sześćdziesiąt siedem, pamięć trzydzieści
 dziewięć. I GPU-Util dla niej: też sto procent — ta metryka
-w ogóle nie rozróżnia obu przypadków. Czyli kartę da się obciążyć. Wniosek z tego slajdu: dwaj klasyczni
+w ogóle nie rozróżnia tych przypadków. Czyli kartę da się obciążyć. Trzeci
+słupek w każdej grupie to ten sam Qwen, ale na ośmiu kartach — prawy
+koniec krzywej z poprzedniego slajdu: moc dziewiętnaście procent,
+jednostki liczące pięć, pamięć trzy. Jeszcze gorzej niż Kimi. Wspólny
+mianownik obu słabych par to osiem kart, nie model. Wniosek z tego slajdu: dwaj klasyczni
 podejrzani, za mało mocy obliczeniowej i za wolna pamięć, odpadają. Żaden element
 karty nie pracuje na granicy możliwości, więc żaden nie jest wąskim
 gardłem. Na karcie nic. Zostaje to, co między kartami — i to jest temat
 następnych trzech slajdów.
 
-Źródło: Kimi — `2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
+Źródło: Qwen 8 kart — `2026-06-11-qwen-tp-curve.md` (TP8 c64 active-filtered:
+111 W = 19%, SM 0,053, DRAM ~0,03; GPU-Util 100% wg v1 slajd 3). Kimi —
+`2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
 (v1 W2: 199 W, SM 0,20, DRAM 0,070; c=1 niemal identycznie: 170 W, 0,21,
 0,093); GPU-Util 100% — zrzut nvidia-smi. Qwen — `2026-06-11-qwen-tp-curve.md` (TP1 c64
 active-filtered: 436 W = 73%, SM 0,665, DRAM 0,385); decyzja: liczby
@@ -513,7 +522,7 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 | id | slajd | treść | dane |
 |---|---|---|---|
 | G1 | 1 | serwer + 8 kart, Kimi na 8 / Qwen na 1 | — |
-| W2' | 4 | słupki pionowe grupowane: 4 liczniki × (Kimi 8 kart, Qwen 1 karta) | v1 W2 + 08-31 tp1_c64 |
+| W2' | 4 | słupki pionowe grupowane: 4 liczniki × (Qwen 1, Qwen 8, Kimi 8) | v1 W2 + qwen-tp-curve |
 | W1' | 3 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
 | G2 | 5 | oś czasu kroku, 3 kolory, klamra GPU-Util | v1 D2 |
 | W3' | 6 | 2 słupki skumulowane Kimi c1 / c16 | v1 W3 |
