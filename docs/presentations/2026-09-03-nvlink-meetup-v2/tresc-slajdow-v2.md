@@ -459,11 +459,11 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ---
 
-## Slajd 8 — Topologia kart GPU: PCIe (1,5 min)
+## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-03, runda 6: łańcuch przyczynowy w 4 krokach:
-topologia → sztafeta → tempo najdłuższej drogi → czekanie na ostatnią
-kartę (1 ms w serwerze vs 0,16 ms w izolacji); puenta wg użytkownika).
+Status: W ITERACJI (2026-09-03, runda 7: slajd zbudowany wokół rachunku
+„skąd 24 s" — jedna tabela; termin „w izolacji" zastąpiony przez „runda
+zmierzona osobno, bez modelu"; puenta wg użytkownika).
 
 ### Na slajdzie
 
@@ -474,20 +474,24 @@ kartę (1 ms w serwerze vs 0,16 ms w izolacji); puenta wg użytkownika).
 > | (4,5)(6,7). Wszystkie połączenia w jednym stylu, bez wyróżnień.]
 >
 > 1. Karty **nie mają bezpośredniego łącza**. Dane z karty 0 do karty 4
->    idą: switch → procesor → UPI → procesor → switch.
-> 2. Taka droga to **sztafeta**: każdy pośrednik odbiera i przekazuje
->    dalej. Zmierzone: porcja 0,5 MB tą drogą — **0,16 ms**, w wyspie
->    z bezpośrednim łączem — 0,04 ms.
-> 3. Runda scala **wszystkie 8 kart**, więc zawsze zawiera najdłuższą
->    drogę. **Tempo rundy = tempo najdłuższej drogi.** Pozostałe karty
->    czekają.
-> 4. W pracującym serwerze karty **docierają do rundy w różnych
->    momentach** — runda rusza dopiero, gdy dotrze ostatnia. Zmierzone
->    (32 użytkowników): krok **127 ms** / 122 rundy = **~1 ms na rundę**,
->    wobec 0,16 ms tej samej rundy w izolacji. Reszta to czekanie na
->    ostatnią kartę.
+>    idą sztafetą: switch → procesor → UPI → procesor → switch.
+> 2. Runda scala **wszystkie 8 kart**: zawsze zawiera najdłuższą trasę
+>    i rusza dopiero, gdy **dotrze ostatnia karta**.
 >
-> Łącze PCIe przy tym stoi: **7 GB/s** średnio z **29** możliwych.
+> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24 s**.
+> Z czego się składają?
+>
+> | | na jedną rundę | × 23 tys. rund | skąd |
+> |---|---:|---:|---|
+> | sam przesył 0,5 MB przy 29 GB/s | 0,02 ms | 0,4 s | rachunek |
+> | cała runda zmierzona osobno, bez modelu, trasą przez UPI (start + sztafeta + przesył) | 0,16 ms | 3,7 s | pomiar |
+> | czekanie na ostatnią kartę | 0,71 ms | 16,6 s | różnica |
+> | **= komunikacja w serwerze** | **0,87 ms** | **20,3 s** | pomiar (84% kroku) |
+> | + przerwy silnika i obliczenia | | 3,7 s | pomiar |
+> | **= odpowiedź** | | **24 s** | pomiar |
+>
+> 23 tys. rund = ~190 kroków × 122 rundy (dekodowanie spekulacyjne:
+> ~1,35 tokena na krok).
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
@@ -495,53 +499,63 @@ kartę (1 ms w serwerze vs 0,16 ms w izolacji); puenta wg użytkownika).
 ### Notes
 
 Tak wyglądała droga danych między kartami na starcie. Po pierwsze: karty
-nie mają bezpośredniego połączenia. Dane z karty zero do karty cztery
-przechodzą przez switch PCIe, procesor, łącze UPI między procesorami,
-drugi procesor i drugi switch.
+nie mają bezpośredniego połączenia. Dane z karty zero do karty cztery idą
+sztafetą: switch PCIe, procesor, łącze UPI między procesorami, drugi
+procesor, drugi switch. Każdy pośrednik odbiera i przekazuje dalej, i
+każde przekazanie kosztuje czas.
 
-Po drugie: taka droga działa jak sztafeta. Każdy pośrednik musi odebrać
-dane i przekazać je dalej, i każde przekazanie kosztuje czas. Zmierzyliśmy
-to: porcja pół megabajta — tyle, ile niesie runda przy trzydziestu dwóch
-użytkownikach — przechodzi tą drogą w sto sześćdziesiąt mikrosekund.
-Dla porównania, między kartami z bezpośrednim łączem: czterdzieści.
-Cztery razy szybciej, ta sama porcja.
+Po drugie: runda scala wszystkie osiem kart naraz. Zawsze zawiera więc tę
+najdłuższą trasę, a rusza dopiero wtedy, gdy dotrze ostatnia karta — bo
+każda karta kończy swój kawałek liczenia w innym momencie.
 
-Po trzecie: runda scala wszystkie osiem kart naraz, więc zawsze zawiera
-tę najdłuższą drogę. Runda idzie w tempie najdłuższej drogi, a karty,
-które mają krótszą, stoją i czekają.
+Teraz rachunek. Przy trzydziestu dwóch użytkownikach odpowiedź na
+dwieście pięćdziesiąt sześć tokenów trwała dwadzieścia cztery sekundy —
+to jest pomiar. Rozkładamy to na składniki rundy.
 
-Po czwarte: to była runda w izolacji, kiedy wszystkie karty startują
-razem. W pracującym serwerze jest inaczej — każda karta dociera do rundy
-wtedy, gdy skończy swój kawałek liczenia, a to dzieje się w ośmiu
-różnych momentach. Runda rusza dopiero, gdy dotrze ostatnia. Zmierzyliśmy
-skutek: przy trzydziestu dwóch użytkownikach jeden krok trwa sto
-dwadzieścia siedem milisekund, sto dwadzieścia dwie rundy — około
-milisekundy na rundę. Ta sama runda w izolacji: szesnaście setnych.
-Różnica to czekanie na ostatnią kartę. Pamiętacie budżet ze slajdu
-siódmego, poniżej milisekundy na rundę razem z liczeniem? Cały ten budżet
-zjada komunikacja — osiemdziesiąt cztery procent — a na liczenie zostaje
-pięć.
+Sam przesył danych: pół megabajta przy dwudziestu dziewięciu gigabajtach
+na sekundę to dwie setne milisekundy na rundę. Razy dwadzieścia trzy
+tysiące rund — cztery dziesiąte sekundy z dwudziestu czterech.
+Przepustowość łącza nie jest problemem.
 
-I dowód, że nie chodzi o przepustowość: łącze PCIe umie dwadzieścia
-dziewięć gigabajtów na sekundę, a średnio przenosi siedem. Przez większość
-rundy nic nie płynie. Wąskim gardłem nie jest przepustowość PCIe, tylko
-czas, jaki każda runda spędza na najdłuższej trasie i na czekaniu na
-ostatnią kartę. I dokładnie w to celuje modernizacja.
+Cała runda zmierzona osobno — zatrzymaliśmy model i serwer, karty
+wykonywały tylko samo scalenie, w kółko, wszystkie startując razem — trasą
+przez UPI: szesnaście setnych milisekundy. Razy dwadzieścia trzy tysiące:
+trzy i siedem dziesiątych sekundy. To jest zmierzony koszt topologii:
+start rundy, uzgodnienie kart i sztafeta przez pośredników.
 
-Q&A (nie na głos): 0,16 ms = nccl all-reduce 512 KB, grupa (0,1,4,5)
-z dwiema parami za UPI (08-31, cross-4: 162 µs); 0,04 ms = wyspa-4 NVLink
-@512 KB: 36 µs (ten sam pomiar; „bezpośrednie łącze" = NVLink, pokazany
-w pełni na slajdzie 9); nop2p wyspa-4 @512 KB: 130 µs. 127 ms = ITL med
-Kimi c=32 (06-11); 84% — profil c=16; 1 ms/rundę to ITL/122, bez
-założeń. Sztafeta = ring all-reduce 2(N−1) = 14 przekazań; UPI = łącze
-międzyprocesorowe. Skąd różnica między 0,16 ms w izolacji a ~0,85 ms
-komunikacji na rundę w serwerze: karty docierają do rundy nierówno
-(nie mierzone osobno). 29,1 GB/s — p2p_bw GPU0→GPU4 (07-31); ~7 GB/s —
-DCGM PCIE_RX 7,2–7,9 przy c≥8 (06-11).
+W pracującym serwerze ta sama runda trwa osiemdziesiąt siedem setnych
+milisekundy — to wynika z profilu, osiemdziesiąt cztery procent kroku na
+komunikację, podzielone przez sto dwadzieścia dwie rundy. Różnica między
+osiemdziesięcioma siedmioma a szesnastoma setnymi to czekanie na ostatnią
+kartę: szesnaście i pół sekundy z dwudziestu czterech. To jest największy
+składnik. Nie mierzyliśmy go osobno, wynika z różnicy — ale nic innego
+w rundzie nie zostało.
+
+Reszta — przerwy silnika i same obliczenia — to niecałe cztery sekundy.
+
+Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda runda
+spędza na najdłuższej trasie i na czekaniu na ostatnią kartę. I dokładnie
+w to celuje modernizacja.
+
+Q&A (nie na głos): 24 s = TPOT med 94 ms × 256 (Kimi c=32, 06-11); krok
+= ITL med 127 ms; tokenów na krok 127/94 = 1,35 (Eagle3); kroków 256/1,35
+≈ 190; rund 190 × 122 ≈ 23 tys. (slajd 7 mówi 31 tys. przy 1 tokenie na
+krok — rząd wielkości ten sam, spekulacja niesie więcej danych na rundę).
+Podział kroku wg profilu c=16: komunikacja 84% = 107 ms, przerwy 10% = 13
+ms, obliczenia 5% = 6 ms; 107/122 = 0,87 ms na rundę. 0,16 ms = nccl
+all-reduce 512 KB, grupa (0,1,4,5) z dwiema parami za UPI (08-31, cross-4:
+162 µs), nie pełna ósemka; koszt stały w tym: ~30 µs (16 KB). Wyspa-4
+NVLink @512 KB: 36 µs; nop2p: 130 µs. 29,1 GB/s — p2p_bw GPU0→GPU4
+(07-31); DCGM PCIE_RX średnio 7,2–7,9 GB/s przy c≥8 (06-11). Sztafeta =
+ring all-reduce 2(N−1) = 14 przekazań; UPI = łącze międzyprocesorowe.
+Ruch rzeczywisty > 14 GB (spekulacja, pierścień) — nawet 5× więcej daje
+2 s przesyłu, nie 20. Po NVLinku (08-03, c=32): krok 90 ms, komunikacja
+61% = 55 ms = 0,45 ms/rundę; runda osobno w wyspie 0,04 ms; czekanie
+~0,41 ms — slajd 9.
 
 Źródło: `infrastructure.md` §2.2; `2026-08-31-latencja-dostepu-summary.md`
-§1; `2026-06-11-nvlink-boundary-verdict.md` K1/K2; p2p_bw 07-31.
-
+§1; `2026-06-11_nvlink_boundary/kimi_ramp/bench/kimi_c32.json`; profil
+Kimi c=16 (06-11); p2p_bw 07-31.
 ---
 
 ## Slajd 9 — Zmiana: mostki NVLink (2 min)
