@@ -352,7 +352,7 @@ compute 4,6%); c=1 — sesja 06-10 (v1 slajd 10); Qwen TP4 c64 — Q4.
 
 ## Slajd 7 — Komunikacja między kartami: liczba rund × czas jednej rundy (2,5 min)
 
-Status: W ITERACJI (2026-09-03; runda 6: tabela runda → token → odpowiedź,
+Status: ZAAKCEPTOWANY (2026-09-03; runda 6: tabela runda → token → odpowiedź,
 bez czasu; puenta „14 GB w sensownym czasie"; linijka koszt stały +
 przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
 31 tys. porcji, co znaczy „sensowny czas").
@@ -402,8 +402,11 @@ rundy na każdy wygenerowany token. I każda runda jest synchroniczna:
 żadna karta nie liczy dalej, dopóki nie skończy ostatnia.
 
 Teraz: ile danych scala jedna runda. Po jednym wektorze na każdego
-użytkownika obsługiwanego w tym kroku. Jeden użytkownik to czternaście
-kilobajtów na rundę — nic. Trzydziestu dwóch: prawie pół megabajta — też
+użytkownika obsługiwanego w tym kroku. Skąd czternaście kilobajtów: ten
+wektor to wewnętrzna reprezentacja jednego tokenu w modelu — u Kimi ma
+siedem tysięcy sto sześćdziesiąt osiem liczb, każda zapisana na dwóch
+bajtach, razem czternaście kilobajtów. Dla jednego użytkownika tyle
+właśnie scala każda runda — nic. Trzydziestu dwóch: prawie pół megabajta — też
 niewiele, każdy z nas kopiuje takie pliki bez zastanowienia. Różnica robi
 się widoczna, gdy pomnożymy przez to, co już wiemy. Sto dwadzieścia dwie
 rundy na token. I tokeny na odpowiedź: w tabeli liczymy dwieście
