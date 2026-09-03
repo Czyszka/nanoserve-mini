@@ -461,9 +461,9 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (1,5 min)
 
-Status: W ITERACJI (2026-09-03, runda 5: łańcuch przyczynowy w 4 krokach:
-topologia → sztafeta → tempo najdłuższej drogi → zmierzony skutek; liczby
-z poprzednich slajdów + dwie nowe zmierzone).
+Status: W ITERACJI (2026-09-03, runda 6: łańcuch przyczynowy w 4 krokach:
+topologia → sztafeta → tempo najdłuższej drogi → czekanie na ostatnią
+kartę (1 ms w serwerze vs 0,16 ms w izolacji); puenta wg użytkownika).
 
 ### Na slajdzie
 
@@ -481,15 +481,16 @@ z poprzednich slajdów + dwie nowe zmierzone).
 > 3. Runda scala **wszystkie 8 kart**, więc zawsze zawiera najdłuższą
 >    drogę. **Tempo rundy = tempo najdłuższej drogi.** Pozostałe karty
 >    czekają.
-> 4. Skutek zmierzony w serwerze (32 użytkowników): krok **127 ms** /
->    122 rundy = **~1 ms na rundę** — cały budżet ze slajdu 7 zjada
->    komunikacja (84%), na liczenie zostaje 5%.
+> 4. W pracującym serwerze karty **docierają do rundy w różnych
+>    momentach** — runda rusza dopiero, gdy dotrze ostatnia. Zmierzone
+>    (32 użytkowników): krok **127 ms** / 122 rundy = **~1 ms na rundę**,
+>    wobec 0,16 ms tej samej rundy w izolacji. Reszta to czekanie na
+>    ostatnią kartę.
 >
-> Łącze PCIe przy tym stoi: **7 GB/s** średnio z **29** możliwych — bo
-> czas rundy to nie przesył, tylko sztafeta i czekanie.
+> Łącze PCIe przy tym stoi: **7 GB/s** średnio z **29** możliwych.
 >
-> **Wąskie gardło: nie przepustowość PCIe, tylko droga, którą każda
-> ze 122 rund na token musi przebyć.**
+> **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
+> runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
 
 ### Notes
 
@@ -509,19 +510,23 @@ Po trzecie: runda scala wszystkie osiem kart naraz, więc zawsze zawiera
 tę najdłuższą drogę. Runda idzie w tempie najdłuższej drogi, a karty,
 które mają krótszą, stoją i czekają.
 
-Po czwarte — skutek, zmierzony w pracującym serwerze. Przy trzydziestu
-dwóch użytkownikach jeden krok trwa sto dwadzieścia siedem milisekund.
-Sto dwadzieścia dwie rundy: około milisekundy na rundę. Pamiętacie
-budżet ze slajdu siódmego — poniżej milisekundy na rundę razem z
-liczeniem? Cały ten budżet zjada komunikacja, osiemdziesiąt cztery
-procent, a na liczenie zostaje pięć.
+Po czwarte: to była runda w izolacji, kiedy wszystkie karty startują
+razem. W pracującym serwerze jest inaczej — każda karta dociera do rundy
+wtedy, gdy skończy swój kawałek liczenia, a to dzieje się w ośmiu
+różnych momentach. Runda rusza dopiero, gdy dotrze ostatnia. Zmierzyliśmy
+skutek: przy trzydziestu dwóch użytkownikach jeden krok trwa sto
+dwadzieścia siedem milisekund, sto dwadzieścia dwie rundy — około
+milisekundy na rundę. Ta sama runda w izolacji: szesnaście setnych.
+Różnica to czekanie na ostatnią kartę. Pamiętacie budżet ze slajdu
+siódmego, poniżej milisekundy na rundę razem z liczeniem? Cały ten budżet
+zjada komunikacja — osiemdziesiąt cztery procent — a na liczenie zostaje
+pięć.
 
 I dowód, że nie chodzi o przepustowość: łącze PCIe umie dwadzieścia
-dziewięć gigabajtów na sekundę, a średnio przenosi siedem. Przez
-większość rundy nic nie płynie — trwa sztafeta i czekanie. Wąskim gardłem
-nie jest więc szybkość łącza, tylko droga, którą każda ze stu dwudziestu
-dwóch rund na token musi przebyć. I dokładnie tę drogę skraca
-modernizacja.
+dziewięć gigabajtów na sekundę, a średnio przenosi siedem. Przez większość
+rundy nic nie płynie. Wąskim gardłem nie jest przepustowość PCIe, tylko
+czas, jaki każda runda spędza na najdłuższej trasie i na czekaniu na
+ostatnią kartę. I dokładnie w to celuje modernizacja.
 
 Q&A (nie na głos): 0,16 ms = nccl all-reduce 512 KB, grupa (0,1,4,5)
 z dwiema parami za UPI (08-31, cross-4: 162 µs); 0,04 ms = wyspa-4 NVLink
