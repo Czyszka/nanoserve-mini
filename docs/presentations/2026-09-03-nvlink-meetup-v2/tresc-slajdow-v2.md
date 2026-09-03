@@ -459,11 +459,11 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ---
 
-## Slajd 8 — Topologia kart GPU: PCIe (1 min)
+## Slajd 8 — Topologia kart GPU: PCIe (1,5 min)
 
-Status: W ITERACJI (2026-09-03, runda 4: jedna myśl — runda idzie w tempie
-najdłuższej trasy, łącze przez większość czasu stoi; bez mikrosekund,
-bez łańcucha przekazań; te idą do Q&A).
+Status: W ITERACJI (2026-09-03, runda 5: łańcuch przyczynowy w 4 krokach:
+topologia → sztafeta → tempo najdłuższej drogi → zmierzony skutek; liczby
+z poprzednich slajdów + dwie nowe zmierzone).
 
 ### Na slajdzie
 
@@ -473,45 +473,69 @@ bez łańcucha przekazań; te idą do Q&A).
 > pod każdym CPU 2 switche PCIe 5.0; pod switchami pary kart (0,1)(2,3)
 > | (4,5)(6,7). Wszystkie połączenia w jednym stylu, bez wyróżnień.]
 >
-> Runda kończy się, gdy skończy **najwolniejsza** para kart. Na tej
-> topologii najwolniejsza para rozmawia przez: switch → procesor → UPI →
-> procesor → switch.
+> 1. Karty **nie mają bezpośredniego łącza**. Dane z karty 0 do karty 4
+>    idą: switch → procesor → UPI → procesor → switch.
+> 2. Taka droga to **sztafeta**: każdy pośrednik odbiera i przekazuje
+>    dalej. Zmierzone: porcja 0,5 MB tą drogą — **0,16 ms**, w wyspie
+>    z bezpośrednim łączem — 0,04 ms.
+> 3. Runda scala **wszystkie 8 kart**, więc zawsze zawiera najdłuższą
+>    drogę. **Tempo rundy = tempo najdłuższej drogi.** Pozostałe karty
+>    czekają.
+> 4. Skutek zmierzony w serwerze (32 użytkowników): krok **127 ms** /
+>    122 rundy = **~1 ms na rundę** — cały budżet ze slajdu 7 zjada
+>    komunikacja (84%), na liczenie zostaje 5%.
 >
-> Łącze PCIe: zmierzona prędkość **29 GB/s** · średni ruch pod obciążeniem
-> **~7 GB/s**
+> Łącze PCIe przy tym stoi: **7 GB/s** średnio z **29** możliwych — bo
+> czas rundy to nie przesył, tylko sztafeta i czekanie.
 >
-> **Łącze przez większość czasu stoi puste. Karty nie przesyłają — czekają
-> na najdłuższą trasę. 31 tysięcy razy na odpowiedź.**
+> **Wąskie gardło: nie przepustowość PCIe, tylko droga, którą każda
+> ze 122 rund na token musi przebyć.**
 
 ### Notes
 
-Tak wyglądała droga danych między kartami na starcie: każda karta pod
-switchem PCIe, switche pod procesorami, procesory połączone przez UPI.
-Runda scalenia ze slajdu siódmego obejmuje wszystkie osiem kart — i
-kończy się dopiero wtedy, gdy skończy najwolniejsza para. A najwolniejsza
-para w tym serwerze rozmawia przez switch, procesor, łącze UPI, drugi
-procesor i drugi switch. Pozostałe karty w tym czasie stoją i czekają.
+Tak wyglądała droga danych między kartami na starcie. Po pierwsze: karty
+nie mają bezpośredniego połączenia. Dane z karty zero do karty cztery
+przechodzą przez switch PCIe, procesor, łącze UPI między procesorami,
+drugi procesor i drugi switch.
 
-Dwie liczby to potwierdzają. Zmierzyliśmy, ile da się przesłać tą trasą:
-dwadzieścia dziewięć gigabajtów na sekundę. I zmierzyliśmy, ile łącze
-przenosiło naprawdę pod obciążeniem, uśrednione co sekundę: siedem. Czyli
-łącze przez większość czasu stoi puste. Karty nie są zajęte
-przesyłaniem — są zajęte czekaniem, aż najdłuższa trasa skończy swoją
-część rundy. I tak trzydzieści jeden tysięcy razy na jedną odpowiedź.
-Dlatego wąskim gardłem nie jest przepustowość PCIe, tylko czas jednej
-rundy na tej topologii. I dokładnie w to celuje modernizacja.
+Po drugie: taka droga działa jak sztafeta. Każdy pośrednik musi odebrać
+dane i przekazać je dalej, i każde przekazanie kosztuje czas. Zmierzyliśmy
+to: porcja pół megabajta — tyle, ile niesie runda przy trzydziestu dwóch
+użytkownikach — przechodzi tą drogą w sto sześćdziesiąt mikrosekund.
+Dla porównania, między kartami z bezpośrednim łączem: czterdzieści.
+Cztery razy szybciej, ta sama porcja.
 
-Q&A (nie na głos): all-reduce na 8 kartach = pierścień 2(N−1) = 14
-przekazań po kolei, każde w tempie najwolniejszego odcinka; runda w
-izolacji z porcją 512 KB przez trasę z UPI: 162 µs (08-31, cross-4) vs
-36 µs w wyspie NVLink; w serwerze ~0,9 ms na rundę (127 ms × 0,84 / 122 —
-rząd wielkości), bo karty docierają do rundy nierówno i czekają na
-ostatnią (rozrzutu nie mierzyliśmy osobno). 29,1 GB/s — p2p_bw GPU0→GPU4
-(07-31); ~7 GB/s — DCGM PCIE_RX 7,2–7,9 przy c≥8 (06-11). PCIe 5.0 x16
-nominalnie 64 GB/s w jedną stronę.
+Po trzecie: runda scala wszystkie osiem kart naraz, więc zawsze zawiera
+tę najdłuższą drogę. Runda idzie w tempie najdłuższej drogi, a karty,
+które mają krótszą, stoją i czekają.
 
-Źródło: `infrastructure.md` §2.2; p2p_bw 07-31; K1/Q1 06-11;
-`2026-08-31-latencja-dostepu-summary.md` §1.
+Po czwarte — skutek, zmierzony w pracującym serwerze. Przy trzydziestu
+dwóch użytkownikach jeden krok trwa sto dwadzieścia siedem milisekund.
+Sto dwadzieścia dwie rundy: około milisekundy na rundę. Pamiętacie
+budżet ze slajdu siódmego — poniżej milisekundy na rundę razem z
+liczeniem? Cały ten budżet zjada komunikacja, osiemdziesiąt cztery
+procent, a na liczenie zostaje pięć.
+
+I dowód, że nie chodzi o przepustowość: łącze PCIe umie dwadzieścia
+dziewięć gigabajtów na sekundę, a średnio przenosi siedem. Przez
+większość rundy nic nie płynie — trwa sztafeta i czekanie. Wąskim gardłem
+nie jest więc szybkość łącza, tylko droga, którą każda ze stu dwudziestu
+dwóch rund na token musi przebyć. I dokładnie tę drogę skraca
+modernizacja.
+
+Q&A (nie na głos): 0,16 ms = nccl all-reduce 512 KB, grupa (0,1,4,5)
+z dwiema parami za UPI (08-31, cross-4: 162 µs); 0,04 ms = wyspa-4 NVLink
+@512 KB: 36 µs (ten sam pomiar; „bezpośrednie łącze" = NVLink, pokazany
+w pełni na slajdzie 9); nop2p wyspa-4 @512 KB: 130 µs. 127 ms = ITL med
+Kimi c=32 (06-11); 84% — profil c=16; 1 ms/rundę to ITL/122, bez
+założeń. Sztafeta = ring all-reduce 2(N−1) = 14 przekazań; UPI = łącze
+międzyprocesorowe. Skąd różnica między 0,16 ms w izolacji a ~0,85 ms
+komunikacji na rundę w serwerze: karty docierają do rundy nierówno
+(nie mierzone osobno). 29,1 GB/s — p2p_bw GPU0→GPU4 (07-31); ~7 GB/s —
+DCGM PCIE_RX 7,2–7,9 przy c≥8 (06-11).
+
+Źródło: `infrastructure.md` §2.2; `2026-08-31-latencja-dostepu-summary.md`
+§1; `2026-06-11-nvlink-boundary-verdict.md` K1/K2; p2p_bw 07-31.
 
 ---
 
@@ -649,5 +673,5 @@ Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
 
 ## Budżet czasu
 
-0: 1 · 1: 1,5 · 2: 1,5 · 3 (krzywa TP): 2 · 4 (DCGM): 2 · 5: 2,5 · 6: 2 · 7: 2,5 · 8: 1 ·
-9: 2 · 10: 2,5 = **20,5 min** → na próbie ciąć notes slajdów 3 i 6.
+0: 1 · 1: 1,5 · 2: 1,5 · 3 (krzywa TP): 2 · 4 (DCGM): 2 · 5: 2,5 · 6: 2 · 7: 2,5 · 8: 1,5 ·
+9: 2 · 10: 2,5 = **21 min** → na próbie ciąć notes slajdów 3 i 6.
