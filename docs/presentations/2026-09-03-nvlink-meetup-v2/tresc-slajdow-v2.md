@@ -81,8 +81,9 @@ konfiguracje badawcze, nie produkcyjne.
 
 ## Slajd 2 — Anomalia (1,5 min)
 
-Status: W ITERACJI (poprawki użytkownika 2026-09-03: bez c, 111–185 W,
-wykres mocy w czasie zostaje). Decyzja 3: bez definicji GPU-Util.
+Status: ZAAKCEPTOWANY (2026-09-03): bez c, 111–185 W, W0' z linią Qwen
+1 karta (kolory: niebieski Kimi, ciemnozielony Qwen, czerwona przerywana
+limit). Decyzja 3: bez definicji GPU-Util.
 
 ### Na slajdzie
 
@@ -91,10 +92,13 @@ wykres mocy w czasie zostaje). Decyzja 3: bez definicji GPU-Util.
 > [ZRZUT: nvidia-smi — 8 wierszy, kolumny GPU-Util 100% i moc ~175 W / 600 W;
 > `../2026-07-31-nvlink-meetup/nvidia_smi_crop.png`]
 >
-> [WYKRES W0': pobór mocy w czasie okna benchmarku, pozioma linia limitu
-> 600 W. Osiem cienkich linii (Kimi na 8 kartach) płasko w paśmie
-> 111–185 W. Jedna gruba linia w kontrastowym kolorze: „model testowy na
-> JEDNEJ karcie" — 400–590 W. Legenda dwuwierszowa.]
+> [WYKRES W0': jak v1 W0 — pobór mocy w czasie okna benchmarku.
+> Osiem niebieskich linii (Kimi na 8 kartach, osobna linia na kartę)
+> płasko w paśmie 111–185 W, podpis przy liniach: „Kimi — 8 × H200, po
+> jednej linii na kartę". Jedna ciemnozielona linia: Qwen na jednej karcie,
+> 400–590 W, podpis „Qwen — 1 × H200". Czerwona przerywana pozioma linia
+> 600 W z podpisem „limit karty: 600 W". Bez legendy — podpisy przy
+> liniach.]
 >
 > **Osiem kart z Kimi: 100% obciążenia — a pobór mocy 111–185 W z 600 W,
 > przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.**
