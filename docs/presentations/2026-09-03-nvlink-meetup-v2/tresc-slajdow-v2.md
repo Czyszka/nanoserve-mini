@@ -301,17 +301,18 @@ Jeśli trzeba ciąć: definicja GPU-Util schodzi do podpisu klamry na G2.
 
 ## Slajd 6 — Rozkład czasu kroku (2 min)
 
-Status: W ITERACJI (2026-09-03): jeden pasek — Kimi 8 kart pod
+Status: ZAAKCEPTOWANY (2026-09-03): jeden pasek — Kimi 8 kart pod
 obciążeniem (profil c=16 z 06-11, bez podawania liczby użytkowników);
-definicja profilera przeredagowana („oś czasu" wycięte). Tytuł neutralny
-jak na slajdach 3–4 — do potwierdzenia. Kolory składników jak na slajdzie 5.
+definicja profilera i wniosek wg użytkownika („rejestruje… ze znacznikiem
+czasu"; „84% czasu pomiaru to komunikacja"); tytuł i ramka wzoru OK. Kolory składników jak na slajdzie 5.
 
 ### Na slajdzie
 
 > ## Rozkład czasu kroku
 >
-> Pomiar: **torch profiler** — nagrywa każdą operację karty razem z czasem
-> jej trwania; z nagrania sumujemy, ile zajął każdy składnik kroku
+> Pomiar: **torch profiler** — rejestruje każdą operację karty razem ze
+> znacznikiem czasu; na podstawie zapisu można określić, ile czasu zajmuje
+> każdy składnik kroku
 >
 > [WYKRES W3': jeden szeroki poziomy pasek 0–100%, podpis „Kimi, 8 kart,
 > serwer pod obciążeniem". Odcinki w kolorach ze slajdu 5:
@@ -320,22 +321,22 @@ jak na slajdach 3–4 — do potwierdzenia. Kolory składników jak na slajdzie 
 > co na slajdzie 5, w tych samych kolorach, bez zmian — pasek jest jej
 > wypełnieniem liczbami.]
 >
-> **Karty przez 84% kroku wymieniają wyniki i czekają na siebie.
-> Liczą przez 5%.**
+> **84% czasu pomiaru to komunikacja między kartami. Obliczenia: 5%.**
 
 ### Notes
 
 Torch profiler to rejestrator: włączamy go na kilkadziesiąt sekund pracy
-serwera i dostajemy nagranie każdej operacji na każdej karcie, z czasem
-jej trwania. Potem sumujemy, ile czasu zajął każdy z trzech składników
+serwera i dostajemy zapis każdej operacji na każdej karcie, ze znacznikiem
+czasu. Na tej podstawie liczymy, ile czasu zajął każdy z trzech składników
 z poprzedniego slajdu. Pasek to Kimi na ośmiu kartach, serwer pod
 obciążeniem, wielu użytkowników naraz. Przerwy: dziesięć procent — silnik
 ma co robić, karta rzadko czeka na procesor. Obliczenia: pięć procent.
-I komunikacja: osiemdziesiąt cztery procent kroku karty wymieniają wyniki
-częściowe i czekają, aż wszystkie skończą. To jest odpowiedź na obraz
+I komunikacja: osiemdziesiąt cztery procent czasu pomiaru. Wiemy już,
+który składnik dominuje — nie wiemy jeszcze, co konkretnie w tej
+komunikacji tyle trwa. To jest odpowiedź na obraz
 z nvidia-smi: sto procent zajętości, bo kernel komunikacyjny trwa;
-trzydzieści procent mocy, bo czekanie nie grzeje. Zostaje pytanie,
-dlaczego komunikacja jest aż tak droga.
+trzydzieści procent mocy, bo czekanie nie grzeje. Co dokładnie dzieje się w tych
+osiemdziesięciu czterech procentach — następny slajd.
 
 Q&A (nie na głos): profil przy 16 równoległych zapytaniach, era PCIe
 (06-11); kontrola narzutu profilera: ITL profilowany vs nie ±2%. Dla
