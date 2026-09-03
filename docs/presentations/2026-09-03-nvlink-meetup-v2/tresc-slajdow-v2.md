@@ -81,7 +81,8 @@ konfiguracje badawcze, nie produkcyjne.
 
 ## Slajd 2 — Anomalia (1,5 min)
 
-Status: SZKIC. Decyzja 3: bez definicji GPU-Util (ta na slajdzie 5).
+Status: W ITERACJI (poprawki użytkownika 2026-09-03: bez c, 111–185 W,
+wykres mocy w czasie zostaje). Decyzja 3: bez definicji GPU-Util.
 
 ### Na slajdzie
 
@@ -90,22 +91,30 @@ Status: SZKIC. Decyzja 3: bez definicji GPU-Util (ta na slajdzie 5).
 > [ZRZUT: nvidia-smi — 8 wierszy, kolumny GPU-Util 100% i moc ~175 W / 600 W;
 > `../2026-07-31-nvlink-meetup/nvidia_smi_crop.png`]
 >
-> **Osiem kart: 100% obciążenia — i po ~30% limitu mocy. Przez cały benchmark.**
+> [WYKRES W0': pobór mocy 8 kart w czasie całego okna benchmarku, pozioma
+> linia limitu 600 W; przebieg płaski w paśmie 111–185 W — z v1 W0,
+> bez zmian poza większymi fontami]
+>
+> **Osiem kart: 100% obciążenia — a pobór mocy 111–185 W z 600 W,
+> przez cały benchmark.**
 >
 > Kto widział coś takiego u siebie?
 
 ### Notes
 
-Tak wyglądał serwer pod pełnym obciążeniem — 64 równoległych zapytań do
-Kimi. nvidia-smi, narzędzie, na które każdy patrzy pierwsze, pokazuje sto
-procent na każdej karcie. A w kolumnie mocy: sto siedemdziesiąt, sto
-osiemdziesiąt watów, przy limicie sześciuset. To nie był chwilowy przestój
-między zadaniami — ten stan trwał przez cały benchmark. Karta, która
-naprawdę liczy, ciągnie czterysta, pięćset watów. Zapamiętajmy ten obraz:
+Tak wyglądał serwer pod pełnym obciążeniem, z Kimi na ośmiu kartach.
+nvidia-smi, narzędzie, na które każdy patrzy pierwsze, pokazuje sto
+procent na każdej karcie. A w kolumnie mocy: sto kilkadziesiąt watów, przy
+limicie sześciuset. Wykres pod spodem pokazuje, że to nie był chwilowy
+przestój między zadaniami: przez cały benchmark karty trzymały się w
+paśmie od stu jedenastu do stu osiemdziesięciu pięciu watów. Karta, która
+naprawdę liczy, ciągnie czterysta, pięćset watów. Zapamiętajmy ten obraz —
 wrócimy do niego, kiedy będziemy wiedzieli, co te karty właściwie robiły.
 
-Źródło: zrzut z rekonstrukcji nop2p 08-03 (172–181 W); historyczne PCIe:
-111–185 W (dcgmi 06-11) — w notes nie rozróżniamy.
+Źródło: zrzut — rekonstrukcja 08-03 (172–181 W); wykres i pasmo 111–185 W
+— dcgmi 06-11 (v1 W0, `generate_charts.py`). W notes nie rozróżniamy
+pochodzenia zrzutu i wykresu; Q&A: zrzut z późniejszej rekonstrukcji
+tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
 
 ---
 
