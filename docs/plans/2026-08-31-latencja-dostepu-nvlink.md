@@ -297,7 +297,12 @@ nccl_lat_run 0,1,2,3,4,5,6,7   8 all8_nop2p    1
 
 # szybka tabela zbiorcza (µs/op @ 16 KB — reżim dekodowania c=1):
 for f in "$NOUT"/nccl_lat_*.json; do
-  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(f"{sys.argv[1].split(chr(47))[-1]:32s} 16KB: {d[\"16384B\"][\"lat_us\"]:8.2f} us  8MB busbw: {d[\"8388608B\"][\"busbw_GBps\"]:7.1f} GB/s")' "$f"
+  python3 - "$f" <<'PYEOF'
+import json, os, sys
+d = json.load(open(sys.argv[1]))
+name = os.path.basename(sys.argv[1])
+print(f"{name:32s} 16KB: {d['16384B']['lat_us']:8.2f} us  8MB busbw: {d['8388608B']['busbw_GBps']:7.1f} GB/s")
+PYEOF
 done | tee "$NOUT/lat_summary_quick.txt"
 ```
 
@@ -371,8 +376,13 @@ services:
       NCCL_P2P_DISABLE: "1"
 EOF
 
-# flaga profilera (vLLM v0.20: --profiler-config, NIE env — lekcja 08-03):
-PROFILER_ARG='--profiler-config={"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
+# flaga profilera (vLLM v0.20: --profiler-config, NIE env — lekcja 08-03).
+# JSON MUSI być w apostrofach: compose po interpolacji ${QWEN_EXTRA_ARGS} dzieli
+# string command jak shell i zjada gołe " (precedens: --speculative-config w
+# docker-compose.qwen3.6.yml). Bez apostrofów silnik dostaje {profiler:torch,...}
+# → "argument --profiler-config: 1 validation error".
+PROFILER_JSON='{"profiler":"torch","torch_profiler_dir":"/tmp/vllm_profile"}'
+PROFILER_ARG="--profiler-config='$PROFILER_JSON'"
 
 qwen_up () {  # $1=TP $2=CVD $3=extra_args(""=brak) $4=nop2p(0/1) $5=label
   export QWEN_TP="$1"; export QWEN_CUDA_VISIBLE_DEVICES="$2"
@@ -396,8 +406,9 @@ qwen_up () {  # $1=TP $2=CVD $3=extra_args(""=brak) $4=nop2p(0/1) $5=label
       || echo "STOP: nop2p env NIE weszło ($5) — wyniki będą o NVLinku"
   fi
   if [ -n "$3" ]; then
-    grep -o 'profiler-config' "$QOUT/engine_cmd_$5.json" \
-      || echo "STOP: profiler-config nie wszedł przez QWEN_EXTRA_ARGS — fallback: overlay z pełną komendą (wzór: plan 2026-08-03-kimi-trace-nvlink.md, Cz. 3)"
+    # cudzysłowy JSON muszą przeżyć shlex compose — w inspect widać je jako \" :
+    grep -o '\\"torch_profiler_dir\\"' "$QOUT/engine_cmd_$5.json" \
+      || echo "STOP: profiler-config nie wszedł POPRAWNIE (brak cudzysłowów JSON w Cmd) — fallback: overlay z pełną komendą (wzór: plan 2026-08-03-kimi-trace-nvlink.md, Cz. 3)"
   fi
   ensure_dataset || return 1
   bench_prereqs "$QWEN_COMPOSE" || return 1
