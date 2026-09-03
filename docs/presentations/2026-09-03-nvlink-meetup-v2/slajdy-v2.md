@@ -684,11 +684,10 @@ do rewizji).
   nawet przy jednym kliencie (inaczej niż Kimi: 63% gaps). Notes do
   slajdu 10 (dlaczego Kimi c=1 zyskał tylko 1,2×).
 
-### E.4 Do zrobienia przed pisaniem slajdów 6–10
+### E.4 Stan po podsumowaniu sesji (2026-09-03)
 
-1. Podsumowanie sesji 08-31 (`results/summaries/`) z werdyktami predykcji —
-   sesja miała predykcje pre-rejestrowane; kilka padło (E.1) i to musi
-   być zapisane, zanim trafi na slajd.
-2. Wyjaśnić: wyspa-4 53,8 µs; c=64 < c=32; bucket „other"; narzut
-   profilera −68%.
-3. Aktualizacja `agent-state.md` (dane 08-31 SĄ w repo; sync-state).
+Podsumowanie z werdyktami: `results/summaries/2026-08-31-latencja-dostepu-summary.md`.
+Wyjaśnione: c=64 < c=32 (`--max-num-seqs 32` — kolejka + prefill-bursty;
+na slajdach c=32); narzut profilera (za krótkie okna profilowane, 8–32
+promptów — trace'y jakościowe). Otwarte (§5 podsumowania): wyspa-4 54 µs
+przy 16–64 KB; bucket „other"; liczba warstw Qwen do rachunku 2L×r.

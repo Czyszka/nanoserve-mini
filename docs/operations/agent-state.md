@@ -122,8 +122,15 @@ status, not a task list. Update when work moves.
   **v2 w toku (od 2026-09-03):** v1 uznana za zbyt skomplikowaną; nowa
   wersja ~20 min / 10–11 slajdów, od ogółu do szczegółu, katalog roboczy
   `docs/presentations/2026-09-03-nvlink-meetup-v2/` (README + `slajdy-v2.md`
-  ze szkieletem, uwagami krytycznymi i fallbackami). Slajdy 4/6/9 czekają
-  na dane z sesji `2026-08-31-latencja-dostepu-nvlink` (nie ma ich w repo).
+  ze szkieletem, uwagami krytycznymi i fallbackami). Tytuł zaakceptowany.
+- **Sesja 2026-08-31/09-02 (latencja all-reduce + grid Qwen + profile):**
+  dane w repo (`8d7ef5b`), podsumowanie z werdyktami predykcji:
+  `results/summaries/2026-08-31-latencja-dostepu-summary.md`. Kluczowe:
+  NVLink nie skraca rundy przy małych wiadomościach (~28–54 µs jak nop2p),
+  wygrywa przepustowością od ~512 KB (14×); krzywa TP Qwen c32 po NVLinku
+  2015/2467/2990/1974; kontrola narzutu profilera nie przeszła (trace'y
+  jakościowe). Teza „latencja, nie przepustowość" wycofana — mechanizm do
+  przepisania w #50/T9. Burn-in poza zakresem (test klimatyzacji).
 - **Drafter k=4 (plan 2026-08-10):** sesja wykonana (wg właściciela, 08-11),
   ale danych nie ma w repo — najpewniej nie zebrane albo nie wrzucone. Jeśli
   artefakty leżą na serwerze, dociągnąć przy okazji sesji 08-12; inaczej wynik
