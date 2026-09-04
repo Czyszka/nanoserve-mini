@@ -777,10 +777,6 @@ użytkownika. Dryf Qwen TP1 tylko w Q&A.
 > | Qwen, 4 karty, 64 użytkowników | 680 tok/s | 2129 tok/s | **3,1×** |
 > | Kimi, 8 kart, 32 użytkowników | 285 tok/s | 608 tok/s | **2,1×** |
 >
-> Qwen na 4 kartach względem jednej karty: przed mostkami **0,57×**, po
-> **1,25×**. Dopiero mostki sprawiły, że dokładanie kart temu modelowi się
-> opłaca (slajd 4).
->
 > Łączny koszt: **2 mostki × ~4,5 tys. zł ≈ 9 tys. zł na serwer**.
 
 ### Notes
