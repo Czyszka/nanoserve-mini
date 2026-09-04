@@ -719,54 +719,87 @@ rekonstrukcja ery PCIe, nie sama era PCIe.
 
 ## Slajd 10 — Efekt: ile sekund oszczędza użytkownik (2,5 min) — PODSUMOWANIE
 
-Status: SZKIC. Decyzja 8: ostatni slajd. Dwa wykresy jeden pod drugim.
+Status: SZKIC 2 (2026-09-04): jeden wykres (reguła ≤1 wykres); Qwen jako
+jedno zdanie; puenta przepisana pod slajd 9 (mostki skróciły rundę, więc
+skróciły czekanie — nie „skracają przesył, nie czekanie", co było
+sprzeczne z tabelą na slajdzie 9). Cena serwera do potwierdzenia.
 
 ### Na slajdzie
 
-> ## Efekt dla użytkownika: odpowiedź (256 tokenów) przed i po
+> ## Efekt dla użytkownika: odpowiedź 256 tokenów, przed i po
 >
-> [WYKRES W5a — Kimi, 8 kart: pary słupków „sekund czekania" per liczba
-> użytkowników naraz:
-> 1 użytkownik **2,2 → 1,9 s** (1,2×) · 8 **20 → 4,5 s** (4,5×) ·
-> 16 **49 → 6,7 s** (7×) · 32 **24 → 11,5 s** (2×)]
+> [WYKRES W5a — Kimi, 8 kart: pary słupków „sekund czekania na odpowiedź"
+> per liczba użytkowników naraz, przed (szary) / po (niebieski), liczba
+> nad każdym słupkiem:
+> 1 użytkownik **2,2 → 1,9 s** · 8 **20,1 → 4,5 s** ·
+> 16 **48,8 → 6,7 s** · 32 **24,1 → 11,5 s**]
 >
-> [WYKRES W5b — Qwen, 4 karty (jedna wyspa), 64 użytkowników:
-> przepustowość **680 → 2022 tok/s (3×)**]
+> Model mieszczący się w jednej czwórce (Qwen, 4 karty, 64 użytkowników):
+> **680 → 2022 tok/s, 3×**.
 >
-> Koszt: 2 mostki × ~4,5 tys. zł ≈ **9 tys. zł**.
+> Koszt: 2 mostki ≈ **9 tys. zł**.
 >
-> **Wąskim gardłem nie był żaden zasób karty — było czekanie kart na
-> siebie w 122 rundach na token. Mostki skracają przesył, nie czekanie:
-> zysk 2–7× pod obciążeniem, ~0 dla pojedynczego użytkownika.**
+> **Wąskim gardłem nie był żaden zasób karty, tylko czekanie kart na
+> siebie — 122 razy na każdy token. Mostki skróciły rundę, więc skróciły
+> czekanie: 2–7× pod obciążeniem, prawie nic dla jednego użytkownika.**
 
 ### Notes
 
-Wracamy do użytkownika. Górny wykres to Kimi na ośmiu kartach: ile sekund
-czeka użytkownik na odpowiedź o długości 256 tokenów, przed i po montażu.
-Jeden użytkownik na pustym serwerze: 2,2 sekundy przed, 1,9 po — dwadzieścia
-procent, tak jak przewidział koszt stały. Ośmiu użytkowników naraz:
-dwadzieścia sekund przed, cztery i pół po. Szesnastu: prawie minuta przed —
-serwer z ośmiu kart obsługiwał szesnaście osób wolniej niż jedną — siedem
-sekund po. Trzydziestu dwóch: dwadzieścia cztery sekundy przed, jedenaście
-i pół po. Dolny wykres to model testowy na czterech kartach w jednej
-wyspie: trzy razy więcej tokenów na sekundę — więcej niż Kimi, bo nie
-przekracza granicy wysp. Koszt: dwa mostki, około dziewięciu tysięcy
-złotych, przy serwerze wartym setki tysięcy.
+Wracamy do użytkownika. Wykres to Kimi na ośmiu kartach: ile sekund czeka
+użytkownik na odpowiedź o długości dwustu pięćdziesięciu sześciu tokenów,
+przed i po montażu mostków. Ta sama praca, ten sam serwer, zmienione
+tylko łącze.
 
-I odpowiedź na pytanie z tytułu. Wąskim gardłem nie był żaden zasób karty
-— ani jednostki liczące, ani pamięć, ani przepustowość łącza na papierze.
-Było czekanie kart na siebie, sto dwadzieścia dwa razy na każdy token.
-Mostki NVLink skracają przesył, ale nie skracają czekania — dlatego dają
-dwa do siedmiu razy pod obciążeniem i prawie nic dla jednego użytkownika.
-Jeśli wasz serwer obsługuje jedną osobę naraz, oszczędźcie te dziewięć
-tysięcy. Jeśli obsługuje kilkanaście — to najtańsza modernizacja, jaką
-znam. Dziękuję.
+Jeden użytkownik na pustym serwerze: dwie i dwie dziesiąte sekundy przed,
+jedna i dziewięć po. Dwadzieścia procent. Dokładnie tyle, ile pozwala
+koszt stały rundy, który — jak widzieliśmy — mostki zostawiły bez zmian.
+Przy jednym użytkowniku porcja jest mała, przystanków mało, karty nie
+czekają na siebie, więc nie ma czego skracać.
 
-Źródło: tabela w `slajdy-v2.md` (slajd 10, runda 2): TPOT Kimi 8,7→7,44;
-78,5→17,5; 190,5→26,0; 94,1→44,9 ms × 256 tok. Qwen TP4 c64 680→2022.
-Zastrzeżenia (Q&A): c=8 „po" = jeden bieg; 49 s przy c=16 to anomalia
-ery PCIe (transportowa, zniknęła z mostkami); wszystkie „po" ciepłe.
-Cena serwera — do potwierdzenia przez prelegenta lub wyciąć.
+Ośmiu użytkowników naraz: dwadzieścia sekund przed, cztery i pół po.
+Szesnastu: czterdzieści dziewięć sekund przed — tak, serwer z ośmiu kart
+obsługiwał szesnaście osób wolniej niż jedną, to była ta anomalia ze
+slajdu trzeciego — niecałe siedem sekund po. Trzydziestu dwóch:
+dwadzieścia cztery sekundy przed, jedenaście i pół po — to jest ten
+rachunek ze slajdów osiem i dziewięć.
+
+Jedno zdanie o modelu, który mieści się w jednej czwórce: tam runda nie
+musi przechodzić między czwórkami, więc dostaje pełną przepustowość
+mostków. Qwen na czterech kartach przy sześćdziesięciu czterech
+użytkownikach: trzy razy więcej tokenów na sekundę.
+
+Koszt: dwa mostki, około dziewięciu tysięcy złotych, przy serwerze wartym
+[DO POTWIERDZENIA: rząd wielkości ceny serwera].
+
+I odpowiedź na pytanie z tytułu. Sto procent zajętości, trzydzieści
+procent mocy. Wąskim gardłem nie był żaden zasób karty — ani jednostki
+liczące, ani pamięć, ani przepustowość łącza. Było czekanie kart na
+siebie, sto dwadzieścia dwa razy na każdy token. Mostki skróciły rundę,
+a krótsza runda to krótsze czekanie — dlatego dają od dwóch do siedmiu
+razy pod obciążeniem i prawie nic dla jednego użytkownika. Jeśli wasz
+serwer obsługuje jedną osobę naraz, oszczędźcie te dziewięć tysięcy.
+Jeśli obsługuje kilkanaście — to najtańsza modernizacja, jaką znam.
+Dziękuję.
+
+Q&A (nie na głos): odpowiedź = TPOT med × 256 (TPOT, nie ITL — przy
+spekulacji Eagle3 ITL zaniża odczuwany zysk). Przed = 06-11 (PCIe), po
+= 07-31 (c=1) i 08-03 (c=16, c=32), c=8 „po" = `domkniecie_grafana/
+grafana/bench/ramp_c8.json` (jeden bieg). c=1: 8,67 → 7,44 ms (1,17×);
+c=8: 78,52 → 17,54 (4,5×); c=16: 190,47 → 25,99 (7,3×); c=32: 94,14
+→ 44,90 (2,1×). 49 s przy c=16 to anomalia ery PCIe potwierdzona trzema
+powtórkami (48,8 / 49,3 / 50,5 s) — transportowa, zniknęła z mostkami;
+dlatego 7× to nie „typowy" zysk, tylko usunięcie patologii; typowy pod
+obciążeniem = 2× (c=32). Wszystkie „po" ciepłe (reguła wygrzewki 08-03).
+Qwen TP4 c64: 680 (06-11, PCIe) → 2022 tok/s (07-31, NVLink); w wyspie
+dochodzi custom all-reduce vLLM (dawka 1,0–1,2×), reszta to
+przepustowość 14×. Przepustowość serwera Kimi c=32: 285 → 608 tok/s
+(2,1×). Cena mostka — wg użytkownika ~4,5 tys. zł/szt.
+
+Źródło: `results/runs/2026-06-11_nvlink_boundary/kimi_ramp/bench/kimi_c{1,8,16,32}.json`;
+`results/runs/2026-07-31_nvlink_install/kimi/bench/kimi_c1.json`;
+`results/runs/2026-08-03_nvlink_gap_fill/kimi/bench/kimi_c{16,32}.json`;
+`results/runs/2026-08-03_domkniecie_grafana/grafana/bench/ramp_c8.json`;
+tabela w `slajdy-v2.md` (slajd 10, runda 2).
 
 ---
 
