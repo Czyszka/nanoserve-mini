@@ -853,8 +853,18 @@ zł/szt. — wg użytkownika.
 - **Z2 — Qwen po mostkach (c=32):** wykres W6 (tok/s: 1/2/4/8 kart =
   2015 / 2467 / 2990 / 1974) + pod nim udział komunikacji 0 / 12 / 18 /
   58% (jakościowo). Źródło: 08-31 §2–3.
-(Z3 — tabela decyzyjna — usunięta 2026-09-04 wg użytkownika; na slajdach
-zapasowych bez dat sesji i bez wzmianek o kontroli narzutu profilera.)
+- **Z3 — Qwen na 4 kartach: dokąd poszedł ruch (c=64):** wykres W8 (moc
+  w czasie, karty 0–3, przed w szarym / po w zielonym) + tabela liczników
+  DCGM: przed 143 W / SM 0,122 / PCIe RX 5,89; po (wyspa) 271 W / 0,402 /
+  0,07 przy NVL RX 10,92; po (cross 0,1,4,5) 201 W / 0,217 / 5,40 przy NVL
+  4,44. Wiersz cross to kontrola topologii wewnątrz jednej sesji, odporna na
+  dryf czerwiec→sierpień. Liczby tylko po kartach pracujących (pozostałe
+  ~72 W idle); okna 236 vs 78 s. Źródło:
+  `2026-06-11_bottleneck/qwen_tp_curve/qwen_tp4_c64_dcgmi.txt`,
+  `2026-08-31_latencja_dostepu/qwen/tp4{isl,cross}_c64_dcgmi.txt`.
+
+(Dawne Z3 — tabela decyzyjna — usunięte 2026-09-04 wg użytkownika; na
+slajdach zapasowych bez dat sesji i bez wzmianek o kontroli narzutu.)
 
 ## Wykresy i grafiki — WYKONANE (2026-09-04)
 
@@ -876,6 +886,7 @@ inline SVG w `index_src.html`; sklejka: `build_index.py` → `index.html`
 | W5b | 10 | Kimi 8 kart, c32, przed/po tok/s | `kimi_c32.json` (06-11, 08-03) |
 | W6 | Z2 | Qwen 1/2/4/8 kart, c32, po mostkach, tok/s | `bench_tp{1,2isl,4isl,8}/*_c32.json` (08-31) |
 | W7 | Z1 | Kimi 8 kart c32, pobór mocy w czasie, przed i po mostkach | `kimi_c32_dcgmi.txt` (06-11) i (08-03 gap_fill) |
+| W8 | Z3 | Qwen 4 karty w wyspie, c64, pobór mocy w czasie, przed i po | `qwen_tp4_c64_dcgmi.txt` (06-11), `tp4isl_c64_dcgmi.txt` (08-31) |
 
 ## Budżet czasu
 

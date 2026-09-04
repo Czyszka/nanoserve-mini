@@ -324,6 +324,37 @@ def w7_kimi_moc_przed_po() -> None:
     save(fig, "w7_kimi_moc_przed_po.svg")
 
 
+# ---------------------------------------------------------------- W8 (zapas Z3)
+def w8_qwen_tp4_moc_przed_po() -> None:
+    """Qwen TP4 w wyspie (karty 0-3), c=64: pobor mocy w czasie, PCIe vs mostki.
+
+    Tylko karty pracujace — pozostale cztery stoja na ~72 W idle i zanizalyby obraz.
+    Okna maja rozna dlugosc (236 vs 78 probek).
+    """
+    before = read_dcgmi(RUNS / "2026-06-11_bottleneck" / "qwen_tp_curve" / "qwen_tp4_c64_dcgmi.txt")
+    after = read_dcgmi(RUNS / "2026-08-31_latencja_dostepu" / "qwen" / "tp4isl_c64_dcgmi.txt")
+    fig, ax = new_ax(9.0, 3.4)
+    for samples, color in ((before, BEFORE), (after, GREEN)):
+        for gid in (0, 1, 2, 3):
+            series = [next((pw for g, pw, *_ in smp if g == gid), None) for smp in samples]
+            xs = [i for i, v in enumerate(series) if v is not None]
+            ys = [v for v in series if v is not None]
+            ax.plot(xs, ys, color=color, lw=1.3, alpha=0.7)
+    ax.axhline(600, color=CRITICAL, lw=1.6, ls="--")
+    ax.text(2, 610, "limit karty: 600 W", color=CRITICAL, fontsize=11, va="bottom")
+    ax.text(len(after) + 4, 300, "po mostkach - średnio 271 W", color=GREEN, fontsize=12,
+            fontweight="600", ha="left", va="bottom")
+    ax.text(len(before) - 4, 130, "era PCIe - średnio 143 W", color=INK2, fontsize=12,
+            fontweight="600", ha="right", va="top")
+    ax.set_ylim(0, 680)
+    ax.set_xlim(0, len(before) - 1)
+    ax.set_xlabel("czas okna benchmarku [s] - okna: era PCIe 236 s, po mostkach 78 s")
+    ax.margins(x=0)
+    ax.set_ylabel("pobór mocy na kartę [W]")
+    ax.set_title("Qwen na 4 kartach w jednej wyspie (karty 0-3), 64 użytkowników", loc="left")
+    save(fig, "w8_qwen_tp4_moc_przed_po.svg")
+
+
 if __name__ == "__main__":
     w0_moc_w_czasie()
     w1_krzywa_tp()
@@ -333,3 +364,4 @@ if __name__ == "__main__":
     w5b_kimi()
     w6_qwen_tp_nvlink()
     w7_kimi_moc_przed_po()
+    w8_qwen_tp4_moc_przed_po()
