@@ -461,9 +461,9 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-04, runda 13: sekundy do jednego miejsca,
-liczone z kolumny „na jedną rundę", żeby tabela dodawała się w kolumnie.
-Runda 12: liczby podane dokładniej
+Status: W ITERACJI (2026-09-04, runda 14: sekundy do dwóch miejsc;
+„przystanki" liczone jako reszta także w sekundach, dzięki czemu obie
+kolumny dodają się dokładnie. Runda 12: liczby podane dokładniej
 (24,1 s, 23 172 rundy, 0,873 / 0,162 / 0,711 ms); wiersz przemianowany na
 „czas komunikacji … bez obliczeń, karty startują równo". Runda 11: tabela dwukolumnowa (na jedną
 rundę / w całej odpowiedzi) w kolejności ciągu przyczynowo-skutkowego:
@@ -485,19 +485,19 @@ w rundzie nie ma — są osobnym składnikiem kroku).
 > 2. Runda scala **wszystkie 8 kart**: zawsze zawiera tę najdłuższą trasę
 >    i kończy się dopiero, gdy **dotrze ostatnia karta**.
 >
-> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24,1 s**.
+> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24,10 s**.
 > Rund w tej odpowiedzi **23 172**: silnik zgaduje tokeny z wyprzedzeniem,
 > więc jeden krok daje średnio 1,35 tokena — 190 kroków × 122 rundy.
 >
 > | | na jedną rundę | w całej odpowiedzi |
 > |---|---:|---:|
-> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | | **24,1 s** |
-> | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 172 rundy | **0,873 ms** | **20,2 s** |
-> | Czas komunikacji trasą z pkt 1, **zmierzony osobno — bez obliczeń, karty startują równo** | **0,162 ms** | 3,8 s |
-> | &nbsp;&nbsp;w tym przesył 459 kB przy 29,1 GB/s (zmierzone) | 0,016 ms | 0,4 s |
-> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,030 ms | 0,7 s |
-> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,116 ms | 2,7 s |
-> | **→ zostaje czekanie na ostatnią kartę** (0,873 − 0,162) | **0,711 ms** | **16,4 s** |
+> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | | **24,10 s** |
+> | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 172 rundy | **0,873 ms** | **20,22 s** |
+> | Czas komunikacji trasą z pkt 1, **zmierzony osobno — bez obliczeń, karty startują równo** | **0,162 ms** | 3,76 s |
+> | &nbsp;&nbsp;w tym przesył 459 kB przy 29,1 GB/s (zmierzone) | 0,016 ms | 0,37 s |
+> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,030 ms | 0,70 s |
+> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,116 ms | 2,69 s |
+> | **→ zostaje czekanie na ostatnią kartę** (0,873 − 0,162) | **0,711 ms** | **16,46 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
@@ -551,7 +551,7 @@ siedemdziesiąt trzy tysięczne. Różnica — siedemset jedenaście tysięcznyc
 milisekundy — to czekanie na ostatnią kartę. Karty nie kończą swojego kawałka liczenia w tym samym
 momencie, a runda nie ruszy bez wszystkich.
 
-Razy dwadzieścia trzy tysiące rund: szesnaście i cztery dziesiąte sekundy
+Razy dwadzieścia trzy tysiące rund: szesnaście i pół sekundy
 z dwudziestu czterech. Największy pojedynczy składnik całej odpowiedzi.
 Nie mierzyliśmy go osobno — wynika z różnicy, ale nic innego w rundzie nie
 zostało.
@@ -567,11 +567,11 @@ Q&A (nie na głos): 24 s = TPOT med 94 ms × 256 (Kimi c=32, 06-11); krok
 krok — rząd wielkości ten sam, spekulacja niesie więcej danych na rundę).
 83,9% — profil Kimi TP8 c=16, werdykt 06-11 (gaps 10%, compute 4,6%);
 24,1 × 0,839 = 20,2 s; 20,2 / 23 172 = 0,873 ms; czekanie 0,873 − 0,162
-= 0,711 ms; w całej odpowiedzi 16,46 s — w tabeli sekundy są liczone
-z wartości pokazanych w kolumnie „na jedną rundę" i zaokrąglone do jednego
-miejsca, żeby kolumna się dodawała (0,4 + 0,7 + 2,7 = 3,8; 3,8 + 16,4
-= 20,2). Dokładnie: 24,101 s, komunikacja 20,220 s, runda osobno 3,763 s,
-czekanie 16,457 s. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
+= 0,711 ms × 23 172 = 16,46 s. Wartości bez zaokrągleń: 24,101 /
+20,220 / 3,763 / 0,365 / 0,697 / 2,700 / 16,457 s. „Przystanki" są resztą
+z odejmowania i tak też są liczone w sekundach (3,76 − 0,37 − 0,70
+= 2,69), dlatego kolumna dodaje się dokładnie; pomnożone osobno dałyby
+2,70. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
 = 458 752 B = 459 kB. Uwaga na fałszywą dokładność: 83,9% pochodzi
 z profilu c=16, przeniesionego na przebieg c=32 — trzecia cyfra
 znacząca w 0,873 ms jest arytmetyczna, nie pomiarowa. 0,16 ms = nccl all-reduce
