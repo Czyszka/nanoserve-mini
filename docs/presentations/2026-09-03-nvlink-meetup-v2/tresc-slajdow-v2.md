@@ -844,7 +844,8 @@ zł/szt. — wg użytkownika.
 - **Z2 — Qwen po mostkach (c=32):** wykres W6 (tok/s: 1/2/4/8 kart =
   2015 / 2467 / 2990 / 1974) + pod nim udział komunikacji 0 / 12 / 18 /
   58% (jakościowo). Źródło: 08-31 §2–3.
-- **Z3 — Tabela decyzyjna:** kiedy NVLink 4-way ma sens.
+(Z3 — tabela decyzyjna — usunięta 2026-09-04 wg użytkownika; na slajdach
+zapasowych bez dat sesji i bez wzmianek o kontroli narzutu profilera.)
 
 ## Wykresy i grafiki — WYKONANE (2026-09-04)
 

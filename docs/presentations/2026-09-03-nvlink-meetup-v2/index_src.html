@@ -99,7 +99,7 @@
   .spacer { flex: 1; }
 
   .title-slide { justify-content: center; }
-  .title-slide h1 { font-size: 50px; max-width: 1140px; }
+  .title-slide h1 { font-size: 38px; max-width: 1150px; white-space: nowrap; }
   .title-slide .subtitle { margin-top: 34px; font-size: 24px; color: var(--ink-2); }
 
   #hud { position: absolute; left: 0; right: 0; bottom: 0; height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-family: var(--mono); font-size: 13px; color: var(--muted); user-select: none; }
@@ -122,7 +122,7 @@
 
 <!-- ================================================== SLAJD 0 -->
 <section class="slide title-slide">
-  <h1>100% zajętości w GPU-Util,<br>a tylko 30% limitu mocy.<br>Co jest wąskim gardłem?</h1>
+  <h1>100% zajętości w GPU-Util, a tylko 30% limitu mocy.<br>Co jest wąskim gardłem?</h1>
   <p class="subtitle">Badania wydajnościowe serwera 8xH200 i ich efekty - studium przypadku</p>
 </section>
 
@@ -451,7 +451,7 @@
   <h1>Kimi po NVLinku: rozkład czasu kroku</h1>
   <div class="slide-body">
     <table>
-      <thead><tr><th>składnik kroku</th><th class="num">PCIe (06-11)</th><th class="num">NVLink (08-03)</th></tr></thead>
+      <thead><tr><th>składnik kroku</th><th class="num">PCIe</th><th class="num">NVLink</th></tr></thead>
       <tbody>
         <tr><td><span class="c-comm"><strong>komunikacja</strong></span></td><td class="num">83,9%</td><td class="num"><strong>61,1%</strong></td></tr>
         <tr><td><span class="c-comp"><strong>obliczenia</strong></span></td><td class="num">4,6%</td><td class="num"><strong>30,2%</strong></td></tr>
@@ -460,7 +460,6 @@
     </table>
     <p>Komunikacja skróciła się ~2,9x, obliczenia zostały takie same - cały zysk 2,1x przyszedł z komunikacji. Prawo Amdahla: 1 / (0,161 + 0,839 / 2,9) = 2,2x (zmierzone 2,1x).</p>
     <p>Komunikacja to nadal 61% kroku → dalszy sufit 1 / (1 − 0,61) = 2,6x (pełna siatka 8 kart / NVSwitch).</p>
-    <p class="secondary small">Kontrola narzutu profilera: −9%, w paśmie ±15% - profil ilościowy. Symetria kart 0 i 7: 61,1% / 59,7%.</p>
   </div>
 </section>
 
@@ -477,32 +476,14 @@
       </tbody>
     </table>
     <p>4 karty przestały być karą: 1,48x względem jednej karty (era PCIe: 0,57x). 8 kart nadal poniżej jednej - skok komunikacji z 18% na 58% to koszt drogi między wyspami.</p>
-    <p class="secondary small">Udziały jakościowo: kontrola narzutu profilera dla tych przebiegów nie przeszła (poza pasmem ±15%). Konfund: 1 karta nie dotyka mostków, a między czerwcem a sierpniem urosła z 1202 do 1710 tok/s przy 64 użytkownikach (+42%) - porównania względem 1 karty tej samej ery są na to odporne.</p>
-  </div>
-</section>
-
-<!-- ================================================== ZAPAS Z3 -->
-<section class="slide">
-  <div class="eyebrow">Zapas Z3</div>
-  <h1>Kiedy mostek NVLink 4-drożny ma sens?</h1>
-  <div class="slide-body">
-    <table>
-      <thead><tr><th>sytuacja</th><th>spodziewany zysk</th><th>decyzja</th></tr></thead>
-      <tbody>
-        <tr><td>model mieści się na 1–2 kartach</td><td>≈ 0 - komunikacji prawie nie ma</td><td><strong>nie</strong></td></tr>
-        <tr><td>pojedynczy czat, jeden użytkownik naraz</td><td>≤ 1,3x - porcje małe, rządzi koszt stały</td><td><strong>nie</strong></td></tr>
-        <tr><td>model na 4 kartach, wielu użytkowników naraz</td><td>3x (pełna przepustowość mostka)</td><td><strong>tak</strong></td></tr>
-        <tr><td>model na 8 kartach (dwie czwórki), wielu użytkowników</td><td>2x - runda nadal przechodzi między czwórkami</td><td><strong>tak</strong></td></tr>
-      </tbody>
-    </table>
-    <p>Koszt: 2 x ~4,5 tys. zł na serwer. Test, który to rozstrzyga w godzinę: torch profiler pod obciążeniem - jeśli komunikacja to &gt; 50% kroku, mostek się zwróci.</p>
+    <p class="secondary small">Konfund: 1 karta nie dotyka mostków, a między czerwcem a sierpniem urosła z 1202 do 1710 tok/s przy 64 użytkownikach (+42%) - porównania względem 1 karty tej samej ery są na to odporne.</p>
   </div>
 </section>
 
 </main>
 
 <footer id="hud">
-  <span id="counter">1 / 14</span>
+  <span id="counter">1 / 13</span>
   <span>← → nawigacja &nbsp;·&nbsp; T motyw</span>
 </footer>
 
