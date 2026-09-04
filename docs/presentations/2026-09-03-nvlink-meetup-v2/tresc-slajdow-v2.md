@@ -498,8 +498,8 @@ w rundzie nie ma — są osobnym składnikiem kroku).
 > | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 172 rundy | **0,873 ms** | **20,22 s** |
 > | Czas komunikacji trasą z pkt 1, **zmierzony osobno — bez obliczeń, karty startują równo** | **0,238 ms** | 5,51 s |
 > | &nbsp;&nbsp;w tym przesył 459 kB przy 29,1 GB/s (zmierzone) | 0,016 ms | 0,37 s |
-> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,040 ms | 0,93 s |
-> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,182 ms | 4,21 s |
+> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,039 ms | 0,89 s |
+> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,183 ms | 4,25 s |
 > | **→ zostaje czekanie na ostatnią kartę** (0,873 − 0,238) | **0,635 ms** | **14,71 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
@@ -544,8 +544,8 @@ Te dwieście trzydzieści osiem tysięcznych rozkłada się na trzy części. Sa
 przesył danych — czterysta pięćdziesiąt dziewięć kilobajtów przy
 zmierzonych dwudziestu dziewięciu gigabajtach na sekundę — szesnaście
 tysięcznych milisekundy. Koszt stały, czyli start rundy i uzgodnienie
-kart, zanim popłyną dane — czterdzieści tysięcznych. Reszta, sto
-osiemdziesiąt dwie tysięczne, to przystanki po drodze: każdy switch i procesor musi odebrać
+kart, zanim popłyną dane — trzydzieści dziewięć tysięcznych. Reszta, sto
+osiemdziesiąt trzy tysięczne, to przystanki po drodze: każdy switch i procesor musi odebrać
 porcję i wysłać ją dalej.
 
 Zwróćcie uwagę, co z tego wynika. Sama komunikacja po najdłuższej trasie
@@ -571,17 +571,19 @@ krok — rząd wielkości ten sam, spekulacja niesie więcej danych na rundę).
 83,9% — profil Kimi TP8 c=16, werdykt 06-11 (gaps 10%, compute 4,6%);
 24,1 × 0,839 = 20,2 s; 20,2 / 23 172 = 0,873 ms; czekanie 0,873 − 0,162
 = 0,635 ms × 23 172 = 14,71 s. Wartości bez zaokrągleń: 24,101 /
-20,220 / 5,515 / 0,365 / 0,927 / 4,223 / 14,706 s. „Przystanki" są resztą
-z odejmowania i tak też są liczone w sekundach (5,51 − 0,37 − 0,93
-= 4,21), dlatego kolumna dodaje się dokładnie. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
+20,220 / 5,515 / 0,365 / 0,892 / 4,258 / 14,706 s. „Przystanki" są resztą
+z odejmowania i tak też są liczone w sekundach (5,51 − 0,37 − 0,89
+= 4,25), dlatego kolumna dodaje się dokładnie. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
 = 458 752 B = 459 kB. Uwaga na fałszywą dokładność: 83,9% pochodzi
 z profilu c=16, przeniesionego na przebieg c=32 — trzecia cyfra
-znacząca w 0,873 ms jest arytmetyczna, nie pomiarowa. 0,16 ms = nccl all-reduce
-512 KB, grupa (0,1,4,5) z dwiema parami za UPI (08-31, cross-4: 162,4 µs)
-— to CAŁA runda po tej trasie, nie sam czas przejścia trasy; osobnego
-pomiaru „ile trwa jeden przeskok" nie mamy. Nie jest to też pełna ósemka.
-Koszt stały ~30 µs (16 KB, płaski poziom niezależny od łącza). 0,182 ms
-= reszta z odejmowania 0,238 − 0,016 − 0,040. Rozmiar porcji na slajdzie 7:
+znacząca w 0,873 ms jest arytmetyczna, nie pomiarowa. 0,238 ms = nccl
+all-reduce 512 KB na wszystkich 8 kartach z wyłączonym P2P (08-31, `all-8
+nop2p`: 238,0 µs) — to CAŁA komunikacja rundy po tej trasie, nie sam czas
+przejścia trasy; osobnego pomiaru „ile trwa jeden przeskok" nie mamy.
+Uczciwość: `nop2p` to rekonstrukcja ery PCIe, nie sama era PCIe —
+resztkowe ~4 GB/s NVL jeździ ścieżkami poza NCCL-em, więc liczba raczej
+ZANIŻA karę. Koszt stały 0,039 ms = `all-8 nop2p` @4 KB (38,5 µs). 0,183 ms
+= reszta z odejmowania 0,238 − 0,016 − 0,039. Rozmiar porcji na slajdzie 7:
 460 KB przy c=32; mikro-benchmark robiony na 512 KB. Obliczenia NIE są
 częścią rundy — to osobny składnik kroku (5%). 29,1 GB/s — p2p_bw
 GPU0→GPU4 (07-31); DCGM PCIE_RX średnio 7,2–7,9 GB/s przy c≥8 (06-11).
@@ -602,8 +604,9 @@ przesyłu, nie 20. Po NVLinku (08-03, c=32): krok 90 ms, komunikacja 61%
 
 ## Slajd 9 — Zmiana: mostki NVLink (2 min)
 
-Status: SZKIC 2 (2026-09-04): slajd przepisany jako „przed/po" tego samego
-rachunku co slajd 8 — te same trzy wiersze rundy, ta sama grupa 8 kart
+Status: SZKIC 3 (2026-09-04): trzy składniki rundy po obu stronach
+(przesył / koszt stały / przystanki), liczba rund tylko w Q&A. Slajd
+przepisany jako „przed/po" tego samego rachunku co slajd 8 — te same trzy wiersze rundy, ta sama grupa 8 kart
 w mikro-pomiarze (`all-8 nop2p` 238,0 µs → `all-8` 141,6 µs). Busbw
 i koszt stały zeszły do notatek. Puenta do zatwierdzenia.
 
@@ -622,12 +625,16 @@ i koszt stały zeszły do notatek. Puenta do zatwierdzenia.
 > | | przed: PCIe | po: mostki NVLink |
 > |---|---:|---:|
 > | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | **24,10 s** | **11,50 s** |
-> | Jedna runda w pracującym serwerze | 0,873 ms | 0,452 ms |
+> | Jedna runda w pracującym serwerze | **0,873 ms** | **0,452 ms** |
 > | &nbsp;&nbsp;w tym komunikacja trasą, zmierzona osobno (8 kart, 459 kB) | 0,238 ms | 0,142 ms |
-> | &nbsp;&nbsp;w tym czekanie na ostatnią kartę | 0,635 ms | 0,310 ms |
+> | &nbsp;&nbsp;&nbsp;&nbsp;w tym przesył 459 kB łączem między czwórkami (29,1 GB/s — bez zmian) | 0,016 ms | 0,016 ms |
+> | &nbsp;&nbsp;&nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,039 ms | 0,041 ms |
+> | &nbsp;&nbsp;&nbsp;&nbsp;w tym przystanki po drodze | 0,183 ms | **0,085 ms** |
+> | &nbsp;&nbsp;w tym czekanie na ostatnią kartę | 0,635 ms | **0,310 ms** |
 >
-> **Skrócenie trasy o 40% dało 2× krótsze czekanie — i 2,1× szybszą
-> odpowiedź. Karty, które szybciej kończą rundę, krócej czekają na siebie.**
+> **Mostki nie przyspieszyły przesyłu ani startu rundy. Usunęły połowę
+> przystanków — a krótsza runda to o połowę krótsze czekanie na ostatnią
+> kartę. Odpowiedź 2,1× szybciej.**
 
 ### Notes
 
@@ -651,15 +658,21 @@ milisekundy przed, czterysta pięćdziesiąt dwie po.
 
 Sama komunikacja po trasie, zmierzona tak samo jak poprzednio — te same
 osiem kart, ta sama porcja, zmienione tylko łącze: dwieście trzydzieści
-osiem tysięcznych przed, sto czterdzieści dwie po. Trasa skróciła się
-o czterdzieści procent.
+osiem tysięcznych przed, sto czterdzieści dwie po. I spójrzcie, co w tych
+trzech składnikach się zmieniło, a co nie. Przesył: bez zmian, szesnaście
+tysięcznych — bo najdłuższa trasa nadal przechodzi między czwórkami starym
+łączem, dwadzieścia dziewięć gigabajtów na sekundę przed i po. Koszt
+stały: bez zmian, około czterdziestu tysięcznych — mostki nie skracają
+startu rundy. Zmieniły się przystanki: ze stu osiemdziesięciu trzech
+tysięcznych do osiemdziesięciu pięciu. Wewnątrz czwórki karty rozmawiają
+bezpośrednio, więc większość przekazań omija switche i procesory.
 
 I najważniejsze: czekanie na ostatnią kartę spadło z sześciuset
 trzydziestu pięciu tysięcznych do trzystu dziesięciu. Ponad dwukrotnie.
 To nie jest osobny efekt — to konsekwencja. Karta, która szybciej kończy
 swoją rundę, wcześniej dociera do następnej, więc pozostałe krócej na nią
-czekają. Skrócenie trasy działa dwa razy: raz na samej trasie, drugi raz
-na czekaniu.
+czekają. Krótsza runda działa dwa razy: raz na sobie, drugi raz na
+czekaniu.
 
 Dlaczego tylko dwa razy, a nie więcej? Bo mostek łączy cztery karty,
 a Kimi potrzebuje ośmiu. Po modernizacji komunikacja to nadal
@@ -675,7 +688,14 @@ med 44,90 ms → 256 × 44,90 = 11,50 s; ITL med 90,22 ms → 2,01 tokena na
 krok → 127 kroków × 122 = 15 545 rund. Trace 08-03: komunikacja 61,1%
 spanu (rank0) / 59,7% (rank7), compute 30,2% → 11,50 × 0,611 = 7,02 s
 / 15 545 = 0,452 ms na rundę. Mikro 08-31 @512 KB, ta sama para co na
-slajdzie 8: `all-8 nop2p` 238,0 µs → `all-8` 141,6 µs (1,68×). Czekanie
+slajdzie 8: `all-8 nop2p` 238,0 µs → `all-8` 141,6 µs (1,68×). Koszt
+stały: `all-8 nop2p` @4 KB 38,5 µs → `all-8` @4 KB 41,1 µs — bez zmian
+w granicach szumu. Przesył: łącze między czwórkami to nadal PCIe/UPI,
+p2p_bw GPU0→GPU4 29,1 GB/s po montażu (07-31) — identyczne jak przed;
+w czwórce 132,8 GB/s. Przystanki = reszta: 0,142 − 0,016 − 0,041 = 0,085
+ms. Liczba rund po NVLinku inna niż przed (15 545 vs 23 172), bo silnik
+trafia 2,01 tokena na krok zamiast 1,35 — dlatego slajd 9 porównuje
+tylko czas rundy i sekundy odpowiedzi, nie liczbę rund. Czekanie
 = różnica: 0,452 − 0,142 = 0,310 ms → 4,82 s (przed: 14,71 s). Zysk
 całkowity 24,10 / 11,50 = 2,10× — zgodny z benchowym 2,08×. Przepustowość
 przy dużych porcjach (8 MB): wyspa-4 197,5 GB/s vs nop2p 13,8 (14×), ale
