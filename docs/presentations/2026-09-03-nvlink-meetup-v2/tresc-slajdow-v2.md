@@ -103,7 +103,7 @@ limit). Decyzja 3: bez definicji GPU-Util.
 > liniach.]
 >
 > **Osiem kart z Kimi: 100% obciążenia — a pobór mocy 126–254 W z 600 W,
-> przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.**
+> przez cały benchmark. Karta, która naprawdę liczy: 380–580 W.**
 
 ### Notes
 
@@ -121,11 +121,14 @@ niego, kiedy będziemy wiedzieli, co te osiem kart właściwie robiło.
 Źródło: zrzut — rekonstrukcja 08-03 (172–181 W); wykres 8 linii i pasmo
 111–185 W — `2026-06-11_nvlink_boundary/kimi_ramp/kimi_c32_dcgmi.txt`
 (v1 W0, `generate_charts.py`); linia „1 karta" —
-`2026-08-31_latencja_dostepu/qwen/tp1_c64_dcgmi.txt`, GPU0 (98 próbek,
-średnia całego okna 404 W, część aktywna ~430–450 W, max 592 W; do
-wykresu tylko część aktywna, przycięta do długości okna Kimi). TP=1 nie
-używa łącza między kartami, więc pomiar po NVLinku jest ważny jako
-odniesienie. Q&A: to inny model (Qwen), ale ta sama karta i ten sam
+`2026-09-04_qwen_tp1_okno_mocy/qwen/tp1_c64_long_dcgmi.txt`, GPU0 (sesja
+2026-09-04: ten sam benchmark SWE c=64, 256-out, co 08-31, tylko 2400
+promptów zamiast 600 → 322 próbki, 307 s pracy powyżej 300 W; mediana
+459 W, p5 377, maks 577, SM_ACTIVE 0,696, 1841 tok/s). Do wykresu tylko
+część aktywna, przycięta do długości okna Kimi. TP=1 nie używa łącza
+między kartami, więc pomiar po NVLinku jest ważny jako odniesienie.
+Poprzedni pomiar (08-31, 81 s pracy) urywał linię w 1/4 szerokości
+wykresu — stąd sesja 09-04. Q&A: to inny model (Qwen), ale ta sama karta i ten sam
 benchmark — pokazujemy, że kartę da się obciążyć. W notes nie rozróżniamy
 pochodzenia zrzutu i wykresu; Q&A: zrzut z późniejszej rekonstrukcji
 tego samego reżimu (NCCL bez P2P), liczby z oryginalnych pomiarów.
@@ -856,7 +859,7 @@ inline SVG w `index_src.html`; sklejka: `build_index.py` → `index.html`
 | id | slajd | treść | dane |
 |---|---|---|---|
 | G1 | 1 | 8 kart, klamra Kimi nad ósemką, klamry Qwen 1/2/4/8 GPU | — |
-| W0' | 2 | moc w czasie: 8 linii Kimi (niebieski) + Qwen 1 karta (zielony) + limit 600 W | `kimi_c32_dcgmi.txt` (06-11), `tp1_c64_dcgmi.txt` (08-31) |
+| W0' | 2 | moc w czasie: 8 linii Kimi (niebieski) + Qwen 1 karta (zielony) + limit 600 W | `kimi_c32_dcgmi.txt` (06-11), `tp1_c64_long_dcgmi.txt` (09-04) |
 | W1' | 3 | 4 słupki tok/s, 1/2/4/8 kart, c64, era PCIe | `batched_c64.json` (06-10), `qwen_tp_curve` (06-11) |
 | W2' | 4 | słupki grupowane 4 liczniki × (Qwen 1 kreskowany, Qwen 8, Kimi 8) | stałe z podsumowań (czerwcowe) |
 | G2 | 5 | oś czasu kroku, 3 kolory, klamra nad kernelami, legenda | — |

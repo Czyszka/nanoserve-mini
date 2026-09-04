@@ -128,7 +128,12 @@ status, not a task list. Update when work moves.
   i koszt stały bez zmian, przystanki 0,183→0,085) → efekt 2,1–6,3×.
   Otwarte: konfund Qwen TP1 1202→1710 tok/s czerwiec→sierpień bez mostków
   (tylko w Q&A); cena mostka ~4,5 tys. zł wg użytkownika.
-- **Sesja serwerowa 2026-09-04 (plan gotowy, do wykonania):**
+- **Sesja serwerowa 2026-09-04 WYKONANA:** Qwen TP1, okno mocy DCGM 307 s
+  pracy (`results/runs/2026-09-04_qwen_tp1_okno_mocy/`). Predykcje: P2–P5
+  w paśmie (moc mediana 459 W, p5 377, maks 577; SM_ACTIVE 0,696; PCIe RX
+  0,08 GB/s; 1841 tok/s), P1 nieznacznie poniżej pasma (307 s vs 330–400,
+  próg falsyfikacji 300 s) — 2400 promptów w 334 s. Linia Qwena na slajdzie 3
+  podmieniona, puenta 400–600 → 380–580 W. Plan sesji:
   `docs/plans/2026-09-04-qwen-tp1-okno-mocy.md` — jeden pomiar: Qwen TP1,
   okno mocy DCGM ≥ 340 s (ten sam bench SWE c=64 co 08-31, `--num-prompts`
   600 → 2400; `vllm bench serve` cyklicznie powtarza 300-liniowy zbiór).
