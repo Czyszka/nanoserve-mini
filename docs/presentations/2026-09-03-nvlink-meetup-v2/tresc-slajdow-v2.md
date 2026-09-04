@@ -301,7 +301,8 @@ Jeśli trzeba ciąć: definicja GPU-Util schodzi do podpisu klamry na G2.
 
 ## Slajd 6 — Rozkład czasu kroku (2 min)
 
-Status: ZAAKCEPTOWANY (2026-09-03): jeden pasek — Kimi 8 kart pod
+Status: ZAAKCEPTOWANY + uzupełnienie 2026-09-04 (prawo Amdahla słowami,
+z rachunkiem w nawiasie, wg użytkownika). 2026-09-03: jeden pasek — Kimi 8 kart pod
 obciążeniem (profil c=16 z 06-11, bez podawania liczby użytkowników);
 definicja profilera i wniosek wg użytkownika („rejestruje… ze znacznikiem
 czasu"; „84% czasu pomiaru to komunikacja"); tytuł i ramka wzoru OK. Kolory składników jak na slajdzie 5.
@@ -322,6 +323,12 @@ czasu"; „84% czasu pomiaru to komunikacja"); tytuł i ramka wzoru OK. Kolory s
 > wypełnieniem liczbami.]
 >
 > **84% czasu pomiaru to komunikacja między kartami. Obliczenia: 5%.**
+>
+> **Prawo Amdahla: nawet gdyby jakiś składnik zniknął zupełnie, krok
+> skróci się tylko o tyle, ile ten składnik zajmował.**
+> Bez obliczeń (5%) krok trwałby 95% tego, co teraz — zysk najwyżej
+> **1,05×** (100 ÷ 95).
+> Bez komunikacji (84%) krok trwałby 16% — zysk najwyżej **6×** (100 ÷ 16).
 
 ### Notes
 
@@ -335,15 +342,31 @@ I komunikacja: osiemdziesiąt cztery procent czasu pomiaru. Wiemy już,
 który składnik dominuje — nie wiemy jeszcze, co konkretnie w tej
 komunikacji tyle trwa. To jest odpowiedź na obraz
 z nvidia-smi: sto procent zajętości, bo kernel komunikacyjny trwa;
-trzydzieści procent mocy, bo czekanie nie grzeje. Co dokładnie dzieje się w tych
-osiemdziesięciu czterech procentach — następny slajd.
+trzydzieści procent mocy, bo czekanie nie grzeje.
+
+Z tego rozkładu od razu wynika, gdzie jest dźwignia. Prawo Amdahla mówi
+prostą rzecz: nawet jeśli jakiś składnik zniknie całkiem, krok skróci się
+tylko o tyle, ile ten składnik zajmował. Gdyby obliczenia trwały zero,
+krok trwałby dziewięćdziesiąt pięć procent tego, co teraz — sto podzielić
+przez dziewięćdziesiąt pięć, jeden i pięć setnych raza szybciej. Szybsza
+karta nic tu nie zmieni. Gdyby zniknęła komunikacja, krok trwałby
+szesnaście procent — sto podzielić przez szesnaście, sześć razy szybciej.
+To jest sufit i to jest cała strategia: pracujemy nad komunikacją.
+
+Co dokładnie dzieje się w tych osiemdziesięciu czterech procentach —
+następny slajd.
 
 Q&A (nie na głos): profil przy 16 równoległych zapytaniach, era PCIe
 (06-11); kontrola narzutu profilera: ITL profilowany vs nie ±2%. Dla
 jednego użytkownika rozkład jest inny: 63% przerwy / 23% komunikacja /
 9% obliczenia — wtedy rządzi silnik, nie łącze (wraca na slajdzie 10 jako
 „1 użytkownik: 1,2×"). Ten sam mechanizm u Qwena na 4 kartach przy 64
-użytkownikach: 53% komunikacja.
+użytkownikach: 53% komunikacja. Amdahl dokładnie: 1/(1−0,839) = 6,2×;
+przerwy 10% to drugi lewar (najwyżej 1,11×). Test spójności z efektem:
+trace 08-03 — komunikacja skróciła się 2,9×; Amdahl dla udziału 0,839
+i przyspieszenia 2,9× daje 1/(0,161 + 0,839/2,9) = 2,2× — zmierzone
+2,1× (slajd 10). Po NVLinku komunikacja to 61% kroku → dalszy sufit
+1/(1−0,61) = 2,6× (pełna siatka / NVSwitch).
 
 Źródło: `2026-06-11-nvlink-boundary-verdict.md` K2 (NCCL 83,9%, gaps 10%,
 compute 4,6%); c=1 — sesja 06-10 (v1 slajd 10); Qwen TP4 c64 — Q4.
