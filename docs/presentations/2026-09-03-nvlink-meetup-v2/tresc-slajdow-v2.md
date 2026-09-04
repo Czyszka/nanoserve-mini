@@ -461,9 +461,9 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-03, runda 7: slajd zbudowany wokół rachunku
-„skąd 24 s" — jedna tabela; termin „w izolacji" zastąpiony przez „runda
-zmierzona osobno, bez modelu"; puenta wg użytkownika).
+Status: W ITERACJI (2026-09-04, runda 8: opis „sztafety" rozdzielony —
+na slajdzie została tylko trasa jednego przesyłu i jej przystanki;
+pierścień i 14 przesyłów przeniesione do Q&A).
 
 ### Na slajdzie
 
@@ -473,10 +473,11 @@ zmierzona osobno, bez modelu"; puenta wg użytkownika).
 > pod każdym CPU 2 switche PCIe 5.0; pod switchami pary kart (0,1)(2,3)
 > | (4,5)(6,7). Wszystkie połączenia w jednym stylu, bez wyróżnień.]
 >
-> 1. Karty **nie mają bezpośredniego łącza**. Dane z karty 0 do karty 4
->    idą sztafetą: switch → procesor → UPI → procesor → switch.
-> 2. Runda scala **wszystkie 8 kart**: zawsze zawiera najdłuższą trasę
->    i rusza dopiero, gdy **dotrze ostatnia karta**.
+> 1. Karty **nie mają bezpośredniego łącza**. Przesył z karty 0 do karty 4
+>    idzie: switch → procesor → UPI → procesor → switch. Każde urządzenie
+>    po drodze **odbiera całą porcję i dopiero wtedy wysyła ją dalej**.
+> 2. Runda scala **wszystkie 8 kart**: zawsze zawiera tę najdłuższą trasę
+>    i kończy się dopiero, gdy **dotrze ostatnia karta**.
 >
 > Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24 s**.
 > Rund w tej odpowiedzi: **23 tys.** — nie 31 tys. ze slajdu 7, bo silnik
@@ -485,7 +486,7 @@ zmierzona osobno, bez modelu"; puenta wg użytkownika).
 >
 > | | na jedną rundę | × 23 tys. rund |
 > |---|---:|---:|
-> | **cała runda trasą przez UPI**, zmierzona osobno, bez modelu: start i uzgodnienie kart + sztafeta (14 przekazań: switch → procesor → UPI → procesor → switch) + przesył 0,5 MB | 0,16 ms | 3,7 s |
+> | **cała runda trasą z pkt 1**, zmierzona osobno, bez modelu: start i uzgodnienie kart + przesył 0,5 MB + przystanki po drodze | 0,16 ms | 3,7 s |
 > | &nbsp;&nbsp;&nbsp;w tym: sam przesył 0,5 MB przy 29 GB/s (rachunek) | 0,02 ms | 0,4 s |
 > | &nbsp;&nbsp;&nbsp;w tym: koszt stały — start i uzgodnienie (zmierzone na porcji 16 KB) | 0,03 ms | 0,7 s |
 > | **+ czekanie na ostatnią kartę** (różnica: 0,87 − 0,16) | 0,71 ms | 16,6 s |
@@ -499,14 +500,16 @@ zmierzona osobno, bez modelu"; puenta wg użytkownika).
 ### Notes
 
 Tak wyglądała droga danych między kartami na starcie. Po pierwsze: karty
-nie mają bezpośredniego połączenia. Dane z karty zero do karty cztery idą
-sztafetą: switch PCIe, procesor, łącze UPI między procesorami, drugi
-procesor, drugi switch. Każdy pośrednik odbiera i przekazuje dalej, i
-każde przekazanie kosztuje czas.
+nie mają bezpośredniego połączenia. Żeby karta zero wysłała porcję danych
+do karty cztery, dane muszą przejść przez switch PCIe, procesor, łącze UPI
+między procesorami, drugi procesor i drugi switch. Pięć przystanków, a na
+każdym urządzenie najpierw odbiera całą porcję, a dopiero potem wysyła ją
+dalej. Dla porównania karta zero do karty jeden to jeden switch, jeden
+przystanek.
 
 Po drugie: runda scala wszystkie osiem kart naraz. Zawsze zawiera więc tę
-najdłuższą trasę, a rusza dopiero wtedy, gdy dotrze ostatnia karta — bo
-każda karta kończy swój kawałek liczenia w innym momencie.
+najdłuższą trasę, a kończy się dopiero wtedy, gdy dotrze ostatnia karta —
+bo każda karta kończy swój kawałek liczenia w innym momencie.
 
 Teraz rachunek. Przy trzydziestu dwóch użytkownikach odpowiedź na
 dwieście pięćdziesiąt sześć tokenów trwała dwadzieścia cztery sekundy —
@@ -526,10 +529,11 @@ dziesiątych sekundy na całą odpowiedź.
 
 Cała runda zmierzona osobno — zatrzymaliśmy model i serwer, karty
 wykonywały tylko samo scalenie, w kółko, wszystkie startując razem — trasą
-przez UPI: szesnaście setnych milisekundy. To jest koszt stały, przesył
-i sztafeta: czternaście przekazań przez switche, procesory i UPI, każdy
-pośrednik odbiera i wysyła dalej. Razy dwadzieścia trzy tysiące: trzy
-i siedem dziesiątych sekundy. Zmierzony koszt topologii.
+przez UPI: szesnaście setnych milisekundy. Czyli koszt stały, przesył
+i przystanki po drodze razem. Razy dwadzieścia trzy tysiące: trzy i siedem
+dziesiątych sekundy. Zmierzony koszt topologii. Dla porównania ta sama
+runda w obrębie jednej połówki serwera, bez przechodzenia przez UPI, jest
+kilkukrotnie krótsza — do tego wrócimy na następnym slajdzie.
 
 W pracującym serwerze ta sama runda trwa osiemdziesiąt siedem setnych
 milisekundy — to wynika z profilu, osiemdziesiąt cztery procent kroku na
@@ -554,8 +558,12 @@ ms, obliczenia 5% = 6 ms; 107/122 = 0,87 ms na rundę. 0,16 ms = nccl
 all-reduce 512 KB, grupa (0,1,4,5) z dwiema parami za UPI (08-31, cross-4:
 162 µs), nie pełna ósemka; koszt stały w tym: ~30 µs (16 KB). Wyspa-4
 NVLink @512 KB: 36 µs; nop2p: 130 µs. 29,1 GB/s — p2p_bw GPU0→GPU4
-(07-31); DCGM PCIE_RX średnio 7,2–7,9 GB/s przy c≥8 (06-11). Sztafeta =
-ring all-reduce 2(N−1) = 14 przekazań; UPI = łącze międzyprocesorowe.
+(07-31); DCGM PCIE_RX średnio 7,2–7,9 GB/s przy c≥8 (06-11). Ring
+all-reduce: 2(N−1) = 14 kolejnych przesyłów karta→karta, każdy czeka na
+poprzedni; część z nich idzie trasą między połówkami serwera i to na nie
+czeka cały łańcuch. Na slajdzie świadomie pominięte — do puenty
+wystarcza „runda zawiera najdłuższą trasę". UPI = łącze
+międzyprocesorowe.
 Ruch rzeczywisty > 14 GB (spekulacja, pierścień) — nawet 5× więcej daje
 2 s przesyłu, nie 20. Po NVLinku (08-03, c=32): krok 90 ms, komunikacja
 61% = 55 ms = 0,45 ms/rundę; runda osobno w wyspie 0,04 ms; czekanie
