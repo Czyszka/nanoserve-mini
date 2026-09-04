@@ -122,7 +122,7 @@ def bar_labels(ax, bars, values, dy, fmt=lambda v: f"{v:.0f}", size=12):
 # ---------------------------------------------------------------- W0' (slajd 2)
 def w0_moc_w_czasie() -> None:
     kimi = read_dcgmi(RUNS / "2026-06-11_nvlink_boundary" / "kimi_ramp" / "kimi_c32_dcgmi.txt")
-    qwen = read_dcgmi(RUNS / "2026-08-31_latencja_dostepu" / "qwen" / "tp1_c64_dcgmi.txt")
+    qwen = read_dcgmi(RUNS / "2026-09-04_qwen_tp1_okno_mocy" / "qwen" / "tp1_c64_long_dcgmi.txt")
     n = len(kimi)
     fig, ax = new_ax(9.0, 4.0)
     gpu_ids = sorted({gid for s in kimi for gid, *_ in s})
@@ -131,7 +131,8 @@ def w0_moc_w_czasie() -> None:
         xs = [i for i, v in enumerate(series) if v is not None]
         ys = [v for v in series if v is not None]
         ax.plot(xs, ys, color=BLUE, lw=1.3, alpha=0.6)
-    # Qwen TP1: GPU0, tylko aktywna czesc okna (moc > 300 W), przycieta do dlugosci okna Kimi.
+    # Qwen TP1: GPU0, tylko aktywna czesc okna (moc > 300 W), przycieta do dlugosci
+    # okna Kimi. Sesja 2026-09-04: 2400 promptow SWE c=64 -> 307 s pracy (wczesniej 81 s).
     q = [s[0][1] for s in qwen if s and s[0][0] == 0]
     active = [i for i, v in enumerate(q) if v > 300]
     q = q[active[0]: active[-1] + 1][:n] if active else q[:n]
