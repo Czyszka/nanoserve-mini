@@ -261,12 +261,10 @@ def w5a_qwen() -> None:
     q = RUNS / "2026-08-31_latencja_dostepu" / "qwen"
     curve = RUNS / "2026-06-11_bottleneck" / "qwen_tp_curve"
     tp4_before = bench_throughput(curve / "bench_tp4" / "tp4_c64.json")
-    tp8_before = bench_throughput(curve / "bench_tp8" / "tp8_c64.json")
     tp4_after = bench_throughput(q / "bench_tp4isl" / "tp4isl_c64.json")
-    tp8_after = bench_throughput(q / "bench_tp8" / "tp8_c64.json")
-    fig, ax = new_ax(8.0, 3.3)
-    _przed_po(ax, [("4 karty", tp4_before, tp4_after), ("8 kart", tp8_before, tp8_after)],
-              GREEN, 2500, "Qwen - 64 użytkowników naraz")
+    fig, ax = new_ax(4.6, 3.3)
+    _przed_po(ax, [("4 karty", tp4_before, tp4_after)], GREEN, 2500,
+              "Qwen - 64 użytkowników naraz")
     save(fig, "w5a_qwen.svg")
 
 

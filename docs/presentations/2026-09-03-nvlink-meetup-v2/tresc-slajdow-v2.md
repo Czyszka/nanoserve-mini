@@ -754,8 +754,8 @@ rekonstrukcja ery PCIe, nie sama era PCIe.
 
 ## Slajd 10 — Efekt: przed i po mostkach (2,5 min) — PODSUMOWANIE
 
-Status: SZKIC 4 (2026-09-04, wg użytkownika): dwa wykresy w tok/s (Qwen
-TP4 i TP8 bez słupka kontrolnego TP1; pod nim Kimi TP8 tylko c=32), pod
+Status: SZKIC 5 (2026-09-04, wg użytkownika): Qwen TP8 usunięty ze slajdu
+(zostaje w Z2); dwa wykresy w tok/s (Qwen TP4; pod nim Kimi TP8 tylko c=32), pod
 nimi tabela zysku = puenta slajdu, pod nią koszt. Zdanie z odpowiedzią na
 tytuł tylko w notatkach. Wyjątek od reguły „≤1 wykres" — decyzja
 użytkownika. Dryf Qwen TP1 tylko w Q&A.
@@ -764,9 +764,9 @@ użytkownika. Dryf Qwen TP1 tylko w Q&A.
 
 > ## Efekt: przepustowość przed i po mostkach
 >
-> [WYKRES W5a — Qwen, 64 użytkowników naraz, tok/s: dwie pary słupków
-> przed (szary) / po (niebieski): **4 karty 680 → 2129** ·
-> **8 kart 257 → 1625**. Liczby nad słupkami.]
+> [WYKRES W5a — Qwen, 4 karty, 64 użytkowników naraz, tok/s: jedna para
+> słupków przed (szary) / po (zielony): **680 → 2129**. Liczby nad
+> słupkami.]
 >
 > [WYKRES W5b — Kimi, 8 kart, 32 użytkowników naraz, tok/s: jedna para
 > słupków przed (szary) / po (niebieski): **285 → 608**. Liczby nad
@@ -775,13 +775,11 @@ użytkownika. Dryf Qwen TP1 tylko w Q&A.
 > | | przed | po | zysk |
 > |---|---:|---:|---:|
 > | Qwen, 4 karty, 64 użytkowników | 680 tok/s | 2129 tok/s | **3,1×** |
-> | Qwen, 8 kart, 64 użytkowników | 257 tok/s | 1625 tok/s | **6,3×** |
 > | Kimi, 8 kart, 32 użytkowników | 285 tok/s | 608 tok/s | **2,1×** |
 >
-> Wysoki mnożnik to nie lepszy wynik, tylko gorszy punkt startu. Względem
-> jednej karty: **4 karty 0,57× → 1,25×**, **8 kart 0,21× → 0,95×**. Mostki
-> nie sprawiły, że 8 kart bije 4 — sprawiły, że 8 kart przestało być
-> wolniejsze niż jedna.
+> Qwen na 4 kartach względem jednej karty: przed mostkami **0,57×**, po
+> **1,25×**. Dopiero mostki sprawiły, że dokładanie kart temu modelowi się
+> opłaca (slajd 4).
 >
 > Łączny koszt: **2 mostki × ~4,5 tys. zł ≈ 9 tys. zł na serwer**.
 
@@ -891,7 +889,7 @@ inline SVG w `index_src.html`; sklejka: `build_index.py` → `index.html`
 | W3' | 6 | pasek 10 / 84 / 5 / inne | verdict K2 (06-11) |
 | G3 | 7 | warstwa: 4 karty → scalenie → 4 karty → scalenie, licznik 122 | — |
 | G4 / G4' | 8 / 9 | topologia PCIe / + mostki w czwórkach | — |
-| W5a | 10 | Qwen 4 i 8 kart, c64, przed/po tok/s | `qwen_tp_curve` (06-11), `bench_tp4isl`/`bench_tp8` (08-31) |
+| W5a | 10 | Qwen 4 karty, c64, przed/po tok/s | `qwen_tp_curve` (06-11), `bench_tp4isl`/`bench_tp8` (08-31) |
 | W5b | 10 | Kimi 8 kart, c32, przed/po tok/s | `kimi_c32.json` (06-11, 08-03) |
 | W6 | Z2 | Qwen 1/2/4/8 kart, c32, po mostkach, tok/s | `bench_tp{1,2isl,4isl,8}/*_c32.json` (08-31) |
 | W7 | Z1 | Kimi 8 kart c32, pobór mocy w czasie, przed i po mostkach | `kimi_c32_dcgmi.txt` (06-11) i (08-03 gap_fill) |
