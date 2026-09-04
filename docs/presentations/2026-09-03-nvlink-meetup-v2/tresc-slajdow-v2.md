@@ -732,10 +732,11 @@ rekonstrukcja ery PCIe, nie sama era PCIe.
 
 ## Slajd 10 — Efekt: przed i po mostkach (2,5 min) — PODSUMOWANIE
 
-Status: SZKIC 3 (2026-09-04, wg użytkownika): dwa wykresy w tok/s (Qwen
-TP4 i TP8; pod nim Kimi TP8), pod nimi tabela zysku, pod nią koszt.
-Wyjątek od reguły „≤1 wykres" — decyzja użytkownika. Puenta bez zmian
-(propozycja).
+Status: SZKIC 4 (2026-09-04, wg użytkownika): dwa wykresy w tok/s (Qwen
+TP4 i TP8 bez słupka kontrolnego TP1; pod nim Kimi TP8 tylko c=32), pod
+nimi tabela zysku = puenta slajdu, pod nią koszt. Zdanie z odpowiedzią na
+tytuł tylko w notatkach. Wyjątek od reguły „≤1 wykres" — decyzja
+użytkownika. Dryf Qwen TP1 tylko w Q&A.
 
 ### Na slajdzie
 
@@ -745,23 +746,17 @@ Wyjątek od reguły „≤1 wykres" — decyzja użytkownika. Puenta bez zmian
 > przed (szary) / po (niebieski): **4 karty 680 → 2129** ·
 > **8 kart 257 → 1625**. Liczby nad słupkami.]
 >
-> [WYKRES W5b — Kimi, 8 kart, tok/s: pary słupków per liczba użytkowników
-> naraz, przed (szary) / po (niebieski): **1 użytk. 75 → 110** ·
-> **8 użytk. 86 → 328** · **16 użytk. 73 → 501** · **32 użytk. 285 → 608**.
-> Liczby nad słupkami.]
+> [WYKRES W5b — Kimi, 8 kart, 32 użytkowników naraz, tok/s: jedna para
+> słupków przed (szary) / po (niebieski): **285 → 608**. Liczby nad
+> słupkami.]
 >
 > | | przed | po | zysk |
 > |---|---:|---:|---:|
 > | Qwen, 4 karty, 64 użytkowników | 680 tok/s | 2129 tok/s | **3,1×** |
 > | Qwen, 8 kart, 64 użytkowników | 257 tok/s | 1625 tok/s | **6,3×** |
 > | Kimi, 8 kart, 32 użytkowników | 285 tok/s | 608 tok/s | **2,1×** |
-> | Kimi, 8 kart, 1 użytkownik | 75 tok/s | 110 tok/s | 1,5× |
 >
 > Łączny koszt: **2 mostki × ~4,5 tys. zł ≈ 9 tys. zł na serwer**.
->
-> **Wąskim gardłem nie był żaden zasób karty, tylko czekanie kart na
-> siebie — 122 razy na każdy token. Mostki skróciły rundę, więc skróciły
-> czekanie: 2–6× pod obciążeniem, niewiele dla jednego użytkownika.**
 
 ### Notes
 
@@ -775,25 +770,23 @@ pięćdziesiąt siedem przed — pamiętacie, więcej kart było wolniej — tys
 sześćset po. Sześć razy. Osiem kart nadal nie wygrywa z czterema, bo runda
 musi przejść między czwórkami, ale przestało być gorzej niż na jednej.
 
-Dolny wykres to Kimi na ośmiu kartach, per liczba użytkowników naraz.
-Trzydziestu dwóch użytkowników: dwieście osiemdziesiąt pięć tokenów na
-sekundę przed, sześćset osiem po — to jest ten rachunek ze slajdów osiem
-i dziewięć, dwa razy. Szesnastu: siedemdziesiąt trzy przed, pięćset jeden
-po — to ta anomalia ze slajdu trzeciego, która z mostkami zniknęła. Jeden
-użytkownik: siedemdziesiąt pięć do stu dziesięciu. Przy jednym
-użytkowniku porcja jest mała, karty prawie nie czekają na siebie, więc
-mostki mają niewiele do skrócenia — zostaje niezmieniony koszt stały.
+Dolny wykres to Kimi na ośmiu kartach przy trzydziestu dwóch
+użytkownikach naraz: dwieście osiemdziesiąt pięć tokenów na sekundę
+przed, sześćset osiem po — to jest ten rachunek ze slajdów osiem
+i dziewięć. Dwa razy.
 
-Tabela zbiera zysk. I koszt: dwa mostki po około cztery i pół tysiąca
-złotych, dziewięć tysięcy na serwer.
+Tabela zbiera zysk — to jest puenta tego slajdu. I koszt: dwa mostki po
+około cztery i pół tysiąca złotych, dziewięć tysięcy na serwer.
 
 I odpowiedź na pytanie z tytułu. Sto procent zajętości, trzydzieści
 procent mocy. Wąskim gardłem nie był żaden zasób karty — ani jednostki
 liczące, ani pamięć, ani przepustowość łącza. Było czekanie kart na
 siebie, sto dwadzieścia dwa razy na każdy token. Mostki skróciły rundę,
 a krótsza runda to krótsze czekanie — dlatego dają od dwóch do sześciu
-razy pod obciążeniem i niewiele dla jednego użytkownika. Jeśli wasz
-serwer obsługuje jedną osobę naraz, oszczędźcie te dziewięć tysięcy.
+razy pod obciążeniem. Dla jednego użytkownika prawie nic — Kimi z dwóch
+i dwóch dziesiątych sekundy na jedną i dziewięć — bo tam karty prawie nie
+czekają na siebie. Jeśli wasz serwer obsługuje jedną osobę naraz,
+oszczędźcie te dziewięć tysięcy.
 Jeśli obsługuje kilkanaście — to najtańsza modernizacja, jaką znam.
 Dziękuję.
 
