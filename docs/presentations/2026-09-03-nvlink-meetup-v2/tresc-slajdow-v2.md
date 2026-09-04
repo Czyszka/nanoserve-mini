@@ -461,7 +461,9 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-04, runda 11: tabela dwukolumnowa (na jedną
+Status: W ITERACJI (2026-09-04, runda 12: liczby podane dokładniej
+(24,1 s, 23 172 rundy, 0,873 / 0,162 / 0,711 ms); wiersz przemianowany na
+„czas komunikacji … bez obliczeń, karty startują równo". Runda 11: tabela dwukolumnowa (na jedną
 rundę / w całej odpowiedzi) w kolejności ciągu przyczynowo-skutkowego:
 24 s → 83,9% → 0,87 ms → 0,16 ms z rozbiciem → 0,71 ms czekania; punkt wyjścia (24 s, 83,9%, skąd 23 tys.) w zdaniu
 nad tabelą; w rundzie zmierzonej osobno rozbite trzy składniki, obliczeń
@@ -481,20 +483,19 @@ w rundzie nie ma — są osobnym składnikiem kroku).
 > 2. Runda scala **wszystkie 8 kart**: zawsze zawiera tę najdłuższą trasę
 >    i kończy się dopiero, gdy **dotrze ostatnia karta**.
 >
-> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24 s**, z czego
-> **83,9% to komunikacja** (slajd 6) = 20,1 s. Rund w tej odpowiedzi
-> **23 tys.**: silnik zgaduje tokeny z wyprzedzeniem, więc jeden krok daje
-> średnio 1,35 tokena — 190 kroków × 122 rundy.
+> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24,1 s**.
+> Rund w tej odpowiedzi **23 172**: silnik zgaduje tokeny z wyprzedzeniem,
+> więc jeden krok daje średnio 1,35 tokena — 190 kroków × 122 rundy.
 >
 > | | na jedną rundę | w całej odpowiedzi |
 > |---|---:|---:|
-> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | | **24 s** |
-> | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 tys. rund | **0,87 ms** | **20,1 s** |
-> | Cała runda trasą z pkt 1, **zmierzona osobno, bez modelu** | **0,16 ms** | 3,7 s |
-> | &nbsp;&nbsp;w tym przesył 460 KB przy 29 GB/s (zmierzone) | 0,02 ms | 0,4 s |
-> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,03 ms | 0,7 s |
-> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,11 ms | 2,6 s |
-> | **→ zostaje czekanie na ostatnią kartę** (0,87 − 0,16) | **0,71 ms** | **16,4 s** |
+> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | | **24,1 s** |
+> | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 172 rundy | **0,873 ms** | **20,2 s** |
+> | Czas komunikacji trasą z pkt 1, **zmierzony osobno — bez obliczeń, karty startują równo** | **0,162 ms** | 3,76 s |
+> | &nbsp;&nbsp;w tym przesył 459 kB przy 29,1 GB/s (zmierzone) | 0,016 ms | 0,37 s |
+> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,030 ms | 0,70 s |
+> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,116 ms | 2,69 s |
+> | **→ zostaje czekanie na ostatnią kartę** (0,873 − 0,162) | **0,711 ms** | **16,5 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
@@ -520,32 +521,35 @@ cztery sekundy. To pomiar.
 
 Z poprzedniego slajdu wiemy, że osiemdziesiąt trzy przecinek dziewięć
 procent czasu generowania to komunikacja. Z dwudziestu czterech sekund
-daje to dwadzieścia sekund i jedną dziesiątą — tyle karty spędziły na
+daje to dwadzieścia sekund i dwie dziesiąte — tyle karty spędziły na
 scalaniu wyników.
 
 Rund w tej odpowiedzi było dwadzieścia trzy tysiące. Dzielimy dwadzieścia
 sekund przez dwadzieścia trzy tysiące i dostajemy czas jednej rundy
 w pracującym serwerze: osiemdziesiąt siedem setnych milisekundy.
 
-Teraz pytanie: na co ten czas idzie? Zmierzyliśmy tę samą rundę osobno.
-Zatrzymaliśmy model i serwer, karty wykonywały tylko samo scalenie,
-w kółko, wszystkie startując równo, po trasie przechodzącej między
-połówkami serwera. Wyszło szesnaście setnych milisekundy.
+Teraz pytanie: na co ten czas idzie? Zmierzyliśmy samą komunikację osobno.
+Zatrzymaliśmy model i serwer, karty nie liczyły nic, wykonywały tylko samo
+scalenie, w kółko, wszystkie startując równo, po trasie przechodzącej
+między połówkami serwera. Wyszło sto sześćdziesiąt dwie tysięczne
+milisekundy — i zapamiętajmy, że w tym pomiarze karty startowały równo,
+więc nie ma w nim czekania na nikogo.
 
-I te szesnaście setnych rozkłada się na trzy części. Sam przesył danych —
-czterysta sześćdziesiąt kilobajtów przy zmierzonych dwudziestu dziewięciu
-gigabajtach na sekundę — dwie setne milisekundy. Koszt stały, czyli start
-rundy i uzgodnienie kart, zanim popłyną dane — trzy setne. Reszta,
-jedenaście setnych, to przystanki po drodze: każdy switch i procesor musi
-odebrać porcję i wysłać ją dalej.
+Te sto sześćdziesiąt dwie tysięczne rozkładają się na trzy części. Sam
+przesył danych — czterysta pięćdziesiąt dziewięć kilobajtów przy
+zmierzonych dwudziestu dziewięciu gigabajtach na sekundę — szesnaście
+tysięcznych milisekundy. Koszt stały, czyli start rundy i uzgodnienie
+kart, zanim popłyną dane — trzydzieści tysięcznych. Reszta, sto szesnaście
+tysięcznych, to przystanki po drodze: każdy switch i procesor musi odebrać
+porcję i wysłać ją dalej.
 
-Zwróćcie uwagę, co z tego wynika. Cała runda po najdłuższej trasie to
-szesnaście setnych, a w serwerze ta sama runda trwa osiemdziesiąt siedem
-setnych. Różnica — siedemdziesiąt jeden setnych milisekundy — to czekanie
-na ostatnią kartę. Karty nie kończą swojego kawałka liczenia w tym samym
+Zwróćcie uwagę, co z tego wynika. Sama komunikacja po najdłuższej trasie
+to sto sześćdziesiąt dwie tysięczne, a w serwerze runda trwa osiemset
+siedemdziesiąt trzy tysięczne. Różnica — siedemset jedenaście tysięcznych
+milisekundy — to czekanie na ostatnią kartę. Karty nie kończą swojego kawałka liczenia w tym samym
 momencie, a runda nie ruszy bez wszystkich.
 
-Razy dwadzieścia trzy tysiące rund: szesnaście i cztery dziesiąte sekundy
+Razy dwadzieścia trzy tysiące rund: szesnaście i pół sekundy
 z dwudziestu czterech. Największy pojedynczy składnik całej odpowiedzi.
 Nie mierzyliśmy go osobno — wynika z różnicy, ale nic innego w rundzie nie
 zostało.
@@ -560,9 +564,11 @@ Q&A (nie na głos): 24 s = TPOT med 94 ms × 256 (Kimi c=32, 06-11); krok
 ≈ 190; rund 190 × 122 ≈ 23 tys. (slajd 7 mówi 31 tys. przy 1 tokenie na
 krok — rząd wielkości ten sam, spekulacja niesie więcej danych na rundę).
 83,9% — profil Kimi TP8 c=16, werdykt 06-11 (gaps 10%, compute 4,6%);
-24 × 0,839 = 20,1 s; 20,1 s / 23 tys. = 0,87 ms; czekanie 20,1 − 3,7
-= 16,4 s. Przesył na rundę bez zaokrąglenia: 460 KB / 29,1 GB/s = 0,016 ms
-(stąd 0,4 s, nie 0,46 s). 0,16 ms = nccl all-reduce
+24,1 × 0,839 = 20,2 s; 20,2 / 23 172 = 0,873 ms; czekanie 0,873 − 0,162
+= 0,711 ms × 23 172 = 16,5 s. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
+= 458 752 B = 459 kB. Uwaga na fałszywą dokładność: 83,9% pochodzi
+z profilu c=16, przeniesionego na przebieg c=32 — trzecia cyfra
+znacząca w 0,873 ms jest arytmetyczna, nie pomiarowa. 0,16 ms = nccl all-reduce
 512 KB, grupa (0,1,4,5) z dwiema parami za UPI (08-31, cross-4: 162,4 µs)
 — to CAŁA runda po tej trasie, nie sam czas przejścia trasy; osobnego
 pomiaru „ile trwa jeden przeskok" nie mamy. Nie jest to też pełna ósemka.
