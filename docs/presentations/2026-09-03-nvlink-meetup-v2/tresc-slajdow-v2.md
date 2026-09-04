@@ -461,7 +461,10 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-04, runda 14: sekundy do dwóch miejsc;
+Status: W ITERACJI (2026-09-04, runda 15: runda zmierzona osobno liczona
+teraz na PEŁNEJ ÓSEMCE z wyłączonym P2P (`all-8 nop2p` 238,0 µs) zamiast
+grupy cross-4 z mostkami — ta sama grupa i ten sam pomiar co „po" na
+slajdzie 9. Runda 14: sekundy do dwóch miejsc;
 „przystanki" liczone jako reszta także w sekundach, dzięki czemu obie
 kolumny dodają się dokładnie. Runda 12: liczby podane dokładniej
 (24,1 s, 23 172 rundy, 0,873 / 0,162 / 0,711 ms); wiersz przemianowany na
@@ -493,11 +496,11 @@ w rundzie nie ma — są osobnym składnikiem kroku).
 > |---|---:|---:|
 > | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | | **24,10 s** |
 > | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 172 rundy | **0,873 ms** | **20,22 s** |
-> | Czas komunikacji trasą z pkt 1, **zmierzony osobno — bez obliczeń, karty startują równo** | **0,162 ms** | 3,76 s |
+> | Czas komunikacji trasą z pkt 1, **zmierzony osobno — bez obliczeń, karty startują równo** | **0,238 ms** | 5,51 s |
 > | &nbsp;&nbsp;w tym przesył 459 kB przy 29,1 GB/s (zmierzone) | 0,016 ms | 0,37 s |
-> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,030 ms | 0,70 s |
-> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,116 ms | 2,69 s |
-> | **→ zostaje czekanie na ostatnią kartę** (0,873 − 0,162) | **0,711 ms** | **16,46 s** |
+> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,040 ms | 0,93 s |
+> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,182 ms | 4,21 s |
+> | **→ zostaje czekanie na ostatnią kartę** (0,873 − 0,238) | **0,635 ms** | **14,71 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
@@ -533,26 +536,26 @@ w pracującym serwerze: osiemdziesiąt siedem setnych milisekundy.
 Teraz pytanie: na co ten czas idzie? Zmierzyliśmy samą komunikację osobno.
 Zatrzymaliśmy model i serwer, karty nie liczyły nic, wykonywały tylko samo
 scalenie, w kółko, wszystkie startując równo, po trasie przechodzącej
-między połówkami serwera. Wyszło sto sześćdziesiąt dwie tysięczne
+między połówkami serwera. Wyszło dwieście trzydzieści osiem tysięcznych
 milisekundy — i zapamiętajmy, że w tym pomiarze karty startowały równo,
 więc nie ma w nim czekania na nikogo.
 
-Te sto sześćdziesiąt dwie tysięczne rozkładają się na trzy części. Sam
+Te dwieście trzydzieści osiem tysięcznych rozkłada się na trzy części. Sam
 przesył danych — czterysta pięćdziesiąt dziewięć kilobajtów przy
 zmierzonych dwudziestu dziewięciu gigabajtach na sekundę — szesnaście
 tysięcznych milisekundy. Koszt stały, czyli start rundy i uzgodnienie
-kart, zanim popłyną dane — trzydzieści tysięcznych. Reszta, sto szesnaście
-tysięcznych, to przystanki po drodze: każdy switch i procesor musi odebrać
+kart, zanim popłyną dane — czterdzieści tysięcznych. Reszta, sto
+osiemdziesiąt dwie tysięczne, to przystanki po drodze: każdy switch i procesor musi odebrać
 porcję i wysłać ją dalej.
 
 Zwróćcie uwagę, co z tego wynika. Sama komunikacja po najdłuższej trasie
-to sto sześćdziesiąt dwie tysięczne, a w serwerze runda trwa osiemset
-siedemdziesiąt trzy tysięczne. Różnica — siedemset jedenaście tysięcznych
-milisekundy — to czekanie na ostatnią kartę. Karty nie kończą swojego kawałka liczenia w tym samym
+to dwieście trzydzieści osiem tysięcznych, a w serwerze runda trwa osiemset
+siedemdziesiąt trzy tysięczne. Różnica — sześćset trzydzieści pięć
+tysięcznych milisekundy — to czekanie na ostatnią kartę. Karty nie kończą swojego kawałka liczenia w tym samym
 momencie, a runda nie ruszy bez wszystkich.
 
-Razy dwadzieścia trzy tysiące rund: szesnaście i pół sekundy
-z dwudziestu czterech. Największy pojedynczy składnik całej odpowiedzi.
+Razy dwadzieścia trzy tysiące rund: czternaście i siedem dziesiątych
+sekundy z dwudziestu czterech. Największy pojedynczy składnik całej odpowiedzi.
 Nie mierzyliśmy go osobno — wynika z różnicy, ale nic innego w rundzie nie
 zostało.
 
@@ -567,19 +570,18 @@ Q&A (nie na głos): 24 s = TPOT med 94 ms × 256 (Kimi c=32, 06-11); krok
 krok — rząd wielkości ten sam, spekulacja niesie więcej danych na rundę).
 83,9% — profil Kimi TP8 c=16, werdykt 06-11 (gaps 10%, compute 4,6%);
 24,1 × 0,839 = 20,2 s; 20,2 / 23 172 = 0,873 ms; czekanie 0,873 − 0,162
-= 0,711 ms × 23 172 = 16,46 s. Wartości bez zaokrągleń: 24,101 /
-20,220 / 3,763 / 0,365 / 0,697 / 2,700 / 16,457 s. „Przystanki" są resztą
-z odejmowania i tak też są liczone w sekundach (3,76 − 0,37 − 0,70
-= 2,69), dlatego kolumna dodaje się dokładnie; pomnożone osobno dałyby
-2,70. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
+= 0,635 ms × 23 172 = 14,71 s. Wartości bez zaokrągleń: 24,101 /
+20,220 / 5,515 / 0,365 / 0,927 / 4,223 / 14,706 s. „Przystanki" są resztą
+z odejmowania i tak też są liczone w sekundach (5,51 − 0,37 − 0,93
+= 4,21), dlatego kolumna dodaje się dokładnie. Rozmiar porcji dokładnie: 32 × 7168 × 2 B
 = 458 752 B = 459 kB. Uwaga na fałszywą dokładność: 83,9% pochodzi
 z profilu c=16, przeniesionego na przebieg c=32 — trzecia cyfra
 znacząca w 0,873 ms jest arytmetyczna, nie pomiarowa. 0,16 ms = nccl all-reduce
 512 KB, grupa (0,1,4,5) z dwiema parami za UPI (08-31, cross-4: 162,4 µs)
 — to CAŁA runda po tej trasie, nie sam czas przejścia trasy; osobnego
 pomiaru „ile trwa jeden przeskok" nie mamy. Nie jest to też pełna ósemka.
-Koszt stały ~30 µs (16 KB, płaski poziom niezależny od łącza). 0,11 ms
-= reszta z odejmowania 0,16 − 0,02 − 0,03. Rozmiar porcji na slajdzie 7:
+Koszt stały ~30 µs (16 KB, płaski poziom niezależny od łącza). 0,182 ms
+= reszta z odejmowania 0,238 − 0,016 − 0,040. Rozmiar porcji na slajdzie 7:
 460 KB przy c=32; mikro-benchmark robiony na 512 KB. Obliczenia NIE są
 częścią rundy — to osobny składnik kroku (5%). 29,1 GB/s — p2p_bw
 GPU0→GPU4 (07-31); DCGM PCIE_RX średnio 7,2–7,9 GB/s przy c≥8 (06-11).
@@ -600,8 +602,10 @@ przesyłu, nie 20. Po NVLinku (08-03, c=32): krok 90 ms, komunikacja 61%
 
 ## Slajd 9 — Zmiana: mostki NVLink (2 min)
 
-Status: SZKIC. Custom all-reduce → notes. Busbw wraca na slajd (decyzja 5
-cofnięta, patrz `slajdy-v2.md` §E).
+Status: SZKIC 2 (2026-09-04): slajd przepisany jako „przed/po" tego samego
+rachunku co slajd 8 — te same trzy wiersze rundy, ta sama grupa 8 kart
+w mikro-pomiarze (`all-8 nop2p` 238,0 µs → `all-8` 141,6 µs). Busbw
+i koszt stały zeszły do notatek. Puenta do zatwierdzenia.
 
 ### Na slajdzie
 
@@ -609,43 +613,83 @@ cofnięta, patrz `slajdy-v2.md` §E).
 >
 > [GRAFIKA G4': ten sam schemat co na slajdzie 8, dorysowane mostki:
 > karty 0–3 spięte w „wyspę", karty 4–7 w drugą; między wyspami nadal
-> PCIe/CPU]
+> PCIe/CPU. Mostki wyróżnione grubszą linią.]
 >
-> Zmierzyliśmy oba koszty rundy, przed i po:
+> Zamontowaliśmy **dwa mostki 4-drożne**: karty 0–3 i karty 4–7. Wewnątrz
+> takiej czwórki karty rozmawiają **bezpośrednio**, bez switcha i procesora.
+> Między czwórkami droga zostaje stara.
 >
-> | | PCIe / bez mostków | NVLink w wyspie |
+> | | przed: PCIe | po: mostki NVLink |
 > |---|---:|---:|
-> | koszt stały rundy | ~30 µs | ~30 µs — **bez zmian** |
-> | przesył dużej porcji (8 MB) | 14 GB/s | **197 GB/s — 14× szybciej** |
+> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | **24,10 s** | **11,50 s** |
+> | Jedna runda w pracującym serwerze | 0,873 ms | 0,452 ms |
+> | &nbsp;&nbsp;w tym komunikacja trasą, zmierzona osobno (8 kart, 459 kB) | 0,238 ms | 0,142 ms |
+> | &nbsp;&nbsp;w tym czekanie na ostatnią kartę | 0,635 ms | 0,310 ms |
 >
-> Mostek łączy **4 karty**. Kimi na 8 kartach ma dwie wyspy — część
-> dogadań nadal idzie starą drogą.
+> **Skrócenie trasy o 40% dało 2× krótsze czekanie — i 2,1× szybszą
+> odpowiedź. Karty, które szybciej kończą rundę, krócej czekają na siebie.**
 
 ### Notes
 
 Producent serwera przewiduje opcję: mostki NVLink, które łączą cztery
-sąsiednie karty bezpośrednio, z pominięciem PCIe i procesorów. Zamontowaliśmy
-dwa — jeden na karty zero do trzy, drugi na cztery do siedem. Każda
-czwórka to „wyspa": wewnątrz wyspy każda para kart ma własne, bezpośrednie
-łącze. Między wyspami droga zostaje stara.
+sąsiednie karty bezpośrednio, z pominięciem switchy PCIe i procesorów.
+Zamontowaliśmy dwa — jeden na karty zero do trzy, drugi na cztery do
+siedem. Każda czwórka to wyspa: wewnątrz wyspy każda para kart ma własne
+łącze. Między wyspami droga zostaje stara, przez procesory i UPI. To
+ważne, bo Kimi pracuje na wszystkich ośmiu kartach, czyli na dwóch
+wyspach — część ruchu nadal jedzie starą drogą.
 
-Zmierzyliśmy oba koszty rundy z poprzedniego slajdu. Koszt stały:
-trzydzieści mikrosekund przed i trzydzieści po — mostki go nie ruszają, bo
-to nie jest czas jazdy, tylko czas wsiadania. Przesył dużej porcji: z
-czternastu do prawie dwustu gigabajtów na sekundę, czternaście razy
-szybciej. Stąd od razu wiemy, czego się spodziewać: dla jednego użytkownika
-prawie nic, bo tam liczy się koszt stały; dla wielu użytkowników — dużo.
-I jedna konsekwencja geometrii: Kimi działa na ośmiu kartach, czyli na
-dwóch wyspach. Część dogadań musi przejść między wyspami starą drogą,
-więc Kimi zyska mniej niż model mieszczący się w jednej wyspie.
+Powtórzyliśmy dokładnie ten sam rachunek co przed chwilą i to jest cała
+tabela.
+
+Odpowiedź na dwieście pięćdziesiąt sześć tokenów przy trzydziestu dwóch
+użytkownikach: dwadzieścia cztery sekundy przed, jedenaście i pół po.
+Dwa razy szybciej.
+
+Runda w pracującym serwerze: osiemset siedemdziesiąt trzy tysięczne
+milisekundy przed, czterysta pięćdziesiąt dwie po.
+
+Sama komunikacja po trasie, zmierzona tak samo jak poprzednio — te same
+osiem kart, ta sama porcja, zmienione tylko łącze: dwieście trzydzieści
+osiem tysięcznych przed, sto czterdzieści dwie po. Trasa skróciła się
+o czterdzieści procent.
+
+I najważniejsze: czekanie na ostatnią kartę spadło z sześciuset
+trzydziestu pięciu tysięcznych do trzystu dziesięciu. Ponad dwukrotnie.
+To nie jest osobny efekt — to konsekwencja. Karta, która szybciej kończy
+swoją rundę, wcześniej dociera do następnej, więc pozostałe krócej na nią
+czekają. Skrócenie trasy działa dwa razy: raz na samej trasie, drugi raz
+na czekaniu.
+
+Dlaczego tylko dwa razy, a nie więcej? Bo mostek łączy cztery karty,
+a Kimi potrzebuje ośmiu. Po modernizacji komunikacja to nadal
+sześćdziesiąt jeden procent czasu — z osiemdziesięciu czterech. Sufit
+istnieje i wiemy, gdzie leży.
 
 W notes (jeśli pytanie z sali): przy pełnej siatce w wyspie vLLM włącza
-własny kernel all-reduce, który skraca też koszt stały — dlatego Qwen na
-4 kartach zyskał 3×, powyżej tego, co daje sama przepustowość.
+własny kernel all-reduce, który skraca też koszt stały — dlatego model
+mieszczący się w jednej czwórce zyskuje więcej niż Kimi.
 
-Źródło: `2026-08-31-latencja-dostepu-summary.md` §1 (wyspa-4 @8 MB
-197,5 vs nop2p 13,8; 16 KB 28–54 µs obie strony). Uczciwość: „bez
-mostków" = NCCL z wyłączonym P2P (rekonstrukcja), nie czerwcowe PCIe.
+Q&A (nie na głos): po NVLinku (08-03, `kimi/bench/kimi_c32.json`): TPOT
+med 44,90 ms → 256 × 44,90 = 11,50 s; ITL med 90,22 ms → 2,01 tokena na
+krok → 127 kroków × 122 = 15 545 rund. Trace 08-03: komunikacja 61,1%
+spanu (rank0) / 59,7% (rank7), compute 30,2% → 11,50 × 0,611 = 7,02 s
+/ 15 545 = 0,452 ms na rundę. Mikro 08-31 @512 KB, ta sama para co na
+slajdzie 8: `all-8 nop2p` 238,0 µs → `all-8` 141,6 µs (1,68×). Czekanie
+= różnica: 0,452 − 0,142 = 0,310 ms → 4,82 s (przed: 14,71 s). Zysk
+całkowity 24,10 / 11,50 = 2,10× — zgodny z benchowym 2,08×. Przepustowość
+przy dużych porcjach (8 MB): wyspa-4 197,5 GB/s vs nop2p 13,8 (14×), ale
+pełna ósemka tylko 14,9 GB/s — ruch między wyspami psuje wynik i to
+tłumaczy, czemu Kimi dostaje 2×, a nie 14×. Koszt stały bez zmian
+(~30–40 µs po obu stronach) — mostki skracają jazdę, nie wsiadanie;
+dlatego przy jednym użytkowniku zysk jest minimalny (slajd 10). Custom
+all-reduce vLLM: aktywny tylko dla pełnej siatki (TP4 w wyspie), nie dla
+TP8 — dawka 1,0–1,2× przy c64, szum ±6%. Uczciwość: `nop2p` to
+rekonstrukcja ery PCIe, nie sama era PCIe.
+
+Źródło: `results/summaries/2026-08-03-nvlink-day-summary.md` §2;
+`results/runs/2026-08-03_nvlink_gap_fill/kimi/bench/kimi_c32.json`;
+`results/summaries/2026-08-31-latencja-dostepu-summary.md` §1.
 
 ---
 
