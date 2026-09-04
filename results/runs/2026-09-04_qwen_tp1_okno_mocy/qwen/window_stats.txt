@@ -1,0 +1,4 @@
+probek GPU0: 322, aktywnych (>300 W): 307
+moc: srednia 457 W, min 303, maks 577
+SM_ACTIVE srednia 0.696
+PCIe RX srednia 0.08 GB/s
