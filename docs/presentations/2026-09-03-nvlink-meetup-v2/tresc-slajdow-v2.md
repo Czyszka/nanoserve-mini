@@ -20,7 +20,7 @@ Status: ZAAKCEPTOWANY (2026-09-03). Decyzje: podtytuł bez NVLink; bez danych pr
 
 ### Na slajdzie
 
-> # 100% GPU-Util, a tylko 30% limitu mocy.
+> # 100% zajętości w GPU-Util, a tylko 30% limitu mocy.
 > # Co jest wąskim gardłem?
 >
 > Badania wydajnościowe serwera 8×H200 i ich efekty — studium przypadku
@@ -47,8 +47,9 @@ CPU z nazwą, SWE-bench Lite.
 > [GRAFIKA G1: osiem kart GPU w rzędzie (0–7). NAD kartami jedna klamra na
 > całą ósemkę: „Kimi-K2.6 — 554 GB wag → tylko na 8 kartach".
 > POD kartami cztery klamry: „1 GPU" (karta 0), „2 GPU" (0–1), „4 GPU"
-> (0–3), „8 GPU" (0–7), z podpisem: „Qwen3.6-35B — 67 GB wag → mieści się
-> na jednej karcie, więc do testów można go uruchomić na 1, 2, 4 lub 8"]
+> (0–3), „8 GPU" (0–7), podpisy wyśrodkowane pod klamrami; pod spodem
+> pogrubione: „Qwen3.6-35B - 67 GB wag → do testów można go uruchomić na
+> 1, 2, 4 lub 8"]
 >
 > - serwer: 2× Intel Xeon Gold 6530, 8× NVIDIA H200 NVL (143 GB każda);
 >   karty połączone magistralą PCIe 5.0 — stan wyjściowy
@@ -81,7 +82,8 @@ konfiguracje badawcze, nie produkcyjne.
 
 ## Slajd 2 — Anomalia (1,5 min)
 
-Status: ZAAKCEPTOWANY (2026-09-03): bez c, 111–185 W, W0' z linią Qwen
+Status: ZAAKCEPTOWANY (2026-09-03; zakres mocy 126–254 W z okna stabilnego
+wykresu, 2026-09-04): bez c, W0' z linią Qwen
 1 karta (kolory: niebieski Kimi, ciemnozielony Qwen, czerwona przerywana
 limit). Decyzja 3: bez definicji GPU-Util.
 
@@ -100,7 +102,7 @@ limit). Decyzja 3: bez definicji GPU-Util.
 > 600 W z podpisem „limit karty: 600 W". Bez legendy — podpisy przy
 > liniach.]
 >
-> **Osiem kart z Kimi: 100% obciążenia — a pobór mocy 111–185 W z 600 W,
+> **Osiem kart z Kimi: 100% obciążenia — a pobór mocy 126–254 W z 600 W,
 > przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.**
 >
 > Kto widział coś takiego u siebie?
@@ -227,7 +229,9 @@ następnych trzech slajdów.
 active-filtered: 436 W = 73%, SM 0,665, DRAM 0,385); decyzja: liczby
 czerwcowe, bez liczenia nowych z 08-31 (zbieżne). GPU-Util Qwena TP1 pod obciążeniem = 100% —
 obserwacja prelegenta z sesji (nvidia-smi na żywo); w repo brak zapisanego
-zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celowo poza slajdem (wraca na slajdzie 8).
+zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe na wykresie jako piąta grupa (2026-09-04, wg użytkownika): % z 64 GB/s
+(PCIe 5.0 x16, jeden kierunek): Qwen 1 = 0,07 GB/s → 0%; Qwen 8 = 7,18 → 11%;
+Kimi 8 = 8,0 (RX, okno stabilne `kimi_c32_dcgmi`) → 13%.
 
 ---
 
@@ -236,8 +240,8 @@ zrzutu, więc w Q&A mówić „obserwowane, nie archiwizowane". PCIe RX/TX celow
 Status: ZAAKCEPTOWANY (2026-09-03): wzór słowami w kolorach składników
 (życzenie użytkownika; symbole tylko w Q&A), definicja GPU-Util tutaj
 (decyzja 3), puenta użytkownika. Kolory składników — ustalone raz, wracają
-na slajdach 6 i 7: obliczenia ciemnoszary · komunikacja pomarańczowy ·
-przerwy jasnoszary (nie niebieski/zielony — te znaczą Kimi/Qwen).
+na slajdach 6 i 7: obliczenia niebieski (zmiana 2026-09-04 wg użytkownika;
+wcześniej ciemnoszary) · komunikacja pomarańczowy · przerwy jasnoszary.
 
 ### Na slajdzie
 
@@ -327,8 +331,8 @@ czasu"; „84% czasu pomiaru to komunikacja"); tytuł i ramka wzoru OK. Kolory s
 > **Prawo Amdahla: nawet gdyby jakiś składnik zniknął zupełnie, krok
 > skróci się tylko o tyle, ile ten składnik zajmował.**
 > Bez obliczeń (5%) krok trwałby 95% tego, co teraz — zysk najwyżej
-> **1,05×** (100 ÷ 95).
-> Bez komunikacji (84%) krok trwałby 16% — zysk najwyżej **6×** (100 ÷ 16).
+> **1,05x** (100 ÷ (100 − 5)).
+> Bez komunikacji (84%) krok trwałby 16% — zysk najwyżej **6x** (100 ÷ (100 − 84)).
 
 ### Notes
 
@@ -400,10 +404,6 @@ przesył dodana; wyjaśnienia: 256 tokenów to krótka odpowiedź, skąd
 > |---:|---:|---:|---:|
 > | 1 | 14 KB | 1,7 MB | 0,4 GB |
 > | 32 | 460 KB | 56 MB | **14 GB** |
->
-> Każda runda kosztuje: **stałe** (start, uzgodnienie, czekanie na
-> najwolniejszą kartę — niezależnie od ilości danych) **+ przesył**
-> (zależy od ilości danych i od łącza)
 >
 > Płynny tekst dla użytkownika ≈ 10 tokenów/s → **100 ms na token** →
 > 100 ms / 122 rund = **< 1 ms na rundę** (razem z liczeniem)
@@ -499,21 +499,21 @@ w rundzie nie ma — są osobnym składnikiem kroku).
 
 ### Na slajdzie
 
-> ## Topologia kart GPU: PCIe
+> ## Topologia kart GPU: liczba rund × <u>czas jednej rundy</u>
 >
 > [GRAFIKA G4: 2 procesory (CPU0, CPU1) połączone łączem podpisanym „UPI";
 > pod każdym CPU 2 switche PCIe 5.0; pod switchami pary kart (0,1)(2,3)
 > | (4,5)(6,7). Wszystkie połączenia w jednym stylu, bez wyróżnień.]
 >
-> 1. Karty **nie mają bezpośredniego łącza**. Przesył z karty 0 do karty 4
+> Karty **nie mają bezpośredniego łącza**. Przesył z karty 0 do karty 4
 >    idzie: switch → procesor → UPI → procesor → switch. Każde urządzenie
 >    po drodze **odbiera całą porcję i dopiero wtedy wysyła ją dalej**.
-> 2. Runda scala **wszystkie 8 kart**: zawsze zawiera tę najdłuższą trasę
->    i kończy się dopiero, gdy **dotrze ostatnia karta**.
 >
-> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24,10 s**.
-> Rund w tej odpowiedzi **23 172**: silnik zgaduje tokeny z wyprzedzeniem,
-> więc jeden krok daje średnio 1,35 tokena — 190 kroków × 122 rundy.
+> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24,10 s**, z czego
+> **83,9% to komunikacja** (slajd 6) = 20,2 s. Silnik korzysta z dekodowania
+> spekulacyjnego EAGLE3, więc 1 krok daje średnio 1,35 tokena, więc na 256
+> tokenów potrzeba 190 kroków (256 ÷ 1,35), a 32 odpowiedzi liczone są
+> w tych samych krokach — razem 190 kroków × 122 rundy = **23 tys. rund**.
 >
 > | | na jedną rundę | w całej odpowiedzi |
 > |---|---:|---:|
@@ -642,12 +642,10 @@ i koszt stały zeszły do notatek. Puenta do zatwierdzenia.
 > karty 0–3 spięte w „wyspę", karty 4–7 w drugą; między wyspami nadal
 > PCIe/CPU. Mostki wyróżnione grubszą linią.]
 >
-> Zamontowaliśmy **dwa mostki 4-drożne**: karty 0–3 i karty 4–7. Mostek to
-> **własny przewód między każdą parą kart w czwórce**: przekazanie wewnątrz
-> czwórki idzie prosto z karty do karty, **bez żadnego przystanku** — nie
-> ma switcha ani procesora, który musiałby odebrać porcję i wysłać ją
-> dalej. Przystanki zostały tylko na przejściach **między czwórkami**, gdzie
-> droga jest stara.
+> Mostki tworzą **dwie wyspy**: karty 0–3 i karty 4–7. W ramach jednej wyspy
+> **każda karta ma bezpośrednie połączenie z każdą inną** — bez pośredników,
+> bez switcha i procesora. Pomiędzy wyspami pozostaje stara droga:
+> karta → switch → procesor → UPI → procesor → switch → karta.
 >
 > | | przed: PCIe | po: mostki NVLink |
 > |---|---:|---:|

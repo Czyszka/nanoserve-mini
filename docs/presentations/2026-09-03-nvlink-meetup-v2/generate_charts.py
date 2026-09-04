@@ -138,9 +138,9 @@ def w0_moc_w_czasie() -> None:
     ax.plot(range(len(q)), q, color=GREEN, lw=2.2)
     ax.axhline(600, color=CRITICAL, lw=1.6, ls="--")
     ax.text(1, 610, "limit karty: 600 W", color=CRITICAL, fontsize=11, va="bottom")
-    ax.text(n * 0.99, max(q) * 0.93 if q else 500, "Qwen — 1 × H200", color=GREEN,
+    ax.text(n * 0.99, max(q) * 0.93 if q else 500, "Qwen - 1 x H200", color=GREEN,
             fontsize=12, fontweight="600", ha="right", va="top")
-    ax.text(n * 0.99, 268, "Kimi — 8 × H200, po jednej linii na kartę", color=BLUE,
+    ax.text(n * 0.99, 268, "Kimi - 8 x H200, po jednej linii na kartę", color=BLUE,
             fontsize=12, fontweight="600", ha="right", va="bottom")
     ax.set_ylim(0, 680)
     ax.set_xlim(0, n - 1)
@@ -165,7 +165,7 @@ def w1_krzywa_tp() -> None:
     ax.tick_params(axis="x", labelcolor=INK, labelsize=13)
     ax.set_ylim(0, 1650)
     ax.set_ylabel("tokeny/s łącznie")
-    ax.set_title("Qwen — zapytania od 64 użytkowników naraz (era PCIe)")
+    ax.set_title("Qwen - zapytania od 64 użytkowników naraz")
     save(fig, "w1_krzywa_tp.svg")
 
 
@@ -173,24 +173,27 @@ def w1_krzywa_tp() -> None:
 def w2_zasoby() -> None:
     # Liczby czerwcowe z podsumowan (decyzja 2026-09-03; zrodla w tresc-slajdow-v2.md, slajd 4):
     # GPU-Util 100% = odczyt nvidia-smi; moc = % limitu 600 W; SM_ACTIVE; DRAM_ACTIVE.
+    # PCIe: sredni odbior (RX) w GB/s / 64 GB/s (PCIe 5.0 x16, jeden kierunek):
+    # Qwen TP1 0,07; Qwen TP8 7,18 (qwen-tp-curve, czerwiec); Kimi 8,0 (kimi_c32_dcgmi, okno stabilne).
     cats = ["GPU-Util\n(nvidia-smi)", "pobór mocy\n(z limitu 600 W)",
-            "jednostki liczące (SM)\n% czasu aktywne", "pamięć HBM\n% czasu aktywna"]
+            "jednostki liczące (SM)\n% czasu aktywne", "pamięć HBM\n% czasu aktywna",
+            "łącze PCIe\n% przepustowości"]
     series = [
-        ("Qwen, 1 karta", [100, 73, 67, 39], GREEN, True),
-        ("Qwen, 8 kart", [100, 19, 5, 3], GREEN, False),
-        ("Kimi, 8 kart", [100, 30, 20, 8], BLUE, False),
+        ("Qwen, 1 karta", [100, 73, 67, 39, 0], GREEN, True),
+        ("Qwen, 8 kart", [100, 19, 5, 3, 11], GREEN, False),
+        ("Kimi, 8 kart", [100, 30, 20, 8, 13], BLUE, False),
     ]
-    fig, ax = new_ax(10.4, 4.2, grid_axis="")
-    w = 0.25
+    fig, ax = new_ax(11.4, 4.2, grid_axis="")
+    w = 0.26
     for k, (name, vals, color, hatched) in enumerate(series):
-        xs = [i + (k - 1) * w for i in range(4)]
+        xs = [i + (k - 1) * w for i in range(5)]
         if hatched:
             bars = ax.bar(xs, vals, width=w - 0.03, facecolor=SURFACE, edgecolor=color,
                           hatch="//", lw=1.5, label=name)
         else:
             bars = ax.bar(xs, vals, width=w - 0.03, color=color, label=name)
-        bar_labels(ax, bars, vals, 1.5, fmt=lambda v: f"{v:.0f}%", size=10)
-    ax.set_xticks(range(4), cats)
+        bar_labels(ax, bars, vals, 1.5, fmt=lambda v: f"{v:.0f}%", size=9)
+    ax.set_xticks(range(5), cats)
     ax.tick_params(axis="x", labelcolor=INK, labelsize=12)
     ax.set_ylim(0, 118)
     ax.set_yticks([0, 25, 50, 75, 100], ["0", "25", "50", "75", "100%"])
@@ -205,7 +208,7 @@ def w3_profil() -> None:
     # przerwy 10,0 / komunikacja 83,9 / obliczenia 4,6 / inne 1,5 (verdict K2).
     shares = [("przerwy (silnik na CPU)", 10.0, BASELINE, INK),
               ("komunikacja", 83.9, ORANGE, SURFACE),
-              ("obliczenia", 4.6, INK2, SURFACE),
+              ("obliczenia", 4.6, BLUE, SURFACE),
               ("inne", 1.5, MUTED, SURFACE)]
     fig, ax = new_ax(9.4, 2.1, grid_axis="")
     left = 0.0
@@ -259,7 +262,7 @@ def w5a_qwen() -> None:
     tp8_after = bench_throughput(q / "bench_tp8" / "tp8_c64.json")
     fig, ax = new_ax(8.0, 3.3)
     _przed_po(ax, [("4 karty", tp4_before, tp4_after), ("8 kart", tp8_before, tp8_after)],
-              GREEN, 2500, "Qwen — 64 użytkowników naraz")
+              GREEN, 2500, "Qwen - 64 użytkowników naraz")
     save(fig, "w5a_qwen.svg")
 
 
@@ -267,7 +270,7 @@ def w5b_kimi() -> None:
     before = bench_throughput(RUNS / "2026-06-11_nvlink_boundary" / "kimi_ramp" / "bench" / "kimi_c32.json")
     after = bench_throughput(RUNS / "2026-08-03_nvlink_gap_fill" / "kimi" / "bench" / "kimi_c32.json")
     fig, ax = new_ax(4.6, 3.3)
-    _przed_po(ax, [("8 kart", before, after)], BLUE, 720, "Kimi — 32 użytkowników naraz")
+    _przed_po(ax, [("8 kart", before, after)], BLUE, 720, "Kimi - 32 użytkowników naraz")
     save(fig, "w5b_kimi.svg")
 
 
