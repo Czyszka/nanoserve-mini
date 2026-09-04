@@ -841,9 +841,15 @@ zł/szt. — wg użytkownika.
 
 ## Slajdy zapasowe (tylko Q&A) — kolejność wg użytkownika 2026-09-04
 
-- **Z1 — Profil Kimi po NVLinku (c=32):** komunikacja 83,9% → 61,1%,
-  obliczenia 4,6% → 30,2%; cały zysk 2,1× ze skrócenia komunikacji; Amdahl
-  1/(0,161 + 0,839/2,9) = 2,2×; dalszy sufit 2,6×. Źródło: 08-03 §2.
+- **Z1 — Kimi przed i po mostkach (c=32):** wykres W7 (pobór mocy w czasie,
+  8 linii przed w szarym + 8 linii po w niebieskim, limit 600 W) + tabela
+  rozkładu czasu kroku: komunikacja 83,9% → 61,1%, obliczenia 4,6% → 30,2%.
+  Liczniki DCGM: moc 192 → 303 W, SM 0,19 → 0,37, HBM 0,065 → 0,132, PCIe RX
+  8,0 → 4,8 GB/s przy NVL RX 9,0. Cały zysk 2,1× ze skrócenia komunikacji;
+  Amdahl 1/(0,161 + 0,839/2,9) = 2,2×; dalszy sufit 2,6×. Uczciwość: okna
+  mocy mają różną długość (361 vs 168 s) — na wykresie linie „po" kończą się
+  wcześniej. Źródło: 08-03 §2; `2026-06-11_nvlink_boundary/kimi_ramp/
+  kimi_c32_dcgmi.txt` i `2026-08-03_nvlink_gap_fill/kimi/kimi_c32_dcgmi.txt`.
 - **Z2 — Qwen po mostkach (c=32):** wykres W6 (tok/s: 1/2/4/8 kart =
   2015 / 2467 / 2990 / 1974) + pod nim udział komunikacji 0 / 12 / 18 /
   58% (jakościowo). Źródło: 08-31 §2–3.
@@ -869,6 +875,7 @@ inline SVG w `index_src.html`; sklejka: `build_index.py` → `index.html`
 | W5a | 10 | Qwen 4 i 8 kart, c64, przed/po tok/s | `qwen_tp_curve` (06-11), `bench_tp4isl`/`bench_tp8` (08-31) |
 | W5b | 10 | Kimi 8 kart, c32, przed/po tok/s | `kimi_c32.json` (06-11, 08-03) |
 | W6 | Z2 | Qwen 1/2/4/8 kart, c32, po mostkach, tok/s | `bench_tp{1,2isl,4isl,8}/*_c32.json` (08-31) |
+| W7 | Z1 | Kimi 8 kart c32, pobór mocy w czasie, przed i po mostkach | `kimi_c32_dcgmi.txt` (06-11) i (08-03 gap_fill) |
 
 ## Budżet czasu
 

@@ -446,20 +446,21 @@
 </section>
 
 <!-- ================================================== ZAPAS Z1 -->
-<section class="slide">
+<section class="slide dense">
   <div class="eyebrow">Zapas Z1</div>
-  <h1>Kimi po NVLinku: rozkład czasu kroku</h1>
+  <h1>Kimi przed i po mostkach: moc i rozkład czasu kroku</h1>
   <div class="slide-body">
-    <table>
-      <thead><tr><th>składnik kroku</th><th class="num">PCIe</th><th class="num">NVLink</th></tr></thead>
+    <div class="figure" style="height:250px; flex:0 0 auto">{{SVG:w7_kimi_moc_przed_po}}</div>
+    <table class="tight">
+      <thead><tr><th>składnik kroku (torch profiler)</th><th class="num">era PCIe</th><th class="num">po mostkach</th></tr></thead>
       <tbody>
         <tr><td><span class="c-comm"><strong>komunikacja</strong></span></td><td class="num">83,9%</td><td class="num"><strong>61,1%</strong></td></tr>
         <tr><td><span class="c-comp"><strong>obliczenia</strong></span></td><td class="num">4,6%</td><td class="num"><strong>30,2%</strong></td></tr>
         <tr><td><span class="c-gap"><strong>przerwy</strong></span> + inne</td><td class="num">11,5%</td><td class="num">8,7%</td></tr>
       </tbody>
     </table>
-    <p>Komunikacja skróciła się ~2,9x, obliczenia zostały takie same - cały zysk 2,1x przyszedł z komunikacji. Prawo Amdahla: 1 / (0,161 + 0,839 / 2,9) = 2,2x (zmierzone 2,1x).</p>
-    <p>Komunikacja to nadal 61% kroku → dalszy sufit 1 / (1 − 0,61) = 2,6x (pełna siatka 8 kart / NVSwitch).</p>
+    <p>Liczniki DCGM, ta sama praca: moc <strong>192 → 303 W</strong>, jednostki liczące (SM) 0,19 → 0,37, pamięć HBM 0,065 → 0,132, ruch PCIe 8,0 → 4,8 GB/s przy 9,0 GB/s po mostkach. Karta nie tylko liczy szybciej - widocznie mocniej pracuje: <strong>51% limitu mocy zamiast 32%</strong>.</p>
+    <p class="secondary small">Komunikacja skróciła się ~2,9x, obliczenia zostały takie same - cały zysk 2,1x przyszedł z komunikacji (Amdahl: 1 / (0,161 + 0,839 / 2,9) = 2,2x). Komunikacja to nadal 61% kroku → dalszy sufit 2,6x. Okna pomiaru mocy mają różną długość (361 vs 168 s).</p>
   </div>
 </section>
 

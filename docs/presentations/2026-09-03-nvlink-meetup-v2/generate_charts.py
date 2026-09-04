@@ -295,6 +295,35 @@ def w6_qwen_tp_nvlink() -> None:
     save(fig, "w6_qwen_tp_nvlink.svg")
 
 
+# ---------------------------------------------------------------- W7 (zapas Z1)
+def w7_kimi_moc_przed_po() -> None:
+    """Kimi TP8 c=32, pobor mocy w czasie: era PCIe (06-11) vs po mostkach (08-03).
+
+    Okna maja rozna dlugosc (361 vs 168 probek) — linie "po" konczą się wczesniej.
+    """
+    before = read_dcgmi(RUNS / "2026-06-11_nvlink_boundary" / "kimi_ramp" / "kimi_c32_dcgmi.txt")
+    after = read_dcgmi(RUNS / "2026-08-03_nvlink_gap_fill" / "kimi" / "kimi_c32_dcgmi.txt")
+    fig, ax = new_ax(9.0, 3.4)
+    for samples, color in ((before, BEFORE), (after, BLUE)):
+        for gid in sorted({g for smp in samples for g, *_ in smp}):
+            series = [next((pw for g, pw, *_ in smp if g == gid), None) for smp in samples]
+            xs = [i for i, v in enumerate(series) if v is not None]
+            ys = [v for v in series if v is not None]
+            ax.plot(xs, ys, color=color, lw=1.3, alpha=0.65)
+    ax.axhline(600, color=CRITICAL, lw=1.6, ls="--")
+    ax.text(2, 610, "limit karty: 600 W", color=CRITICAL, fontsize=11, va="bottom")
+    ax.text(len(after) - 6, 372, "po mostkach - średnio 303 W", color=BLUE, fontsize=12,
+            fontweight="600", ha="right", va="bottom")
+    ax.text(len(before) - 4, 118, "era PCIe - średnio 192 W", color=INK2, fontsize=12,
+            fontweight="600", ha="right", va="top")
+    ax.set_ylim(0, 680)
+    ax.set_xlim(0, len(before) - 1)
+    ax.set_xlabel("czas okna benchmarku [s] - okna: era PCIe 361 s, po mostkach 168 s")
+    ax.set_ylabel("pobór mocy na kartę [W]")
+    ax.set_title("Kimi, 8 kart, 32 użytkowników - po jednej linii na kartę", loc="left")
+    save(fig, "w7_kimi_moc_przed_po.svg")
+
+
 if __name__ == "__main__":
     w0_moc_w_czasie()
     w1_krzywa_tp()
@@ -303,3 +332,4 @@ if __name__ == "__main__":
     w5a_qwen()
     w5b_kimi()
     w6_qwen_tp_nvlink()
+    w7_kimi_moc_przed_po()
