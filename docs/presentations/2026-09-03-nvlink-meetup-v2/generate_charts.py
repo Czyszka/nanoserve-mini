@@ -210,7 +210,7 @@ def w3_profil() -> None:
               ("komunikacja", 83.9, ORANGE, SURFACE),
               ("obliczenia", 4.6, BLUE, SURFACE),
               ("inne", 1.5, MUTED, SURFACE)]
-    fig, ax = new_ax(9.4, 2.1, grid_axis="")
+    fig, ax = new_ax(9.4, 2.4, grid_axis="")
     left = 0.0
     for name, share, color, txt in shares:
         ax.barh(0, share, left=left, height=0.6, color=color, edgecolor=SURFACE, lw=2)
@@ -219,12 +219,15 @@ def w3_profil() -> None:
             ax.text(left + share / 2, 0, label, ha="center", va="center", color=txt,
                     fontsize=13 if share > 15 else 12, fontweight="600")
         left += share
-    ax.text(0.5, -0.48, "przerwy (silnik na CPU)", color=INK2, fontsize=11, ha="left", va="top")
-    ax.annotate("", xy=(95.5, -0.3), xytext=(93.5, -0.5), arrowprops={"arrowstyle": "-", "color": INK2})
-    ax.text(97.5, -0.48, "obliczenia 5%", color=INK2, fontsize=11, ha="right", va="top")
+    ax.annotate("", xy=(5, -0.3), xytext=(5, -0.5), arrowprops={"arrowstyle": "-", "color": INK2})
+    ax.text(5, -0.52, "przerwy (silnik na CPU)", color=INK2, fontsize=11, ha="center", va="top")
+    ax.annotate("", xy=(96.2, -0.3), xytext=(93.0, -0.5), arrowprops={"arrowstyle": "-", "color": INK2})
+    ax.text(93.0, -0.52, "obliczenia 5%", color=INK2, fontsize=11, ha="right", va="top")
+    ax.annotate("", xy=(99.3, -0.3), xytext=(99.3, -0.78), arrowprops={"arrowstyle": "-", "color": INK2})
+    ax.text(99.3, -0.8, "inne", color=INK2, fontsize=11, ha="center", va="top")
     ax.set_yticks([])
     ax.set_xlim(0, 100)
-    ax.set_ylim(-0.8, 0.5)
+    ax.set_ylim(-1.05, 0.5)
     ax.set_xticks([0, 25, 50, 75, 100], ["0", "25", "50", "75", "100% czasu pomiaru"])
     for side in ("left",):
         ax.spines[side].set_visible(False)
@@ -274,6 +277,23 @@ def w5b_kimi() -> None:
     save(fig, "w5b_kimi.svg")
 
 
+# ---------------------------------------------------------------- W6 (zapas Z2)
+def w6_qwen_tp_nvlink() -> None:
+    q = RUNS / "2026-08-31_latencja_dostepu" / "qwen"
+    files = [("1 karta", "bench_tp1/tp1_c32.json"), ("2 karty", "bench_tp2isl/tp2isl_c32.json"),
+             ("4 karty", "bench_tp4isl/tp4isl_c32.json"), ("8 kart", "bench_tp8/tp8_c32.json")]
+    vals = [bench_throughput(q / f) for _, f in files]
+    fig, ax = new_ax(8.4, 3.2)
+    bars = ax.bar(range(4), vals, width=0.6, color=GREEN)
+    bar_labels(ax, bars, vals, 30, size=13)
+    ax.set_xticks(range(4), [n for n, _ in files])
+    ax.tick_params(axis="x", labelcolor=INK, labelsize=13)
+    ax.set_ylim(0, 3400)
+    ax.set_ylabel("tokeny/s łącznie")
+    ax.set_title("Qwen po mostkach - 32 użytkowników naraz", loc="left")
+    save(fig, "w6_qwen_tp_nvlink.svg")
+
+
 if __name__ == "__main__":
     w0_moc_w_czasie()
     w1_krzywa_tp()
@@ -281,3 +301,4 @@ if __name__ == "__main__":
     w3_profil()
     w5a_qwen()
     w5b_kimi()
+    w6_qwen_tp_nvlink()

@@ -178,7 +178,6 @@
     <div class="punch">
       <p>Osiem kart z Kimi: 100% obciążenia - a pobór mocy 126–254 W z 600 W, przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.</p>
     </div>
-    <p class="secondary">Kto widział coś takiego u siebie?</p>
   </div>
 </section>
 
@@ -264,7 +263,7 @@
       <svg class="diag" viewBox="0 0 1080 190" width="1060" role="img" aria-label="Jedna warstwa: wejście, cztery karty liczą blok uwagi, scalenie, cztery karty liczą FFN/MoE, scalenie, wejście następnej warstwy; 2 scalenia x 61 warstw = 122 rundy">
         <rect class="box" x="10" y="44" width="96" height="56"></rect>
         <text x="58" y="67" text-anchor="middle" font-size="13">wejście</text><text x="58" y="85" text-anchor="middle" font-size="13">warstwy k</text>
-        <line class="wire" x1="106" y1="72" x2="134" y2="72"></line>
+        <g stroke="var(--comm)" stroke-width="1.8" fill="none"><line x1="106" y1="72" x2="134" y2="25"></line><line x1="106" y1="72" x2="134" y2="55"></line><line x1="106" y1="72" x2="134" y2="85"></line><line x1="106" y1="72" x2="134" y2="115"></line></g>
         <g font-size="12">
 <rect class="box" x="134" y="12" width="160" height="26"></rect><text x="214" y="30" text-anchor="middle">karta 0 - swój kawałek</text>
 <rect class="box" x="134" y="42" width="160" height="26"></rect><text x="214" y="60" text-anchor="middle">karta 1 - swój kawałek</text>
@@ -449,40 +448,6 @@
 <!-- ================================================== ZAPAS Z1 -->
 <section class="slide">
   <div class="eyebrow">Zapas Z1</div>
-  <h1>Qwen po NVLinku: krzywa liczby kart</h1>
-  <div class="slide-body">
-    <p>32 użytkowników naraz, tok/s łącznie (sesja 08-31, benche ciepłe):</p>
-    <table>
-      <thead><tr><th class="num">karty</th><th class="num">1</th><th class="num">2</th><th class="num">4</th><th class="num">8</th></tr></thead>
-      <tbody>
-        <tr><td class="num">tok/s</td><td class="num">2015</td><td class="num">2467</td><td class="num"><strong>2990</strong></td><td class="num">1974</td></tr>
-      </tbody>
-    </table>
-    <p>4 karty przestały być karą: 1,48x względem jednej karty (era PCIe: 0,57x). 8 kart nadal poniżej jednej - runda musi przejść między czwórkami.</p>
-    <p class="secondary small">Konfund: 1 karta nie dotyka mostków, a między czerwcem a sierpniem urosła z 1202 do 1710 tok/s przy 64 użytkownikach (+42%); kara zimnego benchu tłumaczy 10–15%, reszta niewyjaśniona. Porównania względem 1 karty tej samej ery są odporne na ten dryf.</p>
-  </div>
-</section>
-
-<!-- ================================================== ZAPAS Z2 -->
-<section class="slide">
-  <div class="eyebrow">Zapas Z2</div>
-  <h1>Qwen po NVLinku: udział komunikacji w kroku</h1>
-  <div class="slide-body">
-    <p>torch profiler, 32 użytkowników naraz - udział komunikacji w czasie pomiaru:</p>
-    <table>
-      <thead><tr><th class="num">karty</th><th class="num">1</th><th class="num">2 (czwórka)</th><th class="num">4 (czwórka)</th><th class="num">8 (dwie czwórki)</th></tr></thead>
-      <tbody>
-        <tr><td class="num">komunikacja</td><td class="num">0%</td><td class="num">12%</td><td class="num">18%</td><td class="num"><strong>58%</strong></td></tr>
-      </tbody>
-    </table>
-    <p>Skok z 18% na 58% przy przejściu z jednej czwórki na dwie - to jest koszt drogi między czwórkami.</p>
-    <p class="secondary small">Jakościowo: kontrola narzutu profilera dla tych przebiegów nie przeszła (ITL profilowany vs nie poza pasmem ±15%), więc liczby traktujemy jako kierunek, nie pomiar.</p>
-  </div>
-</section>
-
-<!-- ================================================== ZAPAS Z3 -->
-<section class="slide">
-  <div class="eyebrow">Zapas Z3</div>
   <h1>Kimi po NVLinku: rozkład czasu kroku</h1>
   <div class="slide-body">
     <table>
@@ -499,9 +464,26 @@
   </div>
 </section>
 
-<!-- ================================================== ZAPAS Z4 -->
+<!-- ================================================== ZAPAS Z2 -->
+<section class="slide dense">
+  <div class="eyebrow">Zapas Z2</div>
+  <h1>Qwen po mostkach: przepustowość i udział komunikacji</h1>
+  <div class="slide-body">
+    <div class="figure" style="height:290px; flex:0 0 auto">{{SVG:w6_qwen_tp_nvlink}}</div>
+    <table class="tight">
+      <thead><tr><th>32 użytkowników naraz</th><th class="num">1 karta</th><th class="num">2 karty (wyspa)</th><th class="num">4 karty (wyspa)</th><th class="num">8 kart (dwie wyspy)</th></tr></thead>
+      <tbody>
+        <tr><td>udział komunikacji w czasie pomiaru (torch profiler)</td><td class="num">0%</td><td class="num">12%</td><td class="num">18%</td><td class="num"><strong>58%</strong></td></tr>
+      </tbody>
+    </table>
+    <p>4 karty przestały być karą: 1,48x względem jednej karty (era PCIe: 0,57x). 8 kart nadal poniżej jednej - skok komunikacji z 18% na 58% to koszt drogi między wyspami.</p>
+    <p class="secondary small">Udziały jakościowo: kontrola narzutu profilera dla tych przebiegów nie przeszła (poza pasmem ±15%). Konfund: 1 karta nie dotyka mostków, a między czerwcem a sierpniem urosła z 1202 do 1710 tok/s przy 64 użytkownikach (+42%) - porównania względem 1 karty tej samej ery są na to odporne.</p>
+  </div>
+</section>
+
+<!-- ================================================== ZAPAS Z3 -->
 <section class="slide">
-  <div class="eyebrow">Zapas Z4</div>
+  <div class="eyebrow">Zapas Z3</div>
   <h1>Kiedy mostek NVLink 4-drożny ma sens?</h1>
   <div class="slide-body">
     <table>
@@ -520,7 +502,7 @@
 </main>
 
 <footer id="hud">
-  <span id="counter">1 / 15</span>
+  <span id="counter">1 / 14</span>
   <span>← → nawigacja &nbsp;·&nbsp; T motyw</span>
 </footer>
 

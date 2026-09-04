@@ -104,8 +104,6 @@ limit). Decyzja 3: bez definicji GPU-Util.
 >
 > **Osiem kart z Kimi: 100% obciążenia — a pobór mocy 126–254 W z 600 W,
 > przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.**
->
-> Kto widział coś takiego u siebie?
 
 ### Notes
 
@@ -838,19 +836,15 @@ zł/szt. — wg użytkownika.
 
 ---
 
-## Slajdy zapasowe (tylko Q&A)
+## Slajdy zapasowe (tylko Q&A) — kolejność wg użytkownika 2026-09-04
 
-- **Z1 — Qwen po NVLinku, krzywa TP (c=32):** 2015 / 2467 / 2990 / 1974
-  tok/s — 4 karty przestały być karą (vs slajd 4). Źródło: 08-31 §2.
-- **Z2 — Profil Qwen po NVLinku, udział komunikacji (c=32):** TP1 0% →
-  TP2 12% → TP4 18% → TP8 58% (jakościowo — narzut profilera nie przeszedł
-  kontroli). Źródło: 08-31 §3.
-- **Z3 — Profil Kimi po NVLinku (c=32):** komunikacja 84% → 61%,
-  obliczenia 5% → 30%; cały zysk 2× ze skrócenia komunikacji. Źródło:
-  08-03 §2.
-- **Z4 — Tabela decyzyjna:** kiedy NVLink 4-way ma sens (notatka
-  decyzyjna §3.1): model na 1–2 kartach → nie; TP≥4 + wielu użytkowników
-  → tak; pojedynczy czat → ≤1,3×.
+- **Z1 — Profil Kimi po NVLinku (c=32):** komunikacja 83,9% → 61,1%,
+  obliczenia 4,6% → 30,2%; cały zysk 2,1× ze skrócenia komunikacji; Amdahl
+  1/(0,161 + 0,839/2,9) = 2,2×; dalszy sufit 2,6×. Źródło: 08-03 §2.
+- **Z2 — Qwen po mostkach (c=32):** wykres W6 (tok/s: 1/2/4/8 kart =
+  2015 / 2467 / 2990 / 1974) + pod nim udział komunikacji 0 / 12 / 18 /
+  58% (jakościowo). Źródło: 08-31 §2–3.
+- **Z3 — Tabela decyzyjna:** kiedy NVLink 4-way ma sens.
 
 ## Wykresy i grafiki — WYKONANE (2026-09-04)
 
@@ -870,6 +864,7 @@ inline SVG w `index_src.html`; sklejka: `build_index.py` → `index.html`
 | G4 / G4' | 8 / 9 | topologia PCIe / + mostki w czwórkach | — |
 | W5a | 10 | Qwen 4 i 8 kart, c64, przed/po tok/s | `qwen_tp_curve` (06-11), `bench_tp4isl`/`bench_tp8` (08-31) |
 | W5b | 10 | Kimi 8 kart, c32, przed/po tok/s | `kimi_c32.json` (06-11, 08-03) |
+| W6 | Z2 | Qwen 1/2/4/8 kart, c32, po mostkach, tok/s | `bench_tp{1,2isl,4isl,8}/*_c32.json` (08-31) |
 
 ## Budżet czasu
 
