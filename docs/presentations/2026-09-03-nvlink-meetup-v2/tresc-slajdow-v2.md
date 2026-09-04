@@ -778,6 +778,11 @@ użytkownika. Dryf Qwen TP1 tylko w Q&A.
 > | Qwen, 8 kart, 64 użytkowników | 257 tok/s | 1625 tok/s | **6,3×** |
 > | Kimi, 8 kart, 32 użytkowników | 285 tok/s | 608 tok/s | **2,1×** |
 >
+> Wysoki mnożnik to nie lepszy wynik, tylko gorszy punkt startu. Względem
+> jednej karty: **4 karty 0,57× → 1,25×**, **8 kart 0,21× → 0,95×**. Mostki
+> nie sprawiły, że 8 kart bije 4 — sprawiły, że 8 kart przestało być
+> wolniejsze niż jedna.
+>
 > Łączny koszt: **2 mostki × ~4,5 tys. zł ≈ 9 tys. zł na serwer**.
 
 ### Notes
@@ -823,7 +828,11 @@ nie 42% — reszta niewyjaśniona. Uczciwe porównanie Qwen: względem TP1
 tej samej ery — przed: TP4 = 0,57× TP1, TP8 = 0,21× TP1; po: TP4 = 1,25×
 TP1, TP8 = 0,95× TP1. Wniosek jakościowy (TP8 z „gorzej niż jedna karta"
 na „prawie jak jedna") się utrzymuje; surowe 6,3× może zawierać dryf.
-Kimi TP8: przed 06-11 (c1/c8/c16/c32 = 75/86/73/285), po = 07-31 c1 110,
+Odniesienie do 1 karty tej samej ery (odporne na dryf): PCIe c64
+1202/680/257 → 4 karty 0,57×, 8 kart 0,21×; po mostkach 1710/2129/1625
+→ 1,25× i 0,95×. Stąd 6,3× dla 8 kart przy gorszym wyniku bezwzględnym
+niż 4 karty (1625 vs 2129) — mnożnik mierzy odległość od patologicznego
+punktu startu. Kimi TP8: przed 06-11 (c1/c8/c16/c32 = 75/86/73/285), po = 07-31 c1 110,
 08-03 `ramp_c8` 328 (jeden bieg, Grafana), 08-03 gap_fill c16 501, c32
 608. c=16 przed = 73 tok/s to anomalia ery PCIe potwierdzona trzema
 powtórkami (73/71/67). Odpowiedź w sekundach (TPOT × 256): c1 2,2 → 1,9
