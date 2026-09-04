@@ -661,7 +661,11 @@ osiem kart, ta sama porcja, zmienione tylko łącze: dwieście trzydzieści
 osiem tysięcznych przed, sto czterdzieści dwie po. I spójrzcie, co w tych
 trzech składnikach się zmieniło, a co nie. Przesył: bez zmian, szesnaście
 tysięcznych — bo najdłuższa trasa nadal przechodzi między czwórkami starym
-łączem, dwadzieścia dziewięć gigabajtów na sekundę przed i po. Koszt
+łączem, dwadzieścia dziewięć gigabajtów na sekundę przed i po. Żeby nie
+było nieporozumienia: wewnątrz czwórki przesył jest czternaście razy
+szybszy, zmierzyliśmy to. Ale runda na ośmiu kartach musi przejść między
+czwórkami, a tam łącze zostało stare — i to ono wyznacza tempo całej
+rundy. Dlatego Kimi na ośmiu kartach z tej przepustowości nie korzysta. Koszt
 stały: bez zmian, około czterdziestu tysięcznych — mostki nie skracają
 startu rundy. Zmieniły się przystanki: ze stu osiemdziesięciu trzech
 tysięcznych do osiemdziesięciu pięciu. Wewnątrz czwórki karty rozmawiają
