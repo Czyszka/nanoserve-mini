@@ -461,8 +461,9 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-04, runda 10: tabela dwukolumnowa — na jedną
-rundę i × 23 tys. rund; punkt wyjścia (24 s, 83,9%, skąd 23 tys.) w zdaniu
+Status: W ITERACJI (2026-09-04, runda 11: tabela dwukolumnowa (na jedną
+rundę / w całej odpowiedzi) w kolejności ciągu przyczynowo-skutkowego:
+24 s → 83,9% → 0,87 ms → 0,16 ms z rozbiciem → 0,71 ms czekania; punkt wyjścia (24 s, 83,9%, skąd 23 tys.) w zdaniu
 nad tabelą; w rundzie zmierzonej osobno rozbite trzy składniki, obliczeń
 w rundzie nie ma — są osobnym składnikiem kroku).
 
@@ -485,16 +486,15 @@ w rundzie nie ma — są osobnym składnikiem kroku).
 > **23 tys.**: silnik zgaduje tokeny z wyprzedzeniem, więc jeden krok daje
 > średnio 1,35 tokena — 190 kroków × 122 rundy.
 >
-> | | na jedną rundę | × 23 tys. rund |
+> | | na jedną rundę | w całej odpowiedzi |
 > |---|---:|---:|
-> | **cała runda trasą z pkt 1**, zmierzona osobno, bez modelu | **0,16 ms** | **3,7 s** |
+> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | | **24 s** |
+> | Z tego komunikacja — **83,9%** czasu (slajd 6), w podziale na 23 tys. rund | **0,87 ms** | **20,1 s** |
+> | Cała runda trasą z pkt 1, **zmierzona osobno, bez modelu** | **0,16 ms** | 3,7 s |
 > | &nbsp;&nbsp;w tym przesył 460 KB przy 29 GB/s (zmierzone) | 0,02 ms | 0,4 s |
 > | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,03 ms | 0,7 s |
 > | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,11 ms | 2,6 s |
-> | **+ czekanie na ostatnią kartę** (0,87 − 0,16) | **0,71 ms** | **16,4 s** |
-> | **= komunikacja w pracującym serwerze** (20,1 s ÷ 23 tys.) | **0,87 ms** | **20,1 s** |
-> | + przerwy silnika i obliczenia (zmierzone) | | 3,9 s |
-> | **= odpowiedź** | | **24 s** |
+> | **→ zostaje czekanie na ostatnią kartę** (0,87 − 0,16) | **0,71 ms** | **16,4 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
