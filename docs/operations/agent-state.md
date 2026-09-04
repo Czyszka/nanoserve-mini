@@ -128,6 +128,14 @@ status, not a task list. Update when work moves.
   i koszt stały bez zmian, przystanki 0,183→0,085) → efekt 2,1–6,3×.
   Otwarte: konfund Qwen TP1 1202→1710 tok/s czerwiec→sierpień bez mostków
   (tylko w Q&A); cena mostka ~4,5 tys. zł wg użytkownika.
+- **Sesja serwerowa 2026-09-04 (plan gotowy, do wykonania):**
+  `docs/plans/2026-09-04-qwen-tp1-okno-mocy.md` — jeden pomiar: Qwen TP1,
+  okno mocy DCGM ≥ 340 s (ten sam bench SWE c=64 co 08-31, `--num-prompts`
+  600 → 2400; `vllm bench serve` cyklicznie powtarza 300-liniowy zbiór).
+  Cel: na slajdzie 3 prezentacji v2 zielona linia odniesienia urywa się po
+  ~80 s przy 360 s okna Kimi. Po sesji podmienić ścieżkę w `w0_moc_w_czasie`
+  (`generate_charts.py`) i przebudować `index.html`. ~55 min, restore Kimi
+  nietykalny.
 - **Sesja 2026-08-31/09-02 (latencja all-reduce + grid Qwen + profile):**
   dane w repo (`8d7ef5b`), podsumowanie z werdyktami predykcji:
   `results/summaries/2026-08-31-latencja-dostepu-summary.md`. Kluczowe:
