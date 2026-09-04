@@ -461,10 +461,10 @@ policzone z hidden 7168 × 2 B × c; HF config Kimi K2.
 
 ## Slajd 8 — Topologia kart GPU: PCIe (2 min)
 
-Status: W ITERACJI (2026-09-04, runda 9: tabela przepisana jako ciąg
-przyczynowo-skutkowy 24 s → 20,1 s → 0,87 ms → 0,71 ms → 16,3 s;
-w rundzie zmierzonej osobno rozbite trzy składniki, obliczeń w rundzie
-nie ma — są osobnym składnikiem kroku).
+Status: W ITERACJI (2026-09-04, runda 10: tabela dwukolumnowa — na jedną
+rundę i × 23 tys. rund; punkt wyjścia (24 s, 83,9%, skąd 23 tys.) w zdaniu
+nad tabelą; w rundzie zmierzonej osobno rozbite trzy składniki, obliczeń
+w rundzie nie ma — są osobnym składnikiem kroku).
 
 ### Na slajdzie
 
@@ -480,18 +480,21 @@ nie ma — są osobnym składnikiem kroku).
 > 2. Runda scala **wszystkie 8 kart**: zawsze zawiera tę najdłuższą trasę
 >    i kończy się dopiero, gdy **dotrze ostatnia karta**.
 >
-> | | |
-> |---|---:|
-> | Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone) | **24 s** |
-> | Z tego komunikacja — 83,9% czasu (slajd 6) | **20,1 s** |
-> | Rund w tej odpowiedzi | **23 tys.** |
-> | **→ jedna runda w pracującym serwerze** (20,1 s ÷ 23 tys.) | **0,87 ms** |
-> | Cała runda trasą z pkt 1, **zmierzona osobno, bez modelu** | **0,16 ms** |
-> | &nbsp;&nbsp;w tym przesył 460 KB przy 29 GB/s (zmierzone) | 0,02 ms |
-> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,03 ms |
-> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,11 ms |
-> | **→ czekanie na ostatnią kartę** (0,87 − 0,16) | **0,71 ms** |
-> | **→ czekanie w całej odpowiedzi** (0,71 ms × 23 tys.) | **16,3 s** |
+> Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = **24 s**, z czego
+> **83,9% to komunikacja** (slajd 6) = 20,1 s. Rund w tej odpowiedzi
+> **23 tys.**: silnik zgaduje tokeny z wyprzedzeniem, więc jeden krok daje
+> średnio 1,35 tokena — 190 kroków × 122 rundy.
+>
+> | | na jedną rundę | × 23 tys. rund |
+> |---|---:|---:|
+> | **cała runda trasą z pkt 1**, zmierzona osobno, bez modelu | **0,16 ms** | **3,7 s** |
+> | &nbsp;&nbsp;w tym przesył 460 KB przy 29 GB/s (zmierzone) | 0,02 ms | 0,4 s |
+> | &nbsp;&nbsp;w tym koszt stały: start rundy, uzgodnienie kart (zmierzone) | 0,03 ms | 0,7 s |
+> | &nbsp;&nbsp;w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej | 0,11 ms | 2,6 s |
+> | **+ czekanie na ostatnią kartę** (0,87 − 0,16) | **0,71 ms** | **16,4 s** |
+> | **= komunikacja w pracującym serwerze** (20,1 s ÷ 23 tys.) | **0,87 ms** | **20,1 s** |
+> | + przerwy silnika i obliczenia (zmierzone) | | 3,9 s |
+> | **= odpowiedź** | | **24 s** |
 >
 > **Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda
 > runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.**
@@ -542,7 +545,7 @@ setnych. Różnica — siedemdziesiąt jeden setnych milisekundy — to czekanie
 na ostatnią kartę. Karty nie kończą swojego kawałka liczenia w tym samym
 momencie, a runda nie ruszy bez wszystkich.
 
-Razy dwadzieścia trzy tysiące rund: szesnaście i trzy dziesiąte sekundy
+Razy dwadzieścia trzy tysiące rund: szesnaście i cztery dziesiąte sekundy
 z dwudziestu czterech. Największy pojedynczy składnik całej odpowiedzi.
 Nie mierzyliśmy go osobno — wynika z różnicy, ale nic innego w rundzie nie
 zostało.
@@ -557,7 +560,9 @@ Q&A (nie na głos): 24 s = TPOT med 94 ms × 256 (Kimi c=32, 06-11); krok
 ≈ 190; rund 190 × 122 ≈ 23 tys. (slajd 7 mówi 31 tys. przy 1 tokenie na
 krok — rząd wielkości ten sam, spekulacja niesie więcej danych na rundę).
 83,9% — profil Kimi TP8 c=16, werdykt 06-11 (gaps 10%, compute 4,6%);
-24 × 0,839 = 20,1 s; 20,1 s / 23 tys. = 0,87 ms. 0,16 ms = nccl all-reduce
+24 × 0,839 = 20,1 s; 20,1 s / 23 tys. = 0,87 ms; czekanie 20,1 − 3,7
+= 16,4 s. Przesył na rundę bez zaokrąglenia: 460 KB / 29,1 GB/s = 0,016 ms
+(stąd 0,4 s, nie 0,46 s). 0,16 ms = nccl all-reduce
 512 KB, grupa (0,1,4,5) z dwiema parami za UPI (08-31, cross-4: 162,4 µs)
 — to CAŁA runda po tej trasie, nie sam czas przejścia trasy; osobnego
 pomiaru „ile trwa jeden przeskok" nie mamy. Nie jest to też pełna ósemka.
