@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100% GPU-Util, a tylko 30% limitu mocy. Co jest wąskim gardłem?</title>
+<style>
+  :root {
+    --plane: #f0efec;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --baseline: #c3c2b7;
+    --accent: #2a78d6;   /* Kimi */
+    --green: #1e7d4f;    /* Qwen */
+    --comm: #eb6834;     /* komunikacja */
+    --comp: #52514e;     /* obliczenia */
+    --gap: #c3c2b7;      /* przerwy */
+    --critical: #d03b3b;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  [data-theme="dark"] {
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: #2c2c2a;
+    --baseline: #383835;
+    --accent: #3987e5;
+    --green: #2fa36b;
+    --comm: #ee7a4c;
+    --comp: #c3c2b7;
+    --gap: #55554f;
+    --critical: #e66767;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { background: var(--plane); color: var(--ink); font-family: var(--sans); overflow: hidden; }
+  #stage { position: absolute; inset: 0 0 40px 0; display: flex; align-items: center; justify-content: center; }
+  .slide {
+    width: 1280px; height: 720px;
+    background: var(--surface); border: 1px solid var(--hairline);
+    padding: 48px 68px 40px;
+    display: none; flex-direction: column; transform-origin: center center;
+  }
+  .slide.current { display: flex; }
+  .eyebrow { font-family: var(--mono); font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  h1 { font-size: 36px; font-weight: 650; line-height: 1.15; letter-spacing: -0.01em; }
+  h1 u { text-decoration: underline; text-decoration-color: var(--comm); text-underline-offset: 6px; text-decoration-thickness: 3px; }
+  .slide-body { flex: 1; display: flex; flex-direction: column; margin-top: 22px; gap: 16px; min-height: 0; }
+  p, li { font-size: 21px; line-height: 1.42; color: var(--ink); }
+  .secondary { color: var(--ink-2); }
+  .small { font-size: 18px; }
+  strong { font-weight: 650; }
+  ul, ol { padding-left: 28px; }
+  li { margin-bottom: 6px; }
+  .dense p, .dense li { font-size: 18px; line-height: 1.38; }
+  .dense .slide-body { gap: 12px; margin-top: 16px; }
+  .dense ol { padding-left: 24px; }
+  .dense h1 { font-size: 31px; }
+  table.xs th, table.xs td { font-size: 15px; padding: 4px 9px; line-height: 1.25; }
+  .topo { display: flex; gap: 22px; align-items: flex-start; flex: 0 0 auto; }
+  .topo .figure { flex: 0 0 auto; height: 168px; }
+  .topo ol, .topo p { flex: 1; min-width: 0; }
+  .topo li, .topo p { font-size: 16.5px; line-height: 1.35; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td { font-size: 18px; line-height: 1.32; text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--baseline); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.tight th, table.tight td { font-size: 16px; padding: 5px 9px; }
+  td.sub { padding-left: 34px; color: var(--ink-2); }
+  tr.key td { font-weight: 650; }
+
+  .punch { border: 1px solid var(--baseline); border-left: 4px solid var(--ink); padding: 12px 18px; }
+  .punch p { font-size: 20px; line-height: 1.38; font-weight: 650; }
+  .punch p + p { margin-top: 4px; }
+  .punch .label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; font-weight: 500; }
+  .punch p.plain { font-weight: 400; font-size: 18px; color: var(--ink); }
+
+  .figure { display: flex; justify-content: center; align-items: center; min-height: 0; overflow: hidden; }
+  .figure svg { max-width: 100%; max-height: 100%; height: auto; }
+  .figure img { max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--hairline); }
+  .fig-grow { flex: 1; }
+  .cols { display: flex; gap: 32px; min-height: 0; }
+  .cols > div { flex: 1; min-width: 0; }
+  .cols .figure { height: 100%; }
+  .caption { font-size: 15px; color: var(--muted); text-align: center; }
+
+  .formula { border: 1.5px solid var(--baseline); padding: 12px 22px; font-size: 24px; font-weight: 650; line-height: 1.45; }
+  .formula.small-f { font-size: 19px; padding: 8px 18px; }
+  .c-gap { color: var(--muted); }
+  .c-comm { color: var(--comm); }
+  .c-comp { color: var(--comp); }
+  .spacer { flex: 1; }
+
+  .title-slide { justify-content: center; }
+  .title-slide h1 { font-size: 52px; max-width: 1100px; }
+  .title-slide .subtitle { margin-top: 34px; font-size: 24px; color: var(--ink-2); }
+
+  #hud { position: absolute; left: 0; right: 0; bottom: 0; height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-family: var(--mono); font-size: 13px; color: var(--muted); user-select: none; }
+
+  .diag text { font-family: var(--sans); fill: var(--ink); }
+  .diag .lbl { fill: var(--ink-2); }
+  .diag .mut { fill: var(--muted); }
+  .diag .box { fill: none; stroke: var(--baseline); stroke-width: 1.5; }
+  .diag .wire { stroke: var(--baseline); stroke-width: 1.5; fill: none; }
+  .diag .brace { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide.current { animation: fadein 140ms ease-out; }
+    @keyframes fadein { from { opacity: 0.4; } to { opacity: 1; } }
+  }
+</style>
+</head>
+<body>
+<main id="stage">
+
+<!-- ================================================== SLAJD 0 -->
+<section class="slide title-slide">
+  <h1>100% GPU-Util, a tylko 30% limitu mocy.<br>Co jest wąskim gardłem?</h1>
+  <p class="subtitle">Badania wydajnościowe serwera 8×H200 i ich efekty — studium przypadku</p>
+</section>
+
+<!-- ================================================== SLAJD 1 -->
+<section class="slide">
+  <h1>Stanowisko pomiarowe</h1>
+  <div class="slide-body">
+    <div class="figure">
+      <svg class="diag" viewBox="0 0 1080 262" width="1040" role="img" aria-label="Osiem kart GPU; Kimi zajmuje wszystkie osiem, Qwen mieści się na jednej i może być uruchomiony na 1, 2, 4 lub 8">
+        <path class="brace" d="M42 78 L42 66 L1048 66 L1048 78"></path>
+        <text x="545" y="52" text-anchor="middle" font-size="18" font-weight="650">Kimi-K2.6 — 554 GB wag → tylko na 8 kartach</text>
+        <g font-size="16">
+          <rect class="box" x="42" y="92" width="106" height="44"></rect><text x="95" y="120" text-anchor="middle">karta 0</text>
+          <rect class="box" x="171" y="92" width="106" height="44"></rect><text x="224" y="120" text-anchor="middle">karta 1</text>
+          <rect class="box" x="300" y="92" width="106" height="44"></rect><text x="353" y="120" text-anchor="middle">karta 2</text>
+          <rect class="box" x="429" y="92" width="106" height="44"></rect><text x="482" y="120" text-anchor="middle">karta 3</text>
+          <rect class="box" x="558" y="92" width="106" height="44"></rect><text x="611" y="120" text-anchor="middle">karta 4</text>
+          <rect class="box" x="687" y="92" width="106" height="44"></rect><text x="740" y="120" text-anchor="middle">karta 5</text>
+          <rect class="box" x="816" y="92" width="106" height="44"></rect><text x="869" y="120" text-anchor="middle">karta 6</text>
+          <rect class="box" x="945" y="92" width="103" height="44"></rect><text x="996" y="120" text-anchor="middle">karta 7</text>
+        </g>
+        <g stroke="var(--green)" stroke-width="2" fill="none">
+          <path d="M42 150 L42 160 L148 160 L148 150"></path>
+          <path d="M42 178 L42 188 L277 188 L277 178"></path>
+          <path d="M42 206 L42 216 L535 216 L535 206"></path>
+          <path d="M42 234 L42 244 L1048 244 L1048 234"></path>
+        </g>
+        <g font-size="15" fill="var(--green)" font-weight="650">
+          <text x="160" y="165">1 GPU</text>
+          <text x="289" y="193">2 GPU</text>
+          <text x="547" y="221">4 GPU</text>
+          <text x="985" y="232">8 GPU</text>
+        </g>
+      </svg>
+    </div>
+    <p class="caption" style="font-size:17px; color:var(--green)">Qwen3.6-35B — 67 GB wag → mieści się na jednej karcie, więc do testów można go uruchomić na 1, 2, 4 lub 8</p>
+    <ul>
+      <li>serwer: 2× Intel Xeon Gold 6530, 8× NVIDIA H200 NVL (143 GB każda); karty połączone magistralą PCIe 5.0 — stan wyjściowy</li>
+      <li>silnik: vLLM w kontenerach Docker</li>
+      <li>obciążenie: własny benchmark — zadania programistyczne inspirowane SWE-bench</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 2 -->
+<section class="slide">
+  <h1>Anomalia</h1>
+  <div class="slide-body">
+    <div class="cols" style="flex:1">
+      <div class="figure" style="flex:0.9"><img src="{{PNG:nvidia_smi}}" alt="Zrzut nvidia-smi: 8 kart H200, GPU-Util 100%, pobór ok. 175 W z 600 W"></div>
+      <div class="figure" style="flex:1.3">{{SVG:w0_moc_w_czasie}}</div>
+    </div>
+    <div class="punch">
+      <p>Osiem kart z Kimi: 100% obciążenia — a pobór mocy 111–185 W z 600 W, przez cały benchmark. Karta, która naprawdę liczy: 400–600 W.</p>
+    </div>
+    <p class="secondary">Kto widział coś takiego u siebie?</p>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 3 -->
+<section class="slide">
+  <h1>Druga anomalia: więcej kart = wolniej</h1>
+  <div class="slide-body">
+    <p>Model za duży na jedną kartę tniemy na N kart — każda liczy swój kawałek (<strong>tensor parallelism, TP=N</strong>). Qwen mieści się na jednej, więc możemy go uruchomić na 1, 2, 4 i 8 kartach i porównać.</p>
+    <div class="figure fig-grow">{{SVG:w1_krzywa_tp}}</div>
+    <div class="punch"><p>Dokładanie kart nie zawsze zwiększa przepustowość — od czterech ją zmniejsza.</p></div>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 4 -->
+<section class="slide">
+  <h1>Wykorzystanie zasobów GPU</h1>
+  <div class="slide-body">
+    <p>Pomiar: <strong>DCGM</strong> — liczniki sprzętowe NVIDIA, <code>dcgmi dmon</code> z hosta, próbka co 1 s, bez zmian w kontenerach i bez zatrzymywania serwera</p>
+    <div class="figure fig-grow">{{SVG:w2_zasoby}}</div>
+    <div class="punch"><p>Żaden element karty nie pracuje na granicy możliwości.</p></div>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 5 -->
+<section class="slide">
+  <h1>Jeden token = jeden krok. Z czego składa się krok?</h1>
+  <div class="slide-body" style="gap:14px">
+    <div class="figure">
+      <svg class="diag" viewBox="0 0 1080 230" width="1040" role="img" aria-label="Oś czasu jednego kroku: przerwa, obliczenia, komunikacja, obliczenia, komunikacja, …, przerwa">
+        <path class="brace" d="M120 58 L120 46 L935 46 L935 58"></path>
+        <text x="527" y="36" text-anchor="middle" font-size="16" class="lbl">kernele — dla GPU-Util wszystko to = „zajęte"</text>
+        <rect x="30" y="68" width="86" height="52" fill="var(--gap)"></rect>
+        <rect x="120" y="68" width="70" height="52" fill="var(--comp)"></rect>
+        <rect x="194" y="68" width="230" height="52" fill="var(--comm)"></rect>
+        <rect x="428" y="68" width="70" height="52" fill="var(--comp)"></rect>
+        <rect x="502" y="68" width="230" height="52" fill="var(--comm)"></rect>
+        <rect x="736" y="68" width="70" height="52" fill="var(--comp)"></rect>
+        <rect x="810" y="68" width="125" height="52" fill="var(--comm)"></rect>
+        <text x="968" y="101" font-size="20" class="mut">…</text>
+        <rect x="994" y="68" width="60" height="52" fill="var(--gap)"></rect>
+        <line x1="30" y1="150" x2="1050" y2="150" class="wire"></line>
+        <path d="M1054 150 l-12 -5 v10 z" fill="var(--baseline)"></path>
+        <text x="540" y="176" text-anchor="middle" class="mut" font-size="15">czas →</text>
+        <g font-size="16">
+          <rect x="30" y="184" width="18" height="14" fill="var(--comp)"></rect><text x="56" y="196" class="lbl"><tspan font-weight="650" fill="var(--ink)">obliczenia</tspan> (mnożenia macierzy)</text>
+          <rect x="330" y="184" width="18" height="14" fill="var(--comm)"></rect><text x="356" y="196" class="lbl"><tspan font-weight="650" fill="var(--ink)">komunikacja</tspan> (karty wymieniają wyniki i czekają na siebie)</text>
+          <rect x="30" y="210" width="18" height="14" fill="var(--gap)"></rect><text x="56" y="222" class="lbl"><tspan font-weight="650" fill="var(--ink)">przerwy</tspan> (silnik na CPU przygotowuje następny krok)</text>
+        </g>
+      </svg>
+    </div>
+    <div class="formula">
+      czas kroku = <span class="c-gap">przerwy (silnik na CPU)</span><br>
+      + <span class="c-comm">komunikacja (liczba rund × czas jednej rundy)</span><br>
+      + <span class="c-comp">obliczenia</span>
+    </div>
+    <p>GPU-Util liczy, przez jaki % czasu na karcie trwał <em>jakikolwiek</em> kernel — nie, co ten kernel robił.</p>
+    <p>Kernel, który czeka na synchronizację danych, i kernel, który wykonuje obliczenia — dla GPU-Util <strong>oba liczą się do zajętości</strong>.</p>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 6 -->
+<section class="slide dense">
+  <h1>Rozkład czasu kroku</h1>
+  <div class="slide-body">
+    <p>Pomiar: <strong>torch profiler</strong> — rejestruje każdą operację karty razem ze znacznikiem czasu; na podstawie zapisu można określić, ile czasu zajmuje każdy składnik kroku</p>
+    <div class="figure" style="height:210px">{{SVG:w3_profil}}</div>
+    <div class="formula small-f">
+      czas kroku = <span class="c-gap">przerwy (silnik na CPU)</span> + <span class="c-comm">komunikacja (liczba rund × czas jednej rundy)</span> + <span class="c-comp">obliczenia</span>
+    </div>
+    <div class="punch">
+      <p>84% czasu pomiaru to komunikacja między kartami. Obliczenia: 5%.</p>
+    </div>
+    <div class="punch">
+      <div class="label">Prawo Amdahla</div>
+      <p>Nawet gdyby jakiś składnik zniknął zupełnie, krok skróci się tylko o tyle, ile ten składnik zajmował.</p>
+      <p class="plain">Bez obliczeń (5%) krok trwałby 95% tego, co teraz — zysk najwyżej <strong>1,05×</strong> (100 ÷ 95).<br>
+      Bez komunikacji (84%) krok trwałby 16% — zysk najwyżej <strong>6×</strong> (100 ÷ 16).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 7 -->
+<section class="slide dense">
+  <h1>Komunikacja między kartami: <u>liczba rund</u> × czas jednej rundy</h1>
+  <div class="slide-body">
+    <div class="figure" style="height:172px; flex:0 0 auto">
+      <svg class="diag" viewBox="0 0 1080 190" width="1060" role="img" aria-label="Jedna warstwa: wejście, cztery karty liczą blok uwagi, scalenie, cztery karty liczą FFN/MoE, scalenie, wejście następnej warstwy; 2 scalenia × 61 warstw = 122 rundy">
+        <rect class="box" x="10" y="44" width="96" height="56"></rect>
+        <text x="58" y="67" text-anchor="middle" font-size="13">wejście</text><text x="58" y="85" text-anchor="middle" font-size="13">warstwy k</text>
+        <line class="wire" x1="106" y1="72" x2="134" y2="72"></line>
+        <g font-size="12">
+          <rect class="box" x="134" y="12" width="160" height="26"></rect><text x="214" y="30" text-anchor="middle">karta 0 — swój kawałek</text>
+          <rect class="box" x="134" y="42" width="160" height="26"></rect><text x="214" y="60" text-anchor="middle">karta 1 — swój kawałek</text>
+          <rect class="box" x="134" y="72" width="160" height="26"></rect><text x="214" y="90" text-anchor="middle">karta 2 — swój kawałek</text>
+          <rect class="box" x="134" y="102" width="160" height="26"></rect><text x="214" y="120" text-anchor="middle">karta 3 — swój kawałek</text>
+        </g>
+        <text x="214" y="148" text-anchor="middle" font-size="14" font-weight="650">blok uwagi</text>
+        <g stroke="var(--comm)" stroke-width="2" fill="none">
+          <path d="M294 25 L420 115 M294 55 L420 85 M294 85 L420 55 M294 115 L420 25 M294 25 L420 25 M294 115 L420 115"></path>
+        </g>
+        <rect x="320" y="52" width="76" height="40" fill="var(--comm)"></rect>
+        <text x="358" y="69" text-anchor="middle" font-size="12" fill="#fcfcfb" font-weight="650">SCALENIE</text><text x="358" y="84" text-anchor="middle" font-size="11" fill="#fcfcfb">(all-reduce)</text>
+        <g font-size="12">
+          <rect class="box" x="420" y="12" width="160" height="26"></rect><text x="500" y="30" text-anchor="middle">karta 0 — swój kawałek</text>
+          <rect class="box" x="420" y="42" width="160" height="26"></rect><text x="500" y="60" text-anchor="middle">karta 1 — swój kawałek</text>
+          <rect class="box" x="420" y="72" width="160" height="26"></rect><text x="500" y="90" text-anchor="middle">karta 2 — swój kawałek</text>
+          <rect class="box" x="420" y="102" width="160" height="26"></rect><text x="500" y="120" text-anchor="middle">karta 3 — swój kawałek</text>
+        </g>
+        <text x="500" y="148" text-anchor="middle" font-size="14" font-weight="650">blok FFN/MoE</text>
+        <g stroke="var(--comm)" stroke-width="2" fill="none">
+          <path d="M580 25 L706 115 M580 55 L706 85 M580 85 L706 55 M580 115 L706 25 M580 25 L706 25 M580 115 L706 115"></path>
+        </g>
+        <rect x="606" y="52" width="76" height="40" fill="var(--comm)"></rect>
+        <text x="644" y="69" text-anchor="middle" font-size="12" fill="#fcfcfb" font-weight="650">SCALENIE</text><text x="644" y="84" text-anchor="middle" font-size="11" fill="#fcfcfb">(all-reduce)</text>
+        <rect class="box" x="706" y="44" width="104" height="56"></rect>
+        <text x="758" y="67" text-anchor="middle" font-size="13">wejście</text><text x="758" y="85" text-anchor="middle" font-size="13">warstwy k+1</text>
+        <g font-size="15">
+          <text x="945" y="52" text-anchor="middle" class="lbl">2 scalenia × 61 warstw =</text>
+          <text x="945" y="82" text-anchor="middle" font-size="22" font-weight="650" fill="var(--comm)">122 rundy</text>
+          <text x="945" y="106" text-anchor="middle" class="lbl">na każdy token</text>
+        </g>
+        <text x="540" y="182" text-anchor="middle" font-size="15" class="lbl">scalenie jest warunkiem przejścia dalej — bez niego żadna karta nie policzy warstwy k+1</text>
+      </svg>
+    </div>
+    <p>Ile danych scala jedna runda? Po jednym wektorze na każdego użytkownika obsługiwanego naraz. Rund jest 122 na token; krótka odpowiedź to 256 tokenów (~150 słów):</p>
+    <table class="tight">
+      <thead><tr><th class="num">użytkowników naraz</th><th class="num">na jedną rundę</th><th class="num">na jeden token (× 122 rund)</th><th class="num">na wszystkie odpowiedzi naraz (× 256 tokenów)</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="num">14 KB</td><td class="num">1,7 MB</td><td class="num">0,4 GB</td></tr>
+        <tr><td class="num">32</td><td class="num">460 KB</td><td class="num">56 MB</td><td class="num"><strong>14 GB</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Każda runda kosztuje: <strong>stałe</strong> (start, uzgodnienie, czekanie na najwolniejszą kartę — niezależnie od ilości danych) <strong>+ przesył</strong> (zależy od ilości danych i od łącza)</p>
+    <p>Płynny tekst dla użytkownika ≈ 10 tokenów/s → <strong>100 ms na token</strong> → 100 ms / 122 rund = <strong>&lt; 1 ms na rundę</strong> (razem z liczeniem)</p>
+    <div class="punch"><p>Przy 32 użytkownikach, zanim każdy dostanie krótką odpowiedź, karty muszą zsynchronizować 14 GB — w 31 tysiącach rund (122 × 256), każda ze stałym kosztem i każda w czasie poniżej milisekundy.</p></div>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 8 -->
+<section class="slide dense">
+  <h1>Topologia kart GPU: PCIe</h1>
+  <div class="slide-body" style="gap:10px; margin-top:12px">
+    <div class="topo">
+      <div class="figure"><svg class="diag" viewBox="0 0 1080 230" width="790" role="img" aria-label="Topologia: dwa procesory połączone UPI, pod każdym dwa switche PCIe 5.0, pod switchami pary kart">
+            <rect class="box" x="240" y="14" width="180" height="44"></rect><text x="330" y="42" text-anchor="middle" font-size="17">procesor 0</text>
+            <rect class="box" x="660" y="14" width="180" height="44"></rect><text x="750" y="42" text-anchor="middle" font-size="17">procesor 1</text>
+            <line class="wire" x1="420" y1="36" x2="660" y2="36"></line>
+            <text x="540" y="28" text-anchor="middle" font-size="15" class="lbl">UPI</text>
+            <g font-size="14">
+              <rect class="box" x="120" y="98" width="150" height="38"></rect><text x="195" y="122" text-anchor="middle">switch PCIe 5.0</text>
+              <rect class="box" x="330" y="98" width="150" height="38"></rect><text x="405" y="122" text-anchor="middle">switch PCIe 5.0</text>
+              <rect class="box" x="600" y="98" width="150" height="38"></rect><text x="675" y="122" text-anchor="middle">switch PCIe 5.0</text>
+              <rect class="box" x="810" y="98" width="150" height="38"></rect><text x="885" y="122" text-anchor="middle">switch PCIe 5.0</text>
+            </g>
+            <line class="wire" x1="300" y1="58" x2="195" y2="98"></line><line class="wire" x1="360" y1="58" x2="405" y2="98"></line>
+            <line class="wire" x1="720" y1="58" x2="675" y2="98"></line><line class="wire" x1="780" y1="58" x2="885" y2="98"></line>
+            <g font-size="14">
+              <rect class="box" x="105" y="176" width="80" height="36"></rect><text x="145" y="199" text-anchor="middle">karta 0</text>
+              <rect class="box" x="195" y="176" width="80" height="36"></rect><text x="235" y="199" text-anchor="middle">karta 1</text>
+              <rect class="box" x="315" y="176" width="80" height="36"></rect><text x="355" y="199" text-anchor="middle">karta 2</text>
+              <rect class="box" x="405" y="176" width="80" height="36"></rect><text x="445" y="199" text-anchor="middle">karta 3</text>
+              <rect class="box" x="585" y="176" width="80" height="36"></rect><text x="625" y="199" text-anchor="middle">karta 4</text>
+              <rect class="box" x="675" y="176" width="80" height="36"></rect><text x="715" y="199" text-anchor="middle">karta 5</text>
+              <rect class="box" x="795" y="176" width="80" height="36"></rect><text x="835" y="199" text-anchor="middle">karta 6</text>
+              <rect class="box" x="885" y="176" width="80" height="36"></rect><text x="925" y="199" text-anchor="middle">karta 7</text>
+            </g>
+            <line class="wire" x1="160" y1="136" x2="145" y2="176"></line><line class="wire" x1="230" y1="136" x2="235" y2="176"></line>
+            <line class="wire" x1="370" y1="136" x2="355" y2="176"></line><line class="wire" x1="440" y1="136" x2="445" y2="176"></line>
+            <line class="wire" x1="640" y1="136" x2="625" y2="176"></line><line class="wire" x1="710" y1="136" x2="715" y2="176"></line>
+            <line class="wire" x1="850" y1="136" x2="835" y2="176"></line><line class="wire" x1="920" y1="136" x2="925" y2="176"></line>
+          </svg></div>
+      <ol>
+        <li>Karty <strong>nie mają bezpośredniego łącza</strong>. Przesył z karty 0 do karty 4 idzie: switch → procesor → UPI → procesor → switch. Każde urządzenie po drodze <strong>odbiera całą porcję i dopiero wtedy wysyła ją dalej</strong>.</li>
+        <li>Runda scala <strong>wszystkie 8 kart</strong>: zawsze zawiera tę najdłuższą trasę i kończy się dopiero, gdy <strong>dotrze ostatnia karta</strong>.</li>
+      </ol>
+    </div>
+    <p style="font-size:16px">Zmierzone: odpowiedź 256 tokenów dla 32 użytkowników = <strong>24,10 s</strong>, z czego <strong>83,9% to komunikacja</strong> (slajd 6) = 20,2 s. Rund w tej odpowiedzi <strong>23 tys.</strong>: silnik zgaduje tokeny z wyprzedzeniem, więc jeden krok daje średnio 1,35 tokena — 190 kroków × 122 rundy.</p>
+    <table class="xs">
+      <thead><tr><th></th><th class="num">na jedną rundę</th><th class="num">w całej odpowiedzi</th></tr></thead>
+      <tbody>
+        <tr><td>Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone)</td><td class="num"></td><td class="num"><strong>24,10 s</strong></td></tr>
+        <tr><td>Z tego komunikacja — <strong>83,9%</strong> czasu (slajd 6), w podziale na 23 172 rundy</td><td class="num"><strong>0,873 ms</strong></td><td class="num"><strong>20,22 s</strong></td></tr>
+        <tr><td>Czas komunikacji trasą z pkt 1, <strong>zmierzony osobno — bez obliczeń, karty startują równo</strong></td><td class="num"><strong>0,238 ms</strong></td><td class="num">5,51 s</td></tr>
+        <tr><td class="sub">w tym przesył 459 kB przy 29,1 GB/s (zmierzone)</td><td class="num">0,016 ms</td><td class="num">0,37 s</td></tr>
+        <tr><td class="sub">w tym koszt stały: start rundy, uzgodnienie kart (zmierzone)</td><td class="num">0,039 ms</td><td class="num">0,89 s</td></tr>
+        <tr><td class="sub">w tym przystanki po drodze: każdy switch i procesor odbiera i wysyła dalej</td><td class="num">0,183 ms</td><td class="num">4,25 s</td></tr>
+        <tr class="key"><td>→ zostaje czekanie na ostatnią kartę (0,873 − 0,238)</td><td class="num">0,635 ms</td><td class="num">14,71 s</td></tr>
+      </tbody>
+    </table>
+    <div class="punch"><p>Wąskim gardłem nie jest przepustowość PCIe, tylko czas, jaki każda runda spędza na najdłuższej trasie i na czekaniu na ostatnią kartę.</p></div>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 9 -->
+<section class="slide dense">
+  <h1>Zmiana: mostki NVLink — bezpośrednie łącze między kartami</h1>
+  <div class="slide-body" style="gap:10px; margin-top:12px">
+    <div class="topo">
+      <div class="figure" style="height:176px"><svg class="diag" viewBox="0 0 1080 300" width="620" role="img" aria-label="Ta sama topologia z dorysowanymi mostkami NVLink: karty 0–3 spięte w czwórkę, karty 4–7 w drugą; między czwórkami nadal PCIe i UPI">
+            <rect class="box" x="240" y="14" width="180" height="44"></rect><text x="330" y="42" text-anchor="middle" font-size="17">procesor 0</text>
+            <rect class="box" x="660" y="14" width="180" height="44"></rect><text x="750" y="42" text-anchor="middle" font-size="17">procesor 1</text>
+            <line class="wire" x1="420" y1="36" x2="660" y2="36"></line>
+            <text x="540" y="28" text-anchor="middle" font-size="15" class="lbl">UPI</text>
+            <g font-size="14">
+              <rect class="box" x="120" y="98" width="150" height="38"></rect><text x="195" y="122" text-anchor="middle">switch PCIe 5.0</text>
+              <rect class="box" x="330" y="98" width="150" height="38"></rect><text x="405" y="122" text-anchor="middle">switch PCIe 5.0</text>
+              <rect class="box" x="600" y="98" width="150" height="38"></rect><text x="675" y="122" text-anchor="middle">switch PCIe 5.0</text>
+              <rect class="box" x="810" y="98" width="150" height="38"></rect><text x="885" y="122" text-anchor="middle">switch PCIe 5.0</text>
+            </g>
+            <line class="wire" x1="300" y1="58" x2="195" y2="98"></line><line class="wire" x1="360" y1="58" x2="405" y2="98"></line>
+            <line class="wire" x1="720" y1="58" x2="675" y2="98"></line><line class="wire" x1="780" y1="58" x2="885" y2="98"></line>
+            <g font-size="14">
+              <rect class="box" x="105" y="176" width="80" height="36"></rect><text x="145" y="199" text-anchor="middle">karta 0</text>
+              <rect class="box" x="195" y="176" width="80" height="36"></rect><text x="235" y="199" text-anchor="middle">karta 1</text>
+              <rect class="box" x="315" y="176" width="80" height="36"></rect><text x="355" y="199" text-anchor="middle">karta 2</text>
+              <rect class="box" x="405" y="176" width="80" height="36"></rect><text x="445" y="199" text-anchor="middle">karta 3</text>
+              <rect class="box" x="585" y="176" width="80" height="36"></rect><text x="625" y="199" text-anchor="middle">karta 4</text>
+              <rect class="box" x="675" y="176" width="80" height="36"></rect><text x="715" y="199" text-anchor="middle">karta 5</text>
+              <rect class="box" x="795" y="176" width="80" height="36"></rect><text x="835" y="199" text-anchor="middle">karta 6</text>
+              <rect class="box" x="885" y="176" width="80" height="36"></rect><text x="925" y="199" text-anchor="middle">karta 7</text>
+            </g>
+            <line class="wire" x1="160" y1="136" x2="145" y2="176"></line><line class="wire" x1="230" y1="136" x2="235" y2="176"></line>
+            <line class="wire" x1="370" y1="136" x2="355" y2="176"></line><line class="wire" x1="440" y1="136" x2="445" y2="176"></line>
+            <line class="wire" x1="640" y1="136" x2="625" y2="176"></line><line class="wire" x1="710" y1="136" x2="715" y2="176"></line>
+            <line class="wire" x1="850" y1="136" x2="835" y2="176"></line><line class="wire" x1="920" y1="136" x2="925" y2="176"></line>
+            <!-- mostki NVLink: pelna siatka w kazdej czworce -->
+            <g stroke="var(--accent)" stroke-width="3" fill="none">
+              <path d="M145 212 C145 240, 235 240, 235 212"></path>
+              <path d="M235 212 C235 240, 355 240, 355 212"></path>
+              <path d="M355 212 C355 240, 445 240, 445 212"></path>
+              <path d="M145 212 C145 262, 355 262, 355 212"></path>
+              <path d="M235 212 C235 262, 445 262, 445 212"></path>
+              <path d="M145 212 C145 284, 445 284, 445 212"></path>
+              <path d="M625 212 C625 240, 715 240, 715 212"></path>
+              <path d="M715 212 C715 240, 835 240, 835 212"></path>
+              <path d="M835 212 C835 240, 925 240, 925 212"></path>
+              <path d="M625 212 C625 262, 835 262, 835 212"></path>
+              <path d="M715 212 C715 262, 925 262, 925 212"></path>
+              <path d="M625 212 C625 284, 925 284, 925 212"></path>
+            </g>
+            <text x="295" y="296" text-anchor="middle" font-size="15" fill="var(--accent)" font-weight="650">mostek NVLink: karty 0–3</text>
+            <text x="775" y="296" text-anchor="middle" font-size="15" fill="var(--accent)" font-weight="650">mostek NVLink: karty 4–7</text>
+          </svg></div>
+      <p>Zamontowaliśmy <strong>dwa mostki 4-drożne</strong>: karty 0–3 i karty 4–7. Mostek to <strong>własny przewód między każdą parą kart w czwórce</strong>: przekazanie wewnątrz czwórki idzie prosto z karty do karty, <strong>bez żadnego przystanku</strong> — nie ma switcha ani procesora, który musiałby odebrać porcję i wysłać ją dalej. Przystanki zostały tylko na przejściach <strong>między czwórkami</strong>, gdzie droga jest stara.</p>
+    </div>
+    <table class="xs">
+      <thead><tr><th></th><th class="num">przed: PCIe</th><th class="num">po: mostki NVLink</th></tr></thead>
+      <tbody>
+        <tr><td>Odpowiedź 256 tokenów dla 32 użytkowników (zmierzone)</td><td class="num"><strong>24,10 s</strong></td><td class="num"><strong>11,50 s</strong></td></tr>
+        <tr><td>Jedna runda w pracującym serwerze</td><td class="num"><strong>0,873 ms</strong></td><td class="num"><strong>0,452 ms</strong></td></tr>
+        <tr><td class="sub">w tym komunikacja trasą, zmierzona osobno (8 kart, 459 kB)</td><td class="num">0,238 ms</td><td class="num">0,142 ms</td></tr>
+        <tr><td class="sub" style="padding-left:56px">w tym przesył 459 kB łączem między czwórkami (29,1 GB/s — bez zmian)</td><td class="num">0,016 ms</td><td class="num">0,016 ms</td></tr>
+        <tr><td class="sub" style="padding-left:56px">w tym koszt stały: start rundy, uzgodnienie kart (zmierzone)</td><td class="num">0,039 ms</td><td class="num">0,041 ms</td></tr>
+        <tr><td class="sub" style="padding-left:56px">w tym przystanki po drodze</td><td class="num">0,183 ms</td><td class="num"><strong>0,085 ms</strong></td></tr>
+        <tr><td class="sub">w tym czekanie na ostatnią kartę</td><td class="num">0,635 ms</td><td class="num"><strong>0,310 ms</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="punch"><p>Mostki nie przyspieszyły przesyłu ani startu rundy. Usunęły połowę przystanków — a krótsza runda to o połowę krótsze czekanie na ostatnią kartę. Odpowiedź 2,1× szybciej.</p></div>
+  </div>
+</section>
+
+<!-- ================================================== SLAJD 10 -->
+<section class="slide dense">
+  <h1>Efekt: przepustowość przed i po mostkach</h1>
+  <div class="slide-body">
+    <div class="cols" style="height:300px; flex:0 0 auto">
+      <div class="figure" style="flex:1.65">{{SVG:w5a_qwen}}</div>
+      <div class="figure" style="flex:1">{{SVG:w5b_kimi}}</div>
+    </div>
+    <table class="tight">
+      <thead><tr><th></th><th class="num">przed</th><th class="num">po</th><th class="num">zysk</th></tr></thead>
+      <tbody>
+        <tr><td>Qwen, 4 karty, 64 użytkowników</td><td class="num">680 tok/s</td><td class="num">2129 tok/s</td><td class="num"><strong>3,1×</strong></td></tr>
+        <tr><td>Qwen, 8 kart, 64 użytkowników</td><td class="num">257 tok/s</td><td class="num">1625 tok/s</td><td class="num"><strong>6,3×</strong></td></tr>
+        <tr><td>Kimi, 8 kart, 32 użytkowników</td><td class="num">285 tok/s</td><td class="num">608 tok/s</td><td class="num"><strong>2,1×</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Łączny koszt: <strong>2 mostki × ~4,5 tys. zł ≈ 9 tys. zł na serwer</strong>.</p>
+  </div>
+</section>
+
+<!-- ================================================== ZAPAS Z1 -->
+<section class="slide">
+  <div class="eyebrow">Zapas Z1</div>
+  <h1>Qwen po NVLinku: krzywa liczby kart</h1>
+  <div class="slide-body">
+    <p>32 użytkowników naraz, tok/s łącznie (sesja 08-31, benche ciepłe):</p>
+    <table>
+      <thead><tr><th class="num">karty</th><th class="num">1</th><th class="num">2</th><th class="num">4</th><th class="num">8</th></tr></thead>
+      <tbody>
+        <tr><td class="num">tok/s</td><td class="num">2015</td><td class="num">2467</td><td class="num"><strong>2990</strong></td><td class="num">1974</td></tr>
+      </tbody>
+    </table>
+    <p>4 karty przestały być karą: 1,48× względem jednej karty (era PCIe: 0,57×). 8 kart nadal poniżej jednej — runda musi przejść między czwórkami.</p>
+    <p class="secondary small">Konfund: 1 karta nie dotyka mostków, a między czerwcem a sierpniem urosła z 1202 do 1710 tok/s przy 64 użytkownikach (+42%); kara zimnego benchu tłumaczy 10–15%, reszta niewyjaśniona. Porównania względem 1 karty tej samej ery są odporne na ten dryf.</p>
+  </div>
+</section>
+
+<!-- ================================================== ZAPAS Z2 -->
+<section class="slide">
+  <div class="eyebrow">Zapas Z2</div>
+  <h1>Qwen po NVLinku: udział komunikacji w kroku</h1>
+  <div class="slide-body">
+    <p>torch profiler, 32 użytkowników naraz — udział komunikacji w czasie pomiaru:</p>
+    <table>
+      <thead><tr><th class="num">karty</th><th class="num">1</th><th class="num">2 (czwórka)</th><th class="num">4 (czwórka)</th><th class="num">8 (dwie czwórki)</th></tr></thead>
+      <tbody>
+        <tr><td class="num">komunikacja</td><td class="num">0%</td><td class="num">12%</td><td class="num">18%</td><td class="num"><strong>58%</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Skok z 18% na 58% przy przejściu z jednej czwórki na dwie — to jest koszt drogi między czwórkami.</p>
+    <p class="secondary small">Jakościowo: kontrola narzutu profilera dla tych przebiegów nie przeszła (ITL profilowany vs nie poza pasmem ±15%), więc liczby traktujemy jako kierunek, nie pomiar.</p>
+  </div>
+</section>
+
+<!-- ================================================== ZAPAS Z3 -->
+<section class="slide">
+  <div class="eyebrow">Zapas Z3</div>
+  <h1>Kimi po NVLinku: rozkład czasu kroku</h1>
+  <div class="slide-body">
+    <table>
+      <thead><tr><th>składnik kroku</th><th class="num">PCIe (06-11)</th><th class="num">NVLink (08-03)</th></tr></thead>
+      <tbody>
+        <tr><td><span class="c-comm"><strong>komunikacja</strong></span></td><td class="num">83,9%</td><td class="num"><strong>61,1%</strong></td></tr>
+        <tr><td><span class="c-comp"><strong>obliczenia</strong></span></td><td class="num">4,6%</td><td class="num"><strong>30,2%</strong></td></tr>
+        <tr><td><span class="c-gap"><strong>przerwy</strong></span> + inne</td><td class="num">11,5%</td><td class="num">8,7%</td></tr>
+      </tbody>
+    </table>
+    <p>Komunikacja skróciła się ~2,9×, obliczenia zostały takie same — cały zysk 2,1× przyszedł z komunikacji. Prawo Amdahla: 1 / (0,161 + 0,839 / 2,9) = 2,2× (zmierzone 2,1×).</p>
+    <p>Komunikacja to nadal 61% kroku → dalszy sufit 1 / (1 − 0,61) = 2,6× (pełna siatka 8 kart / NVSwitch).</p>
+    <p class="secondary small">Kontrola narzutu profilera: −9%, w paśmie ±15% — profil ilościowy. Symetria kart 0 i 7: 61,1% / 59,7%.</p>
+  </div>
+</section>
+
+<!-- ================================================== ZAPAS Z4 -->
+<section class="slide">
+  <div class="eyebrow">Zapas Z4</div>
+  <h1>Kiedy mostek NVLink 4-drożny ma sens?</h1>
+  <div class="slide-body">
+    <table>
+      <thead><tr><th>sytuacja</th><th>spodziewany zysk</th><th>decyzja</th></tr></thead>
+      <tbody>
+        <tr><td>model mieści się na 1–2 kartach</td><td>≈ 0 — komunikacji prawie nie ma</td><td><strong>nie</strong></td></tr>
+        <tr><td>pojedynczy czat, jeden użytkownik naraz</td><td>≤ 1,3× — porcje małe, rządzi koszt stały</td><td><strong>nie</strong></td></tr>
+        <tr><td>model na 4 kartach, wielu użytkowników naraz</td><td>3× (pełna przepustowość mostka)</td><td><strong>tak</strong></td></tr>
+        <tr><td>model na 8 kartach (dwie czwórki), wielu użytkowników</td><td>2× — runda nadal przechodzi między czwórkami</td><td><strong>tak</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Koszt: 2 × ~4,5 tys. zł na serwer. Test, który to rozstrzyga w godzinę: torch profiler pod obciążeniem — jeśli komunikacja to &gt; 50% kroku, mostek się zwróci.</p>
+  </div>
+</section>
+
+</main>
+
+<footer id="hud">
+  <span id="counter">1 / 15</span>
+  <span>← → nawigacja &nbsp;·&nbsp; T motyw</span>
+</footer>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var counter = document.getElementById("counter");
+  var idx = 0;
+  var fromHash = parseInt(location.hash.slice(1), 10);
+  if (fromHash >= 1 && fromHash <= slides.length) idx = fromHash - 1;
+
+  function fit() {
+    var stage = document.getElementById("stage");
+    var scale = Math.min(stage.clientWidth / 1320, stage.clientHeight / 760);
+    slides.forEach(function (s) { s.style.transform = "scale(" + scale + ")"; });
+  }
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, k) { s.classList.toggle("current", k === idx); });
+    counter.textContent = (idx + 1) + " / " + slides.length;
+    history.replaceState(null, "", "#" + (idx + 1));
+    fit();
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { show(idx + 1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { show(idx - 1); e.preventDefault(); }
+    else if (e.key === "Home") { show(0); }
+    else if (e.key === "End") { show(slides.length - 1); }
+    else if (e.key === "t" || e.key === "T") {
+      var root = document.documentElement;
+      root.dataset.theme = root.dataset.theme === "dark" ? "" : "dark";
+    }
+  });
+  window.addEventListener("resize", fit);
+  show(idx);
+})();
+</script>
+</body>
+</html>

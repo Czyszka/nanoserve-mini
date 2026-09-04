@@ -854,19 +854,24 @@ zł/szt. — wg użytkownika.
   decyzyjna §3.1): model na 1–2 kartach → nie; TP≥4 + wielu użytkowników
   → tak; pojedynczy czat → ≤1,3×.
 
-## Wykresy i grafiki do zrobienia
+## Wykresy i grafiki — WYKONANE (2026-09-04)
+
+Generator: `generate_charts.py` (matplotlib → `charts/*.svg`); diagramy G1–G4'
+inline SVG w `index_src.html`; sklejka: `build_index.py` → `index.html`
+(bez notatek — decyzja użytkownika; notatki zostają w tym pliku).
 
 | id | slajd | treść | dane |
 |---|---|---|---|
-| G1 | 1 | serwer + 8 kart, Kimi na 8 / Qwen na 1 | — |
-| W2' | 4 | słupki pionowe grupowane: 4 liczniki × (Qwen 1, Qwen 8, Kimi 8) | v1 W2 + qwen-tp-curve |
-| W1' | 3 | 4 słupki tok/s TP1/2/4/8 c64 PCIe | v1 W1 (bez linii efektywności) |
-| G2 | 5 | oś czasu kroku, 3 kolory (szary/pomarańcz/jasnoszary), klamra nad kernelami + ramka wzoru | v1 D2 |
-| W3' | 6 | 1 pasek skumulowany Kimi 8 kart pod obciążeniem (c16) + ramka wzoru | v1 W3 |
-| G3 | 7 | 4 karty, warstwa (uwaga/FFN), 2 scalenia, licznik 122 + tabelka danych/rundę | v1 D3 (uproszczony) |
-| G4 / G4' | 8 / 9 | topologia przed / po (ten sam rysunek + mostki; bez wyróżnień tras, UPI podpisane) | v1 D1 / D1-PO |
-| W5a | 10 | Kimi: sekundy przed/po dla 1/8/16/32 | nowy |
-| W5b | 10 | Qwen TP4 c64 przed/po tok/s | v1 W5 (połowa) |
+| G1 | 1 | 8 kart, klamra Kimi nad ósemką, klamry Qwen 1/2/4/8 GPU | — |
+| W0' | 2 | moc w czasie: 8 linii Kimi (niebieski) + Qwen 1 karta (zielony) + limit 600 W | `kimi_c32_dcgmi.txt` (06-11), `tp1_c64_dcgmi.txt` (08-31) |
+| W1' | 3 | 4 słupki tok/s, 1/2/4/8 kart, c64, era PCIe | `batched_c64.json` (06-10), `qwen_tp_curve` (06-11) |
+| W2' | 4 | słupki grupowane 4 liczniki × (Qwen 1 kreskowany, Qwen 8, Kimi 8) | stałe z podsumowań (czerwcowe) |
+| G2 | 5 | oś czasu kroku, 3 kolory, klamra nad kernelami, legenda | — |
+| W3' | 6 | pasek 10 / 84 / 5 / inne | verdict K2 (06-11) |
+| G3 | 7 | warstwa: 4 karty → scalenie → 4 karty → scalenie, licznik 122 | — |
+| G4 / G4' | 8 / 9 | topologia PCIe / + mostki w czwórkach | — |
+| W5a | 10 | Qwen 4 i 8 kart, c64, przed/po tok/s | `qwen_tp_curve` (06-11), `bench_tp4isl`/`bench_tp8` (08-31) |
+| W5b | 10 | Kimi 8 kart, c32, przed/po tok/s | `kimi_c32.json` (06-11, 08-03) |
 
 ## Budżet czasu
 

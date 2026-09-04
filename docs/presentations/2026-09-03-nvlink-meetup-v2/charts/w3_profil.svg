@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="605.695313pt" height="166.46275pt" viewBox="0 0 605.695313 166.46275" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-04T08:32:42.537315</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.1, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 166.46275
+L 605.695313 166.46275
+L 605.695313 0
+L 0 0
+z
+" style="fill: #fcfcfb"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 11.0175 140.261813
+L 535.5375 140.261813
+L 535.5375 23.837813
+L 11.0175 23.837813
+z
+" style="fill: #fcfcfb"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m80ba280d3e" d="M 0 0
+L 0 3.5
+" style="stroke: #898781; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m80ba280d3e" x="11.0175" y="140.261813" style="fill: #898781; stroke: #898781; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: middle; fill: #898781" x="11.0175" y="156.379" transform="rotate(-0 11.0175 156.379)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m80ba280d3e" x="142.1475" y="140.261813" style="fill: #898781; stroke: #898781; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: middle; fill: #898781" x="142.1475" y="156.379" transform="rotate(-0 142.1475 156.379)">25</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m80ba280d3e" x="273.2775" y="140.261813" style="fill: #898781; stroke: #898781; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: middle; fill: #898781" x="273.2775" y="156.379" transform="rotate(-0 273.2775 156.379)">50</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m80ba280d3e" x="404.4075" y="140.261813" style="fill: #898781; stroke: #898781; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: middle; fill: #898781" x="404.4075" y="156.379" transform="rotate(-0 404.4075 156.379)">75</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#m80ba280d3e" x="535.5375" y="140.261813" style="fill: #898781; stroke: #898781; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: middle; fill: #898781" x="535.5375" y="156.379938" transform="rotate(-0 535.5375 156.379938)">100% czasu pomiaru</text>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2"/>
+   <g id="patch_3">
+    <path d="M 11.0175 95.483351
+L 63.4695 95.483351
+L 63.4695 41.749197
+L 11.0175 41.749197
+z
+" clip-path="url(#p28ea03972d)" style="fill: #c3c2b7; stroke: #fcfcfb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 63.4695 95.483351
+L 503.54178 95.483351
+L 503.54178 41.749197
+L 63.4695 41.749197
+z
+" clip-path="url(#p28ea03972d)" style="fill: #eb6834; stroke: #fcfcfb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 503.54178 95.483351
+L 527.6697 95.483351
+L 527.6697 41.749197
+L 503.54178 41.749197
+z
+" clip-path="url(#p28ea03972d)" style="fill: #52514e; stroke: #fcfcfb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 527.6697 95.483351
+L 535.5375 95.483351
+L 535.5375 41.749197
+L 527.6697 41.749197
+z
+" clip-path="url(#p28ea03972d)" style="fill: #898781; stroke: #fcfcfb; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 11.0175 140.261813
+L 535.5375 140.261813
+" style="fill: none; stroke: #c3c2b7; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_6">
+    <text style="font-weight: 600; font-size: 12px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: middle; fill: #0b0b0b" x="37.2435" y="71.733462" transform="rotate(-0 37.2435 71.733462)">10%</text>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 600; font-size: 13px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; fill: #fcfcfb" transform="translate(237.459234 64.192465)">komunikacja</text>
+    <text style="font-weight: 600; font-size: 13px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; fill: #fcfcfb" transform="translate(267.947281 79.795005)">84%</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 11px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: start; fill: #52514e" x="13.6401" y="119.961878" transform="rotate(-0 13.6401 119.961878)">przerwy (silnik na CPU)</text>
+   </g>
+   <g id="patch_8">
+    <path d="M 502.454067 111.669628
+Q 506.688374 104.439942 510.92268 97.210256
+" style="fill: none; stroke: #52514e; stroke-linecap: round"/>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 11px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: end; fill: #52514e" x="522.4245" y="119.961878" transform="rotate(-0 522.4245 119.961878)">obliczenia 5%</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 600; font-size: 14px; font-family: 'Segoe UI', 'DejaVu Sans', 'Arial', sans-serif; text-anchor: start; fill: #0b0b0b" x="11.0175" y="17.837813" transform="rotate(-0 11.0175 17.837813)">Kimi, 8 kart, serwer pod obciążeniem</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p28ea03972d">
+   <rect x="11.0175" y="23.837813" width="524.52" height="116.424"/>
+  </clipPath>
+ </defs>
+</svg>

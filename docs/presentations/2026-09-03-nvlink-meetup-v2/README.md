@@ -110,3 +110,14 @@ większe fonty, jeden komunikat). W4 i W7 raczej wypadają.
 - `docs/plans/2026-08-31-latencja-dostepu-nvlink.md` — sesja mierząca
   latencję all-reduce + grid Qwen TP×c×łącze + profile TP1–TP8 (dane do
   slajdów 4, 6, 9 — **wyniki jeszcze nie w repo**).
+
+## Budowanie (2026-09-04)
+
+```bash
+uv run --with matplotlib python docs/presentations/2026-09-03-nvlink-meetup-v2/generate_charts.py
+uv run python docs/presentations/2026-09-03-nvlink-meetup-v2/build_index.py
+```
+
+Wynik: `index.html` (samodzielny, 11 slajdów + 4 zapasowe Z1–Z4, bez
+notatek — nawigacja ← →, motyw T). Zrzut nvidia-smi wspólny z v1. Treść
+i notatki prelegenta: `tresc-slajdow-v2.md`.

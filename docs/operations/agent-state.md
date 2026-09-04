@@ -119,10 +119,15 @@ status, not a task list. Update when work moves.
 - **Prezentacja meetupowa NVLink: DOSTARCZONA (2026-08-09/10)** — samodzielny
   `index.html`, speaker notes do druku, wykresy W0–W7;
   `docs/presentations/2026-07-31-nvlink-meetup/`.
-  **v2 w toku (od 2026-09-03):** v1 uznana za zbyt skomplikowaną; nowa
-  wersja ~20 min / 10–11 slajdów, od ogółu do szczegółu, katalog roboczy
-  `docs/presentations/2026-09-03-nvlink-meetup-v2/` (README + `slajdy-v2.md`
-  ze szkieletem, uwagami krytycznymi i fallbackami). Tytuł zaakceptowany.
+  **v2 DOSTARCZONA (2026-09-04):** ~20 min, 11 slajdów + 4 zapasowe,
+  `docs/presentations/2026-09-03-nvlink-meetup-v2/index.html` (bez notatek —
+  notatki i Q&A w `tresc-slajdow-v2.md`; build: `generate_charts.py` +
+  `build_index.py`). Oś: anomalia → DCGM → rozkład kroku (84% komunikacja,
+  Amdahl) → 122 rundy/token → rachunek 24,10 s (runda 0,873 ms = 0,238
+  osobno + 0,635 czekania; `all-8 nop2p` 238 µs) → mostki (0,452 ms; przesył
+  i koszt stały bez zmian, przystanki 0,183→0,085) → efekt 2,1–6,3×.
+  Otwarte: konfund Qwen TP1 1202→1710 tok/s czerwiec→sierpień bez mostków
+  (tylko w Q&A); cena mostka ~4,5 tys. zł wg użytkownika.
 - **Sesja 2026-08-31/09-02 (latencja all-reduce + grid Qwen + profile):**
   dane w repo (`8d7ef5b`), podsumowanie z werdyktami predykcji:
   `results/summaries/2026-08-31-latencja-dostepu-summary.md`. Kluczowe:
