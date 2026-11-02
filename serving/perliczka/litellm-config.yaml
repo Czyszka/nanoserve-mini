@@ -1,0 +1,29 @@
+# LiteLLM Proxy dla stacku perliczka. Routing po polu `model`:
+#   deepseek-v4.1-flash -> vllm-dsv41:8104
+#   minimax-m3.1-flash  -> vllm-minimax:8102
+# Claude Code wola /v1/messages (Anthropic API); LiteLLM tlumaczy je na
+# OpenAI chat completions vLLM-a. Nazwy modeli = ANTHROPIC_DEFAULT_*_MODEL
+# w claude-code.env.example.
+
+model_list:
+  - model_name: deepseek-v4.1-flash
+    litellm_params:
+      model: hosted_vllm/deepseek-v4.1-flash
+      api_base: http://vllm-dsv41:8104/v1
+      api_key: dummy
+
+  - model_name: minimax-m3.1-flash
+    litellm_params:
+      model: hosted_vllm/minimax-m3.1-flash
+      api_base: http://vllm-minimax:8102/v1
+      api_key: dummy
+
+litellm_settings:
+  # Claude Code wysyla parametry Anthropic-specyficzne; nieobslugiwane przez
+  # backend sa pomijane zamiast konczyc sie bledem 400.
+  drop_params: true
+  # Dlugie generacje agentowe + pierwszy request po starcie.
+  request_timeout: 900
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

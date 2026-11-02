@@ -1,0 +1,170 @@
+# Perliczka: dwa modele na dwoch wyspach NVLink (4+4) za LiteLLM Proxy.
+#
+#   GPU 0-3  DeepSeek-V4.1-Flash-1017   vLLM  :8104   (TP4 + DSpark + KV offload CPU+dysk)
+#   GPU 4-7  MiniMax-M3.1-Flash         vLLM  :8102   (TP4 + DSpark, FP8 KV, Marlin MoE)
+#            LiteLLM Proxy              :8100 -> 4000 (routing po nazwie modelu, /v1/messages dla Claude Code)
+#
+# Uruchomienie: cp .env.example .env && uzupelnij sekrety && docker compose up -d
+# Szczegoly i zastrzezenia: README.md w tym katalogu.
+
+services:
+  # DeepSeek-V4.1-Flash-1017: komenda z recepty vLLM (vllm-project/recipes,
+  # models/deepseek-ai/DeepSeek-V4.1-Flash.yaml): hardware=h200, single_node_tp,
+  # features: tool_calling, reasoning, spec_decoding, text_only; kv_offload=offloading_fs.
+  # Wymaga vLLM >= 0.31.0 (poprawka KV offload vllm-project/vllm#57145).
+  # Host RAM: ~183 GiB przypiete na tablice Engram + 32 GiB warstwy CPU KV.
+  vllm-dsv41:
+    image: vllm/vllm-openai:v0.31.0
+    container_name: vllm-dsv41
+    hostname: vllm-dsv41
+    restart: unless-stopped
+    privileged: true
+    ipc: host
+    ports:
+      - "${DSV41_HOST_PORT:-8104}:8104"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:?set HF_TOKEN in .env}
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      VLLM_WORKER_MULTIPROC_METHOD: spawn
+      NCCL_CUMEM_ENABLE: "1"
+      # Wyspa NVLink 0-3.
+      CUDA_VISIBLE_DEVICES: "${DSV41_CUDA_VISIBLE_DEVICES:-0,1,2,3}"
+      VLLM_ENGINE_READY_TIMEOUT_S: "3600"
+      # Bez stalego seeda nazwy blokow KV na dysku zmieniaja sie po restarcie
+      # i warstwa dyskowa nigdy nie trafia.
+      PYTHONHASHSEED: "0"
+    volumes:
+      - ${MODELS_DIR:-/sasraid/models/vllm_models}:/root/.cache/huggingface
+      - ${DSV41_KV_CACHE_DIR:-/home/ubuntusrv2/.vllm/kv_cache}:/mnt/kv_cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: >-
+      --model deepseek-ai/DeepSeek-V4.1-Flash-1017
+      --served-model-name=deepseek-v4.1-flash
+      --host=0.0.0.0 --port=8104
+      --tokenizer-mode deepseek_v41
+      --tensor-parallel-size 4
+      --engram-config '{"cpu_offload":true}'
+      --tool-call-parser deepseek_v41
+      --enable-auto-tool-choice
+      --reasoning-parser deepseek_v41
+      --speculative-config '{"method":"dspark","num_speculative_tokens":5,"draft_sample_method":"probabilistic","rejection_sample_method":"block","enable_adaptive_verification":true}'
+      --language-model-only
+      --kv-transfer-config '{"kv_connector":"OffloadingConnector","kv_role":"kv_both","kv_connector_extra_config":{"spec_name":"TieringOffloadingSpec","cpu_bytes_to_use":34359738368,"blocks_per_chunk":4,"eviction_policy":"lru","secondary_tiers":[{"type":"fs","root_dir":"/mnt/kv_cache","n_read_threads":32,"n_write_threads":16}]}}'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8104/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 60
+      start_period: 60m
+    networks:
+      - perliczka_net
+
+  # MiniMax-M3.1-Flash: flagi z wariantu Hopper FP8 recepty vLLM
+  # (vllm-project/vllm#63244), z dwiema zmianami:
+  #   - TP4 zamiast TP8 (jedna wyspa); recepta Hopper zaklada TP8, TP4 niezweryfikowane,
+  #   - DSpark wlaczony; upstream wylacza go na Hopperze, konfiguracja 3-tokenowa
+  #     jak w SemiAnalysis InferenceX#4423 (H200) — niezweryfikowana.
+  # Wylaczenie spekulacji: MINIMAX_SPEC_TOKENS=0 w .env NIE dziala (dspark wymaga >0) —
+  # usun linie --speculative-config.
+  # Obraz: dedykowany tag day-0 (v0.32.0 sprzed premiery modelu go nie obsluguje).
+  vllm-minimax:
+    image: vllm/vllm-openai:minimax-m31-flash-x86_64-cu134
+    container_name: vllm-minimax
+    hostname: vllm-minimax
+    restart: unless-stopped
+    privileged: true
+    ipc: host
+    ports:
+      - "${MINIMAX_HOST_PORT:-8102}:8102"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:?set HF_TOKEN in .env}
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      VLLM_WORKER_MULTIPROC_METHOD: spawn
+      NCCL_CUMEM_ENABLE: "1"
+      # Wyspa NVLink 4-7.
+      CUDA_VISIBLE_DEVICES: "${MINIMAX_CUDA_VISIBLE_DEVICES:-4,5,6,7}"
+      VLLM_ENGINE_READY_TIMEOUT_S: "3600"
+    volumes:
+      - ${MODELS_DIR:-/sasraid/models/vllm_models}:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: >-
+      --model MiniMaxAI/MiniMax-M3.1-Flash
+      --served-model-name=minimax-m3.1-flash
+      --host=0.0.0.0 --port=8102
+      --tensor-parallel-size 4
+      --block-size 128
+      --disable-hybrid-kv-cache-manager
+      --kv-cache-dtype fp8
+      --attention-config '{"indexer_kv_dtype":"fp8"}'
+      --compilation-config '{"cudagraph_mode":"FULL_AND_PIECEWISE"}'
+      --moe-backend marlin
+      --max-model-len ${MINIMAX_MAX_MODEL_LEN:-262144}
+      --max-num-seqs ${MINIMAX_MAX_NUM_SEQS:-80}
+      --limit-mm-per-prompt '{"video":0}'
+      --gpu-memory-utilization 0.9
+      --no-enable-log-requests
+      --tool-call-parser minimax_m3
+      --enable-auto-tool-choice
+      --reasoning-parser minimax_m3
+      --speculative-config '{"method":"dspark","num_speculative_tokens":${MINIMAX_SPEC_TOKENS:-3},"rejection_sample_method":"block"}'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8102/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 60
+      start_period: 60m
+    networks:
+      - perliczka_net
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-v1.83.14-stable
+    container_name: litellm-perliczka
+    hostname: litellm-perliczka
+    restart: unless-stopped
+    depends_on:
+      vllm-dsv41:
+        condition: service_started
+      vllm-minimax:
+        condition: service_started
+    ports:
+      - "${LITELLM_HOST_PORT:-8100}:4000"
+    environment:
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?set LITELLM_MASTER_KEY in .env}
+      LITELLM_LOG: INFO
+    volumes:
+      - ./litellm-config.yaml:/etc/litellm/config.yaml:ro
+    command: ["--config", "/etc/litellm/config.yaml", "--port", "4000", "--num_workers", "1"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\" || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 1m
+    networks:
+      - perliczka_net
+
+networks:
+  perliczka_net:
+    name: perliczka_net
