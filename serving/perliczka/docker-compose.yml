@@ -44,7 +44,7 @@ services:
       # i warstwa dyskowa nigdy nie trafia.
       PYTHONHASHSEED: "0"
     volumes:
-      - ${MODELS_DIR:-/sasraid/models/vllm_models}:/root/.cache/huggingface
+      - ${MODELS_DIR:-/SASRAID/models/vllm_models}:/root/.cache/huggingface
       - ${DSV41_KV_CACHE_DIR:-/home/ubuntusrv2/.vllm/kv_cache}:/mnt/kv_cache
     deploy:
       resources:
@@ -109,7 +109,7 @@ services:
       CUDA_VISIBLE_DEVICES: "${MINIMAX_CUDA_VISIBLE_DEVICES:-4,5,6,7}"
       VLLM_ENGINE_READY_TIMEOUT_S: "3600"
     volumes:
-      - ${MODELS_DIR:-/sasraid/models/vllm_models}:/root/.cache/huggingface
+      - ${MODELS_DIR:-/SASRAID/models/vllm_models}:/root/.cache/huggingface
     deploy:
       resources:
         reservations:

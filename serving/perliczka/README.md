@@ -9,7 +9,7 @@
 | `prometheus-perliczka` | — | 9190 | scrape co 5 s: oba vLLM + DCGM |
 | `dcgm-exporter-perliczka` | wszystkie | — | liczniki GPU (tylko w sieci dockera) |
 
-Sieć: `perliczka_net`. Modele: `/sasraid/models/vllm_models`.
+Sieć: `perliczka_net`. Modele: `/SASRAID/models/vllm_models`.
 
 ## Start (serwer)
 
