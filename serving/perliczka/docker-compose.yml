@@ -27,7 +27,8 @@ services:
       stack: 67108864
     environment:
       HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:?set HF_TOKEN in .env}
-      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      # Szybkie pobieranie przez backend Xet (hf_transfer jest wycofywany).
+      HF_XET_HIGH_PERFORMANCE: "1"
       VLLM_WORKER_MULTIPROC_METHOD: spawn
       NCCL_CUMEM_ENABLE: "1"
       # Wyspa NVLink 0-3.
@@ -90,7 +91,8 @@ services:
       stack: 67108864
     environment:
       HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:?set HF_TOKEN in .env}
-      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      # Szybkie pobieranie przez backend Xet (hf_transfer jest wycofywany).
+      HF_XET_HIGH_PERFORMANCE: "1"
       VLLM_WORKER_MULTIPROC_METHOD: spawn
       NCCL_CUMEM_ENABLE: "1"
       # Wyspa NVLink 4-7.
