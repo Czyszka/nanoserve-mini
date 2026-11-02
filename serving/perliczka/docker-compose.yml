@@ -17,6 +17,8 @@ services:
   # Wymaga vLLM >= 0.31.0 (poprawka KV offload vllm-project/vllm#57145);
   # `latest` = v0.33.0 (2026-11-02) spelnia.
   # Host RAM: ~183 GiB przypiete na tablice Engram + 32 GiB warstwy CPU KV.
+  # Odstepstwo od recepty (CUDA OOM przy starcie z domyslnymi): jawne
+  # gpu-memory-utilization / max-model-len / max-num-seqs, sterowane z .env.
   vllm-dsv41:
     image: vllm/vllm-openai:latest
     container_name: vllm-dsv41
@@ -57,6 +59,9 @@ services:
       --host=0.0.0.0 --port=8104
       --tokenizer-mode deepseek_v41
       --tensor-parallel-size 4
+      --gpu-memory-utilization ${DSV41_GPU_MEM_UTIL:-0.85}
+      --max-model-len ${DSV41_MAX_MODEL_LEN:-131072}
+      --max-num-seqs ${DSV41_MAX_NUM_SEQS:-64}
       --engram-config '{"cpu_offload":true}'
       --tool-call-parser deepseek_v41
       --enable-auto-tool-choice
