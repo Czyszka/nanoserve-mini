@@ -1,0 +1,18 @@
+# Custom DCGM field list for nanoserve-mini (#34).
+# Format jak w default-counters.csv exportera: <pole DCGM>, <typ prometheus>, <help>.
+# Zestaw = wzorzec samplera host-side z infrastructure.md
+#   (dcgmi dmon -e 155,1002,1004,1005,1009,1010,1011,1012) + temp i FB free.
+# UWAGA: pola PROF *_BYTES to w DCGM RATE (bajty/s) eksportowane jako gauge -
+# w zapytaniach Grafany BEZ rate(). SM_ACTIVE i NVLINK_* sa w domyslnym CSV
+# exportera wykomentowane - dlatego ten plik jest obowiazkowy, nie opcjonalny.
+DCGM_FI_DEV_POWER_USAGE,         gauge, Power draw (in W).
+DCGM_FI_DEV_GPU_TEMP,            gauge, GPU temperature (in C).
+DCGM_FI_DEV_FB_USED,             gauge, Framebuffer memory used (in MiB).
+DCGM_FI_DEV_FB_FREE,             gauge, Framebuffer memory free (in MiB).
+DCGM_FI_PROF_SM_ACTIVE,          gauge, Ratio of cycles at least one warp is active on a multiprocessor.
+DCGM_FI_PROF_PIPE_TENSOR_ACTIVE, gauge, Ratio of cycles the tensor (HMMA) pipe is active.
+DCGM_FI_PROF_DRAM_ACTIVE,        gauge, Ratio of cycles the device memory interface is active.
+DCGM_FI_PROF_PCIE_TX_BYTES,      gauge, PCIe TX rate incl. protocol headers (bytes/s).
+DCGM_FI_PROF_PCIE_RX_BYTES,      gauge, PCIe RX rate incl. protocol headers (bytes/s).
+DCGM_FI_PROF_NVLINK_TX_BYTES,    gauge, NVLink TX rate (bytes/s).
+DCGM_FI_PROF_NVLINK_RX_BYTES,    gauge, NVLink RX rate (bytes/s).

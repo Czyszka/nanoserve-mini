@@ -5,6 +5,9 @@
 | `litellm-perliczka` | — | 8100 | proxy, `/v1/messages` + `/v1/chat/completions` |
 | `vllm-minimax` | 4–7 | 8102 | `minimax-m3.1-flash` |
 | `vllm-dsv41` | 0–3 | 8104 | `deepseek-v4.1-flash` |
+| `grafana-perliczka` | — | 3101 | dashboardy (vLLM, GPU/DCGM, korelacja) |
+| `prometheus-perliczka` | — | 9190 | scrape co 5 s: oba vLLM + DCGM |
+| `dcgm-exporter-perliczka` | wszystkie | — | liczniki GPU (tylko w sieci dockera) |
 
 Sieć: `perliczka_net`. Modele: `/sasraid/models/vllm_models`.
 
@@ -28,6 +31,28 @@ curl http://localhost:8100/v1/chat/completions -H "Authorization: Bearer $LITELL
   -H 'Content-Type: application/json' \
   -d '{"model":"minimax-m3.1-flash","messages":[{"role":"user","content":"2+2?"}],"max_tokens":32}'
 ```
+
+## Monitoring
+
+Konfiguracja w `monitoring/` — kopia sprawdzonego stacku z `serving/compose/`
+(te same dashboardy i lista liczników DCGM). Przed pierwszym startem (jednorazowo):
+
+```bash
+D=/home/ubuntusrv2/working/perliczka-observability
+sudo mkdir -p $D/prometheus-data $D/grafana-data
+sudo chown 65534:65534 $D/prometheus-data   # prometheus = nobody
+sudo chown 472:472 $D/grafana-data          # grafana
+```
+
+Wymagany jest **jeden** dcgm-exporter na maszynie (pola profilingowe GPU trzyma jeden
+klient naraz). Jeśli działa stary stack obserwacji z `serving/compose/`, zatrzymaj go:
+`docker compose -f ../compose/docker-compose.observability.yml down`.
+
+Grafana: `http://<adres-serwera>:3101` (login z `.env`). Dashboardy:
+*vLLM Phase 1* (ruch, latencje, KV, spec decode per model), *GPU hardware (DCGM)*
+(per GPU — wyspa 0–3 to DeepSeek, 4–7 MiniMax) i *Serving ↔ GPU hardware*
+(korelacja; panele DCGM uśredniają wszystkie 8 GPU). Sprawdzenie celów scrape:
+`http://<adres-serwera>:9190/targets` — wszystkie trzy mają być `UP`.
 
 ## Claude Code (klient)
 

@@ -1,0 +1,20 @@
+# Prometheus stacku perliczka (scrape po sieci perliczka_net).
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: "vllm-dsv41"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["vllm-dsv41:8104"]
+
+  - job_name: "vllm-minimax"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["vllm-minimax:8102"]
+
+  - job_name: "dcgm"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["dcgm-exporter-perliczka:9400"]
