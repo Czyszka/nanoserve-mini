@@ -69,16 +69,16 @@ Grafana: `http://<adres-serwera>:3101` (login z `.env`). Dashboardy:
 ## Claude Code (klient)
 
 Zmienne w `claude-code.env.example` — ustaw na stałe (`setx` na Windows), otwórz nowy
-terminal, uruchom `claude`. Opus → DeepSeek, Sonnet/Haiku i domyślny → MiniMax.
+terminal, uruchom `claude`. Na razie wszystkie klasy (Opus/Sonnet/Haiku) → MiniMax;
+DeepSeek dopięty w LiteLLM, do włączenia w Claude Code po ustabilizowaniu startu.
 
 ## Zastrzeżenia (do sprawdzenia przy pierwszym starcie)
 
 - **MiniMax TP4 niezweryfikowane.** Recepta Hopper zakłada TP8; checkpoint ~250 GB
   (górna granica w recepcie 533 GB) — na 4×141 GB powinien wejść, ale nikt tego nie
   potwierdził. OOM → zmniejsz `MINIMAX_MAX_MODEL_LEN` / `MINIMAX_MAX_NUM_SEQS`.
-- **DSpark na Hopperze niezweryfikowany.** Upstream wyłącza go dla H100/H200; użyta
-  konfiguracja 3-tokenowa pochodzi z benchmarku H200 (InferenceX #4423). Błąd startu
-  draftera → usuń linię `--speculative-config` w usłudze `vllm-minimax`.
+- **MiniMax działa bez spekulacji.** DSpark na H200 nie wystartował (upstream też go dla
+  Hoppera wyłącza); usługa `vllm-minimax` chodzi bez `--speculative-config`.
 - **Obrazy na ruchomych tagach** (`latest`, LiteLLM `main-stable`): `docker compose pull`
   potrafi podnieść wersję bez zmian w repo. Przy problemie przypnij tag wersji, np.
   `vllm/vllm-openai:v0.33.0`. Sprawdź przy pierwszym starcie zgodność obrazu vLLM ze

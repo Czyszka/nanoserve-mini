@@ -81,10 +81,9 @@ services:
   # MiniMax-M3.1-Flash: flagi z wariantu Hopper FP8 recepty vLLM
   # (vllm-project/vllm#63244), z dwiema zmianami:
   #   - TP4 zamiast TP8 (jedna wyspa); recepta Hopper zaklada TP8, TP4 niezweryfikowane,
-  #   - DSpark wlaczony; upstream wylacza go na Hopperze, konfiguracja 3-tokenowa
-  #     jak w SemiAnalysis InferenceX#4423 (H200) — niezweryfikowana.
-  # Wylaczenie spekulacji: MINIMAX_SPEC_TOKENS=0 w .env NIE dziala (dspark wymaga >0) —
-  # usun linie --speculative-config.
+  #   - BEZ spekulacji: DSpark na Hopperze (H200) nie startuje (sprawdzone na
+  #     serwerze; upstream tez go dla Hoppera wylacza). Proba z konfiguracja
+  #     3-tokenowa z InferenceX#4423 zakonczona bledem startu.
   # Obraz: `latest` = v0.33.0 ma juz MiniMax M3 (MiniMaxM3Sparse*, parsery minimax_m3);
   # wczesniej wymagany byl dedykowany tag minimax-m31-flash-x86_64-cu134.
   vllm-minimax:
@@ -136,7 +135,6 @@ services:
       --tool-call-parser minimax_m3
       --enable-auto-tool-choice
       --reasoning-parser minimax_m3
-      --speculative-config '{"method":"dspark","num_speculative_tokens":${MINIMAX_SPEC_TOKENS:-3},"rejection_sample_method":"block"}'
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8102/health || exit 1"]
       interval: 30s
