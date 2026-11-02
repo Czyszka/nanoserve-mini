@@ -34,6 +34,18 @@ curl http://localhost:8100/v1/chat/completions -H "Authorization: Bearer $LITELL
 
 ## Monitoring
 
+Monitoring ma profil `observability` i **domyślnie się nie uruchamia**:
+
+```bash
+docker compose up -d                              # tylko modele + LiteLLM
+docker compose --profile observability up -d      # modele + LiteLLM + monitoring
+docker compose --profile observability stop prometheus grafana dcgm-exporter   # wyłącz sam monitoring
+```
+
+Stałe włączenie: `COMPOSE_PROFILES=observability` w `.env`. Zatrzymanie wszystkiego
+razem z monitoringiem: `docker compose --profile observability down` (samo `down`
+pominie usługi z profilu).
+
 Konfiguracja w `monitoring/` — kopia sprawdzonego stacku z `serving/compose/`
 (te same dashboardy i lista liczników DCGM). Przed pierwszym startem (jednorazowo):
 

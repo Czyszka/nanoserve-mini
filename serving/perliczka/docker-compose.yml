@@ -5,7 +5,9 @@
 #            LiteLLM Proxy              :8100 -> 4000 (routing po nazwie modelu, /v1/messages dla Claude Code)
 #            Grafana :3101, Prometheus :9190, dcgm-exporter (bez portu na hoscie)
 #
-# Uruchomienie: cp .env.example .env && uzupelnij sekrety && docker compose up -d
+# Uruchomienie: cp .env.example .env && uzupelnij sekrety, potem:
+#   docker compose up -d                            -> modele + LiteLLM
+#   docker compose --profile observability up -d    -> + Prometheus/Grafana/DCGM
 # Szczegoly i zastrzezenia: README.md w tym katalogu.
 
 services:
@@ -170,7 +172,10 @@ services:
 
   # --- Monitoring: kopia sprawdzonego stacku z serving/compose/ (observability),
   # konfiguracja w ./monitoring. Bez image-renderera (niepotrzebny do podgladu).
+  # Profil "observability": domyslnie NIE startuje. Wlaczenie:
+  #   docker compose --profile observability up -d   (albo COMPOSE_PROFILES w .env)
   prometheus:
+    profiles: ["observability"]
     image: prom/prometheus:v3
     container_name: prometheus-perliczka
     hostname: prometheus-perliczka
@@ -189,6 +194,7 @@ services:
       - perliczka_net
 
   grafana:
+    profiles: ["observability"]
     image: grafana/grafana:latest
     container_name: grafana-perliczka
     hostname: grafana-perliczka
@@ -197,7 +203,7 @@ services:
       - "${GRAFANA_HOST_PORT:-3101}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
-      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ${GRAFANA_DATA_DIR:-/home/ubuntusrv2/working/perliczka-observability/grafana-data}:/var/lib/grafana
@@ -208,6 +214,7 @@ services:
       - perliczka_net
 
   dcgm-exporter:
+    profiles: ["observability"]
     # Ten sam tag co w serving/compose (zweryfikowany 2026-08-11, DCGM 4.5.2 / exporter 4.8.1).
     # Pola PROF wymagaja CAP_SYS_ADMIN (cap_add, NIE privileged).
     # UWAGA: tylko JEDEN dcgm-exporter na maszynie - pola profilingowe GPU trzyma
