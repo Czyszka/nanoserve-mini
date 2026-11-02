@@ -1,0 +1,69 @@
+# DeepSeek-V4.1-Flash-1017 na 4x H200: TP4 + DSpark + KV offload (CPU + dysk).
+# Komenda wyrenderowana z recepty vLLM (vllm-project/recipes,
+# models/deepseek-ai/DeepSeek-V4.1-Flash.yaml): hardware=h200, single_node_tp,
+# features: tool_calling, reasoning, spec_decoding, text_only; kv_offload=offloading_fs.
+# Wymaga vLLM >= 0.31.0 (poprawka KV offload vllm-project/vllm#57145).
+# Host RAM: ~183 GiB przypiete na tablice Engram + 32 GiB warstwy CPU KV.
+services:
+  vllm:
+    image: vllm/vllm-openai:v0.31.0
+    container_name: vllm
+    hostname: vllm
+    restart: unless-stopped
+
+    privileged: true
+    ipc: host
+
+    ports:
+      - "${VLLM_HOST_PORT:-8000}:8000"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    environment:
+      HUGGING_FACE_HUB_TOKEN: ${HF_TOKEN:?set HF_TOKEN in .env}
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+      VLLM_WORKER_MULTIPROC_METHOD: spawn
+      NCCL_CUMEM_ENABLE: "1"
+      # Jedna wyspa NVLink z topologii 4+4.
+      CUDA_VISIBLE_DEVICES: "${DSV41_CUDA_VISIBLE_DEVICES:-0,1,2,3}"
+      VLLM_ENGINE_READY_TIMEOUT_S: "3600"
+      # Bez stalego seeda nazwy blokow KV na dysku zmieniaja sie po restarcie
+      # i warstwa dyskowa nigdy nie trafia.
+      PYTHONHASHSEED: "0"
+    volumes:
+      - /home/ubuntusrv2/.vllm/models:/root/.cache/huggingface
+      - /home/ubuntusrv2/.vllm/kv_cache:/mnt/kv_cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: >-
+      --model deepseek-ai/DeepSeek-V4.1-Flash-1017
+      --served-model-name=deepseek-v4.1-flash
+      --host=0.0.0.0 --port=8000
+      --tokenizer-mode deepseek_v41
+      --tensor-parallel-size 4
+      --engram-config '{"cpu_offload":true}'
+      --tool-call-parser deepseek_v41
+      --enable-auto-tool-choice
+      --reasoning-parser deepseek_v41
+      --speculative-config '{"method":"dspark","num_speculative_tokens":5,"draft_sample_method":"probabilistic","rejection_sample_method":"block","enable_adaptive_verification":true}'
+      --language-model-only
+      --kv-transfer-config '{"kv_connector":"OffloadingConnector","kv_role":"kv_both","kv_connector_extra_config":{"spec_name":"TieringOffloadingSpec","cpu_bytes_to_use":34359738368,"blocks_per_chunk":4,"eviction_policy":"lru","secondary_tiers":[{"type":"fs","root_dir":"/mnt/kv_cache","n_read_threads":32,"n_write_threads":16}]}}'
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 60
+      start_period: 60m
+
+    networks:
+      - nanoserve-net
+
+networks:
+  nanoserve-net:
+    name: nanoserve-net
