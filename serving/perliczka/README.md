@@ -79,7 +79,9 @@ terminal, uruchom `claude`. Opus → DeepSeek, Sonnet/Haiku i domyślny → Mini
 - **DSpark na Hopperze niezweryfikowany.** Upstream wyłącza go dla H100/H200; użyta
   konfiguracja 3-tokenowa pochodzi z benchmarku H200 (InferenceX #4423). Błąd startu
   draftera → usuń linię `--speculative-config` w usłudze `vllm-minimax`.
-- **Obraz MiniMax to build cu134**, a sterownik serwera (595.58.03) wspiera CUDA 13.2.
-  Sprawdź przed startem:
-  `docker run --rm --gpus all --entrypoint python3 vllm/vllm-openai:minimax-m31-flash-x86_64-cu134 -c "import torch;print(torch.ones(1).cuda())"`.
-  Błąd sterownika = potrzebny nowszy driver albo obraz cu130/cu129, gdy się pojawi.
+- **Obrazy na ruchomych tagach** (`latest`, LiteLLM `main-stable`): `docker compose pull`
+  potrafi podnieść wersję bez zmian w repo. Przy problemie przypnij tag wersji, np.
+  `vllm/vllm-openai:v0.33.0`. Sprawdź przy pierwszym starcie zgodność obrazu vLLM ze
+  sterownikiem (595.58.03, CUDA 13.2):
+  `docker run --rm --gpus all --entrypoint python3 vllm/vllm-openai:latest -c "import torch;print(torch.ones(1).cuda())"`.
+  Błąd sterownika → wariant `v0.33.0-cu129` albo nowszy driver.
