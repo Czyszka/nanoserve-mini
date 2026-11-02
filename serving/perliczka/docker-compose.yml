@@ -187,7 +187,7 @@ services:
       - "${PROMETHEUS_HOST_PORT:-9190}:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ${PROMETHEUS_DATA_DIR:-/home/ubuntusrv2/working/perliczka-observability/prometheus-data}:/prometheus
+      - ${PROMETHEUS_DATA_DIR:-/home/ubuntusrv2/perliczka_proj/prometheus-data}:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -209,7 +209,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ${GRAFANA_DATA_DIR:-/home/ubuntusrv2/working/perliczka-observability/grafana-data}:/var/lib/grafana
+      - ${GRAFANA_DATA_DIR:-/home/ubuntusrv2/perliczka_proj/grafana-data}:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
     depends_on:
       - prometheus

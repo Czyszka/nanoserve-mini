@@ -50,7 +50,7 @@ Konfiguracja w `monitoring/` — kopia sprawdzonego stacku z `serving/compose/`
 (te same dashboardy i lista liczników DCGM). Przed pierwszym startem (jednorazowo):
 
 ```bash
-D=/home/ubuntusrv2/working/perliczka-observability
+D=/home/ubuntusrv2/perliczka_proj
 sudo mkdir -p $D/prometheus-data $D/grafana-data
 sudo chown 65534:65534 $D/prometheus-data   # prometheus = nobody
 sudo chown 472:472 $D/grafana-data          # grafana
