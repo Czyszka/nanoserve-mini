@@ -68,8 +68,12 @@ Grafana: `http://<adres-serwera>:3101` (login z `.env`). Dashboardy:
 
 ## Claude Code (klient)
 
-Zmienne w `claude-code.env.example` — ustaw na stałe (`setx` na Windows), otwórz nowy
-terminal, uruchom `claude`. Na razie wszystkie klasy → DeepSeek; docelowo Opus → DeepSeek,
+Najpewniej: skopiuj `claude-code-settings.example.json` do `~/.claude/settings.json`
+(Windows: `%USERPROFILE%\.claude\settings.json`; istniejący plik — dopisz sekcję `env`)
+i podmień adres serwera oraz token (`LITELLM_MASTER_KEY`). Alternatywa: zmienne z
+`claude-code.env.example` przez `setx` + nowe okno terminala. Jeśli przy starcie pojawia
+się ekran logowania: w `~/.claude.json` ustaw `"hasCompletedOnboarding": true` (albo
+zmień nazwę tego pliku, gdy zawiera stary login OAuth) i uruchom `claude` ponownie. Na razie wszystkie klasy → DeepSeek; docelowo Opus → DeepSeek,
 Sonnet/Haiku i domyślny → MiniMax (gdy MiniMax wystartuje).
 
 ## Zastrzeżenia (do sprawdzenia przy pierwszym starcie)
