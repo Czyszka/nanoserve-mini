@@ -78,12 +78,12 @@ Sonnet/Haiku i domyślny → MiniMax (gdy MiniMax wystartuje).
 
 ## Zastrzeżenia (do sprawdzenia przy pierwszym starcie)
 
-- **MiniMax TP4 niezweryfikowane.** Recepta Hopper zakłada TP8; checkpoint ~250 GB
-  (górna granica w recepcie 533 GB) — na 4×141 GB powinien wejść, ale nikt tego nie
-  potwierdził. OOM → zmniejsz `MINIMAX_MAX_MODEL_LEN` / `MINIMAX_MAX_NUM_SEQS`.
-- **DSpark na Hopperze niezweryfikowany.** Upstream wyłącza go dla H100/H200; użyta
-  konfiguracja 3-tokenowa pochodzi z benchmarku H200 (InferenceX #4423). Błąd startu
-  draftera → usuń linię `--speculative-config` w usłudze `vllm-minimax`.
+- **MiniMax na DP4 + EP, nie TP4.** Przy TP4 model pada (niezgodność podziału tensorów
+  192 vs 384), także bez spekulacji. Domyślny układ: `--data-parallel-size 4
+  --enable-expert-parallel` (`MINIMAX_PARALLEL_ARGS` w `.env`). OOM → zmniejsz
+  `MINIMAX_MAX_MODEL_LEN` / `MINIMAX_MAX_NUM_SEQS` (limit liczony na rank DP).
+- **MiniMax bez spekulacji.** DSpark na Hopperze niezweryfikowany (upstream go wyłącza);
+  wyłączony do czasu uruchomienia samego modelu.
 - **Obrazy na ruchomych tagach** (`latest`, LiteLLM `main-stable`): `docker compose pull`
   potrafi podnieść wersję bez zmian w repo. Przy problemie przypnij tag wersji, np.
   `vllm/vllm-openai:v0.33.0`. Sprawdź przy pierwszym starcie zgodność obrazu vLLM ze

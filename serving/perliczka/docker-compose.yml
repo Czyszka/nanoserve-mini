@@ -80,14 +80,12 @@ services:
       - perliczka_net
 
   # MiniMax-M3.1-Flash: flagi z wariantu Hopper FP8 recepty vLLM
-  # (vllm-project/vllm#63244), z dwiema zmianami:
-  #   - TP4 zamiast TP8 (jedna wyspa); recepta Hopper zaklada TP8, TP4 niezweryfikowane,
-  #   - DSpark wlaczony; upstream wylacza go na Hopperze, konfiguracja 3-tokenowa
-  #     jak w SemiAnalysis InferenceX#4423 (H200) — niezweryfikowana.
-  # Wylaczenie spekulacji: MINIMAX_SPEC_TOKENS=0 w .env NIE dziala (dspark wymaga >0) —
-  # usun linie --speculative-config.
-  # Obraz: `latest` = v0.33.0 ma juz MiniMax M3 (MiniMaxM3Sparse*, parsery minimax_m3);
-  # wczesniej wymagany byl dedykowany tag minimax-m31-flash-x86_64-cu134.
+  # (vllm-project/vllm#63244), z dwiema zmianami (sprawdzone na serwerze 2026-11-03):
+  #   - DP4 + expert parallel zamiast TP4: przy TP4 model pada na niezgodnosci
+  #     podzialu tensorow (192 vs 384) takze bez spekulacji; recepta Hopper zaklada
+  #     TP8. Uklad przelaczany z .env (MINIMAX_PARALLEL_ARGS).
+  #   - BEZ spekulacji (DSpark): na Hopperze niezweryfikowany, upstream go wylacza.
+  #     Powrot do proby: dopisz --speculative-config '{"method":"dspark","num_speculative_tokens":3,"rejection_sample_method":"block"}'.
   vllm-minimax:
     image: vllm/vllm-openai:latest
     container_name: vllm-minimax
@@ -122,7 +120,7 @@ services:
       --model MiniMaxAI/MiniMax-M3.1-Flash
       --served-model-name=minimax-m3.1-flash
       --host=0.0.0.0 --port=8102
-      --tensor-parallel-size 4
+      ${MINIMAX_PARALLEL_ARGS:---data-parallel-size 4 --enable-expert-parallel}
       --block-size 128
       --disable-hybrid-kv-cache-manager
       --kv-cache-dtype fp8
@@ -137,7 +135,6 @@ services:
       --tool-call-parser minimax_m3
       --enable-auto-tool-choice
       --reasoning-parser minimax_m3
-      --speculative-config '{"method":"dspark","num_speculative_tokens":${MINIMAX_SPEC_TOKENS:-3},"rejection_sample_method":"block"}'
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8102/health || exit 1"]
       interval: 30s
